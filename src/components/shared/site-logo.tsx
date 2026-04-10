@@ -1,13 +1,15 @@
-import Image from 'next/image';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
-export const SiteLogo = (props: React.HTMLAttributes<HTMLImageElement>) => {
+export const SiteLogo = (props: React.HTMLAttributes<HTMLDivElement>) => {
   return (
-    <Image
-      src="/images/avatars/mahirooyama.webp"
-      alt="Logo"
-      width={42}
-      height={42}
-      {...props}
-    />
+    <div {...props}>
+      <OptimizedImage
+        src="/images/avatars/mahirooyama.webp"
+        alt="Logo"
+        width={32}
+        height={32}
+        priority
+      />
+    </div>
   );
 };

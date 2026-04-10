@@ -51,15 +51,18 @@ export function Search() {
       {/* 搜索触发按钮 */}
       <Button
         variant="outline"
-        className="bg-muted/50 hover:bg-muted relative h-9 w-full cursor-pointer justify-start rounded-md text-sm font-normal shadow-none sm:pr-12 md:w-40 lg:w-64"
+        className="bg-muted/50 hover:bg-muted relative hidden h-9 w-full cursor-pointer justify-start rounded-md text-sm font-normal shadow-none sm:pr-12 md:block md:w-40 lg:w-64"
         onClick={() => setOpen(true)}
       >
         <SearchIcon className="mr-2 h-4 w-4" />
-        搜索...
         <kbd className="bg-muted pointer-events-none absolute top-1.5 right-1.5 hidden h-6 items-center gap-1 rounded border px-1.5 font-mono text-xs font-medium opacity-100 select-none sm:flex">
           <span className="text-xs">⌘</span>K
         </kbd>
       </Button>
+      <SearchIcon
+        onClick={() => setOpen(true)}
+        className="mr-2 h-4 w-4 md:hidden"
+      />
 
       {/* 搜索弹窗 */}
       <Dialog open={open} onOpenChange={setOpen}>

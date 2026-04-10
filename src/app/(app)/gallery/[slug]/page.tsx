@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 
 import { getAllGalleryImages, getGalleryImageBySlug } from '@/lib/gallery';
@@ -8,6 +7,10 @@ import { formatDate } from '@/lib/utils';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { LinkBadge } from '@/components/shared/link-badge';
+import {
+  imageSizes,
+  OptimizedImage,
+} from '@/components/shared/optimized-image';
 
 interface GalleryImagePageProps {
   params: Promise<{
@@ -75,13 +78,12 @@ export default async function GalleryImagePage({
         </div>
         <div className="mx-auto max-w-4xl">
           <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
-            <Image
+            <OptimizedImage
               src={thumbnail}
               alt={image.metadata.title}
               fill
-              loading="eager"
-              className="object-cover"
-              sizes="(max-width: 896px) 100vw, 896px"
+              aspectRatio={16 / 9}
+              sizes={imageSizes.detail}
               priority
             />
           </div>

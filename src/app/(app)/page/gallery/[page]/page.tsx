@@ -60,16 +60,22 @@ export default async function GalleryListPage({
               </h2>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedPosts.map((post) => (
-                <LinkCard
-                  key={post.slug}
-                  title={post.metadata.title}
-                  imageUrl={post.metadata.thumbnail}
-                  link={`/gallery/${post.slug}`}
-                  badgeText={formatDate(post.metadata.createdAt)}
-                  description={post.metadata.description}
-                />
-              ))}
+              {paginatedPosts.map((post, index) => {
+                // 首屏前 3 张图片优先加载，其余懒加载
+                const isPriority = index < 3 && currentPage === 1;
+
+                return (
+                  <LinkCard
+                    key={post.slug}
+                    title={post.metadata.title}
+                    imageUrl={post.metadata.thumbnail}
+                    link={`/gallery/${post.slug}`}
+                    badgeText={formatDate(post.metadata.createdAt)}
+                    description={post.metadata.description}
+                    priority={isPriority}
+                  />
+                );
+              })}
             </div>
           </section>
         </div>

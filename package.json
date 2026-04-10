@@ -16,7 +16,8 @@
     "format:check": "prettier --check .",
     "clean": "rm -rf .next/ node_modules/",
     "convert": "tsx scripts/convert-to-webp.ts",
-    "create-module": "node scripts/create-module.mjs"
+    "create-module": "node scripts/create-module.mjs",
+    "generate-thumbnails": "tsx scripts/generate-thumbnails.ts"
   },
   "packageManager": "pnpm@10.14.0",
   "dependencies": {

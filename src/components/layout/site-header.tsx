@@ -25,10 +25,10 @@ export function SiteHeader() {
   return (
     <header className="bg-background sticky top-0 z-50 w-full">
       <div className="container-wrapper px-6">
-        <div className="container flex h-12 items-center gap-2 border-b **:data-[slot=separator]:!h-4 md:h-16">
+        <div className="container flex h-12 items-center justify-between gap-2 border-b **:data-[slot=separator]:!h-4 md:h-16">
           <Button asChild variant="ghost" size="icon" className="flex size-10">
             <Link href="/">
-              <SiteLogo className="size-8 rounded-full" />
+              <SiteLogo className="overflow-hidden rounded-full" />
               <span className="sr-only">{siteConfig.name}</span>
             </Link>
           </Button>

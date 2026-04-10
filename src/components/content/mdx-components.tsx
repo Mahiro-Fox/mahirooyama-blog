@@ -1,11 +1,10 @@
-import Image from 'next/image';
-
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/shadcn-ui/button';
 import { LinkPreview } from '@/components/content/link-preview';
 import { getIconForLanguageExtension } from '@/components/shared/brand-icons';
 import { Callout } from '@/components/shared/callout';
 import { CopyButton } from '@/components/shared/copy-button';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 export const mdxComponents = {
   h1: ({ className, ...props }: React.ComponentProps<'h1'>) => (
@@ -220,12 +219,13 @@ export const mdxComponents = {
     alt,
     ...props
   }: React.ComponentProps<'img'>) => (
-    <Image
+    <OptimizedImage
       className={cn('mt-6 rounded-md border', className)}
       src={typeof src === 'string' ? src : ''}
       width={Number(width)}
       height={Number(height)}
       alt={alt || ''}
+      containerClassName="mt-6"
       {...props}
     />
   ),

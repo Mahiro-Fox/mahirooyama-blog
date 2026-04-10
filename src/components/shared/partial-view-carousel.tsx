@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import Autoplay from 'embla-carousel-autoplay';
 import {
@@ -19,6 +18,10 @@ import {
   CarouselItem as UICarouselItem,
   type CarouselApi,
 } from '@/components/shadcn-ui/carousel';
+import {
+  imageSizes,
+  OptimizedImage,
+} from '@/components/shared/optimized-image';
 
 interface CarouselItem {
   title: string;
@@ -128,13 +131,13 @@ export function PartialViewCarousel({
                 <div className="flex h-full flex-col gap-6 overflow-hidden rounded-xl border">
                   <div className="relative">
                     <div className="relative aspect-[16/9] w-full overflow-hidden">
-                      <Image
+                      <OptimizedImage
                         src={item.imageUrl || '/placeholder.svg'}
                         alt={`${item.title} thumbnail image`}
-                        loading="eager"
                         fill
-                        className="object-cover transition-transform duration-300 hover:scale-105"
-                        sizes="(max-width: 640px) 80vw, (max-width: 768px) 70vw, (max-width: 1024px) 50vw, (max-width: 1280px) 40vw, 30vw"
+                        aspectRatio={16 / 9}
+                        sizes={imageSizes.hero}
+                        className="transition-transform duration-300 hover:scale-105"
                       />
                     </div>
                     <div className="px-4 py-3">

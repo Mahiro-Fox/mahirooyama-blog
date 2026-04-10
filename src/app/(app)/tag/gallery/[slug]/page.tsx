@@ -109,7 +109,7 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
                 <LinkCard
                   key={item.slug}
                   title={item.metadata.title}
-                  imageUrl={item.metadata.src || '/og.webp'}
+                  imageUrl={item.metadata.thumbnail || '/og.webp'}
                   link={`/gallery/${item.slug}`}
                   badgeText={formatDate(item.metadata.createdAt || '')}
                   description={item.metadata.description}

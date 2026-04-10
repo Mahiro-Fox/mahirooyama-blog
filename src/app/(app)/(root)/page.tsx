@@ -80,7 +80,7 @@ export default async function IndexPage() {
               <h2 className="text-2xl font-medium tracking-tight">Gallery</h2>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {galleryImages.slice(0, 3).map((gallery) => (
+              {galleryImages.slice(0, 3).map((gallery, index) => (
                 <BlurFade inView key={gallery.slug}>
                   <LinkCard
                     key={gallery.slug}
@@ -89,6 +89,7 @@ export default async function IndexPage() {
                     link={`/gallery/${gallery.slug}`}
                     badgeText={formatDate(gallery.metadata.createdAt)}
                     description={gallery.metadata.description}
+                    priority={index === 0} // 首屏第一张优先加载
                   />
                 </BlurFade>
               ))}

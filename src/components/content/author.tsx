@@ -1,5 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
+
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface AuthorProps {
   name: string;
@@ -13,12 +14,14 @@ export function Author({ name, imageUrl, twitterId }: AuthorProps) {
       href={`https://x.com/${twitterId}`}
       className="flex items-center gap-3 text-sm"
     >
-      <Image
+      <OptimizedImage
         src={imageUrl}
         alt={name}
         width={42}
         height={42}
-        className="bg-muted rounded-full"
+        className="rounded-full"
+        containerClassName="bg-muted rounded-full"
+        priority
       />
       <div className="flex-1 text-left leading-tight">
         <p className="font-medium">{name}</p>

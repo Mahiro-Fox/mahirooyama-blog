@@ -1,7 +1,9 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
-import { AspectRatio } from '@/components/shadcn-ui/aspect-ratio';
+import {
+  imageSizes,
+  OptimizedImage,
+} from '@/components/shared/optimized-image';
 
 interface LinkCardProps {
   title: string;
@@ -30,8 +32,8 @@ export function LinkCard({
             imageUrl={imageUrl}
             title={title}
             priority={priority}
-            ratio={16 / 9}
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+            aspectRatio={16 / 9}
+            sizes={imageSizes.galleryGrid}
           />
           <div>
             <LinkCardContent
@@ -52,8 +54,8 @@ export function LinkCard({
           imageUrl={imageUrl}
           title={title}
           priority={priority}
-          ratio={16 / 9}
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+          aspectRatio={16 / 9}
+          sizes={imageSizes.galleryGrid}
         />
       </div>
       <div className="w-[70%]">
@@ -79,8 +81,8 @@ export function LinkCard({
           imageUrl={imageUrl}
           title={title}
           priority={priority}
-          ratio={1 / 1}
-          sizes="(min-width: 768px) 20vw, 30vw"
+          aspectRatio={1 / 1}
+          sizes={imageSizes.thumbnail}
         />
       </div>
       <div className={contentWidth}>
@@ -138,7 +140,7 @@ interface LinkCardImageProps {
   imageUrl: string;
   title: string;
   priority: boolean;
-  ratio: number;
+  aspectRatio: number;
   sizes: string;
   className?: string;
 }
@@ -147,22 +149,21 @@ function LinkCardImage({
   imageUrl,
   title,
   priority,
-  ratio,
+  aspectRatio,
   sizes,
   className,
 }: LinkCardImageProps) {
   return (
-    <AspectRatio ratio={ratio}>
-      <Image
-        src={imageUrl || '/placeholder.svg'}
-        alt={`${title} thumbnail image`}
-        loading="eager"
-        fill
-        className={`rounded-lg object-cover transition-opacity ${className || ''}`}
-        sizes={sizes}
-        priority={priority}
-      />
-    </AspectRatio>
+    <OptimizedImage
+      src={imageUrl || '/placeholder.svg'}
+      alt={`${title} thumbnail image`}
+      fill
+      priority={priority}
+      aspectRatio={aspectRatio}
+      sizes={sizes}
+      className={`rounded-lg ${className || ''}`}
+      containerClassName="overflow-hidden rounded-lg"
+    />
   );
 }
 

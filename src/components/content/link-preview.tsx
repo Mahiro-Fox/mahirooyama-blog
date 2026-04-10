@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { getOGData } from '@/actions/fetch-og-metadata';
 import { ExternalLinkIcon } from 'lucide-react';
@@ -8,6 +7,7 @@ import { siteConfig } from '@/lib/config';
 import { getBlogPostBySlug } from '@/lib/mdx';
 import { cn } from '@/lib/utils';
 import { ImageWithFallback } from '@/components/shared/image-with-fallback';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface LinkCardProps {
   url: string;
@@ -63,12 +63,13 @@ export function LinkCard({
               <>
                 <div className="bg-muted relative size-4 overflow-hidden rounded-full">
                   {hostname && (
-                    <Image
+                    <OptimizedImage
                       src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
                       alt=""
-                      className="object-cover"
-                      fill
-                      sizes="16px"
+                      width={16}
+                      height={16}
+                      containerClassName="rounded-full"
+                      unoptimized
                     />
                   )}
                 </div>
