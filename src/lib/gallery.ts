@@ -6,7 +6,7 @@ import { paginateItems, PaginationResult } from '@/lib/pagination';
 
 const galleryDir = path.join(process.cwd(), 'src', 'content', 'gallery');
 
-export const DEFAULT_GALLERY_LIMIT = 12;
+export const DEFAULT_GALLERY_LIMIT = 6;
 
 export type GalleryImage<T = {}> = {
   title: string;

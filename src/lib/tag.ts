@@ -19,10 +19,8 @@ export const blogTags: Record<string, Tag> = {
 };
 
 export const galleryTags: Record<string, Tag> = {
-  aurora: { name: 'Aurora', icon: 'default' },
-  city: { name: 'City', icon: 'default' },
-  landscape: { name: 'Landscape', icon: 'default' },
-  star: { name: 'Star', icon: 'default' },
+  nekonacho: { name: 'nekonacho', icon: 'default' },
+  bluearchive: { name: 'Blue Archive', icon: 'default' },
   vrchat: { name: 'VRChat', icon: 'vrchat' },
   bilibili: { name: 'Bilibili', icon: 'bilibili' },
 };
