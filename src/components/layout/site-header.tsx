@@ -1,18 +1,27 @@
 'use client';
 
+import { useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
 
 import { pageRoutesConfig, siteConfig } from '@/lib/config';
+import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import { Separator } from '@/components/shadcn-ui/separator';
-import { ModeSwitcher } from '@/components/layout/mode-switcher';
+import { Search } from '@/components/content/search';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { SiteLogo } from '@/components/shared/site-logo';
 
 export function SiteHeader() {
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
+  const { setTheme, resolvedTheme } = useTheme();
+
+  const toggleTheme = useCallback(() => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  }, [resolvedTheme, setTheme]);
+
   return (
     <header className="bg-background sticky top-0 z-50 w-full">
       <div className="container-wrapper px-6">
@@ -45,6 +54,7 @@ export function SiteHeader() {
               </Button>
             ))}
           </div>
+          <Search />
           <div className="flex items-center gap-2 md:flex-1 md:justify-end">
             <Button
               asChild
@@ -62,7 +72,7 @@ export function SiteHeader() {
               </Link>
             </Button>
             <Separator orientation="vertical" />
-            <ModeSwitcher />
+            <AnimatedThemeToggler onThemeChange={toggleTheme} />
           </div>
         </div>
       </div>
