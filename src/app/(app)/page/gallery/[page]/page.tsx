@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
 
 import { getGalleryImages } from '@/lib/gallery';
-import { Gallery } from '@/components/content/gallery';
+import { formatDate } from '@/lib/utils';
 import { AboutCta } from '@/components/shared/about-cta';
+import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
 
 export const dynamic = 'force-static';
@@ -60,7 +61,14 @@ export default async function GalleryListPage({
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {paginatedPosts.map((post) => (
-                <Gallery key={post.slug} item={post} />
+                <LinkCard
+                  key={post.slug}
+                  title={post.metadata.title}
+                  imageUrl={post.metadata.thumbnail}
+                  link={`/gallery/${post.slug}`}
+                  badgeText={formatDate(post.metadata.createdAt)}
+                  description={post.metadata.description}
+                />
               ))}
             </div>
           </section>

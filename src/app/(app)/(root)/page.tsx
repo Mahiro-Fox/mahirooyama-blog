@@ -7,7 +7,6 @@ import { getAllBlogPosts } from '@/lib/mdx';
 import { formatDate } from '@/lib/utils';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
-import { Gallery } from '@/components/content/gallery';
 import { AboutCta } from '@/components/shared/about-cta';
 import { LinkCard } from '@/components/shared/link-card';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
@@ -82,7 +81,16 @@ export default async function IndexPage() {
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {galleryImages.slice(0, 3).map((gallery) => (
-                <Gallery item={gallery} key={gallery.slug} />
+                <BlurFade inView key={gallery.slug}>
+                  <LinkCard
+                    key={gallery.slug}
+                    title={gallery.metadata.title}
+                    imageUrl={gallery.metadata.thumbnail || '/og.webp'}
+                    link={`/gallery/${gallery.slug}`}
+                    badgeText={formatDate(gallery.metadata.createdAt)}
+                    description={gallery.metadata.description}
+                  />
+                </BlurFade>
               ))}
             </div>
             <div className="mt-10 text-center">

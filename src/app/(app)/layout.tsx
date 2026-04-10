@@ -1,6 +1,6 @@
-import { ThemeParticle } from '@/components/content/theme-particle';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
+import { ThemeParticle } from '@/components/layout/theme-particle';
 
 interface AppLayoutProps {
   children: React.ReactNode;

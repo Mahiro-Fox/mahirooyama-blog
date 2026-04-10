@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
+import { ThemeProvider } from '@/context/theme-provider';
 
 import { siteConfig } from '@/lib/config';
 import { fontVariables } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/shadcn-ui/sonner';
-import { ThemeProvider } from '@/components/layout/theme-provider';
 import { TailwindIndicator } from '@/components/shared/tailwind-indicator';
 
 import '@/styles/globals.css';

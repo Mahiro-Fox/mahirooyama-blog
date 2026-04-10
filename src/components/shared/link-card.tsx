@@ -156,6 +156,7 @@ function LinkCardImage({
       <Image
         src={imageUrl || '/placeholder.svg'}
         alt={`${title} thumbnail image`}
+        loading="eager"
         fill
         className={`rounded-lg object-cover transition-opacity ${className || ''}`}
         sizes={sizes}

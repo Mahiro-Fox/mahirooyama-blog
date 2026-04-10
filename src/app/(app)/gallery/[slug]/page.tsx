@@ -64,7 +64,7 @@ export default async function GalleryImagePage({
       label: image.metadata.title,
     },
   ];
-  const src = image.metadata.src;
+  const thumbnail = image.metadata.thumbnail;
   return (
     <div className="container-wrapper">
       <div className="container py-8">
@@ -76,7 +76,7 @@ export default async function GalleryImagePage({
         <div className="mx-auto max-w-4xl">
           <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
             <Image
-              src={src}
+              src={thumbnail}
               alt={image.metadata.title}
               fill
               loading="eager"

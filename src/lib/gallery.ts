@@ -11,8 +11,8 @@ export const DEFAULT_GALLERY_LIMIT = 6;
 export type GalleryImage<T = {}> = {
   title: string;
   description: string;
-  src: string;
-  createdAt?: string;
+  thumbnail: string;
+  createdAt: string;
   tags?: string[];
 } & T;
 
