@@ -71,7 +71,7 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
 
   const breadcrumbItems = [
     {
-      link: '/gallery',
+      link: '/page/gallery/1',
       label: 'Gallery',
     },
     {

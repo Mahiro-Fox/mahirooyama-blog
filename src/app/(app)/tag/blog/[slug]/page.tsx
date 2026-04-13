@@ -71,7 +71,7 @@ export default async function BlogTagPage({ params }: BlogTagPageProps) {
 
   const breadcrumbItems = [
     {
-      link: '/blog',
+      link: '/page/blog/1',
       label: 'Blog',
     },
     {

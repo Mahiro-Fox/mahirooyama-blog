@@ -10,77 +10,80 @@ const PROJECT_ROOT = path.join(__dirname, '..');
 // 模板定义
 const TEMPLATES = {
   // 1. 数据层模板
-  lib: (name, Name, fields) => `import fs from 'fs/promises';
+  lib: (name, Name, fields) => `import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { paginateItems } from './pagination';
 
-const ${name.toUpperCase()}_DIR = path.join(process.cwd(), 'src', 'content', '${name}');
-const DEFAULT_${name.toUpperCase()}_LIMIT = 12;
+import { paginateItems, PaginationResult } from '@/lib/pagination';
 
-export interface ${Name}Item {
-  slug: string;
-  fileName: string;
-  metadata: ${Name}Metadata;
-}
+const ${name}Dir = path.join(process.cwd(), 'src', 'content', '${name}');
 
-export interface ${Name}Metadata {
+export const DEFAULT_${name.toUpperCase()}_LIMIT = 12;
+
+export type ${Name}Item<T = {}> = {
 ${fields.map((f) => `  ${f.name}: ${f.type};`).join('\n')}
-}
+} & T;
 
-// 获取所有 ${Name} 项目
-export async function getAll${Name}Items(): Promise<${Name}Item[]> {
+export type ${Name}Data<T = {}> = {
+  metadata: ${Name}Item<T>;
+  slug: string;
+};
+
+export async function getAll${Name}Items<T = {}>(): Promise<
+  ${Name}Data<T>[]
+> {
   try {
-    const files = await fs.readdir(${name.toUpperCase()}_DIR);
-    const yamlFiles = files.filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
-
-    const items = await Promise.all(
-      yamlFiles.map(async (file) => {
-        const filePath = path.join(${name.toUpperCase()}_DIR, file);
-        const content = await fs.readFile(filePath, 'utf-8');
-        const parsed = matter(content);
-
-        return {
-          slug: path.basename(file, path.extname(file)),
-          fileName: file,
-          metadata: parsed.data as ${Name}Metadata,
-        };
-      })
-    );
-
-    return items;
+    await fs.promises.access(${name}Dir);
   } catch {
     return [];
   }
+
+  const files = await get${Name}Files();
+  const items = await Promise.all(
+    files.map((file) => read${Name}File<T>(path.join(${name}Dir, file)))
+  );
+
+  return items.sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
-// 根据 slug 获取单个项目
-export async function get${Name}BySlug(slug: string): Promise<${Name}Item | null> {
-  try {
-    const filePath = path.join(${name.toUpperCase()}_DIR, \`\${slug}.yml\`);
-    const content = await fs.readFile(filePath, 'utf-8');
-    const parsed = matter(content);
-
-    return {
-      slug,
-      fileName: \`\${slug}.yml\`,
-      metadata: parsed.data as ${Name}Metadata,
-    };
-  } catch {
-    return null;
-  }
+export async function get${Name}ByTagSlug(
+  tagSlug: string
+): Promise<${Name}Data<{}>[] | undefined> {
+  const items = await getAll${Name}Items<{}>();
+  return items.filter((item) => item.metadata.tags?.includes(tagSlug));
 }
 
-// 分页获取项目
-export async function get${Name}Items(page = 1, limit = DEFAULT_${name.toUpperCase()}_LIMIT) {
-  const allItems = await getAll${Name}Items();
-  return paginateItems(allItems, page, limit);
+export async function get${Name}Items<T = {}>(
+  page = 1,
+  pageSize = DEFAULT_${name.toUpperCase()}_LIMIT
+): Promise<PaginationResult<${Name}Data<T>>> {
+  const items = await getAll${Name}Items<T>();
+  return paginateItems(items, page, pageSize);
 }
 
-// 根据标签获取项目
-export async function get${Name}ByTag(tagSlug: string) {
-  const allItems = await getAll${Name}Items();
-  return allItems.filter((item) => item.metadata.tags?.includes(tagSlug));
+export async function get${Name}BySlug<T = {}>(
+  slug: string
+): Promise<${Name}Data<T> | undefined> {
+  const items = await getAll${Name}Items<T>();
+  return items.find((item) => item.slug === slug);
+}
+
+async function get${Name}Files(): Promise<string[]> {
+  return (await fs.promises.readdir(${name}Dir)).filter(
+    (file) => path.extname(file) === '.yml' || path.extname(file) === '.yaml'
+  );
+}
+
+async function read${Name}File<T>(
+  filePath: string
+): Promise<${Name}Data<T>> {
+  const rawContent = await fs.promises.readFile(filePath, 'utf-8');
+  const { data } = matter(rawContent);
+
+  return {
+    metadata: data as ${Name}Item<T>,
+    slug: path.basename(filePath, path.extname(filePath)),
+  };
 }
 `,
 
@@ -213,8 +216,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   listPage: (name, Name) => `import { notFound } from 'next/navigation';
 
 import { get${Name}Items } from '@/lib/${name}';
-import { ${Name}Card } from '@/components/content/${name}-card';
+import { formatDate } from '@/lib/utils';
 import { AboutCta } from '@/components/shared/about-cta';
+import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
 
 export const dynamic = 'force-static';
@@ -253,12 +257,25 @@ export default async function ${Name}ListPage({ params }: ${Name}ListPageProps) 
         <div className="container flex flex-col gap-1">
           <section className="container border-b py-6">
             <div className="flex flex-col gap-1 pb-6">
-              <h2 className="text-2xl font-medium tracking-tight">${Name} List</h2>
+              <h2 className="text-2xl font-medium tracking-tight">Paginated ${Name} List</h2>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((item) => (
-                <${Name}Card key={item.slug} item={item} />
-              ))}
+              {items.map((item, index) => {
+                // 首屏前3个项目优先加载，其余懒加载
+                const isPriority = index < 3 && currentPage === 1;
+
+                return (
+                  <LinkCard
+                    key={item.slug}
+                    title={item.metadata.title}
+                    imageUrl={item.metadata.thumbnail || '/og.webp'}
+                    link={\`/${name}/\${item.slug}\`}
+                    badgeText={item.metadata.createdAt ? formatDate(item.metadata.createdAt) : undefined}
+                    description={item.metadata.description}
+                    priority={isPriority}
+                  />
+                );
+              })}
             </div>
           </section>
         </div>
@@ -275,28 +292,42 @@ export default async function ${Name}ListPage({ params }: ${Name}ListPageProps) 
 
   // 5. 详情页模板
   detailPage: (name, Name, fields) => `import type { Metadata } from 'next';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 
-import { get${Name}BySlug, getAll${Name}Items } from '@/lib/${name}';
+import { getAll${Name}Items, get${Name}BySlug } from '@/lib/${name}';
 import { ${name}Tags } from '@/lib/tag';
+import { formatDate } from '@/lib/utils';
 
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { LinkBadge } from '@/components/shared/link-badge';
+import { OptimizedImage, imageSizes } from '@/components/shared/optimized-image';
 
 interface ${Name}PageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{
+    slug: string;
+  }>;
 }
 
 export async function generateStaticParams() {
   const items = await getAll${Name}Items();
-  return items.map((item) => ({ slug: item.slug }));
+  return items.map((item) => ({
+    slug: item.slug,
+  }));
 }
 
-export async function generateMetadata({ params }: ${Name}PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ${Name}PageProps): Promise<Metadata> {
   const { slug } = await params;
   const item = await get${Name}BySlug(slug);
-  if (!item) return {};
+
+  if (!item) {
+    return {
+      title: 'Not Found',
+    };
+  }
+
   return {
     title: item.metadata.title,
     description: item.metadata.description,
@@ -306,15 +337,17 @@ export async function generateMetadata({ params }: ${Name}PageProps): Promise<Me
 export default async function ${Name}Page({ params }: ${Name}PageProps) {
   const { slug } = await params;
   const item = await get${Name}BySlug(slug);
-  
-  if (!item) notFound();
+
+  if (!item) {
+    notFound();
+  }
 
   const breadcrumbItems = [
     ...(item.metadata.tags && item.metadata.tags.length > 0
       ? [
           {
-            link: '/tag/${name}/' + item.metadata.tags[0],
-            label: ${name}Tags[item.metadata.tags[0]].name,
+            link: \`/tag/${name}/\${item.metadata.tags[0]}\`,
+            label: ${name}Tags[item.metadata.tags[0]]?.name || item.metadata.tags[0],
           },
         ]
       : []),
@@ -323,6 +356,8 @@ export default async function ${Name}Page({ params }: ${Name}PageProps) {
       label: item.metadata.title,
     },
   ];
+
+  const thumbnail = item.metadata.thumbnail;
 
   return (
     <div className="container-wrapper">
@@ -333,28 +368,47 @@ export default async function ${Name}Page({ params }: ${Name}PageProps) {
           </div>
         </div>
         <div className="mx-auto max-w-4xl">
-          <BlurFade inView duration={0.6}>
-            <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
-              <Image
-                src={item.metadata.thumbnail}
-                alt={item.metadata.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 896px) 100vw, 896px"
-                priority
-              />
+          <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
+            <OptimizedImage
+              src={thumbnail || '/og.webp'}
+              alt={item.metadata.title}
+              fill
+              aspectRatio={16 / 9}
+              sizes={imageSizes.detail}
+              priority
+            />
+          </div>
+          <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-2 text-[11px] md:text-xs">
+            {item.metadata.createdAt && (
+              <div className="inline-flex items-center gap-1">
+                <time dateTime={item.metadata.createdAt}>
+                  {\`\${formatDate(item.metadata.createdAt)}\`}
+                </time>
+              </div>
+            )}
+            <div className="hidden flex-wrap gap-2 md:flex">
+              {item.metadata.tags?.map((tagSlug) => (
+                <LinkBadge
+                  key={tagSlug}
+                  link={\`/tag/${name}/\${tagSlug}\`}
+                  label={${name}Tags[tagSlug]?.name || tagSlug}
+                />
+              ))}
+            </div>
+          </div>
+
+          <BlurFade inView delay={0.15} duration={0.5}>
+            <div className="mt-6 space-y-2">
+              <h1 className="text-2xl font-medium tracking-tight">
+                {item.metadata.title}
+              </h1>
+              {item.metadata.description && (
+                <p className="text-muted-foreground">
+                  {item.metadata.description}
+                </p>
+              )}
             </div>
           </BlurFade>
-          <div className="mt-6 space-y-2">
-            <BlurFade inView delay={0.15} duration={0.5}>
-              <h1 className="text-2xl font-medium tracking-tight">{item.metadata.title}</h1>
-            </BlurFade>
-            {item.metadata.description && (
-              <BlurFade inView delay={0.25} duration={0.5}>
-                <p className="text-muted-foreground">{item.metadata.description}</p>
-              </BlurFade>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -365,11 +419,16 @@ export default async function ${Name}Page({ params }: ${Name}PageProps) {
   // 6. Tag 页模板
   tagPage: (name, Name) => `import { notFound } from 'next/navigation';
 
-import { get${Name}ByTag } from '@/lib/${name}';
+import { siteConfig } from '@/lib/config';
+import { get${Name}ByTagSlug } from '@/lib/${name}';
 import { ${name}Tags } from '@/lib/tag';
-import { ${Name}Card } from '@/components/content/${name}-card';
-import { AboutCta } from '@/components/shared/about-cta';
+import { absoluteUrl, formatDate } from '@/lib/utils';
+import { Badge } from '@/components/shadcn-ui/badge';
+import { TextAnimate } from '@/components/shadcn-ui/text-animate';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
+import { AboutCta } from '@/components/shared/about-cta';
+import { BrandIcons } from '@/components/shared/brand-icons';
+import { LinkCard } from '@/components/shared/link-card';
 
 export const dynamic = 'force-static';
 export const revalidate = false;
@@ -383,24 +442,61 @@ export async function generateStaticParams() {
   return Object.keys(${name}Tags).map((slug) => ({ slug }));
 }
 
+export async function generateMetadata({ params }: ${Name}TagPageProps) {
+  const { slug } = await params;
+  const tag = ${name}Tags[slug];
+
+  if (!tag) {
+    return {};
+  }
+
+  return {
+    title: \`\${tag.name} ${Name}\`,
+    description: \`Browse all \${tag.name} tagged ${Name.toLowerCase()}\`,
+    openGraph: {
+      title: \`\${tag.name} ${Name}\`,
+      description: \`Browse all \${tag.name} tagged ${Name.toLowerCase()}\`,
+      type: 'article',
+      url: absoluteUrl(\`/tag/${name}/\${slug}\`),
+      images: [
+        {
+          url: siteConfig.ogImage,
+          width: 1200,
+          height: 630,
+          alt: \`\${tag.name} ${Name}\`,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: \`\${tag.name} ${Name}\`,
+      description: \`Browse all \${tag.name} tagged ${Name.toLowerCase()}\`,
+      images: [siteConfig.ogImage],
+    },
+  };
+}
+
 export default async function ${Name}TagPage({ params }: ${Name}TagPageProps) {
   const { slug } = await params;
-  const items = await get${Name}ByTag(slug);
+  const tag = ${name}Tags[slug];
 
-  if (items.length === 0) notFound();
+  if (!tag) {
+    notFound();
+  }
 
-  const tagName = ${name}Tags[slug]?.name || slug;
+  const items = await get${Name}ByTagSlug(slug);
 
   const breadcrumbItems = [
     {
-      link: '/${name}',
+      link: '/page/${name}/1',
       label: '${Name}',
     },
     {
       link: '',
-      label: tagName,
+      label: tag.name,
     },
   ];
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="container-wrapper">
@@ -414,20 +510,79 @@ export default async function ${Name}TagPage({ params }: ${Name}TagPageProps) {
         <div className="container py-6">
           <AboutCta />
         </div>
+        <div className="container pb-6">
+          <CardTagTitle
+            icon={tag.icon}
+            name={tag.name}
+            postCount={items?.length}
+            itemName="${Name.toLowerCase()}"
+          />
+        </div>
       </div>
       <div className="container-wrapper">
         <div className="container flex flex-col gap-1">
           <section className="container border-b py-6">
-            <div className="flex flex-col gap-1 pb-6">
-              <h2 className="text-2xl font-medium tracking-tight">{tagName}</h2>
-              <p className="text-muted-foreground">共 {items.length} 个${Name}</p>
-            </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((item) => (
-                <${Name}Card key={item.slug} item={item} />
+              {items?.map((item) => (
+                <LinkCard
+                  key={item.slug}
+                  title={item.metadata.title}
+                  imageUrl={item.metadata.thumbnail || '/og.webp'}
+                  link={\`/${name}/\${item.slug}\`}
+                  badgeText={item.metadata.createdAt ? formatDate(item.metadata.createdAt) : undefined}
+                  description={item.metadata.description}
+                  priority={true}
+                />
               ))}
             </div>
           </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardTagTitle({
+  icon,
+  name,
+  postCount,
+  itemName,
+}: {
+  icon: keyof typeof BrandIcons;
+  name: string;
+  postCount?: number;
+  itemName: string;
+}) {
+  const TagIcon = BrandIcons[icon];
+
+  return (
+    <div className="pb-8">
+      <div className="from-primary/5 via-primary/3 ring-primary/10 relative overflow-hidden rounded-2xl bg-gradient-to-br to-transparent p-6 ring-1">
+        <div className="bg-primary/5 absolute -top-4 -right-4 h-24 w-24 rounded-full"></div>
+        <div className="relative flex items-start gap-4">
+          <div className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-xl">
+            <TagIcon className="h-6 w-6" />
+          </div>
+          <div className="flex-1">
+            <div className="mb-2 flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                TAG
+              </Badge>
+              {postCount && (
+                <span className="text-muted-foreground text-sm">
+                  • {postCount} {itemName}
+                </span>
+              )}
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">{name}</h1>
+            <TextAnimate
+              animation="blurIn"
+              as="p"
+              className="text-muted-foreground mt-1"
+            >
+              {\`Explore all \${itemName} tagged with \${name}\`}
+            </TextAnimate>
+          </div>
         </div>
       </div>
     </div>
@@ -747,52 +902,7 @@ export default function ${Name}AdminPage() {
 }
 `,
 
-  // 8. 卡片组件模板
-  cardComponent: (name, Name) => `'use client';
-
-import Link from 'next/link';
-import Image from 'next/image';
-
-import { BlurFade } from '@/components/shadcn-ui/blur-fade';
-
-interface ${Name}CardProps {
-  item: {
-    slug: string;
-    metadata: {
-      title: string;
-      description?: string;
-      thumbnail?: string;
-      tags?: string[];
-    };
-  };
-  index?: number;
-}
-
-export function ${Name}Card({ item, index = 0 }: ${Name}CardProps) {
-  const imageUrl = item.metadata.thumbnail || ''
-
-  return (
-    <BlurFade delay={0.1 * index} inView inViewMargin="-50px">
-      <Link href={\`/${name}/\${item.slug}\`}
-        className="group relative flex flex-col gap-3 overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
-        <div className="relative aspect-[4/3] overflow-hidden">
-          <Image src={imageUrl} alt={item.metadata.title} fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
-        </div>
-        <div className="flex flex-col gap-1 p-4 pt-0">
-          <h3 className="font-medium">{item.metadata.title}</h3>
-          {item.metadata.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">{item.metadata.description}</p>
-          )}
-        </div>
-      </Link>
-    </BlurFade>
-  );
-}
-`,
-
-  // 9. 示例 YAML 文件模板
+  // 8. 示例 YAML 文件模板
   sampleYaml: (fields) => `---
 ${fields.map((f) => `${f.name}: ${f.example}`).join('\n')}
 ---
@@ -1037,21 +1147,7 @@ async function main() {
     skipped.push(`src/app/admin/${moduleName}/page.tsx`);
   }
 
-  // 5. 创建卡片组件
-  const componentDir = path.join(PROJECT_ROOT, 'src', 'components', 'content');
-  await mkdirp(componentDir);
-  if (
-    await writeFileIfNotExists(
-      path.join(componentDir, `${moduleName}-card.tsx`),
-      TEMPLATES.cardComponent(moduleName, ModuleName)
-    )
-  ) {
-    created.push(`src/components/content/${moduleName}-card.tsx`);
-  } else {
-    skipped.push(`src/components/content/${moduleName}-card.tsx`);
-  }
-
-  // 6. 创建内容目录和示例文件
+  // 5. 创建内容目录和示例文件
   const contentDir = path.join(PROJECT_ROOT, 'src', 'content', moduleName);
   await mkdirp(contentDir);
   if (
@@ -1150,6 +1246,14 @@ async function main() {
     console.error(`❌ 更新 src/lib/config.ts 失败:`, error.message);
   }
 
+  // 更新 src/app/admin/config.ts
+  const adminConfigPath = path.join(
+    PROJECT_ROOT,
+    'src',
+    'app',
+    'admin',
+    'config.ts'
+  );
   try {
     const adminConfigContent = await fs.readFile(adminConfigPath, 'utf-8');
     if (
