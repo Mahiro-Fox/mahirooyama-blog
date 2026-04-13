@@ -107,7 +107,7 @@ export function OptimizedImage({
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
         className={cn(
-          'object-cover transition-opacity duration-300',
+          'object-contain transition-opacity duration-300',
           !isLoaded && !blurDataURL && 'opacity-0',
           isLoaded && 'opacity-100',
           className
