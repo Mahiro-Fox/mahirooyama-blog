@@ -3,7 +3,7 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import matter from 'gray-matter';
 
-const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');
+const GALLERY_DIR = path.join(process.cwd(), 'thumbnail', 'content', 'gallery');
 
 export async function GET() {
   try {
@@ -23,7 +23,7 @@ export async function GET() {
           fileName: file,
           title: parsed.data.title || '无标题',
           description: parsed.data.description || '',
-          src: parsed.data.src || '',
+          thumbnail: parsed.data.thumbnail || '',
           tags: parsed.data.tags || [],
           size: (await fs.stat(filePath)).size,
           updatedAt: (await fs.stat(filePath)).mtime.toISOString(),
@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
 
     // 验证 YAML 格式 - 检查是否有 frontmatter
     const parsed = matter(content);
-    if (!parsed.data.title || !parsed.data.src) {
+    if (!parsed.data.title || !parsed.data.thumbnail) {
       return NextResponse.json(
-        { error: 'YAML 文件缺少必需的字段 (title, src)' },
+        { error: 'YAML 文件缺少必需的字段 (title, thumbnail)' },
         { status: 400 }
       );
     }
