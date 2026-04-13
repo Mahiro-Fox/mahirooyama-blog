@@ -3,7 +3,7 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import matter from 'gray-matter';
 
-const GALLERY_DIR = path.join(process.cwd(), 'thumbnail', 'content', 'gallery');
+const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');
 
 export async function GET() {
   try {
