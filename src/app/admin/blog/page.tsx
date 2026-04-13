@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import {
+  FolderOpen,
   ImageIcon,
   LogOut,
   Pencil,
@@ -240,7 +241,14 @@ export default function BlogAdminPage() {
               className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
             >
               <ImageIcon className="h-4 w-4" />
-              切换到 Gallery
+              Gallery
+            </Link>
+            <Link
+              href="/admin/public-files"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
+            >
+              <FolderOpen className="h-4 w-4" />
+              Public 文件
             </Link>
           </div>
           <div className="flex items-center gap-4">

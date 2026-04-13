@@ -30,4 +30,12 @@ export const pageRoutesConfig = [
     title: '管理图库图片和元数据',
     description: '上传、编辑、删除图库图片，支持元数据管理。',
   },
+  {
+    name: 'PublicFiles',
+    navHref: '/admin/public-files',
+    adminHref: '/admin/public-files',
+    label: 'Public 文件管理',
+    title: '管理 Public 文件夹中的图片',
+    description: '上传、删除、重命名 public/images 目录下的图片文件。',
+  },
 ];

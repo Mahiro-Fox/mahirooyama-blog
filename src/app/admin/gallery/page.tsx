@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import {
   FileText,
+  FolderOpen,
   LogOut,
   Pencil,
   RefreshCw,
@@ -240,7 +241,14 @@ export default function GalleryAdminPage() {
               className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
             >
               <FileText className="h-4 w-4" />
-              切换到 Blog
+              Blog
+            </Link>
+            <Link
+              href="/admin/public-files"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
+            >
+              <FolderOpen className="h-4 w-4" />
+              Public 文件
             </Link>
           </div>
           <div className="flex items-center gap-4">
