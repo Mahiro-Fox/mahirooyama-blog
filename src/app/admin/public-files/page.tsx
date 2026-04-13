@@ -11,6 +11,7 @@ import {
   FileText,
   Folder,
   FolderPlus,
+  ImageDown,
   ImageIcon,
   Loader2,
   LogOut,
@@ -94,6 +95,7 @@ export default function PublicFilesAdminPage() {
   const [newName, setNewName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
   const [previewItem, setPreviewItem] = useState<FileItem | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
 
   // 获取文件列表
   const fetchFiles = useCallback(async (path: string = '') => {
@@ -302,6 +304,29 @@ export default function PublicFilesAdminPage() {
     toast.success('路径已复制');
   };
 
+  // PNG 转 WebP
+  const handleConvert = async () => {
+    setIsConverting(true);
+    try {
+      const response = await fetch('/api/convert-images', {
+        method: 'POST',
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '转换失败');
+      }
+
+      toast.success(result.message || '转换完成');
+      fetchFiles(currentPath);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '转换失败');
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
   // 格式化文件大小
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
@@ -434,6 +459,19 @@ export default function PublicFilesAdminPage() {
                 >
                   <FolderPlus className="mr-2 h-4 w-4" />
                   新建文件夹
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleConvert}
+                  disabled={isConverting}
+                >
+                  {isConverting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ImageDown className="mr-2 h-4 w-4" />
+                  )}
+                  PNG 转 WebP
                 </Button>
                 <Button asChild size="sm" disabled={isUploading}>
                   <label htmlFor="file-upload" className="cursor-pointer">

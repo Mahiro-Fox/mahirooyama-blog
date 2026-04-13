@@ -33,26 +33,28 @@ export function SiteHeader() {
             </Link>
           </Button>
           <div className="flex items-center gap-2">
-            {pageRoutesConfig.map((item) => (
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="h-8"
-                key={item.navHref}
-              >
-                <Link
-                  href={item.navHref}
-                  className={
-                    isActive(item.navHref)
-                      ? 'bg-accent'
-                      : 'hover:bg-transparent'
-                  }
+            {pageRoutesConfig
+              .filter((item) => !item.hideInNav)
+              .map((item) => (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="h-8"
+                  key={item.navHref}
                 >
-                  {item.name}
-                </Link>
-              </Button>
-            ))}
+                  <Link
+                    href={item.navHref}
+                    className={
+                      isActive(item.navHref)
+                        ? 'bg-accent'
+                        : 'hover:bg-transparent'
+                    }
+                  >
+                    {item.name}
+                  </Link>
+                </Button>
+              ))}
           </div>
           <Search />
           <div className="flex items-center gap-2 md:flex-1 md:justify-end">

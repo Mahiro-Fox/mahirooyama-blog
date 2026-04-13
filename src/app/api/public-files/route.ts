@@ -114,8 +114,8 @@ export async function POST(request: NextRequest) {
 
     const results = await Promise.all(
       files.map(async (file) => {
-        // 清理文件名
-        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
+        // 清理文件名（保留中文）
+        const safeName = file.name.replace(/[^\w\u4e00-\u9fa5.-]/g, '-');
         const filePath = path.join(targetDir, safeName);
 
         try {
@@ -129,7 +129,11 @@ export async function POST(request: NextRequest) {
         const buffer = Buffer.from(await file.arrayBuffer());
         await fs.writeFile(filePath, buffer);
 
-        return { name: safeName, success: true };
+        // 构建 web 路径
+        const itemRelativePath = path.join(relativePath, safeName);
+        const webPath = '/' + itemRelativePath.replace(/\\/g, '/');
+
+        return { name: safeName, path: webPath, success: true };
       })
     );
 
