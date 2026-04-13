@@ -71,12 +71,17 @@ export async function POST(request: NextRequest) {
       userAgent,
       ip: clientIp,
     });
-
+    // 通过 COOKIE_SECURE 环境变量可强制控制 secure 属性
+    // 如果未设置，则仅在 NODE_ENV=production 且非 HTTP 部署时启用 secure
+    const isSecure =
+      process.env.COOKIE_SECURE === 'true' ||
+      (process.env.COOKIE_SECURE !== 'false' &&
+        process.env.NODE_ENV === 'production');
     // 设置 cookie
     const cookieStore = await cookies();
     cookieStore.set('admin-session', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
       sameSite: 'strict',
       maxAge: SESSION_EXPIRY,
       path: '/',

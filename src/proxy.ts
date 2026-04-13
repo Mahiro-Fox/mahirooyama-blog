@@ -119,10 +119,16 @@ export async function proxy(request: NextRequest) {
           .setExpirationTime(`${SESSION_EXPIRY}s`)
           .sign(JWT_SECRET);
 
+        // 通过 COOKIE_SECURE 环境变量可强制控制 secure 属性
+        // 如果未设置，则仅在 NODE_ENV=production 且非 HTTP 部署时启用 secure
+        const isSecure =
+          process.env.COOKIE_SECURE === 'true' ||
+          (process.env.COOKIE_SECURE !== 'false' &&
+            process.env.NODE_ENV === 'production');
         // 设置新 cookie
         response.cookies.set('admin-session', newToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
+          secure: isSecure,
           sameSite: 'strict',
           maxAge: SESSION_EXPIRY,
           path: '/',
