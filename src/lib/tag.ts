@@ -13,6 +13,8 @@ export type Tag = {
  */
 export const blogTags: Record<string, Tag> = {
   mdx: { name: 'MDX', icon: 'mdx' },
+  github: { name: 'GitHub', icon: 'gitHub' },
+  linux: { name: 'Linux', icon: 'linux' },
   nextjs: { name: 'Next.js', icon: 'nextjs' },
   tailwind: { name: 'Tailwind CSS', icon: 'tailwind' },
   typescript: { name: 'TypeScript', icon: 'ts' },
