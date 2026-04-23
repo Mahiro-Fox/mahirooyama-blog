@@ -9,6 +9,7 @@ import {
   FolderOpen,
   LogOut,
   Pencil,
+  Plus,
   RefreshCw,
   Save,
   Trash2,
@@ -72,7 +73,10 @@ export default function GalleryAdminPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editMode, setEditMode] = useState<'create' | 'edit'>('edit');
   const [editContent, setEditContent] = useState('');
+  const [editFileName, setEditFileName] = useState('');
+  const [originalFileName, setOriginalFileName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   // 获取文件列表
@@ -101,13 +105,32 @@ export default function GalleryAdminPage() {
     toast.success('已登出');
   };
 
+  // 新增文件
+  const handleCreate = () => {
+    setEditMode('create');
+    setSelectedFile(null);
+    setEditFileName('');
+    setOriginalFileName('');
+    setEditContent(`---
+title: ''
+description: ''
+thumbnail: ''
+tags: []
+---
+`);
+    setIsEditDialogOpen(true);
+  };
+
   // 编辑文件
   const handleEdit = async (file: GalleryFile) => {
     try {
       const response = await fetch(`/api/gallery-files/${file.slug}`);
       if (!response.ok) throw new Error('获取失败');
       const data = await response.json();
+      setEditMode('edit');
       setSelectedFile(file);
+      setEditFileName(file.slug);
+      setOriginalFileName(file.fileName);
       setEditContent(data.content);
       setIsEditDialogOpen(true);
     } catch (error) {
@@ -115,27 +138,80 @@ export default function GalleryAdminPage() {
     }
   };
 
-  // 保存编辑
+  // 保存（新增或编辑）
   const handleSave = async () => {
-    if (!selectedFile) return;
-
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/gallery-files/${selectedFile.slug}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: editContent }),
-      });
+      if (editMode === 'create') {
+        // 新增模式
+        if (!editFileName.trim()) {
+          toast.error('请输入文件名称');
+          setIsSaving(false);
+          return;
+        }
 
-      if (!response.ok) throw new Error('保存失败');
+        const response = await fetch('/api/gallery-files', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            slug: editFileName.trim(),
+            content: editContent,
+          }),
+        });
 
-      toast.success('文件保存成功');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || '创建失败');
+        }
+
+        toast.success('文件创建成功');
+      } else {
+        // 编辑模式
+        if (!selectedFile) return;
+
+        let saveResponse = await fetch(
+          `/api/gallery-files/${selectedFile.slug}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: editContent }),
+          }
+        );
+
+        if (!saveResponse.ok) throw new Error('保存内容失败');
+
+        // 如果文件名变更，执行重命名
+        if (editFileName.trim() !== selectedFile.slug) {
+          const renameResponse = await fetch(
+            `/api/gallery-files/${selectedFile.slug}`,
+            {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                newSlug: editFileName.trim(),
+              }),
+            }
+          );
+
+          if (!renameResponse.ok) {
+            const error = await renameResponse.json();
+            throw new Error(error.error || '重命名失败');
+          }
+        }
+
+        toast.success('文件保存成功');
+      }
+
       setIsEditDialogOpen(false);
       fetchFiles();
     } catch (error) {
-      toast.error('保存失败');
+      toast.error(error instanceof Error ? error.message : '保存失败');
     } finally {
       setIsSaving(false);
     }
@@ -285,10 +361,18 @@ export default function GalleryAdminPage() {
                 className="hidden"
                 id="yaml-upload"
               />
+              <Button
+                variant="outline"
+                onClick={handleCreate}
+                disabled={isUploading}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                新增 YML
+              </Button>
               <Button asChild disabled={isUploading}>
                 <label htmlFor="yaml-upload" className="cursor-pointer">
                   <Upload className="mr-2 h-4 w-4" />
-                  {isUploading ? '上传中...' : '上传 YAML'}
+                  {isUploading ? '上传中...' : '上传 YML'}
                 </label>
               </Button>
             </div>
@@ -376,31 +460,58 @@ export default function GalleryAdminPage() {
           </CardContent>
         </Card>
 
-        {/* 编辑对话框 */}
+        {/* 编辑/新增对话框 */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-h-[90vh]">
             <DialogHeader>
-              <DialogTitle>编辑: {selectedFile?.title}</DialogTitle>
-              <DialogDescription>{selectedFile?.fileName}</DialogDescription>
+              <DialogTitle>
+                {editMode === 'create'
+                  ? '新增 YML 文件'
+                  : `编辑: ${selectedFile?.title}`}
+              </DialogTitle>
+              <DialogDescription>
+                {editMode === 'create'
+                  ? '创建新的 Gallery 配置文件'
+                  : selectedFile?.fileName}
+              </DialogDescription>
             </DialogHeader>
-            <div className="mt-4 h-[60vh] w-full">
-              <Editor
-                height="100%"
-                defaultLanguage="yaml"
-                value={editContent}
-                onChange={(value) => setEditContent(value || '')}
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  lineNumbers: 'on',
-                  folding: true,
-                  automaticLayout: true,
-                  tabSize: 2,
-                  fontSize: 14,
-                }}
-                theme="vs-dark"
-              />
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="text-sm font-medium">文件名称 (slug)</label>
+                <Input
+                  value={editFileName}
+                  onChange={(e) => setEditFileName(e.target.value)}
+                  placeholder="例如: my-image"
+                  disabled={editMode === 'edit' && isSaving}
+                  className="mt-1"
+                />
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {editMode === 'edit' &&
+                  originalFileName !== `${editFileName}.yml`
+                    ? '修改文件名将会重命名文件'
+                    : '将生成文件: ' +
+                      (editFileName ? `${editFileName}.yml` : '...')}
+                </p>
+              </div>
+              <div className="h-[50vh] w-full">
+                <Editor
+                  height="100%"
+                  defaultLanguage="yaml"
+                  value={editContent}
+                  onChange={(value) => setEditContent(value || '')}
+                  options={{
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'on',
+                    lineNumbers: 'on',
+                    folding: true,
+                    automaticLayout: true,
+                    tabSize: 2,
+                    fontSize: 14,
+                  }}
+                  theme="vs-dark"
+                />
+              </div>
             </div>
             <DialogFooter className="mt-4">
               <Button
@@ -411,9 +522,18 @@ export default function GalleryAdminPage() {
                 <X className="mr-2 h-4 w-4" />
                 取消
               </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving || !editFileName.trim()}
+              >
                 <Save className="mr-2 h-4 w-4" />
-                {isSaving ? '保存中...' : '保存'}
+                {isSaving
+                  ? editMode === 'create'
+                    ? '创建中...'
+                    : '保存中...'
+                  : editMode === 'create'
+                    ? '创建'
+                    : '保存'}
               </Button>
             </DialogFooter>
           </DialogContent>

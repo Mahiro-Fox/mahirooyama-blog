@@ -47,44 +47,77 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File | null;
-    const slug = formData.get('slug') as string | null;
+    const contentType = request.headers.get('content-type') || '';
 
-    if (!file) {
-      return NextResponse.json({ error: '没有提供文件' }, { status: 400 });
+    let fileName: string;
+    let content: string;
+
+    if (contentType.includes('application/json')) {
+      // JSON 格式：直接创建文件
+      const json = await request.json();
+      const { slug, content: yamlContent } = json;
+
+      if (!slug || !yamlContent) {
+        return NextResponse.json(
+          { error: '缺少必需字段 (slug, content)' },
+          { status: 400 }
+        );
+      }
+
+      // 验证 YAML 格式
+      const parsed = matter(yamlContent);
+      if (!parsed.data.title || !parsed.data.thumbnail) {
+        return NextResponse.json(
+          { error: 'YAML 内容缺少必需的字段 (title, thumbnail)' },
+          { status: 400 }
+        );
+      }
+
+      // 清理文件名
+      const cleanSlug = slug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+      fileName = `${cleanSlug}.yml`;
+      content = yamlContent;
+    } else {
+      // FormData 格式：文件上传
+      const formData = await request.formData();
+      const file = formData.get('file') as File | null;
+      const slug = formData.get('slug') as string | null;
+
+      if (!file) {
+        return NextResponse.json({ error: '没有提供文件' }, { status: 400 });
+      }
+
+      // 验证文件类型
+      const isYaml =
+        file.name.endsWith('.yml') ||
+        file.name.endsWith('.yaml') ||
+        file.type === 'application/x-yaml' ||
+        file.type === 'text/yaml';
+
+      if (!isYaml) {
+        return NextResponse.json(
+          { error: '只接受 .yml 或 .yaml 文件' },
+          { status: 400 }
+        );
+      }
+
+      // 读取文件内容
+      content = await file.text();
+
+      // 验证 YAML 格式
+      const parsed = matter(content);
+      if (!parsed.data.title || !parsed.data.thumbnail) {
+        return NextResponse.json(
+          { error: 'YAML 文件缺少必需的字段 (title, thumbnail)' },
+          { status: 400 }
+        );
+      }
+
+      // 确定文件名
+      fileName = slug
+        ? `${slug}.yml`
+        : file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
     }
-
-    // 验证文件类型
-    const isYaml =
-      file.name.endsWith('.yml') ||
-      file.name.endsWith('.yaml') ||
-      file.type === 'application/x-yaml' ||
-      file.type === 'text/yaml';
-
-    if (!isYaml) {
-      return NextResponse.json(
-        { error: '只接受 .yml 或 .yaml 文件' },
-        { status: 400 }
-      );
-    }
-
-    // 读取文件内容
-    const content = await file.text();
-
-    // 验证 YAML 格式 - 检查是否有 frontmatter
-    const parsed = matter(content);
-    if (!parsed.data.title || !parsed.data.thumbnail) {
-      return NextResponse.json(
-        { error: 'YAML 文件缺少必需的字段 (title, thumbnail)' },
-        { status: 400 }
-      );
-    }
-
-    // 确定文件名
-    const fileName = slug
-      ? `${slug}.yml`
-      : file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
 
     const filePath = path.join(GALLERY_DIR, fileName);
 
@@ -113,16 +146,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: '文件上传成功',
+        message: '文件创建成功',
         fileName,
         slug: newSlug,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error('上传图库文件失败:', error);
+    console.error('创建图库文件失败:', error);
     return NextResponse.json(
-      { error: '上传失败，请稍后重试' },
+      { error: '创建失败，请稍后重试' },
       { status: 500 }
     );
   }
