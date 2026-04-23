@@ -78,6 +78,7 @@ export default function GalleryAdminPage() {
   const [editFileName, setEditFileName] = useState('');
   const [originalFileName, setOriginalFileName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isRevalidating, setIsRevalidating] = useState(false);
 
   // 获取文件列表
   const fetchFiles = useCallback(async () => {
@@ -103,6 +104,33 @@ export default function GalleryAdminPage() {
     }
     router.push('/admin/login');
     toast.success('已登出');
+  };
+
+  // 手动刷新缓存
+  const handleRevalidate = async () => {
+    setIsRevalidating(true);
+    try {
+      const response = await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type: 'all' }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '刷新失败');
+      }
+
+      const data = await response.json();
+      toast.success('页面缓存已刷新，1小时内生效');
+      console.log('刷新结果:', data.results);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '刷新缓存失败');
+    } finally {
+      setIsRevalidating(false);
+    }
   };
 
   // 新增文件
@@ -337,7 +365,18 @@ tags: []
               <RefreshCw
                 className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
               />
-              刷新
+              刷新列表
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRevalidate}
+              disabled={isRevalidating}
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${isRevalidating ? 'animate-spin' : ''}`}
+              />
+              刷新页面缓存
             </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
