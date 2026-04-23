@@ -96,7 +96,6 @@ export default function PublicFilesAdminPage() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [previewItem, setPreviewItem] = useState<FileItem | null>(null);
   const [isConverting, setIsConverting] = useState(false);
-  const [isReBuilding, setIsReBuilding] = useState(false);
 
   // 获取文件列表
   const fetchFiles = useCallback(async (path: string = '') => {
@@ -328,29 +327,6 @@ export default function PublicFilesAdminPage() {
     }
   };
 
-  // 重新构建
-  const handleReBuild = async () => {
-    setIsReBuilding(true);
-    try {
-      const response = await fetch('/api/rebuild', {
-        method: 'POST',
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || '重建失败');
-      }
-
-      toast.success(result.message || '重建完成');
-      fetchFiles(currentPath);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '重建失败');
-    } finally {
-      setIsReBuilding(false);
-    }
-  };
-
   // 格式化文件大小
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
@@ -496,19 +472,6 @@ export default function PublicFilesAdminPage() {
                     <ImageDown className="mr-2 h-4 w-4" />
                   )}
                   PNG 转 WebP
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReBuild}
-                  disabled={isReBuilding}
-                >
-                  {isReBuilding ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <ImageDown className="mr-2 h-4 w-4" />
-                  )}
-                  重新构建
                 </Button>
                 <Button asChild size="sm" disabled={isUploading}>
                   <label htmlFor="file-upload" className="cursor-pointer">
