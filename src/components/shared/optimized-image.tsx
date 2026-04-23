@@ -3,6 +3,10 @@
 import { useCallback, useState } from 'react';
 import Image from 'next/image';
 
+import {
+  resolveImageSrc,
+  shouldUnoptimizeImage,
+} from '@/lib/client-image-utils';
 import { cn } from '@/lib/utils';
 
 interface OptimizedImageProps {
@@ -76,9 +80,11 @@ export function OptimizedImage({
 
   const imageProps = fill ? { fill, sizes } : { width, height, sizes };
 
-  // 外部图片不优化
-  const isExternal = src.startsWith('http');
-  const shouldUnoptimize = unoptimized ?? isExternal;
+  // 本地图片通过 API 路由获取，解决生产环境无法访问运行时上传文件的问题
+  const resolvedSrc = resolveImageSrc(src);
+
+  // 外部图片或通过 API 路由获取的图片都不需要 Next.js 优化
+  const shouldUnoptimize = unoptimized ?? shouldUnoptimizeImage(src);
 
   return (
     <div
@@ -100,7 +106,7 @@ export function OptimizedImage({
       )}
 
       <Image
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         {...imageProps}
         priority={priority}

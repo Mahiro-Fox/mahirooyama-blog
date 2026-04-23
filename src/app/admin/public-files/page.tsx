@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { resolveImageSrc } from '@/lib/client-image-utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -535,7 +536,7 @@ export default function PublicFilesAdminPage() {
                         ) : isImage(item) ? (
                           <div className="bg-muted h-8 w-8 overflow-hidden rounded">
                             <img
-                              src={item.path}
+                              src={resolveImageSrc(item.path)}
                               alt={item.name}
                               className="h-full w-full object-cover"
                             />
@@ -621,7 +622,7 @@ export default function PublicFilesAdminPage() {
             <div className="flex justify-center py-4">
               {previewItem && (
                 <img
-                  src={previewItem.path}
+                  src={resolveImageSrc(previewItem.path)}
                   alt={previewItem.name}
                   className="max-h-[60vh] rounded-lg object-contain"
                 />

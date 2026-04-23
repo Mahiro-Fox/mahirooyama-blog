@@ -1,3 +1,4 @@
+import { resolveImageSrc } from '@/lib/client-image-utils';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/shadcn-ui/button';
 import { LinkPreview } from '@/components/content/link-preview';
@@ -99,10 +100,19 @@ export const mdxComponents = {
       {...props}
     />
   ),
-  img: ({ className, alt, ...props }: React.ComponentProps<'img'>) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className={cn('rounded-md', className)} alt={alt} {...props} />
-  ),
+  img: ({ className, alt, src, ...props }: React.ComponentProps<'img'>) => {
+    const srcStr = typeof src === 'string' ? src : '';
+    const resolvedSrc = resolveImageSrc(srcStr);
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        className={cn('rounded-md', className)}
+        alt={alt}
+        src={resolvedSrc}
+        {...props}
+      />
+    );
+  },
   hr: ({ ...props }: React.ComponentProps<'hr'>) => (
     <hr className="my-4 md:my-8" {...props} />
   ),

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 
+import { isExternalImage, resolveImageSrc } from '@/lib/client-image-utils';
 import { cn } from '@/lib/utils';
 
 interface ImageWithFallbackProps {
@@ -26,15 +27,18 @@ export function ImageWithFallback({
     );
   }
 
+  // 本地图片通过 API 路由获取，解决生产环境无法访问运行时上传文件的问题
+  const resolvedSrc = resolveImageSrc(src);
+
   return (
     <Image
-      src={src || '/placeholder.svg'}
+      src={resolvedSrc || '/placeholder.svg'}
       alt={alt}
       className={cn('object-cover', className)}
       fill
       sizes="148px"
       onError={() => setError(true)}
-      unoptimized={src.startsWith('http')}
+      unoptimized={isExternalImage(src)}
     />
   );
 }
