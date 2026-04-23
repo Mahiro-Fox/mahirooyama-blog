@@ -148,14 +148,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </div>
 
               {/* Share Buttons */}
-              <div className="py-4">
+              {/* <div className="py-4">
                 <ArticleShareButtons
                   url={absoluteUrl(`/blog/${slug}`)}
                   title={post.metadata.title}
                   description={post.metadata.description}
                   image={thumbnailUrl}
                 />
-              </div>
+              </div> */}
             </article>
           </section>
         </div>

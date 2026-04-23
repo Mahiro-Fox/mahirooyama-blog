@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
@@ -94,9 +95,17 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     if (stats.isDirectory()) {
       await deleteFolderRecursive(targetPath);
+      // 刷新缓存
+      revalidatePath('/');
+      revalidatePath('/blog');
+      revalidatePath('/gallery');
       return NextResponse.json({ message: '文件夹删除成功' });
     } else {
       await fs.unlink(targetPath);
+      // 刷新缓存
+      revalidatePath('/');
+      revalidatePath('/blog');
+      revalidatePath('/gallery');
       return NextResponse.json({ message: '文件删除成功' });
     }
   } catch (error) {
@@ -141,6 +150,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     await fs.rename(oldPath, newPath);
+
+    // 刷新缓存
+    revalidatePath('/');
+    revalidatePath('/blog');
+    revalidatePath('/gallery');
 
     const stats = await fs.stat(newPath);
     return NextResponse.json({

@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
@@ -140,6 +141,13 @@ export async function POST(request: NextRequest) {
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.length - successCount;
 
+    // 刷新缓存（只要有一个文件上传成功就刷新）
+    if (successCount > 0) {
+      revalidatePath('/');
+      revalidatePath('/blog');
+      revalidatePath('/gallery');
+    }
+
     return NextResponse.json({
       message: `上传完成: ${successCount} 成功, ${failCount} 失败`,
       results,
@@ -186,6 +194,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     await fs.mkdir(newFolderPath, { recursive: true });
+
+    // 刷新缓存
+    revalidatePath('/');
+    revalidatePath('/blog');
+    revalidatePath('/gallery');
 
     return NextResponse.json({
       message: '文件夹创建成功',

@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 const BLOG_DIR = path.join(process.cwd(), 'src', 'content', 'blog');
@@ -34,6 +35,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     await fs.unlink(filePath);
 
+    // 刷新缓存
+    revalidatePath('/blog');
+    revalidatePath(`/blog/${slug}`);
+    revalidatePath('/');
+
     return NextResponse.json({ message: '文件删除成功' });
   } catch (error) {
     console.error('删除 MDX 文件失败:', error);
@@ -51,6 +57,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
 
     await fs.writeFile(filePath, content, 'utf-8');
+
+    // 刷新缓存
+    revalidatePath('/blog');
+    revalidatePath(`/blog/${slug}`);
+    revalidatePath('/');
 
     return NextResponse.json({ message: '文件更新成功' });
   } catch (error) {

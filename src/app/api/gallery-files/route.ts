@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import matter from 'gray-matter';
 
@@ -104,11 +105,17 @@ export async function POST(request: NextRequest) {
     // 写入文件
     await fs.writeFile(filePath, content, 'utf-8');
 
+    // 刷新缓存
+    const newSlug = path.basename(fileName, path.extname(fileName));
+    revalidatePath('/gallery');
+    revalidatePath(`/gallery/${newSlug}`);
+    revalidatePath('/');
+
     return NextResponse.json(
       {
         message: '文件上传成功',
         fileName,
-        slug: path.basename(fileName, path.extname(fileName)),
+        slug: newSlug,
       },
       { status: 201 }
     );
