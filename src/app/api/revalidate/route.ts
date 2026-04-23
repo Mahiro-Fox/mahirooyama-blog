@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         // 重新验证所有主要路径
         for (const path of PATHS_TO_REVALIDATE) {
           try {
-            revalidatePath(path);
+            revalidatePath(path, 'layout');
             results.push(`✓ ${path}`);
           } catch (error) {
             results.push(`✗ ${path}: ${error}`);
