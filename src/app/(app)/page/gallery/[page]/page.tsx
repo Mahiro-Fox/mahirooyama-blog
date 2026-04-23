@@ -6,9 +6,6 @@ import { AboutCta } from '@/components/shared/about-cta';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
 
-export const revalidate = 3600; // ISR：1小时兜底
-export const dynamicParams = true; // 允许访问新增的分页
-
 interface GalleryListPageProps {
   params: Promise<{ page: string }>;
 }

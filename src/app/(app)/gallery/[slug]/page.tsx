@@ -18,11 +18,6 @@ interface GalleryImagePageProps {
   }>;
 }
 
-// ISR: 静态生成，但支持通过 revalidatePath 即时刷新
-// dynamicParams = true 允许在构建后访问新的 slug
-export const dynamic = 'force-static';
-export const dynamicParams = true;
-
 export async function generateStaticParams() {
   const images = await getAllGalleryImages();
   return images.map((image) => ({

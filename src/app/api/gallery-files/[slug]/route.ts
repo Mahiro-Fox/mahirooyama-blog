@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');
@@ -49,11 +48,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     await fs.unlink(filePath);
 
-    // 刷新缓存
-    revalidatePath('/gallery');
-    revalidatePath(`/gallery/${slug}`);
-    revalidatePath('/');
-
     return NextResponse.json({ message: '文件删除成功' });
   } catch (error) {
     console.error('删除图库文件失败:', error);
@@ -72,11 +66,6 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const filePath = path.join(GALLERY_DIR, `${slug}.${ext}`);
 
     await fs.writeFile(filePath, content, 'utf-8');
-
-    // 刷新缓存
-    revalidatePath('/gallery');
-    revalidatePath(`/gallery/${slug}`);
-    revalidatePath('/');
 
     return NextResponse.json({ message: '文件更新成功' });
   } catch (error) {
@@ -127,12 +116,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     // 重命名文件
     await fs.rename(oldFilePath, newFilePath);
-
-    // 刷新缓存（新旧路径都需要刷新）
-    revalidatePath('/gallery');
-    revalidatePath(`/gallery/${slug}`);
-    revalidatePath(`/gallery/${cleanNewSlug}`);
-    revalidatePath('/');
 
     return NextResponse.json({
       message: '文件重命名成功',

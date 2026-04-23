@@ -15,8 +15,6 @@ const title = 'Lightweight and Minimalistic Next.js Blog Template';
 const description =
   'A minimalistic, easy-to-use blog template built with Next.js. Customize it to your liking and use it for personal blogs, portfolio sites, or tech documentation.';
 
-export const revalidate = 3600; // ISR：1小时兜底
-
 export const metadata: Metadata = {
   title,
   description,

@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import matter from 'gray-matter';
 
@@ -140,9 +139,6 @@ export async function POST(request: NextRequest) {
 
     // 刷新缓存
     const newSlug = path.basename(fileName, path.extname(fileName));
-    revalidatePath('/gallery');
-    revalidatePath(`/gallery/${newSlug}`);
-    revalidatePath('/');
 
     return NextResponse.json(
       {

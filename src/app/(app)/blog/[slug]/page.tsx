@@ -12,11 +12,6 @@ import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';
 import { LinkBadge } from '@/components/shared/link-badge';
 
-// ISR: 静态生成，但支持通过 revalidatePath 即时刷新
-// dynamicParams = true 允许在构建后访问新的 slug
-export const dynamic = 'force-static';
-export const dynamicParams = true;
-
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }

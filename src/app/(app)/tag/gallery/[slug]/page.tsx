@@ -11,10 +11,6 @@ import { AboutCta } from '@/components/shared/about-cta';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
 
-export const dynamic = 'force-static';
-export const revalidate = false;
-export const dynamicParams = false;
-
 interface GalleryTagPageProps {
   params: Promise<{ slug: string }>;
 }
