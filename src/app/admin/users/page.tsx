@@ -98,6 +98,7 @@ export default function UsersPage() {
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState<'super_admin' | 'user'>('user');
   const [editPassword, setEditPassword] = useState('');
+  const [editConfirmPassword, setEditConfirmPassword] = useState('');
 
   // 验证登录并获取当前用户
   useEffect(() => {
@@ -220,32 +221,35 @@ export default function UsersPage() {
   // 修改密码
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingUser) return;
+    if (!editingUser || !editPassword) return;
+
+    // 验证两次输入的密码是否一致
+    if (editPassword !== editConfirmPassword) {
+      toast.error('两次输入的密码不一致');
+      return;
+    }
 
     setIsSubmitting(true);
-
     try {
       const response = await fetch(`/api/users/${editingUser.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          password: editPassword,
-        }),
+        body: JSON.stringify({ password: editPassword }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '修改密码失败');
+        throw new Error(data.error || '更新密码失败');
       }
 
-      toast.success('密码修改成功');
+      toast.success('密码更新成功');
       setEditDialogOpen(false);
       setEditingUser(null);
       setEditPassword('');
-      fetchUsers();
+      setEditConfirmPassword('');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '修改密码失败');
+      toast.error(error instanceof Error ? error.message : '更新密码失败');
     } finally {
       setIsSubmitting(false);
     }
@@ -466,16 +470,18 @@ export default function UsersPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         {/* 用户可以修改自己的密码 */}
-                        {user.id === currentUser?.id && (
+                        {/* 超级管理员可以修改任何人的密码，普通用户只能修改自己的密码 */}
+                        {(isSuperAdmin || user.id === currentUser?.id) && (
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => {
                               setEditingUser(user);
+                              setEditPassword('');
+                              setEditConfirmPassword('');
                               setEditDialogOpen(true);
                             }}
                           >
-                            <UserCog className="mr-2 h-4 w-4" />
                             修改密码
                           </Button>
                         )}
@@ -617,6 +623,17 @@ export default function UsersPage() {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">确认密码</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={editConfirmPassword}
+                onChange={(e) => setEditConfirmPassword(e.target.value)}
+                placeholder="请再次输入新密码"
+                required
+              />
+            </div>
             <DialogFooter>
               <Button
                 type="button"
@@ -625,6 +642,7 @@ export default function UsersPage() {
                   setEditDialogOpen(false);
                   setEditingUser(null);
                   setEditPassword('');
+                  setEditConfirmPassword('');
                 }}
               >
                 取消
