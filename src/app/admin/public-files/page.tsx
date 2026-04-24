@@ -489,7 +489,9 @@ export default function PublicFilesAdminPage() {
                         <FileIcon className="h-6 w-6 text-gray-500" />
                       )}
                     </TableCell>
-                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="max-w-20 overflow-hidden font-medium text-ellipsis">
+                      {item.name}
+                    </TableCell>
                     <TableCell>
                       <code
                         className="bg-muted cursor-pointer rounded px-2 py-1 text-xs"

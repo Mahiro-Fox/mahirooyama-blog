@@ -3,6 +3,7 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import matter from 'gray-matter';
 
+import { checkFileConflict, FileUtils } from '@/lib/file-utils';
 import { requirePermission } from '@/lib/permissions';
 
 const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');
@@ -129,18 +130,16 @@ export async function POST(request: NextRequest) {
     const filePath = path.join(GALLERY_DIR, fileName);
 
     // 检查文件是否已存在
-    try {
-      await fs.access(filePath);
+    const conflict = await checkFileConflict(filePath);
+    if (conflict) {
       return NextResponse.json(
-        { error: `文件 ${fileName} 已存在` },
-        { status: 409 }
+        { error: conflict.error },
+        { status: conflict.status }
       );
-    } catch {
-      // 文件不存在，可以继续
     }
 
     // 确保目录存在
-    await fs.mkdir(GALLERY_DIR, { recursive: true });
+    await FileUtils.ensureDirectory(GALLERY_DIR);
 
     // 写入文件
     await fs.writeFile(filePath, content, 'utf-8');

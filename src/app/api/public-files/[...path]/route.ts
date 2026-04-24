@@ -3,15 +3,10 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 
+import { checkFileConflict, FileUtils } from '@/lib/file-utils';
 import { requirePermission } from '@/lib/permissions';
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
-
-// 安全检查：确保路径在 public 目录内
-function isPathSafe(targetPath: string): boolean {
-  const resolvedPath = path.resolve(targetPath);
-  return resolvedPath.startsWith(PUBLIC_DIR);
-}
 
 interface RouteParams {
   params: Promise<{ path: string[] }>;
@@ -130,7 +125,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const filePath = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(filePath)) {
+    if (!FileUtils.isPathSafe(filePath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -195,7 +190,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const targetPath = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(targetPath)) {
+    if (!FileUtils.isPathSafe(targetPath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -234,7 +229,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const oldPath = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(oldPath)) {
+    if (!FileUtils.isPathSafe(oldPath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -243,16 +238,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const newPath = path.join(dir, newName.trim());
 
     // 安全检查
-    if (!isPathSafe(newPath)) {
+    if (!FileUtils.isPathSafe(newPath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法名称' }, { status: 403 });
     }
 
     // 检查新名称是否已存在
-    try {
-      await fs.access(newPath);
-      return NextResponse.json({ error: '目标名称已存在' }, { status: 409 });
-    } catch {
-      // 继续
+    const conflict = await checkFileConflict(newPath);
+    if (conflict) {
+      return NextResponse.json(
+        { error: conflict.error },
+        { status: conflict.status }
+      );
     }
 
     await fs.rename(oldPath, newPath);

@@ -3,15 +3,10 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 
+import { checkFileConflict, FileUtils } from '@/lib/file-utils';
 import { requirePermission } from '@/lib/permissions';
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
-
-// 安全检查：确保路径在 public 目录内
-function isPathSafe(targetPath: string): boolean {
-  const resolvedPath = path.resolve(targetPath);
-  return resolvedPath.startsWith(PUBLIC_DIR);
-}
 
 interface FileItem {
   name: string;
@@ -31,7 +26,7 @@ export async function GET(request: NextRequest) {
     const targetDir = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(targetDir)) {
+    if (!FileUtils.isPathSafe(targetDir, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -107,7 +102,7 @@ export async function POST(request: NextRequest) {
     const targetDir = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(targetDir)) {
+    if (!FileUtils.isPathSafe(targetDir, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -119,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 确保目录存在
-    await fs.mkdir(targetDir, { recursive: true });
+    await FileUtils.ensureDirectory(targetDir);
 
     const results = await Promise.all(
       files.map(async (file) => {
@@ -127,12 +122,10 @@ export async function POST(request: NextRequest) {
         const safeName = file.name.replace(/[^\w\u4e00-\u9fa5.-]/g, '-');
         const filePath = path.join(targetDir, safeName);
 
-        try {
-          // 检查文件是否已存在
-          await fs.access(filePath);
-          return { name: safeName, success: false, error: '文件已存在' };
-        } catch {
-          // 文件不存在，继续
+        // 检查文件是否已存在
+        const conflict = await checkFileConflict(filePath);
+        if (conflict) {
+          return { name: safeName, success: false, error: conflict.error };
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
@@ -223,25 +216,27 @@ export async function PATCH(request: NextRequest) {
     const targetDir = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(targetDir)) {
+    if (!FileUtils.isPathSafe(targetDir, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
     const newFolderPath = path.join(targetDir, folderName.trim());
 
     // 安全检查
-    if (!isPathSafe(newFolderPath)) {
+    if (!FileUtils.isPathSafe(newFolderPath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法文件夹名称' }, { status: 403 });
     }
 
-    try {
-      await fs.access(newFolderPath);
-      return NextResponse.json({ error: '文件夹已存在' }, { status: 409 });
-    } catch {
-      // 文件夹不存在，继续
+    // 检查文件夹是否已存在
+    const conflict = await checkFileConflict(newFolderPath);
+    if (conflict) {
+      return NextResponse.json(
+        { error: conflict.error },
+        { status: conflict.status }
+      );
     }
 
-    await fs.mkdir(newFolderPath, { recursive: true });
+    await FileUtils.ensureDirectory(newFolderPath);
 
     return NextResponse.json({
       message: '文件夹创建成功',
