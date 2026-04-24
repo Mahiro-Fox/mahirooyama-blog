@@ -3,6 +3,8 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 
+import { requirePermission } from '@/lib/permissions';
+
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
 
 // 安全检查：确保路径在 public 目录内
@@ -91,9 +93,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 上传文件到指定目录
+// 上传文件到指定目录（需要 files:upload 权限）
 export async function POST(request: NextRequest) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('files:upload');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { searchParams } = new URL(request.url);
     const relativePath = searchParams.get('path') || '';
     const targetDir = path.join(PUBLIC_DIR, relativePath);
@@ -192,9 +200,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 创建新文件夹
+// 创建新文件夹（需要 files:manageFolder 权限）
 export async function PATCH(request: NextRequest) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('files:manageFolder');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { searchParams } = new URL(request.url);
     const relativePath = searchParams.get('path') || '';
     const { folderName } = await request.json();

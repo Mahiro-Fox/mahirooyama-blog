@@ -3,6 +3,8 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 
+import { requirePermission } from '@/lib/permissions';
+
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
 
 // 安全检查：确保路径在 public 目录内
@@ -179,9 +181,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// 删除文件或文件夹
+// 删除文件或文件夹（需要 files:delete 权限）
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('files:delete');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { path: pathSegments } = await params;
     const relativePath = pathSegments.join('/');
     const targetPath = path.join(PUBLIC_DIR, relativePath);
@@ -206,9 +214,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// 重命名文件或文件夹
+// 重命名文件或文件夹（需要 files:update 权限）
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('files:update');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { path: pathSegments } = await params;
     const { newName } = await request.json();
 

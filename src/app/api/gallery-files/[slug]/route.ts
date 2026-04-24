@@ -2,6 +2,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { requirePermission } from '@/lib/permissions';
+
 const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');
 
 interface RouteParams {
@@ -33,9 +35,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// 删除文件
+// 删除文件（需要 gallery:delete 权限）
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('gallery:delete');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { slug } = await params;
 
     // 尝试 .yml 和 .yaml 扩展名
@@ -58,8 +66,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 }
 
+// 更新文件（需要 gallery:update 权限）
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('gallery:update');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { slug } = await params;
     const { content, ext = 'yml' } = await request.json();
 
@@ -74,9 +89,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// 重命名文件
+// 重命名文件（需要 gallery:update 权限）
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('gallery:update');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { slug } = await params;
     const { newSlug } = await request.json();
 

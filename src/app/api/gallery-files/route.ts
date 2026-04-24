@@ -3,6 +3,8 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import matter from 'gray-matter';
 
+import { requirePermission } from '@/lib/permissions';
+
 const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');
 
 export async function GET() {
@@ -46,6 +48,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // 检查 gallery:create 权限
+    const permissionCheck = await requirePermission('gallery:create');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const contentType = request.headers.get('content-type') || '';
 
     let fileName: string;

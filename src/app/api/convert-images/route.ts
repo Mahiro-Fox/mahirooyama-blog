@@ -1,16 +1,17 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { NextResponse } from 'next/server';
-import { verifyAuth } from '@/lib/auth';
+
+import { requirePermission } from '@/lib/permissions';
 
 const execAsync = promisify(exec);
 
 export async function POST() {
   try {
-    // 验证管理员权限
-    const payload = await verifyAuth();
-    if (!payload) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+    // 验证图片转换权限
+    const permissionCheck = await requirePermission('system:convertImages');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
     }
 
     // 运行 convert 命令

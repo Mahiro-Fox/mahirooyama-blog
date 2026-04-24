@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { verifyAuth } from '@/lib/auth';
+import { requirePermission } from '@/lib/permissions';
 
 // 需要重新验证的路径列表
 const PATHS_TO_REVALIDATE = [
@@ -15,10 +15,10 @@ const PATHS_TO_REVALIDATE = [
 ];
 
 export async function POST(request: NextRequest) {
-  // 验证管理员权限
-  const authResult = await verifyAuth();
-  if (!authResult) {
-    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  // 验证刷新缓存权限
+  const permissionCheck = await requirePermission('system:revalidate');
+  if (!permissionCheck.allowed) {
+    return permissionCheck.response;
   }
 
   try {

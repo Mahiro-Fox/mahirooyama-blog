@@ -3,6 +3,8 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import matter from 'gray-matter';
 
+import { requirePermission } from '@/lib/permissions';
+
 const BLOG_DIR = path.join(process.cwd(), 'src', 'content', 'blog');
 
 export async function GET() {
@@ -45,6 +47,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // 检查 blog:create 权限
+    const permissionCheck = await requirePermission('blog:create');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const slug = formData.get('slug') as string | null;

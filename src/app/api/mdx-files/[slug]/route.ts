@@ -2,6 +2,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { requirePermission } from '@/lib/permissions';
+
 const BLOG_DIR = path.join(process.cwd(), 'src', 'content', 'blog');
 
 interface RouteParams {
@@ -26,9 +28,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// 删除文件
+// 删除文件（需要 blog:delete 权限）
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('blog:delete');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { slug } = await params;
     const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
 
@@ -44,8 +52,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 }
 
+// 更新文件（需要 blog:update 权限）
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // 检查权限
+    const permissionCheck = await requirePermission('blog:update');
+    if (!permissionCheck.allowed) {
+      return permissionCheck.response;
+    }
+
     const { slug } = await params;
     const { content } = await request.json();
     const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
