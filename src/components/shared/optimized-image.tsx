@@ -19,6 +19,7 @@ interface OptimizedImageProps {
   containerClassName?: string;
   priority?: boolean;
   sizes?: string;
+  hoverScale?: boolean;
   aspectRatio?: number;
   blurDataURL?: string;
   unoptimized?: boolean;
@@ -41,6 +42,7 @@ export function OptimizedImage({
   containerClassName,
   priority = false,
   sizes = '100vw',
+  hoverScale = false,
   aspectRatio,
   blurDataURL,
   unoptimized,
@@ -113,7 +115,8 @@ export function OptimizedImage({
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
         className={cn(
-          'object-contain transition-opacity duration-300',
+          'object-contain transition-all duration-300',
+          hoverScale && 'hover:scale-105',
           !isLoaded && !blurDataURL && 'opacity-0',
           isLoaded && 'opacity-100',
           className

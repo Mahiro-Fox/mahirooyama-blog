@@ -158,6 +158,7 @@ function LinkCardImage({
       src={imageUrl || '/placeholder.svg'}
       alt={`${title} thumbnail image`}
       fill
+      hoverScale
       priority={priority}
       aspectRatio={aspectRatio}
       sizes={sizes}

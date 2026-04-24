@@ -24,7 +24,7 @@ export const galleryTags: Record<string, Tag> = {
   nekonacho: { name: 'Nekonacho', icon: 'default' },
   bluearchive: { name: 'Blue Archive', icon: 'default' },
   lime: { name: 'Lime', icon: 'default' },
-  meiyun: { name: '美云', icon: 'default' },
+  meiyun: { name: 'Meiyun', icon: 'default' },
   vrchat: { name: 'VRChat', icon: 'vrchat' },
   bilibili: { name: 'Bilibili', icon: 'bilibili' },
 };
