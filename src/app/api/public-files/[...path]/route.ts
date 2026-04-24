@@ -23,7 +23,7 @@ const SUPPORTED_IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.avif'];
  * 策略：先降低质量，如果仍然超过限制则降低尺寸
  */
 async function compressImage(buffer: Buffer, ext: string): Promise<Buffer> {
-  let image = sharp(buffer);
+  const image = sharp(buffer);
   const metadata = await image.metadata();
 
   // 如果无法获取元数据，直接返回原图

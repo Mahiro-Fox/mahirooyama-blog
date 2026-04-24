@@ -105,7 +105,7 @@ export async function proxy(request: NextRequest) {
       const exp = payload.exp || 0;
 
       // 4. 会话刷新（Sliding Session）：剩余时间少于4小时时续期
-      let response = NextResponse.next();
+      const response = NextResponse.next();
 
       if (exp - now < SESSION_REFRESH_THRESHOLD) {
         // 重新签发 token，保留原有信息

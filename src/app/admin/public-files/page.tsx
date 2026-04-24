@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import {
   ArrowLeft,
   Copy,
@@ -565,10 +566,12 @@ export default function PublicFilesAdminPage() {
           </DialogHeader>
           <div className="flex justify-center py-4">
             {previewItem && (
-              <img
+              <Image
                 src={resolveImageSrc(previewItem.path)}
                 alt={previewItem.name}
                 className="max-h-[60vh] rounded-lg object-contain"
+                width={400}
+                height={400}
               />
             )}
           </div>

@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import {
-  RBACPermissionChecker,
-  requireAuth,
-  requirePermission,
-} from '@/lib/permissions';
+import { requireAuth, requirePermission } from '@/lib/permissions';
 import { userStore } from '@/lib/user-store';
 
 // PATCH /api/users/[id] - 更新用户

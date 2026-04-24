@@ -38,12 +38,18 @@ export async function POST(request: NextRequest) {
 
     // 4. 验证文件类型
     if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: '只允许上传图片文件' }, { status: 400 });
+      return NextResponse.json(
+        { error: '只允许上传图片文件' },
+        { status: 400 }
+      );
     }
 
     // 5. 验证文件大小 (最大 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      return NextResponse.json({ error: '图片大小不能超过 2MB' }, { status: 400 });
+      return NextResponse.json(
+        { error: '图片大小不能超过 2MB' },
+        { status: 400 }
+      );
     }
 
     // 6. 确保头像目录存在
@@ -93,7 +99,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('头像上传失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '头像上传失败';
+    const errorMessage =
+      error instanceof Error ? error.message : '头像上传失败';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

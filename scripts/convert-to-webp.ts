@@ -150,7 +150,7 @@ async function walkAndConvert(
   }
 
   // 顺序处理文件（避免并发导致的文件锁定问题）
-  for (const { fullPath, targetPath, baseName } of filesToProcess) {
+  for (const { fullPath, targetPath } of filesToProcess) {
     const result = await convertToWebp(fullPath, targetPath);
     if (result) {
       success++;

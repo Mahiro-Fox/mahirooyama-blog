@@ -18,12 +18,7 @@ import {
 } from '@/components/shadcn-ui/alert-dialog';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/shadcn-ui/card';
+import { Card, CardContent, CardHeader } from '@/components/shadcn-ui/card';
 import {
   Dialog,
   DialogContent,
@@ -65,7 +60,6 @@ export default function GalleryAdminPage() {
   const [editFileName, setEditFileName] = useState('');
   const [originalFileName, setOriginalFileName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [isRevalidating, setIsRevalidating] = useState(false);
 
   // 获取文件列表
   const fetchFiles = useCallback(async () => {
@@ -122,7 +116,7 @@ tags: []
   };
 
   // 保存（新增或编辑）
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
       if (editMode === 'create') {
@@ -154,7 +148,7 @@ tags: []
         // 编辑模式
         if (!selectedFile) return;
 
-        let saveResponse = await fetch(
+        const saveResponse = await fetch(
           `/api/gallery-files/${selectedFile.slug}`,
           {
             method: 'PUT',
@@ -198,7 +192,7 @@ tags: []
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [selectedFile, editMode, editFileName, editContent, fetchFiles]);
 
   // 删除文件
   const handleDelete = async () => {

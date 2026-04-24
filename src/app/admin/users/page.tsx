@@ -1,20 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft,
-  KeyRound,
-  Loader2,
-  LogOut,
-  Plus,
-  Shield,
-  Trash2,
-  User,
-  UserCog,
-  X,
-} from 'lucide-react';
+import { KeyRound, Loader2, Plus, Shield, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/shadcn-ui/button';
@@ -82,9 +70,7 @@ export default function UsersPage() {
 
   // 权限编辑状态
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
-  const [rolePermissions, setRolePermissions] = useState<
-    Record<string, string[]>
-  >({});
+
   const [permissionDefinitions, setPermissionDefinitions] = useState<
     PermissionGroup[]
   >([]);
@@ -123,7 +109,7 @@ export default function UsersPage() {
   }, [router]);
 
   // 获取用户列表
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch('/api/users');
       if (!response.ok) {
@@ -140,24 +126,13 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     if (currentUser) {
       fetchUsers();
     }
-  }, [currentUser]);
-
-  // 登出
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-    } catch {
-      // 忽略错误
-    }
-    router.push('/admin/login');
-    toast.success('已登出');
-  };
+  }, [fetchUsers, currentUser]);
 
   // 创建用户
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -268,7 +243,6 @@ export default function UsersPage() {
         throw new Error('获取权限配置失败');
       }
       const data = await response.json();
-      setRolePermissions(data.permissions);
       setPermissionDefinitions(data.definitions);
       return data;
     } catch (error) {
@@ -353,7 +327,6 @@ export default function UsersPage() {
       }
 
       toast.success('权限配置已重置为默认值');
-      setRolePermissions(data.permissions);
       if (editingRole && data.permissions[editingRole]) {
         setSelectedPermissions(data.permissions[editingRole]);
       }

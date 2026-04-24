@@ -73,7 +73,8 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error('更新角色权限失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '更新角色权限失败';
+    const errorMessage =
+      error instanceof Error ? error.message : '更新角色权限失败';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
@@ -109,7 +110,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '无效的操作' }, { status: 400 });
   } catch (error) {
     console.error('重置角色权限失败:', error);
-    const errorMessage = error instanceof Error ? error.message : '重置角色权限失败';
+    const errorMessage =
+      error instanceof Error ? error.message : '重置角色权限失败';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

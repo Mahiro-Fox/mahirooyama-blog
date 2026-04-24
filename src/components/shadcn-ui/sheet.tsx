@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -51,11 +50,7 @@ function SheetContent({
   );
 }
 
-function SheetTrigger({
-  children,
-  asChild,
-  ...props
-}: React.ComponentProps<'button'> & { asChild?: boolean }) {
+function SheetTrigger({ children, ...props }: React.ComponentProps<'button'>) {
   return (
     <button type="button" {...props}>
       {children}

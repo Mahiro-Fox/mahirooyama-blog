@@ -106,10 +106,7 @@ export class FileUtils {
    * @param allowedExts 允许的扩展名列表
    * @returns 是否允许
    */
-  static isAllowedFileType(
-    fileName: string,
-    allowedExts: string[]
-  ): boolean {
+  static isAllowedFileType(fileName: string, allowedExts: string[]): boolean {
     const ext = path.extname(fileName).toLowerCase();
     return allowedExts.includes(ext);
   }

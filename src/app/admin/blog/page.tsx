@@ -18,12 +18,7 @@ import {
 } from '@/components/shadcn-ui/alert-dialog';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/shadcn-ui/card';
+import { Card, CardContent, CardHeader } from '@/components/shadcn-ui/card';
 import {
   Dialog,
   DialogContent,
@@ -62,7 +57,6 @@ export default function BlogAdminPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [isRevalidating, setIsRevalidating] = useState(false);
 
   // 获取文件列表
   const fetchFiles = useCallback(async () => {
@@ -86,40 +80,8 @@ export default function BlogAdminPage() {
     fetchFiles();
   }, [fetchFiles]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!selectedFile) return;
-      if (e.ctrlKey && e.code === 'KeyS') {
-        e.preventDefault();
-        handleSave();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [selectedFile, editContent]);
-
-  // 编辑文件
-  const handleEdit = async (file: MdxFile) => {
-    try {
-      const response = await fetch(`/api/mdx-files/${file.slug}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '获取失败');
-      }
-      const data = await response.json();
-      setSelectedFile(file);
-      setEditContent(data.content);
-      console.log(data.content);
-      setIsEditDialogOpen(true);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '获取文件内容失败');
-    }
-  };
-
   // 保存编辑
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!selectedFile) return;
 
     setIsSaving(true);
@@ -144,6 +106,38 @@ export default function BlogAdminPage() {
       toast.error(error instanceof Error ? error.message : '保存失败');
     } finally {
       setIsSaving(false);
+    }
+  }, [selectedFile, editContent, fetchFiles]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedFile) return;
+      if (e.ctrlKey && e.code === 'KeyS') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleSave, selectedFile, editContent]);
+
+  // 编辑文件
+  const handleEdit = async (file: MdxFile) => {
+    try {
+      const response = await fetch(`/api/mdx-files/${file.slug}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '获取失败');
+      }
+      const data = await response.json();
+      setSelectedFile(file);
+      setEditContent(data.content);
+      console.log(data.content);
+      setIsEditDialogOpen(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '获取文件内容失败');
     }
   };
 

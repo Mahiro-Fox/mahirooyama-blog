@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, Menu, Shield, Upload, User } from 'lucide-react';
+import { LogOut, Menu, Shield, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { pageRoutesConfig } from '@/lib/config';
@@ -178,10 +179,12 @@ export default function AdminLayout({
         {/* 用户信息 - 侧边栏底部 */}
         <div className="border-t p-4">
           <div className="flex items-center gap-3">
-            <img
-              src={currentUser?.avatar}
-              alt={currentUser?.username}
+            <Image
+              src={currentUser?.avatar || ''}
+              alt={currentUser?.username || ''}
               className="h-10 w-10 rounded-full object-cover"
+              width={40}
+              height={40}
             />
             <div className="flex-1 overflow-hidden">
               <p className="truncate text-sm font-medium">
@@ -199,7 +202,7 @@ export default function AdminLayout({
       <div className="bg-background fixed top-0 right-0 left-0 z-30 flex h-14 items-center justify-between border-b px-4 lg:hidden">
         <div className="flex items-center gap-3">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
+            <SheetTrigger>
               <Button variant="ghost" size="icon">
                 <Menu className="h-5 w-5" />
               </Button>
@@ -244,10 +247,12 @@ export default function AdminLayout({
                 {/* 用户信息 */}
                 <div className="border-t p-4">
                   <div className="mb-3 flex items-center gap-3">
-                    <img
-                      src={currentUser?.avatar}
-                      alt={currentUser?.username}
+                    <Image
+                      src={currentUser?.avatar || ''}
+                      alt={currentUser?.username || ''}
                       className="h-10 w-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
                     />
                     <div className="flex-1 overflow-hidden">
                       <p className="truncate text-sm font-medium">
@@ -290,10 +295,12 @@ export default function AdminLayout({
                 onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
                 className="hover:bg-muted flex items-center gap-3 rounded-lg px-2 py-1 transition-colors"
               >
-                <img
-                  src={currentUser?.avatar}
-                  alt={currentUser?.username}
+                <Image
+                  src={currentUser?.avatar || ''}
+                  alt={currentUser?.username || ''}
                   className="h-8 w-8 rounded-full object-cover"
+                  width={32}
+                  height={32}
                 />
                 <span className="text-sm font-medium">
                   {currentUser?.username}

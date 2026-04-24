@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+
 import type { Permission } from './permissions';
 import type { UserRole } from './user-store';
 
@@ -50,23 +51,54 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 /**
  * 所有可用的权限列表（用于前端展示）
  */
-export const ALL_PERMISSIONS: { group: string; permissions: { value: Permission; label: string; description: string }[] }[] = [
+export const ALL_PERMISSIONS: {
+  group: string;
+  permissions: { value: Permission; label: string; description: string }[];
+}[] = [
   {
     group: '用户管理',
     permissions: [
       { value: 'users:read', label: '查看用户', description: '查看用户列表' },
-      { value: 'users:create', label: '创建用户', description: '创建新用户（仅超级管理员）' },
-      { value: 'users:update', label: '修改用户', description: '修改其他用户信息' },
-      { value: 'users:delete', label: '删除用户', description: '删除用户（仅超级管理员）' },
-      { value: 'users:updatePassword', label: '修改密码', description: '修改自己的密码' },
-      { value: 'users:updateRole', label: '修改角色', description: '修改用户角色（仅超级管理员）' },
+      {
+        value: 'users:create',
+        label: '创建用户',
+        description: '创建新用户（仅超级管理员）',
+      },
+      {
+        value: 'users:update',
+        label: '修改用户',
+        description: '修改其他用户信息',
+      },
+      {
+        value: 'users:delete',
+        label: '删除用户',
+        description: '删除用户（仅超级管理员）',
+      },
+      {
+        value: 'users:updatePassword',
+        label: '修改密码',
+        description: '修改自己的密码',
+      },
+      {
+        value: 'users:updateRole',
+        label: '修改角色',
+        description: '修改用户角色（仅超级管理员）',
+      },
     ],
   },
   {
     group: '博客管理',
     permissions: [
-      { value: 'blog:read', label: '查看博客', description: '查看博客列表和内容' },
-      { value: 'blog:create', label: '创建博客', description: '创建新博客文章' },
+      {
+        value: 'blog:read',
+        label: '查看博客',
+        description: '查看博客列表和内容',
+      },
+      {
+        value: 'blog:create',
+        label: '创建博客',
+        description: '创建新博客文章',
+      },
       { value: 'blog:update', label: '更新博客', description: '修改博客文章' },
       { value: 'blog:delete', label: '删除博客', description: '删除博客文章' },
     ],
@@ -75,7 +107,11 @@ export const ALL_PERMISSIONS: { group: string; permissions: { value: Permission;
     group: '图库管理',
     permissions: [
       { value: 'gallery:read', label: '查看图库', description: '查看图库列表' },
-      { value: 'gallery:create', label: '创建图库', description: '创建新图库项' },
+      {
+        value: 'gallery:create',
+        label: '创建图库',
+        description: '创建新图库项',
+      },
       { value: 'gallery:update', label: '更新图库', description: '修改图库项' },
       { value: 'gallery:delete', label: '删除图库', description: '删除图库项' },
     ],
@@ -85,16 +121,36 @@ export const ALL_PERMISSIONS: { group: string; permissions: { value: Permission;
     permissions: [
       { value: 'files:read', label: '查看文件', description: '浏览文件列表' },
       { value: 'files:upload', label: '上传文件', description: '上传新文件' },
-      { value: 'files:update', label: '重命名文件', description: '重命名文件/文件夹' },
-      { value: 'files:delete', label: '删除文件', description: '删除文件/文件夹' },
-      { value: 'files:manageFolder', label: '管理文件夹', description: '创建/删除文件夹' },
+      {
+        value: 'files:update',
+        label: '重命名文件',
+        description: '重命名文件/文件夹',
+      },
+      {
+        value: 'files:delete',
+        label: '删除文件',
+        description: '删除文件/文件夹',
+      },
+      {
+        value: 'files:manageFolder',
+        label: '管理文件夹',
+        description: '创建/删除文件夹',
+      },
     ],
   },
   {
     group: '系统权限',
     permissions: [
-      { value: 'system:revalidate', label: '刷新缓存', description: '刷新页面缓存' },
-      { value: 'system:convertImages', label: '转换图片', description: '批量转换图片格式' },
+      {
+        value: 'system:revalidate',
+        label: '刷新缓存',
+        description: '刷新页面缓存',
+      },
+      {
+        value: 'system:convertImages',
+        label: '转换图片',
+        description: '批量转换图片格式',
+      },
     ],
   },
 ];
@@ -148,7 +204,10 @@ async function writeRolePermissions(
   permissions: Record<UserRole, Permission[]>
 ): Promise<void> {
   await ensureDataFile();
-  await fs.writeFile(ROLE_PERMISSIONS_FILE, JSON.stringify(permissions, null, 2));
+  await fs.writeFile(
+    ROLE_PERMISSIONS_FILE,
+    JSON.stringify(permissions, null, 2)
+  );
 
   // 更新缓存
   cachedRolePermissions = permissions;
@@ -216,7 +275,10 @@ export const rolePermissionStore = {
   /**
    * 检查角色是否拥有指定权限
    */
-  async hasPermission(role: UserRole, permission: Permission): Promise<boolean> {
+  async hasPermission(
+    role: UserRole,
+    permission: Permission
+  ): Promise<boolean> {
     // super_admin 拥有所有权限
     if (role === 'super_admin') {
       return true;

@@ -198,34 +198,6 @@ export class RBACPermissionChecker {
       return PermissionChecker.hasPermission(user, action);
     }
 
-    // 映射到新的权限格式
-    const permissionMap: Record<string, Record<ActionType, Permission>> = {
-      blog: {
-        read: 'blog:read',
-        create: 'blog:create',
-        update: 'blog:update',
-        delete: 'blog:delete',
-      },
-      gallery: {
-        read: 'gallery:read',
-        create: 'gallery:create',
-        update: 'gallery:update',
-        delete: 'gallery:delete',
-      },
-      files: {
-        read: 'files:read',
-        create: 'files:upload',
-        update: 'files:update',
-        delete: 'files:delete',
-      },
-      users: {
-        read: 'users:read',
-        create: 'users:create',
-        update: 'users:update',
-        delete: 'users:delete',
-      },
-    };
-
     const modulePerms = moduleMap[module];
     if (modulePerms) {
       return this.hasPermission(user, modulePerms[action]);

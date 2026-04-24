@@ -1,14 +1,4 @@
-import {
-  FileText,
-  FolderOpen,
-  Home,
-  ImageIcon,
-  LogOut,
-  Menu,
-  Shield,
-  User,
-  X,
-} from 'lucide-react';
+import { FileText, FolderOpen, ImageIcon, Shield } from 'lucide-react';
 
 export const siteConfig = {
   name: 'mahirooyama-blog',
