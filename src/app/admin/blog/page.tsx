@@ -81,11 +81,14 @@ export default function BlogAdminPage() {
     try {
       setLoading(true);
       const response = await fetch('/api/mdx-files');
-      if (!response.ok) throw new Error('获取失败');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '获取失败');
+      }
       const data = await response.json();
       setFiles(data);
     } catch (error) {
-      toast.error('获取文件列表失败');
+      toast.error(error instanceof Error ? error.message : '获取文件列表失败');
     } finally {
       setLoading(false);
     }
@@ -124,14 +127,17 @@ export default function BlogAdminPage() {
   const handleEdit = async (file: MdxFile) => {
     try {
       const response = await fetch(`/api/mdx-files/${file.slug}`);
-      if (!response.ok) throw new Error('获取失败');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '获取失败');
+      }
       const data = await response.json();
       setSelectedFile(file);
       setEditContent(data.content);
       console.log(data.content);
       setIsEditDialogOpen(true);
     } catch (error) {
-      toast.error('获取文件内容失败');
+      toast.error(error instanceof Error ? error.message : '获取文件内容失败');
     }
   };
 
@@ -149,13 +155,16 @@ export default function BlogAdminPage() {
         body: JSON.stringify({ content: editContent }),
       });
 
-      if (!response.ok) throw new Error('保存失败');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '保存失败');
+      }
 
       toast.success('文件保存成功');
       setIsEditDialogOpen(false);
       fetchFiles();
     } catch (error) {
-      toast.error('保存失败');
+      toast.error(error instanceof Error ? error.message : '保存失败');
     } finally {
       setIsSaving(false);
     }
@@ -170,14 +179,17 @@ export default function BlogAdminPage() {
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('删除失败');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '删除失败');
+      }
 
       toast.success('文件删除成功');
       setIsDeleteDialogOpen(false);
       setSelectedFile(null);
       fetchFiles();
     } catch (error) {
-      toast.error('删除失败');
+      toast.error(error instanceof Error ? error.message : '删除失败');
     }
   };
 

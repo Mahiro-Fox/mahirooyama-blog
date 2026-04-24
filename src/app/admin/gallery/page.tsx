@@ -85,11 +85,14 @@ export default function GalleryAdminPage() {
     try {
       setLoading(true);
       const response = await fetch('/api/gallery-files');
-      if (!response.ok) throw new Error('获取失败');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '获取失败');
+      }
       const data = await response.json();
       setFiles(data);
     } catch (error) {
-      toast.error('获取文件列表失败');
+      toast.error(error instanceof Error ? error.message : '获取文件列表失败');
     } finally {
       setLoading(false);
     }
@@ -126,7 +129,10 @@ tags: []
   const handleEdit = async (file: GalleryFile) => {
     try {
       const response = await fetch(`/api/gallery-files/${file.slug}`);
-      if (!response.ok) throw new Error('获取失败');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '获取失败');
+      }
       const data = await response.json();
       setEditMode('edit');
       setSelectedFile(file);
@@ -135,7 +141,7 @@ tags: []
       setEditContent(data.content);
       setIsEditDialogOpen(true);
     } catch (error) {
-      toast.error('获取文件内容失败');
+      toast.error(error instanceof Error ? error.message : '获取文件内容失败');
     }
   };
 
@@ -227,14 +233,17 @@ tags: []
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('删除失败');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '删除失败');
+      }
 
       toast.success('文件删除成功');
       setIsDeleteDialogOpen(false);
       setSelectedFile(null);
       fetchFiles();
     } catch (error) {
-      toast.error('删除失败');
+      toast.error(error instanceof Error ? error.message : '删除失败');
     }
   };
 
