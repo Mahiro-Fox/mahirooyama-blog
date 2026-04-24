@@ -142,6 +142,18 @@ export default function AdminLayout({
     );
   }
 
+  if (pathname === '/admin/login') {
+    return (
+      <div className="bg-muted/30 flex min-h-screen">
+        {/* 主内容区域 */}
+        <main className="flex-1">
+          {/* 页面内容 */}
+          <div className="pt-14 lg:pt-0">{children}</div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-muted/30 flex min-h-screen">
       {/* 侧边导航栏 - 桌面端 */}
@@ -179,13 +191,15 @@ export default function AdminLayout({
         {/* 用户信息 - 侧边栏底部 */}
         <div className="border-t p-4">
           <div className="flex items-center gap-3">
-            <Image
-              src={currentUser?.avatar || ''}
-              alt={currentUser?.username || ''}
-              className="h-10 w-10 rounded-full object-cover"
-              width={40}
-              height={40}
-            />
+            {currentUser && (
+              <Image
+                src={currentUser.avatar}
+                alt={currentUser.username}
+                className="h-10 w-10 rounded-full object-cover"
+                width={40}
+                height={40}
+              />
+            )}
             <div className="flex-1 overflow-hidden">
               <p className="truncate text-sm font-medium">
                 {currentUser?.username}
@@ -247,13 +261,15 @@ export default function AdminLayout({
                 {/* 用户信息 */}
                 <div className="border-t p-4">
                   <div className="mb-3 flex items-center gap-3">
-                    <Image
-                      src={currentUser?.avatar || ''}
-                      alt={currentUser?.username || ''}
-                      className="h-10 w-10 rounded-full object-cover"
-                      width={40}
-                      height={40}
-                    />
+                    {currentUser && (
+                      <Image
+                        src={currentUser.avatar}
+                        alt={currentUser.username}
+                        className="h-10 w-10 rounded-full object-cover"
+                        width={40}
+                        height={40}
+                      />
+                    )}
                     <div className="flex-1 overflow-hidden">
                       <p className="truncate text-sm font-medium">
                         {currentUser?.username}
@@ -295,13 +311,15 @@ export default function AdminLayout({
                 onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
                 className="hover:bg-muted flex items-center gap-3 rounded-lg px-2 py-1 transition-colors"
               >
-                <Image
-                  src={currentUser?.avatar || ''}
-                  alt={currentUser?.username || ''}
-                  className="h-8 w-8 rounded-full object-cover"
-                  width={32}
-                  height={32}
-                />
+                {currentUser && (
+                  <Image
+                    src={currentUser.avatar}
+                    alt={currentUser.username}
+                    className="h-8 w-8 rounded-full object-cover"
+                    width={32}
+                    height={32}
+                  />
+                )}
                 <span className="text-sm font-medium">
                   {currentUser?.username}
                 </span>
