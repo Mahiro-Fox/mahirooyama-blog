@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
     const token = await new SignJWT({
       userId: user.id,
       username: user.username,
+      avatar: user.avatar,
       role: user.role,
       loggedInAt: new Date().toISOString(),
       sessionId,
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
       user: {
         id: user.id,
         username: user.username,
+        avatar: user.avatar,
         role: user.role,
       },
     });

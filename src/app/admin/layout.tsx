@@ -3,17 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  FileText,
-  FolderOpen,
-  Home,
-  ImageIcon,
-  LogOut,
-  Menu,
-  Shield,
-  User,
-  X,
-} from 'lucide-react';
+import { LogOut, Menu, Shield, Upload, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { pageRoutesConfig } from '@/lib/config';
@@ -27,6 +17,7 @@ import {
 interface CurrentUser {
   id: string;
   username: string;
+  avatar: string;
   role: 'super_admin' | 'user';
 }
 
@@ -40,6 +31,8 @@ export default function AdminLayout({
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // 验证登录并获取当前用户
   useEffect(() => {
@@ -54,6 +47,7 @@ export default function AdminLayout({
         setCurrentUser({
           id: data.userId || '',
           username: data.username || '',
+          avatar: data.avatar || '/image/avatar/default.webp',
           role: data.role || 'user',
         });
       } catch {
@@ -74,6 +68,53 @@ export default function AdminLayout({
     }
     router.push('/admin/login');
     toast.success('已登出');
+  };
+
+  // 修改头像
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      toast.error('请选择图片文件');
+      return;
+    }
+
+    // 验证文件大小 (最大 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('图片大小不能超过 2MB');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch('/api/users/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '上传失败');
+      }
+
+      // 更新本地状态
+      setCurrentUser((prev) =>
+        prev ? { ...prev, avatar: data.avatar } : null
+      );
+      toast.success('头像更新成功');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '头像上传失败');
+    } finally {
+      setIsUploadingAvatar(false);
+      setAvatarMenuOpen(false);
+      e.target.value = '';
+    }
   };
 
   // 获取当前页面标题
@@ -136,8 +177,12 @@ export default function AdminLayout({
 
         {/* 用户信息 - 侧边栏底部 */}
         <div className="border-t p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <User className="text-muted-foreground h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <img
+              src={currentUser?.avatar}
+              alt={currentUser?.username}
+              className="h-10 w-10 rounded-full object-cover"
+            />
             <div className="flex-1 overflow-hidden">
               <p className="truncate text-sm font-medium">
                 {currentUser?.username}
@@ -147,15 +192,6 @@ export default function AdminLayout({
               </p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            登出
-          </Button>
         </div>
       </aside>
 
@@ -207,8 +243,12 @@ export default function AdminLayout({
 
                 {/* 用户信息 */}
                 <div className="border-t p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <User className="text-muted-foreground h-4 w-4" />
+                  <div className="mb-3 flex items-center gap-3">
+                    <img
+                      src={currentUser?.avatar}
+                      alt={currentUser?.username}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
                     <div className="flex-1 overflow-hidden">
                       <p className="truncate text-sm font-medium">
                         {currentUser?.username}
@@ -244,10 +284,68 @@ export default function AdminLayout({
         <header className="bg-background sticky top-0 z-20 hidden h-14 items-center justify-between border-b px-6 lg:flex">
           <h1 className="text-lg font-semibold">{getCurrentPageTitle()}</h1>
           <div className="flex items-center gap-4">
-            <span className="text-muted-foreground text-sm">
-              {currentUser?.username} ({getRoleDisplay(currentUser?.role || '')}
-              )
-            </span>
+            {/* 用户头像下拉菜单 */}
+            <div className="relative">
+              <button
+                onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
+                className="hover:bg-muted flex items-center gap-3 rounded-lg px-2 py-1 transition-colors"
+              >
+                <img
+                  src={currentUser?.avatar}
+                  alt={currentUser?.username}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+                <span className="text-sm font-medium">
+                  {currentUser?.username}
+                </span>
+              </button>
+
+              {/* 下拉菜单 */}
+              {avatarMenuOpen && (
+                <>
+                  {/* 点击外部关闭 */}
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setAvatarMenuOpen(false)}
+                  />
+                  <div className="bg-background absolute right-0 z-20 mt-2 w-48 rounded-lg border py-1 shadow-lg">
+                    <div className="border-b px-4 py-2">
+                      <p className="text-sm font-medium">
+                        {currentUser?.username}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {getRoleDisplay(currentUser?.role || '')}
+                      </p>
+                    </div>
+
+                    {/* 修改头像选项 */}
+                    <label className="hover:bg-muted flex cursor-pointer items-center gap-2 px-4 py-2 text-sm transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        disabled={isUploadingAvatar}
+                        className="hidden"
+                      />
+                      <Upload className="h-4 w-4" />
+                      {isUploadingAvatar ? '上传中...' : '修改头像'}
+                    </label>
+
+                    {/* 登出选项 */}
+                    <button
+                      onClick={() => {
+                        setAvatarMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="hover:bg-muted flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      登出
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 

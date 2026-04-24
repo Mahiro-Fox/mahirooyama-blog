@@ -9,6 +9,7 @@ export type UserRole = 'super_admin' | 'user';
 export interface User {
   id: string;
   username: string;
+  avatar: string;
   passwordHash: string;
   role: UserRole;
   createdAt: string;
@@ -34,6 +35,7 @@ export interface CreateUserRequest {
 export interface UpdateUserRequest {
   username?: string;
   password?: string;
+  avatar?: string;
   role?: UserRole;
   permissions?: User['permissions'];
 }
@@ -42,6 +44,7 @@ export interface UpdateUserRequest {
 export interface UserResponse {
   id: string;
   username: string;
+  avatar: string;
   role: UserRole;
   createdAt: string;
   updatedAt: string;
@@ -114,6 +117,7 @@ async function ensureDataFile(): Promise<void> {
     const defaultAdmin: User = {
       id: crypto.randomUUID(),
       username: 'admin',
+      avatar: '/image/avatar/default.webp',
       passwordHash: await bcrypt.hash('admin123', 10),
       role: 'super_admin',
       createdAt: new Date().toISOString(),
@@ -161,7 +165,10 @@ export const userStore = {
   },
 
   // 验证用户密码
-  async verifyPassword(username: string, password: string): Promise<User | null> {
+  async verifyPassword(
+    username: string,
+    password: string
+  ): Promise<User | null> {
     const user = await this.getByUsername(username);
     if (!user) return null;
 
@@ -181,6 +188,7 @@ export const userStore = {
     const newUser: User = {
       id: crypto.randomUUID(),
       username: request.username,
+      avatar: '/image/avatar/default.webp',
       passwordHash: await bcrypt.hash(request.password, 10),
       role: request.role,
       createdAt: new Date().toISOString(),
@@ -195,7 +203,10 @@ export const userStore = {
   },
 
   // 更新用户
-  async update(id: string, request: UpdateUserRequest): Promise<UserResponse | null> {
+  async update(
+    id: string,
+    request: UpdateUserRequest
+  ): Promise<UserResponse | null> {
     const users = await readUsers();
     const index = users.findIndex((u) => u.id === id);
 
@@ -212,9 +223,12 @@ export const userStore = {
 
     // 更新字段
     if (request.username) user.username = request.username;
-    if (request.password) user.passwordHash = await bcrypt.hash(request.password, 10);
+    if (request.password)
+      user.passwordHash = await bcrypt.hash(request.password, 10);
+    if (request.avatar) user.avatar = request.avatar;
     if (request.role) user.role = request.role;
-    if (request.permissions !== undefined) user.permissions = request.permissions;
+    if (request.permissions !== undefined)
+      user.permissions = request.permissions;
     user.updatedAt = new Date().toISOString();
 
     await writeUsers(users);
@@ -229,7 +243,9 @@ export const userStore = {
     if (index === -1) return false;
 
     // 禁止删除最后一个 super_admin
-    const superAdminCount = users.filter((u) => u.role === 'super_admin').length;
+    const superAdminCount = users.filter(
+      (u) => u.role === 'super_admin'
+    ).length;
     if (users[index].role === 'super_admin' && superAdminCount <= 1) {
       throw new Error('不能删除唯一的超级管理员');
     }

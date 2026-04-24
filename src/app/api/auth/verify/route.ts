@@ -35,6 +35,7 @@ export async function GET() {
       success: true,
       userId: payload.userId,
       username: payload.username,
+      avatar: payload.avatar,
       role: payload.role,
       loggedInAt: payload.loggedInAt,
       expiresAt: payload.exp,
