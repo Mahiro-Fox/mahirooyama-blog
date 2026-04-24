@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { verifyAuth } from './auth';
+import { rolePermissionStore } from './role-permission-store';
 import {
   PermissionChecker,
   userStore,
@@ -47,10 +48,10 @@ export type Permission =
 export type ActionType = 'create' | 'read' | 'update' | 'delete';
 
 /**
- * 角色权限映射表
- * 定义每个角色拥有的权限列表
+ * 默认角色权限映射表（用于初始化）
+ * 实际运行时从 data/role-permissions.json 加载
  */
-export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   super_admin: ['*'], // 超级管理员拥有所有权限
 
   user: [
@@ -74,7 +75,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'files:read',
     'files:upload',
     'files:update',
-    // 'files:delete',
+    'files:delete',
     'files:manageFolder',
 
     // 系统权限：可以刷新缓存
@@ -88,7 +89,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
  */
 export class RBACPermissionChecker {
   /**
-   * 检查用户是否拥有指定权限
+   * 检查用户是否拥有指定权限（同步版本，使用默认配置）
+   * 注意：这是同步方法，仅使用默认配置，无法读取文件
+   * 异步版本应使用 rolePermissionStore.hasPermission
    */
   static hasPermission(user: User, permission: Permission): boolean {
     // super_admin 拥有所有权限
@@ -96,9 +99,19 @@ export class RBACPermissionChecker {
       return true;
     }
 
-    // 检查用户是否有特定权限
-    const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+    // 检查用户是否有特定权限（使用默认配置）
+    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[user.role] || [];
     return rolePermissions.includes(permission);
+  }
+
+  /**
+   * 异步检查用户是否拥有指定权限（从文件加载）
+   */
+  static async hasPermissionAsync(
+    user: User,
+    permission: Permission
+  ): Promise<boolean> {
+    return rolePermissionStore.hasPermission(user.role, permission);
   }
 
   /**
@@ -109,7 +122,21 @@ export class RBACPermissionChecker {
       return true;
     }
 
-    const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[user.role] || [];
+    return permissions.some((perm) => rolePermissions.includes(perm));
+  }
+
+  /**
+   * 异步检查多个权限（从文件加载）
+   */
+  static async hasAnyPermissionAsync(
+    user: User,
+    permissions: Permission[]
+  ): Promise<boolean> {
+    if (user.role === 'super_admin') {
+      return true;
+    }
+    const rolePermissions = await rolePermissionStore.getByRole(user.role);
     return permissions.some((perm) => rolePermissions.includes(perm));
   }
 
@@ -121,19 +148,40 @@ export class RBACPermissionChecker {
       return true;
     }
 
-    const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[user.role] || [];
     return permissions.every((perm) => rolePermissions.includes(perm));
   }
 
   /**
-   * 获取用户的所有权限列表
+   * 异步检查所有权限（从文件加载）
+   */
+  static async hasAllPermissionsAsync(
+    user: User,
+    permissions: Permission[]
+  ): Promise<boolean> {
+    if (user.role === 'super_admin') {
+      return true;
+    }
+    const rolePermissions = await rolePermissionStore.getByRole(user.role);
+    return permissions.every((perm) => rolePermissions.includes(perm));
+  }
+
+  /**
+   * 获取用户的所有权限列表（同步版本）
    */
   static getUserPermissions(user: User): Permission[] {
     if (user.role === 'super_admin') {
       return ['*'];
     }
 
-    return ROLE_PERMISSIONS[user.role] || [];
+    return DEFAULT_ROLE_PERMISSIONS[user.role] || [];
+  }
+
+  /**
+   * 异步获取用户所有权限（从文件加载）
+   */
+  static async getUserPermissionsAsync(user: User): Promise<Permission[]> {
+    return rolePermissionStore.getByRole(user.role);
   }
 
   /**
@@ -230,8 +278,12 @@ export async function requirePermission(
     };
   }
 
-  // 3. 检查权限
-  if (!RBACPermissionChecker.hasPermission(user, permission)) {
+  // 3. 检查权限（从持久化存储加载）
+  const hasPerm = await rolePermissionStore.hasPermission(
+    user.role,
+    permission
+  );
+  if (!hasPerm) {
     return {
       allowed: false,
       user,
@@ -273,7 +325,9 @@ export async function requireAnyPermission(
     };
   }
 
-  if (!RBACPermissionChecker.hasAnyPermission(user, permissions)) {
+  const userPerms = await rolePermissionStore.getByRole(user.role);
+  const hasAnyPerm = permissions.some((perm) => userPerms.includes(perm));
+  if (!hasAnyPerm) {
     return {
       allowed: false,
       user,

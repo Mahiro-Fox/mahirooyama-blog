@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
+  KeyRound,
   Loader2,
   LogOut,
   Plus,
@@ -41,7 +43,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/shadcn-ui/table';
-import Link from 'next/link';
 
 interface UserData {
   id: string;
@@ -57,6 +58,18 @@ interface CurrentUser {
   role: 'super_admin' | 'user';
 }
 
+// 权限定义接口
+interface PermissionDef {
+  value: string;
+  label: string;
+  description: string;
+}
+
+interface PermissionGroup {
+  group: string;
+  permissions: PermissionDef[];
+}
+
 export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<UserData[]>([]);
@@ -66,6 +79,19 @@ export default function UsersPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 权限编辑状态
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
+  const [rolePermissions, setRolePermissions] = useState<
+    Record<string, string[]>
+  >({});
+  const [permissionDefinitions, setPermissionDefinitions] = useState<
+    PermissionGroup[]
+  >([]);
+  const [editingRole, setEditingRole] = useState<'user' | 'super_admin' | null>(
+    null
+  );
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   // 表单状态
   const [newUsername, setNewUsername] = useState('');
@@ -230,6 +256,110 @@ export default function UsersPage() {
     return new Date(dateString).toLocaleString('zh-CN');
   };
 
+  // 获取角色权限配置
+  const fetchRolePermissions = async () => {
+    try {
+      const response = await fetch('/api/role-permissions');
+      if (!response.ok) {
+        throw new Error('获取权限配置失败');
+      }
+      const data = await response.json();
+      setRolePermissions(data.permissions);
+      setPermissionDefinitions(data.definitions);
+      return data;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '获取权限配置失败');
+      return null;
+    }
+  };
+
+  // 打开权限编辑对话框
+  const openPermissionDialog = async (role: 'user' | 'super_admin') => {
+    const data = await fetchRolePermissions();
+    setEditingRole(role);
+    // 注意：super_admin 的权限是固定的 '*', 但这里我们只编辑 user 角色
+    // 直接使用返回的数据，而不是 state（state 更新是异步的）
+    if (data && role === 'user' && data.permissions[role]) {
+      setSelectedPermissions(data.permissions[role]);
+    } else {
+      setSelectedPermissions([]);
+    }
+    setPermissionDialogOpen(true);
+  };
+
+  // 切换权限选择
+  const togglePermission = (permission: string) => {
+    setSelectedPermissions((prev) =>
+      prev.includes(permission)
+        ? prev.filter((p) => p !== permission)
+        : [...prev, permission]
+    );
+  };
+
+  // 保存角色权限
+  const handleSavePermissions = async () => {
+    if (!editingRole) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/role-permissions', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: editingRole,
+          permissions: selectedPermissions,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '保存权限配置失败');
+      }
+
+      toast.success('权限配置已保存');
+      setPermissionDialogOpen(false);
+      setEditingRole(null);
+      setSelectedPermissions([]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '保存权限配置失败');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 重置为默认权限
+  const handleResetPermissions = async () => {
+    if (!confirm('确定要重置为默认权限配置吗？')) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/role-permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset' }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '重置权限配置失败');
+      }
+
+      toast.success('权限配置已重置为默认值');
+      setRolePermissions(data.permissions);
+      if (editingRole && data.permissions[editingRole]) {
+        setSelectedPermissions(data.permissions[editingRole]);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '重置权限配置失败');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // 获取角色显示文本
   const getRoleDisplay = (role: string) => {
     return role === 'super_admin' ? '超级管理员' : '普通用户';
@@ -270,7 +400,8 @@ export default function UsersPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">
-              当前用户: {currentUser?.username} ({getRoleDisplay(currentUser?.role || '')})
+              当前用户: {currentUser?.username} (
+              {getRoleDisplay(currentUser?.role || '')})
             </span>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
@@ -289,10 +420,19 @@ export default function UsersPage() {
               <CardDescription>管理系统用户账号和权限</CardDescription>
             </div>
             {isSuperAdmin && (
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                创建用户
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => openPermissionDialog('user')}
+                >
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  修改权限
+                </Button>
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  创建用户
+                </Button>
+              </div>
             )}
           </CardHeader>
           <CardContent>
@@ -314,7 +454,7 @@ export default function UsersPage() {
                         {getRoleIcon(user.role)}
                         {user.username}
                         {user.id === currentUser?.id && (
-                          <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+                          <span className="bg-primary text-primary-foreground rounded px-2 py-0.5 text-xs">
                             我
                           </span>
                         )}
@@ -430,7 +570,9 @@ export default function UsersPage() {
               <select
                 id="role"
                 value={newRole}
-                onChange={(e) => setNewRole(e.target.value as 'super_admin' | 'user')}
+                onChange={(e) =>
+                  setNewRole(e.target.value as 'super_admin' | 'user')
+                }
                 className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus-visible:ring-1 focus-visible:outline-none"
               >
                 <option value="user">普通用户</option>
@@ -495,6 +637,93 @@ export default function UsersPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 权限编辑对话框 */}
+      <Dialog
+        open={permissionDialogOpen}
+        onOpenChange={setPermissionDialogOpen}
+      >
+        <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>修改角色权限</DialogTitle>
+            <DialogDescription>
+              配置 &quot;
+              {editingRole === 'super_admin' ? '超级管理员' : '普通用户'}&quot;
+              角色的权限
+              {editingRole === 'super_admin' && (
+                <span className="text-destructive mt-1 block">
+                  超级管理员始终拥有所有权限
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {editingRole === 'user' &&
+              permissionDefinitions.map((group) => (
+                <div key={group.group} className="space-y-3">
+                  <h4 className="text-muted-foreground border-b pb-2 text-sm font-medium">
+                    {group.group}
+                  </h4>
+                  <div className="grid gap-2">
+                    {group.permissions.map((perm) => (
+                      <label
+                        key={perm.value}
+                        className="hover:bg-muted/50 flex cursor-pointer items-start gap-3 rounded-lg p-2"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPermissions.includes(perm.value)}
+                          onChange={() => togglePermission(perm.value)}
+                          className="text-primary focus:ring-primary mt-1 h-4 w-4 rounded border-gray-300"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">
+                            {perm.label}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {perm.description}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPermissionDialogOpen(false)}
+            >
+              取消
+            </Button>
+            {editingRole === 'user' && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleResetPermissions}
+                disabled={isSubmitting}
+              >
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                重置默认
+              </Button>
+            )}
+            <Button
+              type="button"
+              onClick={handleSavePermissions}
+              disabled={isSubmitting || editingRole === 'super_admin'}
+            >
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              保存
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
