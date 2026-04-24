@@ -49,7 +49,7 @@ export default function AdminPage() {
       }
 
       const data = await response.json();
-      toast.success('页面缓存已刷新，1小时内生效');
+      toast.success('所有页面缓存已刷新√');
       console.log('刷新结果:', data.results);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '刷新缓存失败');

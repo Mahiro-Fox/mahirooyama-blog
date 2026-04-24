@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import sharp from 'sharp';
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
 
@@ -132,6 +133,47 @@ export async function POST(request: NextRequest) {
         // 构建 web 路径
         const itemRelativePath = path.join(relativePath, safeName);
         const webPath = '/' + itemRelativePath.replace(/\\/g, '/');
+
+        // 检查是否为可转换的图片格式
+        const ext = path.extname(safeName).toLowerCase();
+        const convertibleImageExts = ['.png', '.jpg', '.jpeg'];
+
+        if (convertibleImageExts.includes(ext)) {
+          try {
+            const baseName = path.basename(safeName, ext);
+            const webpName = `${baseName}.webp`;
+            const webpPath = path.join(targetDir, webpName);
+
+            // 转换图片为 WebP
+            await sharp(filePath)
+              .webp({
+                quality: 80,
+                effort: 4,
+              })
+              .toFile(webpPath);
+
+            const webpRelativePath = path.join(relativePath, webpName);
+            const webpWebPath = '/' + webpRelativePath.replace(/\\/g, '/');
+
+            return {
+              name: safeName,
+              path: webPath,
+              webpPath: webpWebPath,
+              webpName: webpName,
+              success: true,
+              converted: true,
+            };
+          } catch (convertError) {
+            console.error(`转换 WebP 失败: ${safeName}`, convertError);
+            // 转换失败但原始文件已保存，仍返回成功
+            return {
+              name: safeName,
+              path: webPath,
+              success: true,
+              converted: false,
+            };
+          }
+        }
 
         return { name: safeName, path: webPath, success: true };
       })

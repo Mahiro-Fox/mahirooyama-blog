@@ -534,14 +534,15 @@ export default function PublicFilesAdminPage() {
                         {item.type === 'directory' ? (
                           <Folder className="h-6 w-6 text-blue-500" />
                         ) : isImage(item) ? (
-                          <div className="bg-muted h-8 w-8 overflow-hidden rounded">
-                            <img
-                              src={resolveImageSrc(item.path)}
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
+                          <p>不展示预览，请点击预览按钮进行预览</p>
                         ) : (
+                          // <div className="bg-muted h-8 w-8 overflow-hidden rounded">
+                          //   <img
+                          //     src={resolveImageSrc(item.path)}
+                          //     alt={item.name}
+                          //     className="h-full w-full object-cover"
+                          //   />
+                          // </div>
                           <FileIcon className="h-6 w-6 text-gray-500" />
                         )}
                       </TableCell>
