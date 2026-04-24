@@ -33,6 +33,8 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
+      userId: payload.userId,
+      username: payload.username,
       role: payload.role,
       loggedInAt: payload.loggedInAt,
       expiresAt: payload.exp,

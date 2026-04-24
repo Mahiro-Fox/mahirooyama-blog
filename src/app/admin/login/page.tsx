@@ -18,6 +18,7 @@ import { Label } from '@/components/shadcn-ui/label';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rateLimitTime, setRateLimitTime] = useState<number | null>(null);
@@ -68,7 +69,7 @@ function LoginForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
@@ -100,11 +101,24 @@ function LoginForm() {
             管理后台
           </CardTitle>
           <CardDescription className="text-center">
-            请输入密码登录
+            请输入用户名和密码登录
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">用户名</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="请输入用户名"
+                value={username}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setUsername(e.target.value)
+                }
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="password">密码</Label>
               <Input

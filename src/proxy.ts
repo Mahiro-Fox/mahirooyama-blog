@@ -108,9 +108,11 @@ export async function proxy(request: NextRequest) {
       let response = NextResponse.next();
 
       if (exp - now < SESSION_REFRESH_THRESHOLD) {
-        // 重新签发 token
+        // 重新签发 token，保留原有信息
         const newToken = await new SignJWT({
-          role: 'admin',
+          userId: payload.userId,
+          username: payload.username,
+          role: payload.role,
           loggedInAt: new Date().toISOString(),
           sessionId: payload.sessionId || crypto.randomUUID(),
         })

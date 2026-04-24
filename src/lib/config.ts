@@ -39,4 +39,13 @@ export const pageRoutesConfig = [
     description: '上传、删除、重命名 public/images 目录下的图片文件。',
     hideInNav: true,
   },
+  {
+    name: 'UserManagement',
+    navHref: '/admin/users',
+    adminHref: '/admin/users',
+    label: '用户管理',
+    title: '管理系统用户和权限',
+    description: '创建、编辑、删除用户账号，管理用户权限（仅超级管理员）。',
+    hideInNav: true,
+  },
 ];

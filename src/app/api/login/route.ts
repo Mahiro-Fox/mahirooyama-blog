@@ -1,11 +1,10 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 
 import { sessionStore } from '@/lib/session-store';
+import { userStore } from '@/lib/user-store';
 
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 );
@@ -16,41 +15,37 @@ const SESSION_EXPIRY = 24 * 60 * 60;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { password } = body;
+    const { username, password } = body;
 
-    if (!password) {
-      return NextResponse.json({ error: '请提供密码' }, { status: 400 });
-    }
-
-    // 验证密码（使用 bcrypt 比较）
-    let isValidPassword = false;
-
-    if (ADMIN_PASSWORD_HASH) {
-      // 使用哈希验证
-      isValidPassword = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
-    } else {
-      // 如果没有设置哈希，降级到明文比较（仅用于开发）
-      console.warn(
-        '警告: 未设置 ADMIN_PASSWORD_HASH，使用明文密码验证。生产环境请使用哈希密码！'
+    if (!username || !password) {
+      return NextResponse.json(
+        { error: '请提供用户名和密码' },
+        { status: 400 }
       );
-      const fallbackPassword = process.env.ADMIN_PASSWORD || 'admin123';
-      isValidPassword = password === fallbackPassword;
     }
 
-    if (!isValidPassword) {
+    // 初始化用户存储（创建默认管理员）
+    await userStore.initialize();
+
+    // 验证用户
+    const user = await userStore.verifyPassword(username, password);
+
+    if (!user) {
       // 添加随机延迟防止时序攻击
       await new Promise((resolve) =>
         setTimeout(resolve, Math.random() * 100 + 50)
       );
-      return NextResponse.json({ error: '密码错误' }, { status: 401 });
+      return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
 
     // 生成唯一的会话 ID
     const sessionId = crypto.randomUUID();
 
-    // 创建 JWT token
+    // 创建 JWT token（包含用户ID用于单设备登录）
     const token = await new SignJWT({
-      role: 'admin',
+      userId: user.id,
+      username: user.username,
+      role: user.role,
       loggedInAt: new Date().toISOString(),
       sessionId,
     })
@@ -66,7 +61,11 @@ export async function POST(request: NextRequest) {
     const realIp = request.headers.get('x-real-ip');
     const clientIp = forwardedFor?.split(',')[0] || realIp || 'unknown';
 
+    // 删除该用户的旧会话（单设备登录）
+    sessionStore.deleteByUserId(user.id);
+
     sessionStore.create(token, {
+      userId: user.id,
       sessionId,
       userAgent,
       ip: clientIp,
@@ -92,6 +91,11 @@ export async function POST(request: NextRequest) {
       message: '登录成功',
       expiresIn: SESSION_EXPIRY,
       sessionId,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error('登录失败:', error);

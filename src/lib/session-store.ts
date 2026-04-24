@@ -1,5 +1,6 @@
 // 简单的内存会话存储（生产环境建议使用 Redis）
 interface SessionInfo {
+  userId: string;
   sessionId: string;
   createdAt: string;
   lastUsedAt: string;
@@ -31,15 +32,20 @@ export const sessionStore = {
     token: string,
     sessionInfo: Omit<SessionInfo, 'createdAt' | 'lastUsedAt'>
   ): void => {
-    // 查找并删除该用户的旧会话（这里简化处理，实际应该用 userId 关联）
-    // 由于我们只有 token，无法直接查找，这里只是示例
-    // 实际生产环境应该在 token payload 中包含 userId
-
     sessions.set(token, {
       ...sessionInfo,
       createdAt: new Date().toISOString(),
       lastUsedAt: new Date().toISOString(),
     });
+  },
+
+  // 根据用户ID删除会话（单设备登录：新登录使旧会话失效）
+  deleteByUserId: (userId: string): void => {
+    for (const [token, session] of sessions.entries()) {
+      if (session.userId === userId) {
+        sessions.delete(token);
+      }
+    }
   },
 
   // 更新会话最后使用时间
@@ -65,5 +71,15 @@ export const sessionStore = {
   // 获取所有会话（调试用）
   getAll: (): Map<string, SessionInfo> => {
     return new Map(sessions);
+  },
+
+  // 根据用户ID获取会话
+  getByUserId: (userId: string): SessionInfo | undefined => {
+    for (const [, session] of sessions.entries()) {
+      if (session.userId === userId) {
+        return session;
+      }
+    }
+    return undefined;
   },
 };
