@@ -1,21 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  ChevronRight,
   Copy,
   File as FileIcon,
-  FileText,
   Folder,
   FolderPlus,
   ImageDown,
   ImageIcon,
   Loader2,
-  LogOut,
-  RefreshCw,
   Trash2,
   Upload,
   X,
@@ -82,7 +76,6 @@ interface FileListResponse {
 }
 
 export default function PublicFilesAdminPage() {
-  const router = useRouter();
   const [currentPath, setCurrentPath] = useState('');
   const [data, setData] = useState<FileListResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,17 +111,6 @@ export default function PublicFilesAdminPage() {
   useEffect(() => {
     fetchFiles(currentPath);
   }, [currentPath, fetchFiles]);
-
-  // 登出
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-    } catch {
-      // 忽略错误
-    }
-    router.push('/admin/login');
-    toast.success('已登出');
-  };
 
   // 进入文件夹
   const enterFolder = (folder: FileItem) => {
@@ -360,392 +342,350 @@ export default function PublicFilesAdminPage() {
   const items = data?.items || [];
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      {/* 头部 */}
-      <header className="bg-background border-b px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold">Public 文件管理</h1>
-            <Link
-              href="/admin/blog"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
-            >
-              <FileText className="h-4 w-4" />
-              Blog
-            </Link>
-            <Link
-              href="/admin/gallery"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
-            >
-              <ImageIcon className="h-4 w-4" />
-              Gallery
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchFiles(currentPath)}
-              disabled={loading}
-            >
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
-              刷新
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              登出
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="p-4 lg:p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">公共文件管理</h2>
+      </div>
+      <Card>
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              {/* 返回上级按钮 */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goBack}
+                disabled={!currentPath}
+                className="h-8 w-8"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
 
-      {/* 主内容 */}
-      <main className="mx-auto max-w-6xl p-6">
-        <Card>
-          <CardHeader className="flex flex-col gap-4">
-            <div className="flex flex-row items-center justify-between">
-              <div className="flex items-center gap-2">
-                {/* 返回上级按钮 */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={goBack}
-                  disabled={!currentPath}
-                  className="h-8 w-8"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-
-                {/* 面包屑导航 */}
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
+              {/* 面包屑导航 */}
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      onClick={() => setCurrentPath('')}
+                      className="cursor-pointer"
+                    >
+                      public
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  {data?.breadcrumb.map((part, index) => (
+                    <BreadcrumbItem key={index}>
+                      <BreadcrumbSeparator />
                       <BreadcrumbLink
-                        onClick={() => setCurrentPath('')}
+                        onClick={() => navigateToBreadcrumb(index)}
                         className="cursor-pointer"
                       >
-                        public
+                        {part}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
-                    {data?.breadcrumb.map((part, index) => (
-                      <BreadcrumbItem key={index}>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbLink
-                          onClick={() => navigateToBreadcrumb(index)}
-                          className="cursor-pointer"
-                        >
-                          {part}
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-                    ))}
-                  </BreadcrumbList>
-                </Breadcrumb>
-              </div>
+                  ))}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
 
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  onChange={handleUpload}
-                  disabled={isUploading}
-                  className="hidden"
-                  id="file-upload"
-                  multiple
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsNewFolderDialogOpen(true)}
-                >
-                  <FolderPlus className="mr-2 h-4 w-4" />
-                  新建文件夹
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleConvert}
-                  disabled={isConverting}
-                >
-                  {isConverting ? (
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                onChange={handleUpload}
+                disabled={isUploading}
+                className="hidden"
+                id="file-upload"
+                multiple
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsNewFolderDialogOpen(true)}
+              >
+                <FolderPlus className="mr-2 h-4 w-4" />
+                新建文件夹
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleConvert}
+                disabled={isConverting}
+              >
+                {isConverting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ImageDown className="mr-2 h-4 w-4" />
+                )}
+                PNG 转 WebP
+              </Button>
+              <Button asChild size="sm" disabled={isUploading}>
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  {isUploading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <ImageDown className="mr-2 h-4 w-4" />
+                    <Upload className="mr-2 h-4 w-4" />
                   )}
-                  PNG 转 WebP
-                </Button>
-                <Button asChild size="sm" disabled={isUploading}>
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    {isUploading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="mr-2 h-4 w-4" />
-                    )}
-                    上传文件
-                  </label>
-                </Button>
-              </div>
+                  上传文件
+                </label>
+              </Button>
             </div>
+          </div>
 
-            <CardTitle>文件列表 ({items.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
+          <CardTitle>文件列表 ({items.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>类型</TableHead>
+                <TableHead>名称</TableHead>
+                <TableHead>路径</TableHead>
+                <TableHead>大小</TableHead>
+                <TableHead>更新时间</TableHead>
+                <TableHead className="text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
                 <TableRow>
-                  <TableHead>类型</TableHead>
-                  <TableHead>名称</TableHead>
-                  <TableHead>路径</TableHead>
-                  <TableHead>大小</TableHead>
-                  <TableHead>更新时间</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
+                  <TableCell colSpan={6} className="py-8 text-center">
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center">
-                      <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+              ) : items.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="text-muted-foreground py-8 text-center"
+                  >
+                    暂无文件
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((item) => (
+                  <TableRow
+                    key={item.name}
+                    className={
+                      item.type === 'directory'
+                        ? 'hover:bg-muted/50 cursor-pointer'
+                        : ''
+                    }
+                    onClick={() =>
+                      item.type === 'directory' && enterFolder(item)
+                    }
+                  >
+                    <TableCell>
+                      {item.type === 'directory' ? (
+                        <Folder className="h-6 w-6 text-blue-500" />
+                      ) : isImage(item) ? (
+                        <p>不展示预览，请点击预览按钮进行预览</p>
+                      ) : (
+                        // <div className="bg-muted h-8 w-8 overflow-hidden rounded">
+                        //   <img
+                        //     src={resolveImageSrc(item.path)}
+                        //     alt={item.name}
+                        //     className="h-full w-full object-cover"
+                        //   />
+                        // </div>
+                        <FileIcon className="h-6 w-6 text-gray-500" />
+                      )}
                     </TableCell>
-                  </TableRow>
-                ) : items.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-muted-foreground py-8 text-center"
-                    >
-                      暂无文件
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>
+                      <code
+                        className="bg-muted cursor-pointer rounded px-2 py-1 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyPath(item.path);
+                        }}
+                        title="点击复制"
+                      >
+                        {item.path}
+                      </code>
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  items.map((item) => (
-                    <TableRow
-                      key={item.name}
-                      className={
-                        item.type === 'directory'
-                          ? 'hover:bg-muted/50 cursor-pointer'
-                          : ''
-                      }
-                      onClick={() =>
-                        item.type === 'directory' && enterFolder(item)
-                      }
-                    >
-                      <TableCell>
-                        {item.type === 'directory' ? (
-                          <Folder className="h-6 w-6 text-blue-500" />
-                        ) : isImage(item) ? (
-                          <p>不展示预览，请点击预览按钮进行预览</p>
-                        ) : (
-                          // <div className="bg-muted h-8 w-8 overflow-hidden rounded">
-                          //   <img
-                          //     src={resolveImageSrc(item.path)}
-                          //     alt={item.name}
-                          //     className="h-full w-full object-cover"
-                          //   />
-                          // </div>
-                          <FileIcon className="h-6 w-6 text-gray-500" />
+                    <TableCell className="text-muted-foreground">
+                      {item.type === 'directory' ? '-' : formatSize(item.size)}
+                    </TableCell>
+                    <TableCell>{formatDate(item.updatedAt)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {item.type === 'file' && isImage(item) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewItem(item);
+                            }}
+                          >
+                            <ImageIcon className="h-4 w-4" />
+                          </Button>
                         )}
-                      </TableCell>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell>
-                        <code
-                          className="bg-muted cursor-pointer rounded px-2 py-1 text-xs"
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
-                            copyPath(item.path);
+                            openRenameDialog(item);
                           }}
-                          title="点击复制"
                         >
-                          {item.path}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.type === 'directory'
-                          ? '-'
-                          : formatSize(item.size)}
-                      </TableCell>
-                      <TableCell>{formatDate(item.updatedAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {item.type === 'file' && isImage(item) && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPreviewItem(item);
-                              }}
-                            >
-                              <ImageIcon className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openRenameDialog(item);
-                            }}
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedItem(item);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* 图片预览对话框 */}
-        <Dialog open={!!previewItem} onOpenChange={() => setPreviewItem(null)}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>{previewItem?.name}</DialogTitle>
-              <DialogDescription>
-                {previewItem && formatSize(previewItem.size)}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-center py-4">
-              {previewItem && (
-                <img
-                  src={resolveImageSrc(previewItem.path)}
-                  alt={previewItem.name}
-                  className="max-h-[60vh] rounded-lg object-contain"
-                />
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedItem(item);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setPreviewItem(null)}>
-                <X className="mr-2 h-4 w-4" />
-                关闭
-              </Button>
-              <Button onClick={() => previewItem && copyPath(previewItem.path)}>
-                复制路径
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-        {/* 新建文件夹对话框 */}
-        <Dialog
-          open={isNewFolderDialogOpen}
-          onOpenChange={setIsNewFolderDialogOpen}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>新建文件夹</DialogTitle>
-              <DialogDescription>在当前目录下创建新文件夹</DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Input
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="文件夹名称"
-                autoFocus
+      {/* 图片预览对话框 */}
+      <Dialog open={!!previewItem} onOpenChange={() => setPreviewItem(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{previewItem?.name}</DialogTitle>
+            <DialogDescription>
+              {previewItem && formatSize(previewItem.size)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-4">
+            {previewItem && (
+              <img
+                src={resolveImageSrc(previewItem.path)}
+                alt={previewItem.name}
+                className="max-h-[60vh] rounded-lg object-contain"
               />
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsNewFolderDialogOpen(false)}
-                disabled={isCreatingFolder}
-              >
-                取消
-              </Button>
-              <Button
-                onClick={handleCreateFolder}
-                disabled={isCreatingFolder || !newFolderName.trim()}
-              >
-                {isCreatingFolder ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                创建
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewItem(null)}>
+              <X className="mr-2 h-4 w-4" />
+              关闭
+            </Button>
+            <Button onClick={() => previewItem && copyPath(previewItem.path)}>
+              复制路径
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* 重命名对话框 */}
-        <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>重命名</DialogTitle>
-              <DialogDescription>
-                将 &quot;{selectedItem?.name}&quot; 重命名为：
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="新名称"
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsRenameDialogOpen(false)}
-                disabled={isRenaming}
-              >
-                取消
-              </Button>
-              <Button
-                onClick={handleRename}
-                disabled={isRenaming || !newName.trim()}
-              >
-                {isRenaming ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                保存
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      {/* 新建文件夹对话框 */}
+      <Dialog
+        open={isNewFolderDialogOpen}
+        onOpenChange={setIsNewFolderDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>新建文件夹</DialogTitle>
+            <DialogDescription>在当前目录下创建新文件夹</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="文件夹名称"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsNewFolderDialogOpen(false)}
+              disabled={isCreatingFolder}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleCreateFolder}
+              disabled={isCreatingFolder || !newFolderName.trim()}
+            >
+              {isCreatingFolder ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              创建
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* 删除确认对话框 */}
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>确认删除?</AlertDialogTitle>
-              <AlertDialogDescription>
-                确定要删除 &quot;{selectedItem?.name}&quot; 吗？
-                {selectedItem?.type === 'directory' &&
-                  ' 该文件夹内的所有内容将被一并删除。'}
-                此操作无法撤销。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
-                取消
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-white"
-              >
-                删除
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </main>
+      {/* 重命名对话框 */}
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>重命名</DialogTitle>
+            <DialogDescription>
+              将 &quot;{selectedItem?.name}&quot; 重命名为：
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="新名称"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsRenameDialogOpen(false)}
+              disabled={isRenaming}
+            >
+              取消
+            </Button>
+            <Button
+              onClick={handleRename}
+              disabled={isRenaming || !newName.trim()}
+            >
+              {isRenaming ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              保存
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认对话框 */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除?</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除 &quot;{selectedItem?.name}&quot; 吗？
+              {selectedItem?.type === 'directory' &&
+                ' 该文件夹内的所有内容将被一并删除。'}
+              此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-white"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

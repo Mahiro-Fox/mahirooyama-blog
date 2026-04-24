@@ -2,20 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
-import {
-  FileText,
-  FolderOpen,
-  LogOut,
-  Pencil,
-  Plus,
-  RefreshCw,
-  Save,
-  Trash2,
-  Upload,
-  X,
-} from 'lucide-react';
+import { Pencil, Plus, RefreshCw, Save, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -66,7 +54,6 @@ interface GalleryFile {
 }
 
 export default function GalleryAdminPage() {
-  const router = useRouter();
   const [files, setFiles] = useState<GalleryFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<GalleryFile | null>(null);
@@ -97,17 +84,6 @@ export default function GalleryAdminPage() {
       setLoading(false);
     }
   }, []);
-
-  // 登出
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-    } catch {
-      // 忽略错误
-    }
-    router.push('/admin/login');
-    toast.success('已登出');
-  };
 
   // 新增文件
   const handleCreate = () => {
@@ -316,266 +292,235 @@ tags: []
   }, [selectedFile, editContent, handleSave]);
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      {/* 头部 */}
-      <header className="bg-background border-b px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold">Gallery 管理</h1>
-            <Link
-              href="/admin/blog"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
-            >
-              <FileText className="h-4 w-4" />
-              Blog
-            </Link>
-            <Link
-              href="/admin/public-files"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
-            >
-              <FolderOpen className="h-4 w-4" />
-              Public 文件
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
+    <div className="p-4 lg:p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">图片列表 ({files.length})</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchFiles}
+          disabled={loading}
+        >
+          <RefreshCw
+            className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+          />
+          刷新列表
+        </Button>
+      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Input
+              type="file"
+              accept=".yml,.yaml"
+              onChange={handleUpload}
+              disabled={isUploading}
+              className="hidden"
+              id="yaml-upload"
+            />
             <Button
               variant="outline"
-              size="sm"
-              onClick={fetchFiles}
-              disabled={loading}
+              onClick={handleCreate}
+              disabled={isUploading}
             >
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
-              刷新列表
+              <Plus className="mr-2 h-4 w-4" />
+              新增 YML
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              登出
+            <Button asChild disabled={isUploading}>
+              <label htmlFor="yaml-upload" className="cursor-pointer">
+                <Upload className="mr-2 h-4 w-4" />
+                {isUploading ? '上传中...' : '上传 YML'}
+              </label>
             </Button>
           </div>
-        </div>
-      </header>
-
-      {/* 主内容 */}
-      <main className="mx-auto max-w-6xl p-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>图片列表 ({files.length})</CardTitle>
-            <div className="flex items-center gap-2">
-              <Input
-                type="file"
-                accept=".yml,.yaml"
-                onChange={handleUpload}
-                disabled={isUploading}
-                className="hidden"
-                id="yaml-upload"
-              />
-              <Button
-                variant="outline"
-                onClick={handleCreate}
-                disabled={isUploading}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                新增 YML
-              </Button>
-              <Button asChild disabled={isUploading}>
-                <label htmlFor="yaml-upload" className="cursor-pointer">
-                  <Upload className="mr-2 h-4 w-4" />
-                  {isUploading ? '上传中...' : '上传 YML'}
-                </label>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>标题</TableHead>
+                <TableHead>文件名</TableHead>
+                <TableHead>图片路径</TableHead>
+                <TableHead>标签</TableHead>
+                <TableHead>大小</TableHead>
+                <TableHead className="text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {files.length === 0 ? (
                 <TableRow>
-                  <TableHead>标题</TableHead>
-                  <TableHead>文件名</TableHead>
-                  <TableHead>图片路径</TableHead>
-                  <TableHead>标签</TableHead>
-                  <TableHead>大小</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
+                  <TableCell
+                    colSpan={6}
+                    className="text-muted-foreground py-8 text-center"
+                  >
+                    {loading ? '加载中...' : '暂无文件'}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {files.length === 0 ? (
-                  <TableRow>
+              ) : (
+                files.map((file) => (
+                  <TableRow key={file.slug}>
+                    <TableCell className="cursor-pointer font-medium underline-offset-4 hover:underline">
+                      <Link href={`/gallery/${file.slug}`}>{file.title}</Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {file.fileName}
+                    </TableCell>
                     <TableCell
-                      colSpan={6}
-                      className="text-muted-foreground py-8 text-center"
+                      className="text-muted-foreground max-w-[200px] truncate"
+                      title={file.src}
                     >
-                      {loading ? '加载中...' : '暂无文件'}
+                      {truncate(file.src, 30)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {file.tags?.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {tag}
+                          </Badge>
+                        )) || '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatSize(file.size)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(file)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setSelectedFile(file);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  files.map((file) => (
-                    <TableRow key={file.slug}>
-                      <TableCell className="cursor-pointer font-medium underline-offset-4 hover:underline">
-                        <Link href={`/gallery/${file.slug}`}>{file.title}</Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {file.fileName}
-                      </TableCell>
-                      <TableCell
-                        className="text-muted-foreground max-w-[200px] truncate"
-                        title={file.src}
-                      >
-                        {truncate(file.src, 30)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {file.tags?.map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              {tag}
-                            </Badge>
-                          )) || '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatSize(file.size)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(file)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => {
-                              setSelectedFile(file);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-        {/* 编辑/新增对话框 */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle>
-                {editMode === 'create'
-                  ? '新增 YML 文件'
-                  : `编辑: ${selectedFile?.title}`}
-              </DialogTitle>
-              <DialogDescription>
-                {editMode === 'create'
-                  ? '创建新的 Gallery 配置文件'
-                  : selectedFile?.fileName}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="text-sm font-medium">文件名称 (slug)</label>
-                <Input
-                  value={editFileName}
-                  onChange={(e) => setEditFileName(e.target.value)}
-                  placeholder="例如: my-image"
-                  disabled={editMode === 'edit' && isSaving}
-                  className="mt-1"
-                />
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {editMode === 'edit' &&
-                  originalFileName !== `${editFileName}.yml`
-                    ? '修改文件名将会重命名文件'
-                    : '将生成文件: ' +
-                      (editFileName ? `${editFileName}.yml` : '...')}
-                </p>
-              </div>
-              <div className="h-[50vh] w-full">
-                <Editor
-                  height="100%"
-                  defaultLanguage="yaml"
-                  value={editContent}
-                  onChange={(value) => setEditContent(value || '')}
-                  options={{
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    wordWrap: 'on',
-                    lineNumbers: 'on',
-                    folding: true,
-                    automaticLayout: true,
-                    tabSize: 2,
-                    fontSize: 14,
-                  }}
-                  theme="vs-dark"
-                />
-              </div>
+      {/* 编辑/新增对话框 */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {editMode === 'create'
+                ? '新增 YML 文件'
+                : `编辑: ${selectedFile?.title}`}
+            </DialogTitle>
+            <DialogDescription>
+              {editMode === 'create'
+                ? '创建新的 Gallery 配置文件'
+                : selectedFile?.fileName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium">文件名称 (slug)</label>
+              <Input
+                value={editFileName}
+                onChange={(e) => setEditFileName(e.target.value)}
+                placeholder="例如: my-image"
+                disabled={editMode === 'edit' && isSaving}
+                className="mt-1"
+              />
+              <p className="text-muted-foreground mt-1 text-xs">
+                {editMode === 'edit' &&
+                originalFileName !== `${editFileName}.yml`
+                  ? '修改文件名将会重命名文件'
+                  : '将生成文件: ' +
+                    (editFileName ? `${editFileName}.yml` : '...')}
+              </p>
             </div>
-            <DialogFooter className="mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-                disabled={isSaving}
-              >
-                <X className="mr-2 h-4 w-4" />
-                取消
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isSaving || !editFileName.trim()}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {isSaving
-                  ? editMode === 'create'
-                    ? '创建中...'
-                    : '保存中...'
-                  : editMode === 'create'
-                    ? '创建'
-                    : '保存'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            <div className="h-[50vh] w-full">
+              <Editor
+                height="100%"
+                defaultLanguage="yaml"
+                value={editContent}
+                onChange={(value) => setEditContent(value || '')}
+                options={{
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  lineNumbers: 'on',
+                  folding: true,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  fontSize: 14,
+                }}
+                theme="vs-dark"
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSaving}
+            >
+              <X className="mr-2 h-4 w-4" />
+              取消
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || !editFileName.trim()}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving
+                ? editMode === 'create'
+                  ? '创建中...'
+                  : '保存中...'
+                : editMode === 'create'
+                  ? '创建'
+                  : '保存'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* 删除确认对话框 */}
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>确认删除?</AlertDialogTitle>
-              <AlertDialogDescription>
-                确定要删除 &quot;{selectedFile?.title}&quot;
-                吗？此操作无法撤销。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
-                取消
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-white"
-              >
-                删除
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </main>
+      {/* 删除确认对话框 */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除?</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除 &quot;{selectedFile?.title}&quot; 吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-white"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

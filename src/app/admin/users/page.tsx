@@ -389,37 +389,14 @@ export default function UsersPage() {
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      {/* 头部 */}
-      <header className="bg-background border-b px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                返回
-              </Button>
-            </Link>
-            <h1 className="text-xl font-bold">用户管理</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">
-              当前用户: {currentUser?.username} (
-              {getRoleDisplay(currentUser?.role || '')})
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              登出
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* 主内容 */}
-      <main className="mx-auto max-w-6xl p-6">
+    <div className="flex flex-col items-center justify-between p-4 lg:p-6">
+      <div className="mb-4 w-full">
+        <h2 className="text-lg font-semibold">用户管理</h2>
+      </div>
+      <div className="w-full">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <div>
+            <div className="flex flex-col gap-4">
               <CardTitle>用户列表</CardTitle>
               <CardDescription>管理系统用户账号和权限</CardDescription>
             </div>
@@ -540,7 +517,7 @@ export default function UsersPage() {
             </div>
           </CardContent>
         </Card>
-      </main>
+      </div>
 
       {/* 创建用户对话框 */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>

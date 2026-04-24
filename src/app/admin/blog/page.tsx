@@ -2,19 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
-import {
-  FolderOpen,
-  ImageIcon,
-  LogOut,
-  Pencil,
-  RefreshCw,
-  Save,
-  Trash2,
-  Upload,
-  X,
-} from 'lucide-react';
+import { Pencil, RefreshCw, Save, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -65,7 +54,6 @@ interface MdxFile {
 }
 
 export default function BlogAdminPage() {
-  const router = useRouter();
   const [files, setFiles] = useState<MdxFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<MdxFile | null>(null);
@@ -111,17 +99,6 @@ export default function BlogAdminPage() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedFile, editContent]);
-
-  // 登出
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-    } catch {
-      // 忽略错误
-    }
-    router.push('/admin/login');
-    toast.success('已登出');
-  };
 
   // 编辑文件
   const handleEdit = async (file: MdxFile) => {
@@ -243,217 +220,186 @@ export default function BlogAdminPage() {
   };
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      {/* 头部 */}
-      <header className="bg-background border-b px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold">Blog 管理</h1>
-            <Link
-              href="/admin/gallery"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
-            >
-              <ImageIcon className="h-4 w-4" />
-              Gallery
-            </Link>
-            <Link
-              href="/admin/public-files"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
-            >
-              <FolderOpen className="h-4 w-4" />
-              Public 文件
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchFiles}
-              disabled={loading}
-            >
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
-              刷新列表
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              登出
+    <div className="p-4 lg:p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">文章列表 ({files.length})</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchFiles}
+          disabled={loading}
+        >
+          <RefreshCw
+            className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+          />
+          刷新列表
+        </Button>
+      </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Input
+              type="file"
+              accept=".mdx"
+              onChange={handleUpload}
+              disabled={isUploading}
+              className="hidden"
+              id="mdx-upload"
+            />
+            <Button asChild disabled={isUploading}>
+              <label htmlFor="mdx-upload" className="cursor-pointer">
+                <Upload className="mr-2 h-4 w-4" />
+                {isUploading ? '上传中...' : '上传 MDX'}
+              </label>
             </Button>
           </div>
-        </div>
-      </header>
-
-      {/* 主内容 */}
-      <main className="mx-auto max-w-6xl p-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>文章列表 ({files.length})</CardTitle>
-            <div className="flex items-center gap-2">
-              <Input
-                type="file"
-                accept=".mdx"
-                onChange={handleUpload}
-                disabled={isUploading}
-                className="hidden"
-                id="mdx-upload"
-              />
-              <Button asChild disabled={isUploading}>
-                <label htmlFor="mdx-upload" className="cursor-pointer">
-                  <Upload className="mr-2 h-4 w-4" />
-                  {isUploading ? '上传中...' : '上传 MDX'}
-                </label>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>标题</TableHead>
+                <TableHead>文件名</TableHead>
+                <TableHead>日期</TableHead>
+                <TableHead>标签</TableHead>
+                <TableHead>大小</TableHead>
+                <TableHead className="text-right">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {files.length === 0 ? (
                 <TableRow>
-                  <TableHead>标题</TableHead>
-                  <TableHead>文件名</TableHead>
-                  <TableHead>日期</TableHead>
-                  <TableHead>标签</TableHead>
-                  <TableHead>大小</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
+                  <TableCell
+                    colSpan={6}
+                    className="text-muted-foreground py-8 text-center"
+                  >
+                    {loading ? '加载中...' : '暂无文件'}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {files.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-muted-foreground py-8 text-center"
-                    >
-                      {loading ? '加载中...' : '暂无文件'}
+              ) : (
+                files.map((file) => (
+                  <TableRow key={file.slug}>
+                    <TableCell className="cursor-pointer font-medium underline-offset-4 hover:underline">
+                      <Link href={`/blog/${file.slug}`}>{file.title}</Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {file.fileName}
+                    </TableCell>
+                    <TableCell>{formatDate(file.createdAt)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {file.tags?.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {tag}
+                          </Badge>
+                        )) || '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatSize(file.size)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(file)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setSelectedFile(file);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  files.map((file) => (
-                    <TableRow key={file.slug}>
-                      <TableCell className="cursor-pointer font-medium underline-offset-4 hover:underline">
-                        <Link href={`/blog/${file.slug}`}>{file.title}</Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {file.fileName}
-                      </TableCell>
-                      <TableCell>{formatDate(file.createdAt)}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {file.tags?.map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              {tag}
-                            </Badge>
-                          )) || '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatSize(file.size)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(file)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => {
-                              setSelectedFile(file);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-        {/* 编辑对话框 */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle>编辑: {selectedFile?.title}</DialogTitle>
-              <DialogDescription>{selectedFile?.fileName}</DialogDescription>
-            </DialogHeader>
-            <div className="mt-4 h-[60vh] w-full">
-              <Editor
-                height="100%"
-                defaultLanguage="markdown"
-                value={editContent}
-                onChange={(value) => setEditContent(value || '')}
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  lineNumbers: 'on',
-                  folding: true,
-                  automaticLayout: true,
-                  tabSize: 2,
-                  fontSize: 14,
-                }}
-                theme="vs-dark"
-              />
-            </div>
-            <DialogFooter className="mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-                disabled={isSaving}
-              >
-                <X className="mr-2 h-4 w-4" />
-                取消
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                <Save className="mr-2 h-4 w-4" />
-                {isSaving ? '保存中...' : '保存'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      {/* 编辑对话框 */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>编辑: {selectedFile?.title}</DialogTitle>
+            <DialogDescription>{selectedFile?.fileName}</DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 h-[60vh] w-full">
+            <Editor
+              height="100%"
+              defaultLanguage="markdown"
+              value={editContent}
+              onChange={(value) => setEditContent(value || '')}
+              options={{
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                folding: true,
+                automaticLayout: true,
+                tabSize: 2,
+                fontSize: 14,
+              }}
+              theme="vs-dark"
+            />
+          </div>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSaving}
+            >
+              <X className="mr-2 h-4 w-4" />
+              取消
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? '保存中...' : '保存'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        {/* 删除确认对话框 */}
-        <AlertDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>确认删除?</AlertDialogTitle>
-              <AlertDialogDescription>
-                确定要删除 &quot;{selectedFile?.title}&quot;
-                吗？此操作无法撤销。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
-                取消
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-white"
-              >
-                删除
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </main>
+      {/* 删除确认对话框 */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除?</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除 &quot;{selectedFile?.title}&quot; 吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              取消
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-white"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
