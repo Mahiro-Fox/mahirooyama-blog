@@ -117,7 +117,7 @@ async function ensureDataFile(): Promise<void> {
     const defaultAdmin: User = {
       id: crypto.randomUUID(),
       username: 'admin',
-      avatar: '/image/avatar/default.webp',
+      avatar: '/images/avatar/default-avatar.webp',
       passwordHash: await bcrypt.hash('admin123', 10),
       role: 'super_admin',
       createdAt: new Date().toISOString(),
@@ -188,7 +188,7 @@ export const userStore = {
     const newUser: User = {
       id: crypto.randomUUID(),
       username: request.username,
-      avatar: '/image/avatar/default.webp',
+      avatar: '/images/avatar/default-avatar.webp',
       passwordHash: await bcrypt.hash(request.password, 10),
       role: request.role,
       createdAt: new Date().toISOString(),

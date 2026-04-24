@@ -48,7 +48,7 @@ export default function AdminLayout({
         setCurrentUser({
           id: data.userId || '',
           username: data.username || '',
-          avatar: data.avatar || '/image/avatar/default.webp',
+          avatar: data.avatar || '/images/avatar/default-avatar.webp',
           role: data.role || 'user',
         });
       } catch {
