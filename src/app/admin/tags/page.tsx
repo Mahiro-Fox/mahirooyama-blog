@@ -206,10 +206,8 @@ export default function TagsManagementPage() {
     }
   };
 
-  const currentTags = Object.values(tags[activeTab]);
-
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -261,6 +259,7 @@ export default function TagsManagementPage() {
             {TAG_TYPES.map((type) => (
               <TabsContent key={type.id} value={type.id}>
                 <TagsTable
+                  type={type.id}
                   tags={Object.values(tags[type.id])}
                   isLoading={isLoading}
                   onEdit={openEditDialog}
@@ -312,6 +311,6 @@ export default function TagsManagementPage() {
         onConfirm={handleDelete}
         isDeleting={isSubmitting}
       />
-    </div>
+    </>
   );
 }

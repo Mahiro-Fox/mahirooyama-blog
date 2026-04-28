@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { Loader2, Plus, RefreshCw } from 'lucide-react';
+
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,
@@ -38,7 +39,7 @@ export function AdminPageLayout({
   loading = false,
 }: AdminPageLayoutProps) {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="px-4 py-8">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -48,7 +49,9 @@ export function AdminPageLayout({
                 <CardTitle className="flex items-center gap-2">
                   {title}
                 </CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
+                {description && (
+                  <CardDescription>{description}</CardDescription>
+                )}
               </div>
             </div>
             {actions.length > 0 && (

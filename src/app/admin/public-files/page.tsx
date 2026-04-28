@@ -343,10 +343,7 @@ export default function PublicFilesAdminPage() {
   const items = data?.items || [];
 
   return (
-    <div className="p-4 lg:p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">公共文件管理</h2>
-      </div>
+    <>
       <Card>
         <CardHeader className="flex flex-col gap-4">
           <div className="flex flex-row items-center justify-between">
@@ -691,6 +688,6 @@ export default function PublicFilesAdminPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

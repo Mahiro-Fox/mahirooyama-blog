@@ -1,4 +1,11 @@
-import { FileText, FolderOpen, ImageIcon, Shield } from 'lucide-react';
+import {
+  FileText,
+  FolderOpen,
+  ImageIcon,
+  LucideIcon,
+  Shield,
+  Tag,
+} from 'lucide-react';
 
 export const siteConfig = {
   name: 'mahirooyama-blog',
@@ -21,7 +28,7 @@ export interface PageRouteConfig {
   label: string;
   title: string;
   description: string;
-  icon?: string;
+  icon: LucideIcon;
   hideInNav?: boolean;
   permissions?: string[];
 }
@@ -33,10 +40,9 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     adminHref: '/admin/blog',
     label: 'Blog 管理',
     title: '管理博客文章和 MDX 文件',
-    icon: <FileText className="h-4 w-4" />,
+    icon: FileText,
     description:
       '上传、编辑、删除博客文章，支持 Markdown 格式和 YAML Frontmatter。',
-    icon: 'fileText',
   },
   {
     name: 'Gallery',
@@ -44,9 +50,8 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     adminHref: '/admin/gallery',
     label: 'Gallery 管理',
     title: '管理图库图片和元数据',
-    icon: <ImageIcon className="h-4 w-4" />,
+    icon: ImageIcon,
     description: '上传、编辑、删除图库图片，支持元数据管理。',
-    icon: 'image',
   },
   {
     name: 'PublicFiles',
@@ -54,10 +59,9 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     adminHref: '/admin/public-files',
     label: 'Public 文件管理',
     title: '管理 Public 文件夹中的图片',
-    icon: <FolderOpen className="h-4 w-4" />,
+    icon: FolderOpen,
     description: '上传、删除、重命名 public/images 目录下的图片文件。',
     hideInNav: true,
-    icon: 'folder',
   },
   {
     name: 'UserManagement',
@@ -65,19 +69,18 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     adminHref: '/admin/users',
     label: '用户管理',
     title: '管理系统用户和权限',
-    icon: <Shield className="h-4 w-4" />,
-    description: '创建、编辑、删除用户账号，管理用户权限（仅超级管理员）。',
+    icon: Shield,
+    description: '创建、编辑、删除用户账号，管理用户权限（仅超级管理员）.',
     hideInNav: true,
-    icon: 'users',
   },
   {
     name: 'Tag',
     navHref: '/tags',
     adminHref: '/admin/tags',
     label: '标签管理',
+    icon: Tag,
     title: '管理博客和图库标签',
     description: '创建、编辑、删除标签分类，用于文章和图库的分类管理。',
-    icon: 'tag',
   },
 ];
 

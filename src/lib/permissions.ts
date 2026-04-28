@@ -33,6 +33,14 @@ export type Permission =
   | 'gallery:create'
   | 'gallery:update'
   | 'gallery:delete'
+
+  // 标签管理权限
+  | 'tag:read'
+  | 'tag:create'
+  | 'tag:update'
+  | 'tag:delete'
+  | 'tag:reset'
+
   // 文件管理权限（public files）
   | 'files:read'
   | 'files:upload'
@@ -70,6 +78,13 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'gallery:create',
     'gallery:update',
     'gallery:delete',
+
+    // 标签权限：完整的CRUD
+    'tag:read',
+    'tag:create',
+    'tag:update',
+    'tag:delete',
+    'tag:reset',
 
     // 文件权限：完整的文件管理
     'files:read',

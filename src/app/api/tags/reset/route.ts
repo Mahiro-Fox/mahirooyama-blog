@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { tagStore } from '@/lib/tag-store';
+
 import { requirePermission } from '@/lib/permissions';
+import { tagStore } from '@/lib/tag-store';
 
 // 重置为默认标签
 export async function POST() {
-  // 需要 blog:delete 权限（因为是危险操作）
-  const permissionCheck = await requirePermission('blog:delete');
+  // 需要 tag:delete 权限（因为是危险操作）
+  const permissionCheck = await requirePermission('tag:reset');
   if (!permissionCheck.allowed) return permissionCheck.response;
 
   try {

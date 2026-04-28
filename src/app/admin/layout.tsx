@@ -8,6 +8,7 @@ import { LogOut, Menu, Shield, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { pageRoutesConfig } from '@/lib/config';
+import type { UserRole } from '@/lib/user-store';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Sheet,
@@ -19,7 +20,7 @@ interface CurrentUser {
   id: string;
   username: string;
   avatar: string;
-  role: 'super_admin' | 'user';
+  role: UserRole;
 }
 
 export default function AdminLayout({
@@ -181,7 +182,7 @@ export default function AdminLayout({
                     : 'hover:bg-muted text-foreground'
                 }`}
               >
-                {item.icon}
+                {item.icon && <item.icon className="h-4 w-4" />}
                 {item.label}
               </Link>
             ))}
@@ -251,7 +252,7 @@ export default function AdminLayout({
                             : 'hover:bg-muted text-foreground'
                         }`}
                       >
-                        {item.icon}
+                        {item.icon && <item.icon className="h-4 w-4" />}
                         {item.label}
                       </Link>
                     ))}
@@ -375,7 +376,7 @@ export default function AdminLayout({
         </header>
 
         {/* 页面内容 */}
-        <div className="pt-14 lg:pt-0">{children}</div>
+        <div className="p-4 lg:p-6">{children}</div>
       </main>
     </div>
   );

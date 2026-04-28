@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { tagStore, TagType } from '@/lib/tag-store';
+
 import { requirePermission } from '@/lib/permissions';
+import { tagStore, TagType } from '@/lib/tag-store';
 
 // 更新标签
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // 需要 blog:update 权限
-  const permissionCheck = await requirePermission('blog:update');
+  // 需要 tag:update 权限
+  const permissionCheck = await requirePermission('tag:update');
   if (!permissionCheck.allowed) return permissionCheck.response;
 
   try {
@@ -40,8 +41,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // 需要 blog:delete 权限
-  const permissionCheck = await requirePermission('blog:delete');
+  // 需要 tag:delete 权限
+  const permissionCheck = await requirePermission('tag:delete');
   if (!permissionCheck.allowed) return permissionCheck.response;
 
   try {

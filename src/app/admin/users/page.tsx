@@ -1,19 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft,
-  KeyRound,
-  Loader2,
-  LogOut,
-  Plus,
-  Shield,
-  Trash2,
-  User,
-  X,
-} from 'lucide-react';
+import { KeyRound, Loader2, Plus, Shield, Trash2, User, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useCrud } from '@/hooks/use-crud';
@@ -103,9 +92,6 @@ export default function UsersPage() {
 
   // 权限编辑状态
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
-  const [rolePermissions, setRolePermissions] = useState<
-    Record<string, string[]>
-  >({});
   const [permissionDefinitions, setPermissionDefinitions] = useState<
     PermissionGroup[]
   >([]);
@@ -401,32 +387,9 @@ export default function UsersPage() {
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      {/* 头部 */}
-      <header className="bg-background border-b px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" /> 返回
-              </Button>
-            </Link>
-            <h1 className="text-xl font-bold">用户管理</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">
-              当前用户: {currentUser?.username} (
-              {getRoleDisplay(currentUser?.role || '')})
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" /> 登出
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <>
       {/* 主内容 */}
-      <main className="mx-auto max-w-6xl p-6">
+      <div>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div className="flex flex-col gap-4">
@@ -496,7 +459,7 @@ export default function UsersPage() {
             </div>
           </CardContent>
         </Card>
-      </main>
+      </div>
 
       {/* 创建用户对话框 */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -715,6 +678,6 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

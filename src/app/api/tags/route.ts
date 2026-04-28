@@ -5,6 +5,10 @@ import { tagStore, TagType } from '@/lib/tag-store';
 
 // 获取所有标签
 export async function GET() {
+  // 需要 tag:read 权限
+  const permissionCheck = await requirePermission('tag:read');
+  if (!permissionCheck.allowed) return permissionCheck.response;
+
   try {
     const tags = await tagStore.getAll();
     return NextResponse.json(tags);
@@ -16,8 +20,8 @@ export async function GET() {
 
 // 创建标签
 export async function POST(request: NextRequest) {
-  // 需要 blog:create 权限
-  const permissionCheck = await requirePermission('blog:create');
+  // 需要 tag:create 权限
+  const permissionCheck = await requirePermission('tag:create');
   if (!permissionCheck.allowed) return permissionCheck.response;
 
   try {

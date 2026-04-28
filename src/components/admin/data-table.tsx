@@ -1,7 +1,9 @@
 'use client';
 
 import { ReactNode } from 'react';
+import cn from 'classnames';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
+
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Table,
@@ -58,13 +60,12 @@ export function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <div className="text-muted-foreground py-12 text-center">
-        {emptyText}
-      </div>
+      <div className="text-muted-foreground py-12 text-center">{emptyText}</div>
     );
   }
 
-  const showActions = actions && (actions.edit || actions.delete || actions.custom);
+  const showActions =
+    actions && (actions.edit || actions.delete || actions.custom);
 
   return (
     <Table>
@@ -88,10 +89,15 @@ export function DataTable<T>({
             {columns.map((col) => (
               <TableCell
                 key={col.key}
-                className={col.width}
-                style={{ textAlign: col.align }}
+                className={cn(
+                  'overflow-hidden text-ellipsis whitespace-nowrap',
+                  col.width,
+                  col.align && `text-${col.align}`
+                )}
               >
-                {col.render ? col.render(item) : (item as Record<string, unknown>)[col.key] as ReactNode}
+                {col.render
+                  ? col.render(item)
+                  : ((item as Record<string, unknown>)[col.key] as ReactNode)}
               </TableCell>
             ))}
             {showActions && (

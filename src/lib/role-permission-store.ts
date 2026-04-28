@@ -35,6 +35,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'gallery:create',
     'gallery:update',
     'gallery:delete',
+    // tag权限：完整的CRUD
+    'tag:read',
+    'tag:create',
+    'tag:update',
+    'tag:delete',
+    'tag:reset',
 
     // 文件权限：完整的文件管理
     'files:read',
@@ -114,6 +120,16 @@ export const ALL_PERMISSIONS: {
       },
       { value: 'gallery:update', label: '更新图库', description: '修改图库项' },
       { value: 'gallery:delete', label: '删除图库', description: '删除图库项' },
+    ],
+  },
+  {
+    group: '标签管理',
+    permissions: [
+      { value: 'tag:read', label: '查看标签', description: '查看标签列表' },
+      { value: 'tag:create', label: '创建标签', description: '创建新标签' },
+      { value: 'tag:update', label: '更新标签', description: '修改标签' },
+      { value: 'tag:delete', label: '删除标签', description: '删除标签' },
+      { value: 'tag:reset', label: '重置标签', description: '重置标签' },
     ],
   },
   {

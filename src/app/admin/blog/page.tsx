@@ -63,6 +63,7 @@ const columns: Column<MdxFile>[] = [
   {
     key: 'title',
     header: '标题',
+    width: 'max-w-20',
     render: (file) => (
       <Link
         href={`/blog/${file.slug}`}
@@ -75,6 +76,7 @@ const columns: Column<MdxFile>[] = [
   {
     key: 'fileName',
     header: '文件名',
+    width: 'max-w-20',
     render: (file) => (
       <span className="text-muted-foreground">{file.fileName}</span>
     ),
@@ -227,126 +229,102 @@ export default function BlogAdminPage() {
   };
 
   return (
-    <div className="bg-muted/30 min-h-screen">
-      {/* 头部导航 */}
-      <header className="bg-background border-b px-6 py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold">Blog 管理</h1>
-            <Link
-              href="/admin/gallery"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
-            >
-              <ImageIcon className="h-4 w-4" /> Gallery
-            </Link>
-            <Link
-              href="/admin/public-files"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
-            >
-              <FolderOpen className="h-4 w-4" /> Public 文件
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* 主内容 - 使用通用布局 */}
-      <main className="mx-auto max-w-6xl p-6">
-        <AdminPageLayout
-          title="文章列表"
-          description={`共 ${files.length} 篇文章`}
-          actions={[
-            createRefreshAction(fetchItems, loading),
-            {
-              label: isUploading ? '上传中...' : '上传 MDX',
-              icon: <Upload className="mr-2 h-4 w-4" />,
-              onClick: () => document.getElementById('mdx-upload')?.click(),
-              disabled: isUploading,
-              variant: 'default',
-            },
-          ]}
-        >
-          {/* 隐藏的文件输入 */}
-          <Input
-            type="file"
-            accept=".mdx"
-            onChange={handleUpload}
-            disabled={isUploading}
-            className="hidden"
-            id="mdx-upload"
-          />
-
-          {/* 数据表格 */}
-          <DataTable
-            data={files}
-            columns={columns}
-            isLoading={loading}
-            loadingText="加载文章列表..."
-            emptyText="暂无文章，请上传 MDX 文件"
-            keyExtractor={(file) => file.slug}
-            onEdit={handleEdit}
-            onDelete={openDelete}
-            actions={{ edit: true, delete: true }}
-          />
-        </AdminPageLayout>
-
-        {/* 编辑对话框 */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle>编辑: {selectedFile?.title}</DialogTitle>
-              <DialogDescription>{selectedFile?.fileName}</DialogDescription>
-            </DialogHeader>
-            <div className="mt-4 h-[60vh] w-full">
-              <Editor
-                height="100%"
-                defaultLanguage="markdown"
-                value={editContent}
-                onChange={(value) => setEditContent(value || '')}
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  lineNumbers: 'on',
-                  folding: true,
-                  automaticLayout: true,
-                  tabSize: 2,
-                  fontSize: 14,
-                }}
-                theme="vs-dark"
-              />
-            </div>
-            <DialogFooter className="mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-                disabled={isSaving}
-              >
-                <X className="mr-2 h-4 w-4" />
-                取消
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                <Save className="mr-2 h-4 w-4" />
-                {isSaving ? '保存中...' : '保存'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* 删除确认对话框 - 使用通用组件 */}
-        <DeleteConfirmDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-          title="确认删除"
-          description={
-            <>
-              确定要删除文章 <strong>{selectedFile?.title}</strong>{' '}
-              吗？此操作不可恢复。
-            </>
-          }
-          onConfirm={handleDelete}
-          isDeleting={isSubmitting}
+    <>
+      <AdminPageLayout
+        title="文章列表"
+        description={`共 ${files.length} 篇文章`}
+        actions={[
+          createRefreshAction(fetchItems, loading),
+          {
+            label: isUploading ? '上传中...' : '上传 MDX',
+            icon: <Upload className="mr-2 h-4 w-4" />,
+            onClick: () => document.getElementById('mdx-upload')?.click(),
+            disabled: isUploading,
+            variant: 'default',
+          },
+        ]}
+      >
+        {/* 隐藏的文件输入 */}
+        <Input
+          type="file"
+          accept=".mdx"
+          onChange={handleUpload}
+          disabled={isUploading}
+          className="hidden"
+          id="mdx-upload"
         />
-      </main>
-    </div>
+
+        {/* 数据表格 */}
+        <DataTable
+          data={files}
+          columns={columns}
+          isLoading={loading}
+          loadingText="加载文章列表..."
+          emptyText="暂无文章，请上传 MDX 文件"
+          keyExtractor={(file) => file.slug}
+          onEdit={handleEdit}
+          onDelete={openDelete}
+          actions={{ edit: true, delete: true }}
+        />
+      </AdminPageLayout>
+
+      {/* 编辑对话框 */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>编辑: {selectedFile?.title}</DialogTitle>
+            <DialogDescription>{selectedFile?.fileName}</DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 h-[60vh] w-full">
+            <Editor
+              height="100%"
+              defaultLanguage="markdown"
+              value={editContent}
+              onChange={(value) => setEditContent(value || '')}
+              options={{
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                folding: true,
+                automaticLayout: true,
+                tabSize: 2,
+                fontSize: 14,
+              }}
+              theme="vs-dark"
+            />
+          </div>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSaving}
+            >
+              <X className="mr-2 h-4 w-4" />
+              取消
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? '保存中...' : '保存'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认对话框 - 使用通用组件 */}
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="确认删除"
+        description={
+          <>
+            确定要删除文章 <strong>{selectedFile?.title}</strong>{' '}
+            吗？此操作不可恢复。
+          </>
+        }
+        onConfirm={handleDelete}
+        isDeleting={isSubmitting}
+      />
+    </>
   );
 }

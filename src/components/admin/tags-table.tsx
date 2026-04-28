@@ -1,7 +1,9 @@
 'use client';
 
-import { Loader2, Pencil, Trash2, Tag } from 'lucide-react';
-import { BrandIcons } from '@/components/shared/brand-icons';
+import Link from 'next/link';
+import { Loader2, Tag as LucideTag, Pencil, Trash2 } from 'lucide-react';
+
+import type { Tag, TagType } from '@/lib/tag-store';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Table,
@@ -11,16 +13,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/shadcn-ui/table';
-import type { Tag as TagType } from '@/lib/tag-store';
+import { BrandIcons } from '@/components/shared/brand-icons';
 
 interface TagsTableProps {
-  tags: TagType[];
+  type: TagType;
+  tags: Tag[];
   isLoading: boolean;
-  onEdit: (tag: TagType) => void;
-  onDelete: (tag: TagType) => void;
+  onEdit: (tag: Tag) => void;
+  onDelete: (tag: Tag) => void;
 }
 
-export function TagsTable({ tags, isLoading, onEdit, onDelete }: TagsTableProps) {
+export function TagsTable({
+  type,
+  tags,
+  isLoading,
+  onEdit,
+  onDelete,
+}: TagsTableProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -51,13 +60,20 @@ export function TagsTable({ tags, isLoading, onEdit, onDelete }: TagsTableProps)
       <TableBody>
         {tags.map((tag) => {
           const IconComponent =
-            BrandIcons[tag.icon as keyof typeof BrandIcons] || Tag;
+            BrandIcons[tag.icon as keyof typeof BrandIcons] || LucideTag;
           return (
             <TableRow key={tag.id}>
               <TableCell>
                 <IconComponent className="h-4 w-4" />
               </TableCell>
-              <TableCell className="font-mono text-xs">{tag.id}</TableCell>
+              <TableCell className="font-mono text-xs">
+                <Link
+                  href={`/tag/${type}/${tag.id}`}
+                  className="hover:underline"
+                >
+                  {tag.id}
+                </Link>
+              </TableCell>
               <TableCell className="font-medium">{tag.name}</TableCell>
               <TableCell className="text-muted-foreground max-w-xs truncate">
                 {tag.description || '-'}
