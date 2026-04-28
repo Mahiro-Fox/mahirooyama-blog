@@ -10,11 +10,7 @@ import { toast } from 'sonner';
 import { pageRoutesConfig } from '@/lib/config';
 import type { UserRole } from '@/lib/user-store';
 import { Button } from '@/components/shadcn-ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/shadcn-ui/sheet';
+import { Sheet, SheetContent } from '@/components/shadcn-ui/sheet';
 
 interface CurrentUser {
   id: string;
@@ -216,14 +212,14 @@ export default function AdminLayout({
       {/* 移动端顶部Header */}
       <div className="bg-background fixed top-0 right-0 left-0 z-30 flex h-14 items-center justify-between border-b px-4 lg:hidden">
         <div className="flex items-center gap-3">
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
+          <Menu
+            className="h-5 w-5 md:hidden"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="打开菜单"
+          />
+          <Sheet open={mobileMenuOpen}>
             <SheetContent side="left" className="w-64 p-0">
-              <div className="flex h-full flex-col">
+              <div className="flex h-screen flex-col">
                 {/* Logo */}
                 <div className="border-b p-4">
                   <Link
@@ -279,6 +275,11 @@ export default function AdminLayout({
                         {getRoleDisplay(currentUser?.role || '')}
                       </p>
                     </div>
+                    <Menu
+                      className="h-5 w-5 md:hidden"
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-label="关闭菜单"
+                    />
                   </div>
                   <Button
                     variant="outline"
@@ -376,7 +377,7 @@ export default function AdminLayout({
         </header>
 
         {/* 页面内容 */}
-        <div className="p-4 lg:p-6">{children}</div>
+        <div className="px-4 py-20 lg:p-6">{children}</div>
       </main>
     </div>
   );

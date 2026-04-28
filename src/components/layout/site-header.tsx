@@ -1,14 +1,22 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { navRoutesConfig, siteConfig } from '@/lib/config';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import { Separator } from '@/components/shadcn-ui/separator';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/shadcn-ui/sheet';
 import { Search } from '@/components/content/search';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { SiteLogo } from '@/components/shared/site-logo';
@@ -17,6 +25,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
   const { setTheme, resolvedTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
 
   const toggleTheme = useCallback(() => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
@@ -32,7 +41,8 @@ export function SiteHeader() {
               <span className="sr-only">{siteConfig.name}</span>
             </Link>
           </Button>
-          <div className="flex items-center gap-2">
+          {/* 桌面端导航 - 在中等屏幕以上显示 */}
+          <nav className="hidden items-center gap-2 md:flex">
             {navRoutesConfig.map((item) => (
               <Button
                 asChild
@@ -53,7 +63,45 @@ export function SiteHeader() {
                 </Link>
               </Button>
             ))}
-          </div>
+          </nav>
+          {/* 移动端菜单按钮 */}
+          <Menu className="md:hidden" onClick={() => setIsOpen(true)} />
+          {/* 移动端侧边栏导航 */}
+          <Sheet open={isOpen}>
+            <SheetContent
+              side="left"
+              className="relative w-[280px] sm:w-[350px]"
+            >
+              <SheetHeader className="border-b pb-4">
+                <SheetTitle className="flex items-center gap-2">
+                  <SiteLogo className="h-8 w-8 overflow-hidden rounded-full" />
+                  <span className="text-lg font-semibold">
+                    {siteConfig.name}
+                  </span>
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="mt-6 flex flex-col gap-2">
+                {navRoutesConfig.map((item) => (
+                  <SheetClose asChild key={item.navHref}>
+                    <Link
+                      href={item.navHref}
+                      className={`flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                        isActive(item.navHref)
+                          ? 'bg-accent text-accent-foreground'
+                          : 'hover:bg-muted'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  </SheetClose>
+                ))}
+              </nav>
+              <Menu
+                onClick={() => setIsOpen(false)}
+                className="absolute right-4 bottom-4 cursor-pointer"
+              />
+            </SheetContent>
+          </Sheet>
           <Search />
           <div className="flex items-center gap-2 md:flex-1 md:justify-end">
             <Button

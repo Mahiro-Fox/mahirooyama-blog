@@ -75,7 +75,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
   },
   {
     name: 'Tag',
-    navHref: '/tags',
+    navHref: '/tag',
     adminHref: '/admin/tags',
     label: '标签管理',
     icon: Tag,
