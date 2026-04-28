@@ -57,7 +57,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
   {
     name: 'Photos',
     navHref: '/photos',
-    adminHref: '/admin/photos',
+    adminHref: '',
     label: 'Photos 管理',
     title: '瀑布流图片展示',
     icon: Camera,
@@ -97,4 +97,8 @@ export const pageRoutesConfig: PageRouteConfig[] = [
 // 仅导航栏使用的路由（排除 hideInNav 的路由）
 export const navRoutesConfig = pageRoutesConfig.filter(
   (route) => !route.hideInNav
+);
+
+export const adminRoutesConfig = pageRoutesConfig.filter(
+  (route) => route.adminHref
 );

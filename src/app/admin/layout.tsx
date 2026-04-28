@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Menu, Shield, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { pageRoutesConfig } from '@/lib/config';
+import { adminRoutesConfig } from '@/lib/config';
 import type { UserRole } from '@/lib/user-store';
 import { Button } from '@/components/shadcn-ui/button';
 import { Sheet, SheetContent } from '@/components/shadcn-ui/sheet';
@@ -118,7 +118,9 @@ export default function AdminLayout({
   // 获取当前页面标题
   const getCurrentPageTitle = () => {
     if (pathname === '/admin') return '管理后台';
-    const config = pageRoutesConfig.find((item) => item.adminHref === pathname);
+    const config = adminRoutesConfig.find(
+      (item) => item.adminHref === pathname
+    );
     return config?.label || '管理后台';
   };
 
@@ -165,7 +167,7 @@ export default function AdminLayout({
         {/* 导航 */}
         <nav className="flex-1 overflow-auto p-4">
           <div className="space-y-1">
-            {pageRoutesConfig.map((item) => (
+            {adminRoutesConfig.map((item) => (
               <Link
                 key={item.adminHref}
                 href={item.adminHref}
@@ -234,7 +236,7 @@ export default function AdminLayout({
                 {/* 导航 */}
                 <nav className="flex-1 overflow-auto p-4">
                   <div className="space-y-1">
-                    {pageRoutesConfig.map((item) => (
+                    {adminRoutesConfig.map((item) => (
                       <Link
                         key={item.adminHref}
                         href={item.adminHref}
