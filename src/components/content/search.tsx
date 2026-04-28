@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   FileText,
@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { debounce } from '@/lib/utils';
 import { SearchResult, useSearch } from '@/hooks/use-search';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -24,6 +25,20 @@ export function Search() {
   const [open, setOpen] = useState(false);
   const { keyword, setKeyword, results, isLoading, clearSearch } =
     useSearch(10);
+
+  // 本地输入状态（立即响应输入）
+  const [inputValue, setInputValue] = useState(keyword);
+
+  // 防抖设置搜索关键词（延迟300ms）
+  const debouncedSetKeyword = useMemo(
+    () => debounce((value: string) => setKeyword(value), 300),
+    [setKeyword]
+  );
+
+  // 同步外部 keyword 变化到本地输入
+  useEffect(() => {
+    setInputValue(keyword);
+  }, [keyword]);
 
   // 键盘快捷键 Cmd/Ctrl + K 打开搜索
   useEffect(() => {
@@ -44,6 +59,7 @@ export function Search() {
   const handleClose = () => {
     setOpen(false);
     clearSearch();
+    setInputValue('');
   };
 
   return (
@@ -77,8 +93,12 @@ export function Search() {
             <Input
               className="placeholder:text-muted-foreground flex h-14 w-full rounded-md border-0 bg-transparent py-4 text-sm outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="搜索文章、画廊..."
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
+              value={inputValue}
+              onChange={(e) => {
+                const value = e.target.value;
+                setInputValue(value); // 立即更新输入显示
+                debouncedSetKeyword(value); // 防抖更新搜索
+              }}
               autoFocus
             />
             {keyword && (

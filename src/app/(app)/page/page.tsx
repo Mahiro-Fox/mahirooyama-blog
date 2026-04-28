@@ -25,34 +25,36 @@ export default function BrowsePage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {pageRoutesConfig.map((route) => (
-            <Link key={route.navHref} href={route.navHref}>
-              <Card className="group cursor-pointer transition-all hover:shadow-lg">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex h-14 w-14 items-center justify-center rounded-xl transition-colors">
-                      {route.label === 'Blog' ? (
-                        <FileText className="h-7 w-7" />
-                      ) : route.label === 'Gallery' ? (
-                        <ImageIcon className="h-7 w-7" />
-                      ) : (
-                        <Folder className="h-7 w-7" />
-                      )}
+          {pageRoutesConfig.map((route) =>
+            route.hideInNav ? null : (
+              <Link key={route.navHref} href={route.navHref}>
+                <Card className="group cursor-pointer transition-all hover:shadow-lg">
+                  <CardHeader>
+                    <div className="flex items-center gap-4">
+                      <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex h-14 w-14 items-center justify-center rounded-xl transition-colors">
+                        {route.label === 'Blog' ? (
+                          <FileText className="h-7 w-7" />
+                        ) : route.label === 'Gallery' ? (
+                          <ImageIcon className="h-7 w-7" />
+                        ) : (
+                          <Folder className="h-7 w-7" />
+                        )}
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl">{route.label}</CardTitle>
+                        <CardDescription>{route.title}</CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-xl">{route.label}</CardTitle>
-                      <CardDescription>{route.title}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm">
-                    {route.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm">
+                      {route.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            )
+          )}
         </div>
       </div>
     </div>

@@ -97,7 +97,7 @@ export default async function IndexPage() {
                   href="/page/gallery/1"
                   className="group inline-flex items-center gap-2"
                 >
-                  <span>{'See more posts'}</span>
+                  <span>{'See more galleries'}</span>
                   <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
