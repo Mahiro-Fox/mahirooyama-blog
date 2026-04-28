@@ -1,4 +1,5 @@
 import {
+  Camera,
   FileText,
   FolderOpen,
   ImageIcon,
@@ -52,6 +53,15 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '管理图库图片和元数据',
     icon: ImageIcon,
     description: '上传、编辑、删除图库图片，支持元数据管理。',
+  },
+  {
+    name: 'Photos',
+    navHref: '/photos',
+    adminHref: '/admin/photos',
+    label: 'Photos 管理',
+    title: '瀑布流图片展示',
+    icon: Camera,
+    description: '以瀑布流形式展示 public/images/gallery 目录下的图片。',
   },
   {
     name: 'PublicFiles',
