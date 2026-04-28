@@ -3,13 +3,16 @@ import type { MetadataRoute } from 'next';
 import { siteConfig } from '@/lib/config';
 import { getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
-import { blogTags, galleryTags } from '@/lib/tag';
+import { tagStore } from '@/lib/tag-store';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
 
-  const blogPosts = await getAllBlogPosts();
-  const galleryImages = await getAllGalleryImages();
+  const [blogPosts, galleryImages, tags] = await Promise.all([
+    getAllBlogPosts(),
+    getAllGalleryImages(),
+    tagStore.getAll(),
+  ]);
 
   const blogPages = blogPosts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
@@ -19,11 +22,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${baseUrl}/gallery/${gallery.slug}`,
   }));
 
-  const blogTagPages = Object.keys(blogTags).map((slug) => ({
+  const blogTagPages = Object.keys(tags.blog).map((slug) => ({
     url: `${baseUrl}/tag/blog/${slug}`,
   }));
 
-  const galleryTagPages = Object.keys(galleryTags).map((slug) => ({
+  const galleryTagPages = Object.keys(tags.gallery).map((slug) => ({
     url: `${baseUrl}/tag/gallery/${slug}`,
   }));
 

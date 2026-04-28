@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { author } from '@/lib/author';
 import { siteConfig } from '@/lib/config';
 import { getAllBlogPosts, getBlogPostBySlug } from '@/lib/mdx';
-import { blogTags } from '@/lib/tag';
+import { tagStore } from '@/lib/tag-store';
 import { absoluteUrl, formatDate } from '@/lib/utils';
 import { Author } from '@/components/content/author';
 import { CustomMDX } from '@/components/content/custom-mdx';
@@ -24,7 +24,10 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const [post, tags] = await Promise.all([
+    getBlogPostBySlug(slug),
+    tagStore.getByType('blog'),
+  ]);
 
   if (!post) {
     return {};
@@ -58,7 +61,10 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const [post, tags] = await Promise.all([
+    getBlogPostBySlug(slug),
+    tagStore.getByType('blog'),
+  ]);
 
   if (!post) {
     notFound();
@@ -69,7 +75,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       ? [
           {
             link: `/tag/blog/${post.metadata.tags[0]}`,
-            label: blogTags[post.metadata.tags[0]].name,
+            label: tags[post.metadata.tags[0]]?.name || post.metadata.tags[0],
           },
         ]
       : []),
@@ -116,7 +122,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                       <LinkBadge
                         key={slug}
                         link={`/tag/blog/${slug}`}
-                        label={blogTags[slug].name}
+                        label={tags[slug]?.name || slug}
                       />
                     ))}
                   </div>

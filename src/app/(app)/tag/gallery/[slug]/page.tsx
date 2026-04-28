@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { siteConfig } from '@/lib/config';
 import { getGalleryPostsByTagSlug } from '@/lib/gallery';
-import { galleryTags } from '@/lib/tag';
+import { tagStore } from '@/lib/tag-store';
 import { absoluteUrl, formatDate } from '@/lib/utils';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { TextAnimate } from '@/components/shadcn-ui/text-animate';
@@ -16,14 +16,16 @@ interface GalleryTagPageProps {
 }
 
 export async function generateStaticParams() {
-  return Object.keys(galleryTags).map((slug) => ({
+  const tags = await tagStore.getByType('gallery');
+  return Object.keys(tags).map((slug) => ({
     slug,
   }));
 }
 
 export async function generateMetadata({ params }: GalleryTagPageProps) {
   const { slug } = await params;
-  const tag = galleryTags[slug];
+  const tags = await tagStore.getByType('gallery');
+  const tag = tags[slug];
 
   if (!tag) {
     return {};
@@ -57,10 +59,11 @@ export async function generateMetadata({ params }: GalleryTagPageProps) {
 
 export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
   const { slug } = await params;
-  const tag = galleryTags[slug];
+  const tags = await tagStore.getByType('gallery');
+  const tag = tags[slug];
 
   if (!tag) {
-    notFound();
+    return notFound();
   }
 
   const data = await getGalleryPostsByTagSlug(slug);
@@ -91,9 +94,9 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
         </div>
         <div className="container pb-6">
           <CardTagTitle
-            icon={tag.icon}
+            icon={tag.icon as keyof typeof BrandIcons}
             name={tag.name}
-            postCount={data?.length}
+            postCount={data?.length || 0}
           />
         </div>
       </div>
@@ -127,7 +130,7 @@ function CardTagTitle({
 }: {
   icon: keyof typeof BrandIcons;
   name: string;
-  postCount?: number;
+  postCount: number;
 }) {
   const TagIcon = BrandIcons[icon];
 

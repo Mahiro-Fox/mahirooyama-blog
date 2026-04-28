@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { getAllGalleryImages, getGalleryImageBySlug } from '@/lib/gallery';
-import { galleryTags } from '@/lib/tag';
+import { tagStore } from '@/lib/tag-store';
 import { formatDate } from '@/lib/utils';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
@@ -29,12 +29,13 @@ export async function generateMetadata({
   params,
 }: GalleryImagePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const image = await getGalleryImageBySlug(slug);
+  const [image, tags] = await Promise.all([
+    getGalleryImageBySlug(slug),
+    tagStore.getByType('gallery'),
+  ]);
 
   if (!image) {
-    return {
-      title: 'Image Not Found',
-    };
+    return notFound();
   }
 
   return {
@@ -47,10 +48,13 @@ export default async function GalleryImagePage({
   params,
 }: GalleryImagePageProps) {
   const { slug } = await params;
-  const image = await getGalleryImageBySlug(slug);
+  const [image, tags] = await Promise.all([
+    getGalleryImageBySlug(slug),
+    tagStore.getByType('gallery'),
+  ]);
 
   if (!image) {
-    notFound();
+    return notFound();
   }
 
   const breadcrumbItems = [
@@ -58,7 +62,7 @@ export default async function GalleryImagePage({
       ? [
           {
             link: `/tag/gallery/${image.metadata.tags[0]}`,
-            label: galleryTags[image.metadata.tags[0]].name,
+            label: tags[image.metadata.tags[0]]?.name || image.metadata.tags[0],
           },
         ]
       : []),
@@ -100,7 +104,7 @@ export default async function GalleryImagePage({
                 <LinkBadge
                   key={slug}
                   link={`/tag/gallery/${slug}`}
-                  label={galleryTags[slug]?.name || slug}
+                  label={tags[slug]?.name || slug}
                 />
               ))}
             </div>

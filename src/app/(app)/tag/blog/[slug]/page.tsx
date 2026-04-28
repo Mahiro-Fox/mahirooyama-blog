@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { siteConfig } from '@/lib/config';
 import { getBlogPostsByTagSlug } from '@/lib/mdx';
-import { blogTags } from '@/lib/tag';
+import { tagStore } from '@/lib/tag-store';
 import { absoluteUrl, formatDate } from '@/lib/utils';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { TextAnimate } from '@/components/shadcn-ui/text-animate';
@@ -16,14 +16,16 @@ interface BlogTagPageProps {
 }
 
 export async function generateStaticParams() {
-  return Object.keys(blogTags).map((slug) => ({
+  const tags = await tagStore.getByType('blog');
+  return Object.keys(tags).map((slug) => ({
     slug,
   }));
 }
 
 export async function generateMetadata({ params }: BlogTagPageProps) {
   const { slug } = await params;
-  const tag = blogTags[slug];
+  const tags = await tagStore.getByType('blog');
+  const tag = tags[slug];
 
   if (!tag) {
     return {};
@@ -57,13 +59,14 @@ export async function generateMetadata({ params }: BlogTagPageProps) {
 
 export default async function BlogTagPage({ params }: BlogTagPageProps) {
   const { slug } = await params;
-  const tag = blogTags[slug];
+  const tags = await tagStore.getByType('blog');
+  const tag = tags[slug];
 
   if (!tag) {
-    notFound();
+    return notFound();
   }
 
-  const data = await getBlogPostsByTagSlug(slug);
+  const posts = await getBlogPostsByTagSlug(slug);
 
   const breadcrumbItems = [
     {
@@ -91,9 +94,9 @@ export default async function BlogTagPage({ params }: BlogTagPageProps) {
         </div>
         <div className="container pb-6">
           <CardTagTitle
-            icon={tag.icon}
+            icon={tag.icon as keyof typeof BrandIcons}
             name={tag.name}
-            postCount={data?.length}
+            postCount={posts.length}
           />
         </div>
       </div>
@@ -101,7 +104,7 @@ export default async function BlogTagPage({ params }: BlogTagPageProps) {
         <div className="container flex flex-col gap-1">
           <section className="container border-b py-6">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {data?.map((item) => (
+              {posts.map((item) => (
                 <LinkCard
                   key={item.slug}
                   title={item.metadata.title}
@@ -127,7 +130,7 @@ function CardTagTitle({
 }: {
   icon: keyof typeof BrandIcons;
   name: string;
-  postCount?: number;
+  postCount: number;
 }) {
   const TagIcon = BrandIcons[icon];
 

@@ -54,4 +54,13 @@ export const pageRoutesConfig = [
     description: '创建、编辑、删除用户账号，管理用户权限（仅超级管理员）。',
     hideInNav: true,
   },
+  {
+    name: 'TagManagement',
+    navHref: '/admin/tags',
+    adminHref: '/admin/tags',
+    label: '标签管理',
+    title: '管理博客和图库标签',
+    description: '创建、编辑、删除标签分类，用于文章和图库的分类管理。',
+    hideInNav: true,
+  },
 ];
