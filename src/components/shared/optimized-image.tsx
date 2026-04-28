@@ -9,6 +9,8 @@ import {
 } from '@/lib/client-image-utils';
 import { cn } from '@/lib/utils';
 
+import { useImagePreview } from './image-preview-provider';
+
 interface OptimizedImageProps {
   src: string;
   alt: string;
@@ -23,6 +25,8 @@ interface OptimizedImageProps {
   aspectRatio?: number;
   blurDataURL?: string;
   unoptimized?: boolean;
+  /** 是否启用点击预览功能 */
+  previewable?: boolean;
 }
 
 /**
@@ -46,9 +50,11 @@ export function OptimizedImage({
   aspectRatio,
   blurDataURL,
   unoptimized,
+  previewable = false,
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const { openPreview } = useImagePreview();
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -57,6 +63,12 @@ export function OptimizedImage({
   const handleError = useCallback(() => {
     setHasError(true);
   }, []);
+
+  const handleClick = useCallback(() => {
+    if (previewable && src) {
+      openPreview({ src, alt, width, height });
+    }
+  }, [previewable, src, alt, width, height, openPreview]);
 
   // 错误回退
   if (hasError || !src) {
@@ -93,11 +105,13 @@ export function OptimizedImage({
       className={cn(
         'relative overflow-hidden',
         fill && 'h-full w-full',
+        previewable && 'cursor-zoom-in',
         containerClassName
       )}
       style={
         aspectRatio ? { aspectRatio } : !fill ? { width, height } : undefined
       }
+      onClick={handleClick}
     >
       {/* 模糊占位符 */}
       {blurDataURL && !isLoaded && (
@@ -115,7 +129,7 @@ export function OptimizedImage({
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
         className={cn(
-          'object-contain transition-all duration-300',
+          'object-cover transition-all duration-300',
           hoverScale && 'hover:scale-105',
           !isLoaded && !blurDataURL && 'opacity-0',
           isLoaded && 'opacity-100',

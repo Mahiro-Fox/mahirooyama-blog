@@ -23,9 +23,10 @@ export function BlurredHeroImage({ imageUrl, alt }: BlurredHeroImageProps) {
           aria-hidden="true"
         />
       </div>
-      <div className="relative z-10 mx-auto max-w-3xl px-4 md:px-0">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 md:px-0">
         <AspectRatio ratio={16 / 9} className="overflow-hidden shadow-lg">
           <OptimizedImage
+            previewable
             src={imageUrl || '/placeholder.svg'}
             alt={alt}
             fill

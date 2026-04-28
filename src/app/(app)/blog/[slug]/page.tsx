@@ -160,11 +160,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </section>
         </div>
       </div>
-      <div className="container-wrapper">
-        <div className="container py-6">
-          <Breadcrumb items={breadcrumbItems} />
-        </div>
-      </div>
     </div>
   );
 }
