@@ -53,6 +53,7 @@ export default async function IndexPage() {
                   badgeText={formatDate(post.metadata.createdAt)}
                   description={post.metadata.description}
                   priority={true}
+                  isPortrait={post.isPortrait}
                 />
               </BlurFade>
             ))}
@@ -87,6 +88,7 @@ export default async function IndexPage() {
                     badgeText={formatDate(gallery.metadata.createdAt)}
                     description={gallery.metadata.description}
                     priority={index === 0} // 首屏第一张优先加载
+                    isPortrait={gallery.isPortrait}
                   />
                 </BlurFade>
               ))}

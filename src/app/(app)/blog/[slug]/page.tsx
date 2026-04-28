@@ -99,12 +99,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <BlurredHeroImage
               imageUrl={thumbnailUrl}
               alt={`${post.metadata.title} thumbnail image`}
+              isPortrait={post.isPortrait}
             />
           )}
         </div>
       </div>
       <div className="container-wrapper py-8">
-        <div className="container flex max-w-screen-md flex-col gap-8">
+        <div className="container flex flex-col gap-8">
           <section className="flex-1">
             <article className="relative">
               <header className="mb-10 space-y-2 md:space-y-6">

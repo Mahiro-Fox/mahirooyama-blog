@@ -88,3 +88,29 @@ export function hasThumbnail(
   );
   return fs.existsSync(thumbPath);
 }
+
+/**
+ * 解析图片尺寸和宽高比
+ * @param imagePath 相对于 public 目录的图片路径
+ * @returns 图片尺寸信息，如果失败返回默认尺寸
+ */
+export async function parseImageDimensions(
+  imagePath: string
+): Promise<boolean> {
+  try {
+    const fullPath = path.join(process.cwd(), 'public', imagePath);
+
+    if (!fs.existsSync(fullPath)) {
+      return false;
+    }
+
+    const metadata = await sharp(fullPath).metadata();
+    const width = metadata.width || 0;
+    const height = metadata.height || 0;
+    const isPortrait = height > width;
+
+    return isPortrait;
+  } catch {
+    return false;
+  }
+}

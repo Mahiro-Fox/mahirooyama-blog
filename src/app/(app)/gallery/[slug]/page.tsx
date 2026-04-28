@@ -8,10 +8,6 @@ import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';
 import { LinkBadge } from '@/components/shared/link-badge';
-import {
-  imageSizes,
-  OptimizedImage,
-} from '@/components/shared/optimized-image';
 
 interface GalleryImagePageProps {
   params: Promise<{
@@ -86,6 +82,7 @@ export default async function GalleryImagePage({
             <BlurredHeroImage
               imageUrl={thumbnail}
               alt={`${image.metadata.title} thumbnail image`}
+              isPortrait={image.isPortrait}
             />
           )}
         </div>

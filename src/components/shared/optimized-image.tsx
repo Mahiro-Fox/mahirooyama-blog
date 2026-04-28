@@ -27,6 +27,8 @@ interface OptimizedImageProps {
   unoptimized?: boolean;
   /** 是否启用点击预览功能 */
   previewable?: boolean;
+  /** 是否是竖屏图片 */
+  isPortrait?: boolean;
 }
 
 /**
@@ -51,6 +53,7 @@ export function OptimizedImage({
   blurDataURL,
   unoptimized,
   previewable = false,
+  isPortrait = false,
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -129,7 +132,8 @@ export function OptimizedImage({
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
         className={cn(
-          'object-cover transition-all duration-300',
+          'transition-all duration-300',
+          isPortrait ? 'object-contain' : 'object-cover',
           hoverScale && 'hover:scale-105',
           !isLoaded && !blurDataURL && 'opacity-0',
           isLoaded && 'opacity-100',

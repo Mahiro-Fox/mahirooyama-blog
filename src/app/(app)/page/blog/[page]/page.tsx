@@ -63,6 +63,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
                   badgeText={formatDate(post.metadata.createdAt)}
                   description={post.metadata.description}
                   priority={true}
+                  isPortrait={post.isPortrait}
                 />
               ))}
             </div>

@@ -69,6 +69,7 @@ export default async function GalleryListPage({
                     badgeText={formatDate(post.metadata.createdAt)}
                     description={post.metadata.description}
                     priority={isPriority}
+                    isPortrait={post.isPortrait}
                   />
                 );
               })}

@@ -13,6 +13,7 @@ interface LinkCardProps {
   description?: string;
   priority?: boolean;
   variant?: 'vertical' | 'horizontal' | 'compact';
+  isPortrait?: boolean;
 }
 
 export function LinkCard({
@@ -23,6 +24,7 @@ export function LinkCard({
   priority = false,
   variant = 'vertical',
   description,
+  isPortrait = false,
 }: LinkCardProps) {
   const renderVertical = () => (
     <div className="group py-2 transition-colors duration-100 hover:text-blue-400">
@@ -33,6 +35,7 @@ export function LinkCard({
             title={title}
             priority={priority}
             aspectRatio={16 / 9}
+            isPortrait={isPortrait}
             sizes={imageSizes.galleryGrid}
           />
           <div>
@@ -55,6 +58,7 @@ export function LinkCard({
           title={title}
           priority={priority}
           aspectRatio={16 / 9}
+          isPortrait={isPortrait}
           sizes={imageSizes.galleryGrid}
         />
       </div>
@@ -82,6 +86,7 @@ export function LinkCard({
           title={title}
           priority={priority}
           aspectRatio={1 / 1}
+          isPortrait={isPortrait}
           sizes={imageSizes.thumbnail}
         />
       </div>
@@ -141,6 +146,7 @@ interface LinkCardImageProps {
   title: string;
   priority: boolean;
   aspectRatio: number;
+  isPortrait: boolean;
   sizes: string;
   className?: string;
 }
@@ -150,6 +156,7 @@ function LinkCardImage({
   title,
   priority,
   aspectRatio,
+  isPortrait,
   sizes,
   className,
 }: LinkCardImageProps) {
@@ -161,6 +168,7 @@ function LinkCardImage({
       hoverScale
       priority={priority}
       aspectRatio={aspectRatio}
+      isPortrait={isPortrait}
       sizes={sizes}
       className={`rounded-lg ${className || ''}`}
       containerClassName="overflow-hidden rounded-lg"
