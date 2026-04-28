@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { KeyRound, Loader2, Plus, Shield, Trash2, User, X } from 'lucide-react';
+import { KeyRound, Loader2, Plus, Shield, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useCrud } from '@/hooks/use-crud';
@@ -137,17 +137,6 @@ export default function UsersPage() {
       fetchItems();
     }
   }, [currentUser, fetchItems]);
-
-  // 登出
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-    } catch {
-      // 忽略错误
-    }
-    router.push('/admin/login');
-    toast.success('已登出');
-  };
 
   // 创建用户
   const handleCreateUser = async (e: React.FormEvent) => {

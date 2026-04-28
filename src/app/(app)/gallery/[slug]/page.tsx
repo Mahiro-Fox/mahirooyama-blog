@@ -29,7 +29,7 @@ export async function generateMetadata({
   params,
 }: GalleryImagePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [image, tags] = await Promise.all([
+  const [image] = await Promise.all([
     getGalleryImageBySlug(slug),
     tagStore.getByType('gallery'),
   ]);

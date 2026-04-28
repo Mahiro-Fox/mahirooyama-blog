@@ -3,16 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Editor from '@monaco-editor/react';
-import {
-  FileText,
-  FolderOpen,
-  Pencil,
-  Plus,
-  Save,
-  Trash2,
-  Upload,
-  X,
-} from 'lucide-react';
+import { Plus, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useCrud } from '@/hooks/use-crud';

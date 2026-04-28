@@ -3,15 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Editor from '@monaco-editor/react';
-import {
-  FolderOpen,
-  ImageIcon,
-  Pencil,
-  Save,
-  Trash2,
-  Upload,
-  X,
-} from 'lucide-react';
+import { Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useCrud } from '@/hooks/use-crud';
@@ -28,7 +20,6 @@ import {
 import { Input } from '@/components/shadcn-ui/input';
 import {
   AdminPageLayout,
-  createAddAction,
   createRefreshAction,
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
