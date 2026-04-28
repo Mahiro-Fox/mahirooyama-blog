@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, Menu, Shield, Upload } from 'lucide-react';
+import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { adminRoutesConfig } from '@/lib/config';
@@ -31,6 +31,7 @@ export default function AdminLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isRevalidating, setIsRevalidating] = useState(false);
 
   // 验证登录并获取当前用户
   useEffect(() => {
@@ -57,6 +58,30 @@ export default function AdminLayout({
     checkAuth();
   }, [router, pathname]);
 
+  // 手动刷新缓存
+  const handleRevalidate = async () => {
+    setIsRevalidating(true);
+    try {
+      const response = await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'all' }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '刷新失败');
+      }
+
+      const data = await response.json();
+      toast.success('所有页面缓存已刷新√');
+      console.log('刷新结果:', data.results);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '刷新缓存失败');
+    } finally {
+      setIsRevalidating(false);
+    }
+  };
   // 登出
   const handleLogout = async () => {
     try {
@@ -182,6 +207,19 @@ export default function AdminLayout({
               </Link>
             ))}
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRevalidate}
+            disabled={isRevalidating}
+          >
+            {isRevalidating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {isRevalidating ? '刷新中...' : '全量刷新缓存'}
+          </Button>
         </nav>
 
         {/* 用户信息 - 侧边栏底部 */}
@@ -252,6 +290,19 @@ export default function AdminLayout({
                       </Link>
                     ))}
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRevalidate}
+                    disabled={isRevalidating}
+                  >
+                    {isRevalidating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    {isRevalidating ? '刷新中...' : '全量刷新缓存'}
+                  </Button>
                 </nav>
 
                 {/* 用户信息 */}
