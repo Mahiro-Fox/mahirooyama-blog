@@ -14,7 +14,19 @@ export const siteConfig = {
   email: 'mahirooyama@example.com',
 };
 
-export const pageRoutesConfig = [
+export interface PageRouteConfig {
+  name: string;
+  navHref: string;
+  adminHref: string;
+  label: string;
+  title: string;
+  description: string;
+  icon?: string;
+  hideInNav?: boolean;
+  permissions?: string[];
+}
+
+export const pageRoutesConfig: PageRouteConfig[] = [
   {
     name: 'Blog',
     navHref: '/page/blog/1',
@@ -24,6 +36,7 @@ export const pageRoutesConfig = [
     icon: <FileText className="h-4 w-4" />,
     description:
       '上传、编辑、删除博客文章，支持 Markdown 格式和 YAML Frontmatter。',
+    icon: 'fileText',
   },
   {
     name: 'Gallery',
@@ -33,6 +46,7 @@ export const pageRoutesConfig = [
     title: '管理图库图片和元数据',
     icon: <ImageIcon className="h-4 w-4" />,
     description: '上传、编辑、删除图库图片，支持元数据管理。',
+    icon: 'image',
   },
   {
     name: 'PublicFiles',
@@ -43,6 +57,7 @@ export const pageRoutesConfig = [
     icon: <FolderOpen className="h-4 w-4" />,
     description: '上传、删除、重命名 public/images 目录下的图片文件。',
     hideInNav: true,
+    icon: 'folder',
   },
   {
     name: 'UserManagement',
@@ -53,14 +68,20 @@ export const pageRoutesConfig = [
     icon: <Shield className="h-4 w-4" />,
     description: '创建、编辑、删除用户账号，管理用户权限（仅超级管理员）。',
     hideInNav: true,
+    icon: 'users',
   },
   {
-    name: 'TagManagement',
-    navHref: '/admin/tags',
+    name: 'Tag',
+    navHref: '/tags',
     adminHref: '/admin/tags',
     label: '标签管理',
     title: '管理博客和图库标签',
     description: '创建、编辑、删除标签分类，用于文章和图库的分类管理。',
-    hideInNav: true,
+    icon: 'tag',
   },
 ];
+
+// 仅导航栏使用的路由（排除 hideInNav 的路由）
+export const navRoutesConfig = pageRoutesConfig.filter(
+  (route) => !route.hideInNav
+);

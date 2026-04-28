@@ -1,15 +1,26 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { KeyRound, Loader2, Plus, Shield, Trash2, User } from 'lucide-react';
+import {
+  ArrowLeft,
+  KeyRound,
+  Loader2,
+  LogOut,
+  Plus,
+  Shield,
+  Trash2,
+  User,
+  X,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
+import { useCrud } from '@/hooks/use-crud';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/shadcn-ui/card';
@@ -23,14 +34,8 @@ import {
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/shadcn-ui/table';
+import { Column, DataTable } from '@/components/admin/data-table';
+import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 
 interface UserData {
   id: string;
@@ -46,7 +51,6 @@ interface CurrentUser {
   role: 'super_admin' | 'user';
 }
 
-// 权限定义接口
 interface PermissionDef {
   value: string;
   label: string;
@@ -58,19 +62,50 @@ interface PermissionGroup {
   permissions: PermissionDef[];
 }
 
+// 获取角色显示文本
+const getRoleDisplay = (role: string) =>
+  role === 'super_admin' ? '超级管理员' : '普通用户';
+
+// 格式化日期
+const formatDate = (dateString: string) =>
+  new Date(dateString).toLocaleString('zh-CN');
+
 export default function UsersPage() {
   const router = useRouter();
-  const [users, setUsers] = useState<UserData[]>([]);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // CRUD 状态管理
+  const {
+    items: users,
+    isLoading,
+    isSubmitting,
+    fetchItems,
+    deleteItem,
+    setState,
+  } = useCrud<UserData>({
+    apiPath: '/api/users',
+    idField: 'id',
+    onSuccess: (action) => {
+      if (action === 'delete') {
+        // 删除成功后刷新列表
+        fetchItems();
+      }
+    },
+  });
+
+  // 表单状态
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<UserData | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // 权限编辑状态
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
-
+  const [rolePermissions, setRolePermissions] = useState<
+    Record<string, string[]>
+  >({});
   const [permissionDefinitions, setPermissionDefinitions] = useState<
     PermissionGroup[]
   >([]);
@@ -103,42 +138,35 @@ export default function UsersPage() {
         });
       } catch {
         router.push('/admin/login?redirect=/admin/users');
+      } finally {
+        setAuthLoading(false);
       }
     };
     checkAuth();
   }, [router]);
 
   // 获取用户列表
-  const fetchUsers = useCallback(async () => {
-    try {
-      const response = await fetch('/api/users');
-      if (!response.ok) {
-        if (response.status === 401) {
-          router.push('/admin/login?redirect=/admin/users');
-          return;
-        }
-        throw new Error('获取用户列表失败');
-      }
-      const data = await response.json();
-      setUsers(data.users);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '获取用户列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
   useEffect(() => {
     if (currentUser) {
-      fetchUsers();
+      fetchItems();
     }
-  }, [fetchUsers, currentUser]);
+  }, [currentUser, fetchItems]);
+
+  // 登出
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } catch {
+      // 忽略错误
+    }
+    router.push('/admin/login');
+    toast.success('已登出');
+  };
 
   // 创建用户
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
+    setState((prev) => ({ ...prev, isSubmitting: true }));
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
@@ -149,75 +177,52 @@ export default function UsersPage() {
           role: newRole,
         }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '创建用户失败');
-      }
-
+      if (!response.ok) throw new Error(data.error || '创建用户失败');
       toast.success('用户创建成功');
       setCreateDialogOpen(false);
       setNewUsername('');
       setNewPassword('');
       setNewRole('user');
-      fetchUsers();
+      fetchItems();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '创建用户失败');
     } finally {
-      setIsSubmitting(false);
+      setState((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
 
-  // 删除用户
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('确定要删除这个用户吗？此操作不可撤销。')) {
-      return;
-    }
+  // 打开删除对话框
+  const openDelete = (user: UserData) => {
+    setDeletingUser(user);
+    setIsDeleteDialogOpen(true);
+  };
 
-    try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '删除用户失败');
-      }
-
-      toast.success('用户删除成功');
-      fetchUsers();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除用户失败');
-    }
+  // 执行删除
+  const handleDeleteUser = async () => {
+    if (!deletingUser) return;
+    await deleteItem(deletingUser.id);
+    setIsDeleteDialogOpen(false);
+    setDeletingUser(null);
   };
 
   // 修改密码
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser || !editPassword) return;
-
-    // 验证两次输入的密码是否一致
     if (editPassword !== editConfirmPassword) {
       toast.error('两次输入的密码不一致');
       return;
     }
-
-    setIsSubmitting(true);
+    setState((prev) => ({ ...prev, isSubmitting: true }));
     try {
       const response = await fetch(`/api/users/${editingUser.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: editPassword }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '更新密码失败');
-      }
-
+      if (!response.ok) throw new Error(data.error || '更新密码失败');
       toast.success('密码更新成功');
       setEditDialogOpen(false);
       setEditingUser(null);
@@ -226,22 +231,15 @@ export default function UsersPage() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '更新密码失败');
     } finally {
-      setIsSubmitting(false);
+      setState((prev) => ({ ...prev, isSubmitting: false }));
     }
-  };
-
-  // 格式化日期
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('zh-CN');
   };
 
   // 获取角色权限配置
   const fetchRolePermissions = async () => {
     try {
       const response = await fetch('/api/role-permissions');
-      if (!response.ok) {
-        throw new Error('获取权限配置失败');
-      }
+      if (!response.ok) throw new Error('获取权限配置失败');
       const data = await response.json();
       setPermissionDefinitions(data.definitions);
       return data;
@@ -255,8 +253,6 @@ export default function UsersPage() {
   const openPermissionDialog = async (role: 'user' | 'super_admin') => {
     const data = await fetchRolePermissions();
     setEditingRole(role);
-    // 注意：super_admin 的权限是固定的 '*', 但这里我们只编辑 user 角色
-    // 直接使用返回的数据，而不是 state（state 更新是异步的）
     if (data && role === 'user' && data.permissions[role]) {
       setSelectedPermissions(data.permissions[role]);
     } else {
@@ -277,8 +273,7 @@ export default function UsersPage() {
   // 保存角色权限
   const handleSavePermissions = async () => {
     if (!editingRole) return;
-
-    setIsSubmitting(true);
+    setState((prev) => ({ ...prev, isSubmitting: true }));
     try {
       const response = await fetch('/api/role-permissions', {
         method: 'PUT',
@@ -288,13 +283,8 @@ export default function UsersPage() {
           permissions: selectedPermissions,
         }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '保存权限配置失败');
-      }
-
+      if (!response.ok) throw new Error(data.error || '保存权限配置失败');
       toast.success('权限配置已保存');
       setPermissionDialogOpen(false);
       setEditingRole(null);
@@ -302,30 +292,22 @@ export default function UsersPage() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '保存权限配置失败');
     } finally {
-      setIsSubmitting(false);
+      setState((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
 
   // 重置为默认权限
   const handleResetPermissions = async () => {
-    if (!confirm('确定要重置为默认权限配置吗？')) {
-      return;
-    }
-
-    setIsSubmitting(true);
+    if (!confirm('确定要重置为默认权限配置吗？')) return;
+    setState((prev) => ({ ...prev, isSubmitting: true }));
     try {
       const response = await fetch('/api/role-permissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reset' }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '重置权限配置失败');
-      }
-
+      if (!response.ok) throw new Error(data.error || '重置权限配置失败');
       toast.success('权限配置已重置为默认值');
       if (editingRole && data.permissions[editingRole]) {
         setSelectedPermissions(data.permissions[editingRole]);
@@ -333,25 +315,82 @@ export default function UsersPage() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '重置权限配置失败');
     } finally {
-      setIsSubmitting(false);
+      setState((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
 
-  // 获取角色显示文本
-  const getRoleDisplay = (role: string) => {
-    return role === 'super_admin' ? '超级管理员' : '普通用户';
-  };
-
-  // 获取角色图标
-  const getRoleIcon = (role: string) => {
-    return role === 'super_admin' ? (
-      <Shield className="h-4 w-4 text-blue-500" />
-    ) : (
-      <User className="h-4 w-4 text-gray-500" />
+  // 自定义操作按钮渲染
+  const renderActions = (user: UserData) => {
+    const isSuperAdmin = currentUser?.role === 'super_admin';
+    const isSelf = user.id === currentUser?.id;
+    return (
+      <div className="flex justify-end gap-2">
+        {(isSuperAdmin || isSelf) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setEditingUser(user);
+              setEditPassword('');
+              setEditConfirmPassword('');
+              setEditDialogOpen(true);
+            }}
+          >
+            修改密码
+          </Button>
+        )}
+        {isSuperAdmin && !isSelf && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => openDelete(user)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> 删除
+          </Button>
+        )}
+      </div>
     );
   };
 
-  if (loading) {
+  // 表格列定义
+  const columns: Column<UserData>[] = [
+    {
+      key: 'username',
+      header: '用户名',
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          {user.role === 'super_admin' ? (
+            <Shield className="h-4 w-4 text-blue-500" />
+          ) : (
+            <User className="h-4 w-4 text-gray-500" />
+          )}
+          <span className="font-medium">{user.username}</span>
+          {user.id === currentUser?.id && (
+            <span className="bg-primary text-primary-foreground rounded px-2 py-0.5 text-xs">
+              我
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      header: '角色',
+      render: (user) => getRoleDisplay(user.role),
+    },
+    {
+      key: 'createdAt',
+      header: '创建时间',
+      render: (user) => formatDate(user.createdAt),
+    },
+    {
+      key: 'updatedAt',
+      header: '更新时间',
+      render: (user) => formatDate(user.updatedAt),
+    },
+  ];
+
+  if (authLoading) {
     return (
       <div className="bg-muted/30 flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -362,16 +401,39 @@ export default function UsersPage() {
   const isSuperAdmin = currentUser?.role === 'super_admin';
 
   return (
-    <div className="flex flex-col items-center justify-between p-4 lg:p-6">
-      <div className="mb-4 w-full">
-        <h2 className="text-lg font-semibold">用户管理</h2>
-      </div>
-      <div className="w-full">
+    <div className="bg-muted/30 min-h-screen">
+      {/* 头部 */}
+      <header className="bg-background border-b px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/admin">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" /> 返回
+              </Button>
+            </Link>
+            <h1 className="text-xl font-bold">用户管理</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">
+              当前用户: {currentUser?.username} (
+              {getRoleDisplay(currentUser?.role || '')})
+            </span>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" /> 登出
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* 主内容 */}
+      <main className="mx-auto max-w-6xl p-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div className="flex flex-col gap-4">
               <CardTitle>用户列表</CardTitle>
-              <CardDescription>管理系统用户账号和权限</CardDescription>
+              <p className="text-muted-foreground text-sm">
+                管理系统用户账号和权限
+              </p>
             </div>
             {isSuperAdmin && (
               <div className="flex gap-2">
@@ -379,79 +441,24 @@ export default function UsersPage() {
                   variant="outline"
                   onClick={() => openPermissionDialog('user')}
                 >
-                  <KeyRound className="mr-2 h-4 w-4" />
-                  修改权限
+                  <KeyRound className="mr-2 h-4 w-4" /> 修改权限
                 </Button>
                 <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  创建用户
+                  <Plus className="mr-2 h-4 w-4" /> 创建用户
                 </Button>
               </div>
             )}
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>用户名</TableHead>
-                  <TableHead>角色</TableHead>
-                  <TableHead>创建时间</TableHead>
-                  <TableHead>更新时间</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {getRoleIcon(user.role)}
-                        {user.username}
-                        {user.id === currentUser?.id && (
-                          <span className="bg-primary text-primary-foreground rounded px-2 py-0.5 text-xs">
-                            我
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getRoleDisplay(user.role)}</TableCell>
-                    <TableCell>{formatDate(user.createdAt)}</TableCell>
-                    <TableCell>{formatDate(user.updatedAt)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {/* 用户可以修改自己的密码 */}
-                        {/* 超级管理员可以修改任何人的密码，普通用户只能修改自己的密码 */}
-                        {(isSuperAdmin || user.id === currentUser?.id) && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingUser(user);
-                              setEditPassword('');
-                              setEditConfirmPassword('');
-                              setEditDialogOpen(true);
-                            }}
-                          >
-                            修改密码
-                          </Button>
-                        )}
-                        {/* super_admin 可以删除其他用户 */}
-                        {isSuperAdmin && user.id !== currentUser?.id && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteUser(user.id)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            删除
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              data={users}
+              columns={columns}
+              isLoading={isLoading}
+              loadingText="加载用户列表..."
+              emptyText="暂无用户"
+              keyExtractor={(user) => user.id}
+              actions={{ custom: renderActions }}
+            />
           </CardContent>
         </Card>
 
@@ -464,8 +471,8 @@ export default function UsersPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 font-medium">
-                  <Shield className="h-5 w-5 text-blue-500" />
-                  超级管理员 (super_admin)
+                  <Shield className="h-5 w-5 text-blue-500" /> 超级管理员
+                  (super_admin)
                 </div>
                 <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
                   <li>查看所有用户数据</li>
@@ -477,8 +484,7 @@ export default function UsersPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 font-medium">
-                  <User className="h-5 w-5 text-gray-500" />
-                  普通用户 (user)
+                  <User className="h-5 w-5 text-gray-500" /> 普通用户 (user)
                 </div>
                 <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
                   <li>查看用户列表</li>
@@ -490,7 +496,7 @@ export default function UsersPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </main>
 
       {/* 创建用户对话框 */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -546,7 +552,7 @@ export default function UsersPage() {
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+                )}{' '}
                 创建
               </Button>
             </DialogFooter>
@@ -600,13 +606,28 @@ export default function UsersPage() {
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+                )}{' '}
                 保存
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* 删除确认对话框 - 使用通用组件 */}
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="确认删除"
+        description={
+          <>
+            确定要删除用户 <strong>{deletingUser?.username}</strong>{' '}
+            吗？此操作不可恢复。
+          </>
+        }
+        onConfirm={handleDeleteUser}
+        isDeleting={isSubmitting}
+      />
 
       {/* 权限编辑对话框 */}
       <Dialog
@@ -677,7 +698,7 @@ export default function UsersPage() {
               >
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
+                )}{' '}
                 重置默认
               </Button>
             )}
@@ -688,7 +709,7 @@ export default function UsersPage() {
             >
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+              )}{' '}
               保存
             </Button>
           </DialogFooter>

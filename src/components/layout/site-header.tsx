@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 
-import { pageRoutesConfig, siteConfig } from '@/lib/config';
+import { navRoutesConfig, siteConfig } from '@/lib/config';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import { Separator } from '@/components/shadcn-ui/separator';
@@ -33,28 +33,26 @@ export function SiteHeader() {
             </Link>
           </Button>
           <div className="flex items-center gap-2">
-            {pageRoutesConfig
-              .filter((item) => !item.hideInNav)
-              .map((item) => (
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="sm"
-                  className="h-8"
-                  key={item.navHref}
+            {navRoutesConfig.map((item) => (
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="h-8"
+                key={item.navHref}
+              >
+                <Link
+                  href={item.navHref}
+                  className={
+                    isActive(item.navHref)
+                      ? 'bg-accent'
+                      : 'hover:bg-transparent'
+                  }
                 >
-                  <Link
-                    href={item.navHref}
-                    className={
-                      isActive(item.navHref)
-                        ? 'bg-accent'
-                        : 'hover:bg-transparent'
-                    }
-                  >
-                    {item.name}
-                  </Link>
-                </Button>
-              ))}
+                  {item.name}
+                </Link>
+              </Button>
+            ))}
           </div>
           <Search />
           <div className="flex items-center gap-2 md:flex-1 md:justify-end">
