@@ -143,10 +143,7 @@ export default function AdminLayout({
     return (
       <div className="bg-muted/30 flex min-h-screen">
         {/* 主内容区域 */}
-        <main className="flex-1">
-          {/* 页面内容 */}
-          <div className="pt-14 lg:pt-0">{children}</div>
-        </main>
+        <main className="flex-1">{children}</main>
       </div>
     );
   }
