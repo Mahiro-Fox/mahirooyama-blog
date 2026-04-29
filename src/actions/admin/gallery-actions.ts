@@ -2,9 +2,9 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { checkFileConflict, FileUtils } from '@/utils/file-utils';
 import matter from 'gray-matter';
 
-import { checkFileConflict, FileUtils } from '@/utils/file-utils';
 import { requirePermission } from '@/lib/permissions';
 
 const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');
@@ -68,7 +68,9 @@ export async function adminGetGalleryFiles(): Promise<
 }
 
 // GET - 获取单个文件内容
-export async function adminGetGalleryFile(slug: string): Promise<
+export async function adminGetGalleryFile(
+  slug: string
+): Promise<
   { success: true; content: string } | { success: false; error: string }
 > {
   const permissionCheck = await requirePermission('gallery:read');
@@ -113,7 +115,10 @@ export async function adminCreateGalleryFile(input: {
     // 验证 YAML 格式
     const parsed = matter(content);
     if (!parsed.data.title || !parsed.data.thumbnail) {
-      return { success: false, error: 'YAML 内容缺少必需的字段 (title, thumbnail)' };
+      return {
+        success: false,
+        error: 'YAML 内容缺少必需的字段 (title, thumbnail)',
+      };
     }
 
     // 清理文件名
@@ -202,11 +207,9 @@ export async function adminRenameGalleryFile(
 
     // 检查新文件名是否已存在
     const newFilePath = path.join(GALLERY_DIR, `${cleanNewSlug}${oldExt}`);
-    try {
-      await fs.access(newFilePath);
-      return { success: false, error: `文件 ${cleanNewSlug}${oldExt} 已存在` };
-    } catch {
-      // 文件不存在，可以继续
+    const conflictCheck = await checkFileConflict(newFilePath);
+    if (conflictCheck) {
+      return { success: false, error: conflictCheck.error || '文件已存在' };
     }
 
     // 重命名文件

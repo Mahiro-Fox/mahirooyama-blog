@@ -2,17 +2,19 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import Editor from '@monaco-editor/react';
-import { Save, Upload, X } from 'lucide-react';
-import { toast } from 'sonner';
-
 import {
+  adminCreateBlogFile,
   adminDeleteBlogFile,
   adminGetBlogFile,
   adminGetBlogFiles,
+  adminRenameBlogFile,
   adminUpdateBlogFile,
   type MdxFile,
 } from '@/actions/admin/blog-actions';
+import Editor from '@monaco-editor/react';
+import { Plus, Save, Upload, X } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -108,7 +110,9 @@ export default function BlogClient({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editMode, setEditMode] = useState<'create' | 'edit'>('edit');
   const [editContent, setEditContent] = useState('');
+  const [editFileName, setEditFileName] = useState('');
 
   // 刷新文件列表
   const fetchItems = async () => {
@@ -126,16 +130,64 @@ export default function BlogClient({
     }
   };
 
-  // 保存编辑
+  // 新增文件
+  const handleCreate = () => {
+    setEditMode('create');
+    setSelectedFile(null);
+    setEditFileName('');
+    setEditContent(`---
+title: ''
+description: ''
+thumbnail: ''
+tags: []
+createdAt: '${new Date().toISOString().split('T')[0]}'
+---
+
+`);
+    setIsEditDialogOpen(true);
+  };
+
+  // 保存（新增或编辑）
   const handleSave = useCallback(async () => {
-    if (!selectedFile) return;
     setIsSaving(true);
     try {
-      const result = await adminUpdateBlogFile(selectedFile.slug, editContent);
-      if (!result.success) {
-        throw new Error(result.error);
+      if (editMode === 'create') {
+        if (!editFileName.trim()) {
+          toast.error('请输入文件名称');
+          setIsSaving(false);
+          return;
+        }
+        const result = await adminCreateBlogFile({
+          slug: editFileName.trim(),
+          content: editContent,
+        });
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+        toast.success('文件创建成功');
+      } else {
+        if (!selectedFile) return;
+        const result = await adminUpdateBlogFile(
+          selectedFile.slug,
+          editContent
+        );
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        // 如果文件名变更，执行重命名
+        if (editFileName.trim() !== selectedFile.slug) {
+          const renameResult = await adminRenameBlogFile(
+            selectedFile.slug,
+            editFileName.trim()
+          );
+          if (!renameResult.success) {
+            throw new Error(renameResult.error);
+          }
+        }
+        toast.success('文件保存成功');
       }
-      toast.success('文件保存成功');
       setIsEditDialogOpen(false);
       await fetchItems();
     } catch (error) {
@@ -143,7 +195,7 @@ export default function BlogClient({
     } finally {
       setIsSaving(false);
     }
-  }, [selectedFile, editContent]);
+  }, [selectedFile, editMode, editFileName, editContent]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -166,7 +218,9 @@ export default function BlogClient({
       if (!result.success) {
         throw new Error(result.error);
       }
+      setEditMode('edit');
       setSelectedFile(file);
+      setEditFileName(file.slug);
       setEditContent(result.content);
       setIsEditDialogOpen(true);
     } catch (error) {
@@ -232,11 +286,17 @@ export default function BlogClient({
         actions={[
           createRefreshAction(fetchItems, loading),
           {
+            label: '新增 MDX',
+            icon: <Plus className="mr-2 h-4 w-4" />,
+            onClick: handleCreate,
+            variant: 'default',
+          },
+          {
             label: isUploading ? '上传中...' : '上传 MDX',
             icon: <Upload className="mr-2 h-4 w-4" />,
             onClick: () => document.getElementById('mdx-upload')?.click(),
             disabled: isUploading,
-            variant: 'default',
+            variant: 'outline',
           },
         ]}
       >
@@ -266,11 +326,27 @@ export default function BlogClient({
 
       {/* 编辑对话框 */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh]">
+        <DialogContent className="max-h-[90vh] max-w-4xl">
           <DialogHeader>
-            <DialogTitle>编辑: {selectedFile?.title}</DialogTitle>
-            <DialogDescription>{selectedFile?.fileName}</DialogDescription>
+            <DialogTitle>
+              {editMode === 'create'
+                ? '新增 MDX 文件'
+                : `编辑: ${selectedFile?.title}`}
+            </DialogTitle>
+            <DialogDescription>
+              {editMode === 'create'
+                ? '请输入文件名并编辑内容'
+                : `文件名：${selectedFile?.fileName}`}
+            </DialogDescription>
           </DialogHeader>
+          <div className="mt-2">
+            <Input
+              placeholder="文件名称 (不含 .mdx 后缀)"
+              value={editFileName}
+              onChange={(e) => setEditFileName(e.target.value)}
+              className="w-full"
+            />
+          </div>
           <div className="mt-4 h-[60vh] w-full">
             <Editor
               height="100%"
@@ -299,9 +375,20 @@ export default function BlogClient({
               <X className="mr-2 h-4 w-4" />
               取消
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button
+              onClick={handleSave}
+              disabled={
+                isSaving || (editMode === 'create' && !editFileName.trim())
+              }
+            >
               <Save className="mr-2 h-4 w-4" />
-              {isSaving ? '保存中...' : '保存'}
+              {isSaving
+                ? editMode === 'create'
+                  ? '创建中...'
+                  : '保存中...'
+                : editMode === 'create'
+                  ? '创建'
+                  : '保存'}
             </Button>
           </DialogFooter>
         </DialogContent>

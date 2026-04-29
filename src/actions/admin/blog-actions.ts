@@ -2,9 +2,9 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { checkFileConflict, FileUtils } from '@/utils/file-utils';
 import matter from 'gray-matter';
 
-import { checkFileConflict, FileUtils } from '@/utils/file-utils';
 import { requirePermission } from '@/lib/permissions';
 
 const BLOG_DIR = path.join(process.cwd(), 'src', 'content', 'blog');
@@ -67,7 +67,9 @@ export async function adminGetBlogFiles(): Promise<
 }
 
 // GET - 获取单个文件内容
-export async function adminGetBlogFile(slug: string): Promise<
+export async function adminGetBlogFile(
+  slug: string
+): Promise<
   { success: true; content: string } | { success: false; error: string }
 > {
   const permissionCheck = await requirePermission('blog:read');
@@ -102,6 +104,80 @@ export async function adminUpdateBlogFile(
   } catch (error) {
     console.error('更新 MDX 文件失败:', error);
     return { success: false, error: '更新失败' };
+  }
+}
+
+// POST - 创建新文件
+export async function adminCreateBlogFile({
+  slug,
+  content,
+}: {
+  slug: string;
+  content: string;
+}): Promise<{ success: true } | { success: false; error: string }> {
+  const permissionCheck = await requirePermission('blog:create');
+  if (!permissionCheck.allowed) {
+    return { success: false, error: 'unauthorized' };
+  }
+
+  try {
+    const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+
+    // 检查文件冲突
+    const conflictCheck = await checkFileConflict(filePath);
+    if (conflictCheck) {
+      return { success: false, error: conflictCheck.error || '文件已存在' };
+    }
+
+    await fs.writeFile(filePath, content, 'utf-8');
+    return { success: true };
+  } catch (error) {
+    console.error('创建 MDX 文件失败:', error);
+    return { success: false, error: '创建失败' };
+  }
+}
+
+// PATCH - 重命名文件
+export async function adminRenameBlogFile(
+  slug: string,
+  newSlug: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  const permissionCheck = await requirePermission('blog:update');
+  if (!permissionCheck.allowed) {
+    return { success: false, error: 'unauthorized' };
+  }
+
+  try {
+    if (!newSlug || newSlug.trim() === '') {
+      return { success: false, error: '新文件名不能为空' };
+    }
+
+    // 清理新文件名
+    const cleanNewSlug = newSlug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+
+    // 尝试找到原文件
+    let oldFilePath = path.join(BLOG_DIR, `${slug}.mdx`);
+    let oldExt = '.mdx';
+    try {
+      await fs.access(oldFilePath);
+    } catch {
+      return { success: false, error: '原文件不存在' };
+    }
+
+    // 检查新文件名是否已存在
+    const newFilePath = path.join(BLOG_DIR, `${cleanNewSlug}${oldExt}`);
+    const conflictCheck = await checkFileConflict(newFilePath);
+    if (conflictCheck) {
+      return { success: false, error: conflictCheck.error || '文件已存在' };
+    }
+
+    // 重命名文件
+    await fs.rename(oldFilePath, newFilePath);
+
+    return { success: true };
+  } catch (error) {
+    console.error('重命名博客文件失败:', error);
+    return { success: false, error: '重命名失败' };
   }
 }
 
