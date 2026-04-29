@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { tagStore, Tag as TagType } from '@/store/tag-store';
 import { FileText, Image, Tag } from 'lucide-react';
 
-import { tagStore, Tag as TagType } from '@/lib/tag-store';
 import { Card, CardContent } from '@/components/shadcn-ui/card';
 import { BrandIcons } from '@/components/shared/brand-icons';
 

@@ -1,9 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import { cn } from '@/utils/utils';
 import { CheckIcon, ClipboardIcon } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Tooltip,

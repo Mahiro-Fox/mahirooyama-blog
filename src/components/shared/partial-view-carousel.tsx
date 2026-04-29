@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { cn } from '@/utils/utils';
 import Autoplay from 'embla-carousel-autoplay';
 import {
   ChevronLeftIcon,
@@ -10,7 +11,6 @@ import {
   PlayIcon,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Carousel,

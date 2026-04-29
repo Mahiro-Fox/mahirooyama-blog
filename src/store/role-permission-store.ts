@@ -1,8 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
+import type { UserRole } from '@/store/user-store';
 
-import type { Permission } from './permissions';
-import type { UserRole } from './user-store';
+import type { Permission } from '@/lib/permissions';
 
 /**
  * 角色权限配置存储

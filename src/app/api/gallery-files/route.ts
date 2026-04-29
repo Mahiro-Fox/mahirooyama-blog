@@ -1,9 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkFileConflict, FileUtils } from '@/utils/file-utils';
 import matter from 'gray-matter';
 
-import { checkFileConflict, FileUtils } from '@/lib/file-utils';
 import { requirePermission } from '@/lib/permissions';
 
 const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');

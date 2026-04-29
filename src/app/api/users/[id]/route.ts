@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { userStore } from '@/store/user-store';
 
 import { requireAuth, requirePermission } from '@/lib/permissions';
-import { userStore } from '@/lib/user-store';
 
 // PATCH /api/users/[id] - 更新用户
 // - super_admin 可以修改任何用户

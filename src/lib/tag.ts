@@ -2,9 +2,9 @@
 // 请使用 lib/tag-store 进行标签管理
 // 此文件保留用于类型定义和向后兼容
 
-import { BrandIcons } from '@/components/shared/brand-icons';
+import { tagStore } from '@/store/tag-store';
 
-import { tagStore } from './tag-store';
+import { BrandIcons } from '@/components/shared/brand-icons';
 
 /**
  * 标签类型（向后兼容）

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { tagStore } from '@/store/tag-store';
+import { formatDate } from '@/utils/utils';
 
 import { getAllGalleryImages, getGalleryImageBySlug } from '@/lib/gallery';
-import { tagStore } from '@/lib/tag-store';
-import { formatDate } from '@/lib/utils';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';

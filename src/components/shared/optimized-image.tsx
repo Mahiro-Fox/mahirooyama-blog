@@ -2,12 +2,11 @@
 
 import { useCallback, useState } from 'react';
 import Image from 'next/image';
-
 import {
   resolveImageSrc,
   shouldUnoptimizeImage,
-} from '@/lib/client-image-utils';
-import { cn } from '@/lib/utils';
+} from '@/utils/client-image-utils';
+import { cn } from '@/utils/utils';
 
 import { useImagePreview } from './image-preview-provider';
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { resolveImageSrc } from '@/utils/client-image-utils';
 import {
   ArrowLeft,
   Copy,
@@ -17,7 +18,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { resolveImageSrc } from '@/lib/client-image-utils';
 import {
   AlertDialog,
   AlertDialogAction,

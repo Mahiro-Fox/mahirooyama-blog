@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
 
 import { getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
-import { formatDate } from '@/lib/utils';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
 import { AboutCta } from '@/components/shared/about-cta';

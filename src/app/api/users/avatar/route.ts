@@ -1,10 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { userStore } from '@/store/user-store';
 import sharp from 'sharp';
 
 import { verifyAuth } from '@/lib/auth';
-import { userStore } from '@/lib/user-store';
 
 const AVATAR_DIR = path.join(process.cwd(), 'public', 'image', 'avatar');
 

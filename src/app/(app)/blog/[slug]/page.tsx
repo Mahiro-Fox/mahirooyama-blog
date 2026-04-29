@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
+import { tagStore } from '@/store/tag-store';
+import { absoluteUrl, formatDate } from '@/utils/utils';
 
+import { siteConfig } from '@/config/config';
 import { author } from '@/lib/author';
-import { siteConfig } from '@/lib/config';
 import { getAllBlogPosts, getBlogPostBySlug } from '@/lib/mdx';
-import { tagStore } from '@/lib/tag-store';
-import { absoluteUrl, formatDate } from '@/lib/utils';
 import { Author } from '@/components/content/author';
 import { CustomMDX } from '@/components/content/custom-mdx';
 import { Breadcrumb } from '@/components/layout/breadcrumb';

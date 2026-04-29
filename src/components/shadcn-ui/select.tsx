@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import { cn } from '@/utils/utils';
 import { Check, ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface SelectContextType {
   value: string;
@@ -11,7 +11,9 @@ interface SelectContextType {
   setOpen: (open: boolean) => void;
 }
 
-const SelectContext = React.createContext<SelectContextType | undefined>(undefined);
+const SelectContext = React.createContext<SelectContextType | undefined>(
+  undefined
+);
 
 function useSelect() {
   const context = React.useContext(SelectContext);
@@ -52,13 +54,18 @@ function SelectTrigger({ children, className }: SelectTriggerProps) {
       onClick={() => setOpen(!open)}
       className={cn(
         'border-input bg-background ring-offset-background flex h-9 w-full items-center justify-between rounded-md border px-3 py-1 text-sm shadow-sm transition-colors',
-        'focus:outline-none focus:ring-2 focus:ring-offset-2',
+        'focus:ring-2 focus:ring-offset-2 focus:outline-none',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
     >
       {children}
-      <ChevronDown className={cn('h-4 w-4 opacity-50 transition-transform', open && 'rotate-180')} />
+      <ChevronDown
+        className={cn(
+          'h-4 w-4 opacity-50 transition-transform',
+          open && 'rotate-180'
+        )}
+      />
     </button>
   );
 }
@@ -106,7 +113,11 @@ interface SelectItemProps {
   className?: string;
 }
 
-function SelectItem({ value: itemValue, children, className }: SelectItemProps) {
+function SelectItem({
+  value: itemValue,
+  children,
+  className,
+}: SelectItemProps) {
   const { value, onValueChange, setOpen } = useSelect();
   const isSelected = value === itemValue;
 
@@ -118,7 +129,7 @@ function SelectItem({ value: itemValue, children, className }: SelectItemProps) 
         setOpen(false);
       }}
       className={cn(
-        'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none',
+        'relative flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none',
         'hover:bg-accent hover:text-accent-foreground',
         'focus:bg-accent focus:text-accent-foreground',
         isSelected && 'bg-accent',

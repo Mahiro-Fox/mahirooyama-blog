@@ -9,6 +9,7 @@ import {
   type RefAttributes,
   type RefObject,
 } from 'react';
+import { cn } from '@/utils/utils';
 import {
   motion,
   useInView,
@@ -16,8 +17,6 @@ import {
   type HTMLMotionProps,
   type MotionProps,
 } from 'motion/react';
-
-import { cn } from '@/lib/utils';
 
 const motionElements = {
   article: motion.article,

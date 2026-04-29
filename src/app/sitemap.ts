@@ -1,9 +1,9 @@
 import type { MetadataRoute } from 'next';
+import { tagStore } from '@/store/tag-store';
 
-import { siteConfig } from '@/lib/config';
+import { siteConfig } from '@/config/config';
 import { getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
-import { tagStore } from '@/lib/tag-store';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;

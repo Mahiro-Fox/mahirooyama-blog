@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { debounce } from '@/utils/utils';
 import {
   FileText,
   Image,
@@ -10,7 +11,6 @@ import {
   X,
 } from 'lucide-react';
 
-import { debounce } from '@/lib/utils';
 import { SearchResult, useSearch } from '@/hooks/use-search';
 import { Button } from '@/components/shadcn-ui/button';
 import {

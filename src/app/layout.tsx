@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/context/theme-provider';
+import { cn } from '@/utils/utils';
 
-import { siteConfig } from '@/lib/config';
+import { siteConfig } from '@/config/config';
 import { fontVariables } from '@/lib/fonts';
-import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/shadcn-ui/sonner';
 import { ImagePreviewProvider } from '@/components/shared/image-preview-provider';
 import { TailwindIndicator } from '@/components/shared/tailwind-indicator';

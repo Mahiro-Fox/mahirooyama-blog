@@ -90,13 +90,11 @@ export function hasThumbnail(
 }
 
 /**
- * 解析图片尺寸和宽高比
+ * 判断图片是否为竖屏图片
  * @param imagePath 相对于 public 目录的图片路径
- * @returns 图片尺寸信息，如果失败返回默认尺寸
+ * @returns 是否是竖屏图片，如果失败返回 false
  */
-export async function parseImageDimensions(
-  imagePath: string
-): Promise<boolean> {
+export async function isPortraitImage(imagePath: string): Promise<boolean> {
   try {
     const fullPath = path.join(process.cwd(), 'public', imagePath);
 

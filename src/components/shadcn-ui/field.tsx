@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
+import { cn } from '@/utils/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { cn } from '@/lib/utils';
 import { Label } from '@/components/shadcn-ui/label';
 import { Separator } from '@/components/shadcn-ui/separator';
 

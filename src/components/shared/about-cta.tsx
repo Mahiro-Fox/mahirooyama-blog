@@ -1,4 +1,4 @@
-import { siteConfig } from '@/lib/config';
+import { siteConfig } from '@/config/config';
 
 export function AboutCta() {
   return (

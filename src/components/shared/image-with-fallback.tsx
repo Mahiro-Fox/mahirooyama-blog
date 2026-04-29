@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-
-import { isExternalImage, resolveImageSrc } from '@/lib/client-image-utils';
-import { cn } from '@/lib/utils';
+import { isExternalImage, resolveImageSrc } from '@/utils/client-image-utils';
+import { cn } from '@/utils/utils';
 
 interface ImageWithFallbackProps {
   src?: string;

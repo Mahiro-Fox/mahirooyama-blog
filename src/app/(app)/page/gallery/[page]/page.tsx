@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
+import { formatDate } from '@/utils/utils';
 
 import { getGalleryImages } from '@/lib/gallery';
-import { formatDate } from '@/lib/utils';
 import { AboutCta } from '@/components/shared/about-cta';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';

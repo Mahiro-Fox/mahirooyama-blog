@@ -8,9 +8,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { cn } from '@/utils/utils';
 import { Download, X, ZoomIn, ZoomOut } from 'lucide-react';
-
-import { cn } from '@/lib/utils';
 
 interface PreviewImage {
   src: string;

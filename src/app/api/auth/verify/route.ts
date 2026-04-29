@@ -1,8 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { sessionStore } from '@/store/session-store';
 import { jwtVerify } from 'jose';
-
-import { sessionStore } from '@/lib/session-store';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'

@@ -1,6 +1,6 @@
 'use client';
 
-import { adminRoutesConfig } from '@/lib/config';
+import { adminRoutesConfig } from '@/config/config';
 import { AdminNavCard } from '@/components/admin/admin-nav-card';
 
 export default function AdminPage() {

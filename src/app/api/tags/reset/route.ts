@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
+import { tagStore } from '@/store/tag-store';
 
 import { requirePermission } from '@/lib/permissions';
-import { tagStore } from '@/lib/tag-store';
 
 // 重置为默认标签
 export async function POST() {

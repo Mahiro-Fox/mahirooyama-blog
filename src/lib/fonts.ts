@@ -3,8 +3,7 @@ import {
   Geist as FontSans,
   Inter,
 } from 'next/font/google';
-
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils';
 
 const fontSans = FontSans({
   subsets: ['latin'],

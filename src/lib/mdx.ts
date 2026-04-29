@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { isPortraitImage } from '@/utils/image-utils';
 import matter from 'gray-matter';
 
-import { parseImageDimensions } from '@/lib/image-utils';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
 
 const blogDir = path.join(process.cwd(), 'src', 'content', 'blog');
@@ -130,7 +130,7 @@ async function readMDXFile<T>(filePath: string): Promise<MDXData<T>> {
 
   const { data, content } = matter(rawContent);
 
-  const isPortrait = await parseImageDimensions(data.thumbnail);
+  const isPortrait = await isPortraitImage(data.thumbnail);
 
   return {
     metadata: data as Frontmatter<T>,

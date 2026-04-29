@@ -1,9 +1,9 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { cn } from '@/utils/utils';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Table,

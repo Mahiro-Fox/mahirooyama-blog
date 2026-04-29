@@ -1,11 +1,11 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { getOGData } from '@/actions/fetch-og-metadata';
+import { cn } from '@/utils/utils';
 import { ExternalLinkIcon } from 'lucide-react';
 
-import { siteConfig } from '@/lib/config';
+import { siteConfig } from '@/config/config';
 import { getBlogPostBySlug } from '@/lib/mdx';
-import { cn } from '@/lib/utils';
 import { ImageWithFallback } from '@/components/shared/image-with-fallback';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 

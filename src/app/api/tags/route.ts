@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { tagStore, TagType } from '@/store/tag-store';
 
 import { requirePermission } from '@/lib/permissions';
-import { tagStore, TagType } from '@/lib/tag-store';
 
 // 获取所有标签
 export async function GET() {

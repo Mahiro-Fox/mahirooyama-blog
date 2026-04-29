@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import type { UserRole } from '@/store/user-store';
 import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { adminRoutesConfig } from '@/lib/config';
-import type { UserRole } from '@/lib/user-store';
+import { adminRoutesConfig } from '@/config/config';
 import { Button } from '@/components/shadcn-ui/button';
 import { Sheet, SheetContent } from '@/components/shadcn-ui/sheet';
 

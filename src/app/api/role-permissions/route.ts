@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rolePermissionStore } from '@/store/role-permission-store';
 
 import { requirePermission } from '@/lib/permissions';
-import { rolePermissionStore } from '@/lib/role-permission-store';
 
 /**
  * GET /api/role-permissions

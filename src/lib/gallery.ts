@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { isPortraitImage } from '@/utils/image-utils';
 import matter from 'gray-matter';
 
-import { parseImageDimensions } from '@/lib/image-utils';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
 
 const galleryDir = path.join(process.cwd(), 'src', 'content', 'gallery');
@@ -74,8 +74,8 @@ async function readGalleryFile<T>(
   const rawContent = await fs.promises.readFile(filePath, 'utf-8');
   const { data } = matter(rawContent);
 
-  // 解析图片尺寸
-  const isPortrait = await parseImageDimensions(data.thumbnail);
+  // 判断是否为竖屏图片
+  const isPortrait = await isPortraitImage(data.thumbnail);
 
   return {
     metadata: data as GalleryImage<T>,

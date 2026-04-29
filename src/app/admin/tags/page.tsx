@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { TagType as TagCategory, Tag as TagType } from '@/store/tag-store';
 import { Plus, RefreshCw, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { getTagTypeConfig, TAG_TYPES } from '@/lib/tag-config';
-import type { TagType as TagCategory, Tag as TagType } from '@/lib/tag-store';
+import { getTagTypeConfig, TAG_TYPES } from '@/config/tag-config';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,

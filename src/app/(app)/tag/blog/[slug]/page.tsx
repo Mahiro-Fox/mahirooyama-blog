@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
+import { tagStore } from '@/store/tag-store';
+import { absoluteUrl, formatDate } from '@/utils/utils';
 
-import { siteConfig } from '@/lib/config';
+import { siteConfig } from '@/config/config';
 import { getBlogPostsByTagSlug } from '@/lib/mdx';
-import { tagStore } from '@/lib/tag-store';
-import { absoluteUrl, formatDate } from '@/lib/utils';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { TextAnimate } from '@/components/shadcn-ui/text-animate';
 import { Breadcrumb } from '@/components/layout/breadcrumb';

@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-
-import { verifyAuth } from './auth';
-import { rolePermissionStore } from './role-permission-store';
+import { rolePermissionStore } from '@/store/role-permission-store';
 import {
   PermissionChecker,
   userStore,
   type User,
   type UserRole,
-} from './user-store';
+} from '@/store/user-store';
+
+import { verifyAuth } from './auth';
 
 /**
  * RBAC 权限系统

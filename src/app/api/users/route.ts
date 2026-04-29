@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { userStore } from '@/store/user-store';
 
 import { requirePermission } from '@/lib/permissions';
-import { userStore } from '@/lib/user-store';
 
 // GET /api/users - 获取所有用户（需要 users:read 权限）
 export async function GET() {

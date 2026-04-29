@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import type { Tag, TagType } from '@/store/tag-store';
 import { Loader2, Tag as LucideTag, Pencil, Trash2 } from 'lucide-react';
 
-import type { Tag, TagType } from '@/lib/tag-store';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Table,

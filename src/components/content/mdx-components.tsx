@@ -1,5 +1,6 @@
-import { resolveImageSrc } from '@/lib/client-image-utils';
-import { cn } from '@/lib/utils';
+import { resolveImageSrc } from '@/utils/client-image-utils';
+import { cn } from '@/utils/utils';
+
 import { Button } from '@/components/shadcn-ui/button';
 import { LinkPreview } from '@/components/content/link-preview';
 import { getIconForLanguageExtension } from '@/components/shared/brand-icons';
