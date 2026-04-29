@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { UserRole } from '@/store/user-store';
 import { jwtVerify } from 'jose';
@@ -34,16 +34,28 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Check if this is the login page by checking the URL via headers
+  // Get current pathname from headers (set by middleware)
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+
+  // If this is the login page, skip auth check (login page handles its own logic)
+  if (pathname === '/admin/login' || pathname.startsWith('/admin/login?')) {
+    return (
+      <div className="bg-muted/30 flex min-h-screen">
+        <main className="flex-1">{children}</main>
+      </div>
+    );
+  }
+
+  // Check auth for all other admin pages
   const currentUser = await getCurrentUserFromCookie();
 
-  // If no user and children appears to be login page content, just render it
-  // We detect login page by checking if there's no authenticated user
-  // The login page itself should handle its own layout
   if (!currentUser) {
-    // Check if we're on the login page by looking at the referer or pathname
-    // This is a simplified check - the login page is at /admin/login
-    redirect('/admin/login?redirect=/admin');
+    // Not logged in, redirect to login page with return URL
+    const redirectUrl = pathname
+      ? `/admin/login?redirect=${encodeURIComponent(pathname)}`
+      : '/admin/login';
+    redirect(redirectUrl);
   }
 
   return (
