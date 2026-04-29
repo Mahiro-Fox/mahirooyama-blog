@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -8,9 +8,11 @@ import { adminLogout } from '@/actions/admin/logout';
 import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
 import type { UserRole } from '@/store/user-store';
 import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 
 import { adminRoutesConfig } from '@/config/config';
+import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import { Sheet, SheetContent } from '@/components/shadcn-ui/sheet';
 
@@ -37,6 +39,11 @@ export default function AdminShell({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isRevalidating, setIsRevalidating] = useState(false);
 
+  const { setTheme, resolvedTheme } = useTheme();
+
+  const toggleTheme = useCallback(() => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  }, [resolvedTheme, setTheme]);
   // 手动刷新缓存
   const handleRevalidate = async () => {
     setIsRevalidating(true);
@@ -295,6 +302,7 @@ export default function AdminShell({
             </SheetContent>
           </Sheet>
           <span className="font-semibold">{getCurrentPageTitle()}</span>
+          <AnimatedThemeToggler onThemeChange={toggleTheme} />
         </div>
       </div>
 
@@ -368,6 +376,7 @@ export default function AdminShell({
                 </>
               )}
             </div>
+            <AnimatedThemeToggler onThemeChange={toggleTheme} />
           </div>
         </header>
 

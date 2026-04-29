@@ -10,6 +10,8 @@ import { TailwindIndicator } from '@/components/shared/tailwind-indicator';
 
 import '@/styles/globals.css';
 
+import { BackToTop } from '@/components/layout/back-to-top';
+
 interface RootLayoutProps {
   children: React.ReactNode;
 }
@@ -69,6 +71,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <ThemeProvider>
           <ImagePreviewProvider>
             {children}
+            <BackToTop />
             <TailwindIndicator />
             <Toaster position="top-center" />
           </ImagePreviewProvider>
