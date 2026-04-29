@@ -11,7 +11,7 @@ export function BackToTop() {
   };
   return (
     <div
-      className="bg-foreground fixed right-10 bottom-10 z-50 rounded-full p-2 shadow-lg backdrop-blur-sm"
+      className="bg-foreground fixed right-10 bottom-10 z-50 cursor-pointer rounded-full p-2 shadow-lg backdrop-blur-sm"
       aria-label="Back to top"
     >
       <ArrowUp onClick={handleClick} className="text-background" />

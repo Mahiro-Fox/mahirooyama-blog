@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { tagStore, type Tag } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
 
@@ -24,6 +25,8 @@ export default async function IndexPage() {
   const allPosts = await getAllBlogPosts();
   const galleryImages = await getAllGalleryImages();
 
+  const tags = await tagStore.getAll();
+
   return (
     <div className="relative flex h-[500px] w-full flex-1 flex-col overflow-hidden">
       <section className="py-8">
@@ -37,6 +40,7 @@ export default async function IndexPage() {
           </div>
         </div>
       </BlurFade>
+      {/* Blogs */}
       <div className="container-wrapper">
         <section className="container border-b py-6">
           <div className="flex flex-col gap-1 pb-6">
@@ -73,11 +77,12 @@ export default async function IndexPage() {
       </div>
       <div className="container-wrapper py-8">
         <div className="container flex flex-col gap-8 lg:flex-row">
-          <section className="flex-1">
+          {/* Gallery */}
+          <section className="flex-2">
             <div className="flex flex-col gap-1 pb-6">
               <h2 className="text-2xl font-medium tracking-tight">Gallery</h2>
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col">
               {galleryImages.slice(0, 3).map((gallery, index) => (
                 <BlurFade inView key={gallery.slug}>
                   <LinkCard
@@ -104,6 +109,26 @@ export default async function IndexPage() {
                 </Link>
               </Button>
             </div>
+          </section>
+          {/* Tags */}
+          <section className="flex flex-1 flex-col gap-6">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-2xl font-medium tracking-tight">Tags</h2>
+            </div>
+            {/* @ts-ignore */}
+            {Object.entries<Record<string, Tag>>(tags).map(([key, value]) => (
+              <div key={key} className="flex flex-wrap gap-2">
+                {Object.values(value).map((tag) => (
+                  <Link
+                    key={tag.id}
+                    href={`/tag/${key}/${tag.id}`}
+                    className="hover:bg-muted flex cursor-pointer items-center justify-center rounded-lg border p-2 transition-colors"
+                  >
+                    {tag.name}
+                  </Link>
+                ))}
+              </div>
+            ))}
           </section>
         </div>
       </div>
