@@ -3,6 +3,15 @@ import path from 'path';
 import sharp from 'sharp';
 
 const galleryDir = path.join(process.cwd(), 'public', 'images', 'gallery');
+const compressedDir = path.join(galleryDir, '.compressed');
+
+// 压缩配置
+const COMPRESSION_CONFIG = {
+  quality: 80, // WebP 质量 0-100
+  maxWidth: 1920, // 最大宽度限制
+  maxHeight: 1920, // 最大高度限制
+  effort: 4, // 压缩 effort (0-6, 越高越慢但更小)
+};
 
 export interface GalleryImageItem {
   id: string;
@@ -15,8 +24,75 @@ export interface GalleryImageItem {
 }
 
 /**
+ * 确保压缩目录存在
+ */
+async function ensureCompressedDir(): Promise<void> {
+  try {
+    await fs.promises.access(compressedDir);
+  } catch {
+    await fs.promises.mkdir(compressedDir, { recursive: true });
+  }
+}
+
+/**
+ * 获取压缩后的图片路径
+ * 如果压缩版本不存在，则创建
+ */
+async function getCompressedImagePath(
+  originalPath: string,
+  filename: string
+): Promise<string> {
+  await ensureCompressedDir();
+
+  const compressedFilename = filename;
+  const compressedPath = path.join(compressedDir, compressedFilename);
+
+  // 检查压缩版本是否存在且比原文件新
+  try {
+    const [origStat, compressedStat] = await Promise.all([
+      fs.promises.stat(originalPath),
+      fs.promises.stat(compressedPath),
+    ]);
+
+    if (compressedStat.mtime >= origStat.mtime) {
+      return compressedPath;
+    }
+  } catch {
+    // 压缩文件不存在，继续创建
+  }
+
+  // 创建压缩版本
+  try {
+    const sharpInstance = sharp(originalPath);
+    const metadata = await sharpInstance.metadata();
+
+    let pipeline = sharpInstance.webp({
+      quality: COMPRESSION_CONFIG.quality,
+      effort: COMPRESSION_CONFIG.effort,
+    });
+
+    // 如果图片过大，进行缩放
+    if (metadata.width && metadata.width > COMPRESSION_CONFIG.maxWidth) {
+      pipeline = pipeline.resize({
+        width: COMPRESSION_CONFIG.maxWidth,
+        height: COMPRESSION_CONFIG.maxHeight,
+        fit: 'inside',
+        withoutEnlargement: true,
+      });
+    }
+
+    await pipeline.toFile(compressedPath);
+    return compressedPath;
+  } catch (error) {
+    console.error(`压缩图片失败 ${filename}:`, error);
+    // 压缩失败返回原路径
+    return originalPath;
+  }
+}
+
+/**
  * 获取 public/images/gallery 目录下的所有图片
- * 解析图片尺寸并计算宽高比
+ * 解析图片尺寸并计算宽高比，自动返回压缩版本
  */
 export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
   try {
@@ -28,8 +104,8 @@ export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
   const files = await fs.promises.readdir(galleryDir);
   const imageFiles = files.filter((file) => {
     const ext = path.extname(file).toLowerCase();
-    // return ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext);
-    // 目前只展示 webp 格式
+    // 排除压缩目录和隐藏文件
+    if (file.startsWith('.') || file.startsWith('_')) return false;
     return ['.webp'].includes(ext);
   });
 
@@ -39,14 +115,24 @@ export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
       const id = path.basename(filename, path.extname(filename));
 
       try {
-        const metadata = await sharp(filePath).metadata();
+        // 获取压缩版本路径
+        const compressedPath = await getCompressedImagePath(filePath, filename);
+
+        // 从压缩版本读取元数据
+        const metadata = await sharp(compressedPath).metadata();
         const width = metadata.width || 0;
         const height = metadata.height || 0;
         const ratio = width > 0 && height > 0 ? width / height : 1;
 
+        // 返回压缩版本的路径（相对于 public）
+        const isCompressed = compressedPath.includes('.compressed');
+        const src = isCompressed
+          ? `/images/gallery/.compressed/${filename}`
+          : `/images/gallery/${filename}`;
+
         return {
           id,
-          src: `/images/gallery/${filename}`,
+          src,
           filename,
           width,
           height,
