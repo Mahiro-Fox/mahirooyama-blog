@@ -113,6 +113,7 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
                   badgeText={formatDate(item.metadata.createdAt || '')}
                   description={item.metadata.description}
                   priority={true}
+                  isPortrait={item.isPortrait}
                 />
               ))}
             </div>

@@ -113,6 +113,7 @@ export default async function BlogTagPage({ params }: BlogTagPageProps) {
                   badgeText={formatDate(item.metadata.createdAt)}
                   description={item.metadata.description}
                   priority={true}
+                  isPortrait={item.isPortrait}
                 />
               ))}
             </div>
