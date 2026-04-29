@@ -17,9 +17,8 @@ const JWT_SECRET = new TextEncoder().encode(rawSecret);
 const SESSION_REFRESH_THRESHOLD = 4 * 60 * 60; // 4小时（秒）
 const SESSION_EXPIRY = 24 * 60 * 60; // 24小时（秒）
 
-// 需要保护的路由
+// 需要保护的路由 - /login 已独立，不在 /admin 下
 const protectedRoutes = ['/admin'];
-const publicRoutes = ['/admin/login'];
 
 // 添加安全响应头
 function addSecurityHeaders(response: NextResponse): NextResponse {
@@ -39,18 +38,14 @@ export async function middleware(request: NextRequest) {
 
   // 添加 x-pathname header 供 Server Components 使用
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-pathname', request.nextUrl.pathname);
   requestHeaders.set('x-pathname', pathname);
 
-  // 检查 /admin 路径，但排除 /admin/login
-  if (
-    protectedRoutes.some((route) => pathname.startsWith(route)) &&
-    !publicRoutes.some((route) => pathname.startsWith(route))
-  ) {
+  // 检查 /admin 路径（所有 /admin 都需要认证）
+  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
     const token = request.cookies.get('admin-session')?.value;
 
     if (!token) {
-      const loginUrl = new URL('/admin/login', request.url);
+      const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       const response = NextResponse.redirect(loginUrl);
       return addSecurityHeaders(response);
@@ -102,22 +97,12 @@ export async function middleware(request: NextRequest) {
       return addSecurityHeaders(response);
     } catch (error) {
       // token 无效或过期
-      const loginUrl = new URL('/admin/login', request.url);
+      const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       const response = NextResponse.redirect(loginUrl);
       response.cookies.delete('admin-session');
       return addSecurityHeaders(response);
     }
-  }
-
-  // 对 /admin/login 也添加安全头和 x-pathname
-  if (pathname.startsWith('/admin')) {
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-    return addSecurityHeaders(response);
   }
 
   return NextResponse.next({

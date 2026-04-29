@@ -61,7 +61,7 @@ export default function AdminShell({
     } catch {
       // 忽略错误
     }
-    router.push('/admin/login');
+    router.push('/login');
     toast.success('已登出');
   };
 
@@ -125,14 +125,6 @@ export default function AdminShell({
   const getRoleDisplay = (role: string) => {
     return role === 'super_admin' ? '超级管理员' : '普通用户';
   };
-
-  if (pathname === '/admin/login') {
-    return (
-      <div className="bg-muted/30 flex min-h-screen">
-        <main className="flex-1">{children}</main>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-muted/30 flex min-h-screen">
