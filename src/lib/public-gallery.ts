@@ -139,7 +139,8 @@ export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
           ratio,
           alt: id,
         };
-      } catch {
+      } catch (error) {
+        console.error(`获取图片元数据失败 ${filename}`, error);
         return null;
       }
     })

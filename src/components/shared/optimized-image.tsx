@@ -115,6 +115,13 @@ export function OptimizedImage({
       }
       onClick={handleClick}
     >
+      {/* Loading Spinner - 图片加载中显示 */}
+      {!isLoaded && (
+        <div className="bg-muted/30 absolute inset-0 flex items-center justify-center">
+          <div className="border-primary/30 border-t-primary h-8 w-8 animate-spin rounded-full border-2" />
+        </div>
+      )}
+
       {/* 模糊占位符 */}
       {blurDataURL && !isLoaded && (
         <div
