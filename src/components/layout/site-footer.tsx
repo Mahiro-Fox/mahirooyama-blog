@@ -16,16 +16,16 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
           </p>
         </div>
         <div className="flex items-center space-x-4">
-          {siteConfig.links.twitter && (
+          {siteConfig.links.vrchat && (
             <Link
-              href={siteConfig.links.twitter}
+              href={siteConfig.links.vrchat}
               target="_blank"
               rel="noreferrer"
               className={buttonVariants({ variant: 'outline', size: 'icon' })}
-              aria-label="X(Twitter)"
-              title="X(Twitter, @cakegaly)"
+              aria-label="VRChat"
+              title="VRChat (mahirooyama)"
             >
-              <BrandIcons.x className="size-4" />
+              <BrandIcons.vrchat className="size-4" />
             </Link>
           )}
           {siteConfig.email && (
@@ -35,7 +35,7 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
               target="_blank"
               rel="noreferrer"
               aria-label="Email"
-              title="Email (mahirooyama-blog -at- example -dot- com)"
+              title="Email (mahirooyama)"
             >
               <MailIcon className="size-4" />
             </Link>

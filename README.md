@@ -1,18 +1,15 @@
 # Next.js Minimal Blog Template
 
-This is a lightweight, minimalistic blog template built with Next.js 15, MDX, Tailwind CSS, and shadcn/ui.
-
-![Demo ScreenShot](/public/images/demo/screenshot.webp)
+This is a lightweight, minimalistic blog template built with Next.js 16, MDX, Tailwind CSS, and shadcn/ui.
 
 ## Tech Stack
 
-- Framework - [Next.js](https://nextjs.org/15) (v15)
+- Framework - [Next.js](https://nextjs.org/16) (v16)
 - Language - [TypeScript](https://www.typescriptlang.org)
 - Styling - [Tailwind CSS](https://tailwindcss.com) (v4)
 - UI Components - [shadcn/ui](https://ui.shadcn.com)
 - Static Content Management - [MDX](https://mdxjs.com)
 - Syntax Highlight - [Rehype Pretty Code](https://rehype-pretty.pages.dev/) + [Shiki](https://github.com/shikijs/shiki)
-- Deployment - [Vercel](https://vercel.com)
 - Code Linting - [ESLint](https://eslint.org) (v9, Flat Config)
 - Code Formatting - [Prettier](https://prettier.io)
 
@@ -61,10 +58,6 @@ pnpm dev
 ### Open in your browser
 
 Visit **[http://localhost:8888](http://localhost:8888)** to see the site in action 🎅
-
-## Deployment
-
-This project is automatically deployed on **[Vercel](https://mahirooyama.cn)**.
 
 ## License
 

@@ -1,13 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import { GALLERY_DIR } from '@/constant/dir';
+import { DEFAULT_GALLERY_LIST_LIMIT } from '@/constant/limit';
 import { isPortraitImage } from '@/utils/image-utils';
 import matter from 'gray-matter';
 
 import { paginateItems, PaginationResult } from '@/lib/pagination';
-
-const galleryDir = path.join(process.cwd(), 'src', 'content', 'gallery');
-
-export const DEFAULT_GALLERY_LIMIT = 6;
 
 export type GalleryImage<T = {}> = {
   title: string;
@@ -27,14 +25,14 @@ export async function getAllGalleryImages<T = {}>(): Promise<
   GalleryImageData<T>[]
 > {
   try {
-    await fs.promises.access(galleryDir);
+    await fs.promises.access(GALLERY_DIR);
   } catch {
     return [];
   }
 
   const files = await getGalleryFiles();
   const images = await Promise.all(
-    files.map((file) => readGalleryFile<T>(path.join(galleryDir, file)))
+    files.map((file) => readGalleryFile<T>(path.join(GALLERY_DIR, file)))
   );
 
   return images.sort((a, b) => a.slug.localeCompare(b.slug));
@@ -49,7 +47,7 @@ export async function getGalleryPostsByTagSlug(
 
 export async function getGalleryImages<T = {}>(
   page = 1,
-  pageSize = DEFAULT_GALLERY_LIMIT
+  pageSize = DEFAULT_GALLERY_LIST_LIMIT
 ): Promise<PaginationResult<GalleryImageData<T>>> {
   const images = await getAllGalleryImages<T>();
   return paginateItems(images, page, pageSize);
@@ -63,7 +61,7 @@ export async function getGalleryImageBySlug<T = {}>(
 }
 
 async function getGalleryFiles(): Promise<string[]> {
-  return (await fs.promises.readdir(galleryDir)).filter(
+  return (await fs.promises.readdir(GALLERY_DIR)).filter(
     (file) => path.extname(file) === '.yml' || path.extname(file) === '.yaml'
   );
 }

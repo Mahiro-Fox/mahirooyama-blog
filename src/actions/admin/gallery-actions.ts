@@ -2,12 +2,11 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { GALLERY_DIR } from '@/constant/dir';
 import { checkFileConflict, FileUtils } from '@/utils/file-utils';
 import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
-
-const GALLERY_DIR = path.join(process.cwd(), 'src', 'content', 'gallery');
 
 export interface GalleryFile {
   slug: string;

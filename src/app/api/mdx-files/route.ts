@@ -1,12 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { BLOG_DIR } from '@/constant/dir';
 import { checkFileConflict, FileUtils } from '@/utils/file-utils';
 import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
-
-const BLOG_DIR = path.join(process.cwd(), 'src', 'content', 'blog');
 
 export async function GET() {
   try {

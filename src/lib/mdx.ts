@@ -1,13 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import { BLOG_DIR } from '@/constant/dir';
+import { DEFAULT_BLOG_LIST_LIMIT } from '@/constant/limit';
 import { isPortraitImage } from '@/utils/image-utils';
 import matter from 'gray-matter';
 
 import { paginateItems, PaginationResult } from '@/lib/pagination';
-
-const blogDir = path.join(process.cwd(), 'src', 'content', 'blog');
-
-export const DEFAULT_BLOG_LIST_LIMIT = 6;
 
 /**
  * Frontmatter类型
@@ -45,7 +43,7 @@ export type BlogPost = MDXData<{
  * @returns 博客文章数组
  */
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
-  const posts = await getMDXData(blogDir);
+  const posts = await getMDXData(BLOG_DIR);
   return posts.sort(
     (a, b) =>
       new Date(b.metadata.createdAt).getTime() -

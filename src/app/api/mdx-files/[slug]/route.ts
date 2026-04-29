@@ -1,10 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { BLOG_DIR } from '@/constant/dir';
 
 import { requirePermission } from '@/lib/permissions';
-
-const BLOG_DIR = path.join(process.cwd(), 'src', 'content', 'blog');
 
 interface RouteParams {
   params: Promise<{ slug: string }>;

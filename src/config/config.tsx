@@ -10,16 +10,17 @@ import {
 
 export const siteConfig = {
   name: 'mahirooyama-blog',
-  description:
-    'mahirooyama-blog is a lightweight, minimalistic blog template built with Next.js (v15), MDX, Tailwind CSS (v4), and shadcn/ui',
+  description: "this is mahirooyama's blog, welcome to visit!",
   url: 'https://mahirooyama-blog-delta.vercel.app/',
   ogImage: 'https://mahirooyama-blog-delta.vercel.app/og.webp',
   links: {
     twitter: 'https://twitter.com/mahirooyama',
     github: 'https://github.com/Misterwanghaoyu/mahirooyama-blog',
+    vrchat:
+      'https://vrchat.com/home/user/usr_f938bc37-4d62-48d8-98eb-955f10f464e0',
   },
   copyRight: 'mahirooyama',
-  email: 'mahirooyama@example.com',
+  email: 'wanghaoyu510902@gmail.com',
 };
 
 export interface PageRouteConfig {
