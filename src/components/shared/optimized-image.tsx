@@ -66,12 +66,6 @@ export function OptimizedImage({
     setHasError(true);
   }, []);
 
-  const handleClick = useCallback(() => {
-    if (previewable && src) {
-      openPreview({ src, alt, width, height });
-    }
-  }, [previewable, src, alt, width, height, openPreview]);
-
   // 错误回退
   if (hasError || !src) {
     return (
@@ -101,6 +95,12 @@ export function OptimizedImage({
 
   // 外部图片或通过 API 路由获取的图片都不需要 Next.js 优化
   const shouldUnoptimize = unoptimized ?? shouldUnoptimizeImage(src);
+
+  const handleClick = useCallback(() => {
+    if (previewable && resolvedSrc) {
+      openPreview({ src: resolvedSrc, alt, width, height });
+    }
+  }, [previewable, alt, width, height, openPreview, resolvedSrc]);
 
   return (
     <div
