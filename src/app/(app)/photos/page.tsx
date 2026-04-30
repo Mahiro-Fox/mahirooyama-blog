@@ -1,5 +1,3 @@
-import { getPublicGalleryImages } from '@/lib/public-gallery';
-
 import { PhotosGallery } from './photos-gallery';
 
 export const metadata = {
@@ -7,23 +5,7 @@ export const metadata = {
   description: 'Gallery photos showcase',
 };
 
-export default async function PhotosPage() {
-  const images = await getPublicGalleryImages();
-
-  if (images.length === 0) {
-    return (
-      <div className="container-wrapper">
-        <div className="container flex min-h-[60vh] flex-col items-center justify-center py-20">
-          <h1 className="text-2xl font-medium tracking-tight">Photos</h1>
-          <p className="text-muted-foreground mt-4">
-            No images found in gallery. Add some images to
-            public/images/gallery/
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+export default function PhotosPage() {
   return (
     <div className="container-wrapper">
       <div className="container py-8">
@@ -34,7 +16,7 @@ export default async function PhotosPage() {
           </p>
         </div>
 
-        <PhotosGallery images={images} />
+        <PhotosGallery />
       </div>
     </div>
   );
