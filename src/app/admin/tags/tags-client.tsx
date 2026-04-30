@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   adminCreateTag,
   adminDeleteTag,
@@ -13,7 +14,7 @@ import type {
   Tag as TagModel,
   TagsData,
 } from '@/store/tag-store';
-import { Plus, RefreshCw, Tag } from 'lucide-react';
+import { Tag as LucideTag, Plus, RefreshCw, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { getTagTypeConfig, TAG_TYPES } from '@/config/tag-config';
@@ -31,9 +32,10 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/shadcn-ui/tabs';
+import { DataTable, type Column } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { TagFormDialog } from '@/components/admin/tag-form-dialog';
-import { TagsTable } from '@/components/admin/tags-table';
+import { BrandIcons } from '@/components/shared/brand-icons';
 
 // 表单数据初始状态
 const INITIAL_FORM_DATA = {
@@ -42,6 +44,46 @@ const INITIAL_FORM_DATA = {
   icon: 'default',
   description: '',
 };
+
+// 表格列定义
+const getColumns = (type: TagCategory): Column<TagModel>[] => [
+  {
+    key: 'icon',
+    header: '图标',
+    width: 'w-[50px]',
+    render: (tag) => {
+      const IconComponent =
+        BrandIcons[tag.icon as keyof typeof BrandIcons] || LucideTag;
+      return <IconComponent className="h-4 w-4" />;
+    },
+  },
+  {
+    key: 'id',
+    header: 'ID',
+    render: (tag) => (
+      <Link
+        href={`/tag/${type}/${tag.id}`}
+        className="font-mono text-xs hover:underline"
+      >
+        {tag.id}
+      </Link>
+    ),
+  },
+  {
+    key: 'name',
+    header: '名称',
+    render: (tag) => <span className="font-medium">{tag.name}</span>,
+  },
+  {
+    key: 'description',
+    header: '描述',
+    render: (tag) => (
+      <span className="text-muted-foreground max-w-xs truncate">
+        {tag.description || '-'}
+      </span>
+    ),
+  },
+];
 
 export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   const [tags, setTags] = useState<TagsData>(initialTags);
@@ -259,12 +301,16 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
 
             {TAG_TYPES.map((type) => (
               <TabsContent key={type.id} value={type.id}>
-                <TagsTable
-                  type={type.id}
-                  tags={Object.values(tags[type.id])}
+                <DataTable
+                  data={Object.values(tags[type.id])}
+                  columns={getColumns(type.id)}
                   isLoading={isLoading}
+                  loadingText="加载中..."
+                  emptyText="暂无标签，点击上方按钮创建"
+                  keyExtractor={(tag) => tag.id}
                   onEdit={openEditDialog}
                   onDelete={openDeleteDialog}
+                  actions={{ edit: true, delete: true }}
                 />
               </TabsContent>
             ))}

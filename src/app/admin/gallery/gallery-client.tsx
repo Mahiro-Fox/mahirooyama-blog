@@ -2,10 +2,6 @@
 
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
-import Editor from '@monaco-editor/react';
-import { Plus, Save, Upload, X } from 'lucide-react';
-import { toast } from 'sonner';
-
 import {
   adminCreateGalleryFile,
   adminDeleteGalleryFile,
@@ -15,6 +11,11 @@ import {
   adminUpdateGalleryFile,
   type GalleryFile,
 } from '@/actions/admin/gallery-actions';
+import { formatDate } from '@/utils/utils';
+import Editor from '@monaco-editor/react';
+import { Plus, Save, Upload, X } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -68,6 +69,11 @@ const columns: Column<GalleryFile>[] = [
     render: (file) => (
       <span className="text-muted-foreground">{file.fileName}</span>
     ),
+  },
+  {
+    key: 'lastUpdated',
+    header: '更新时间',
+    render: (file) => formatDate(file.lastUpdated),
   },
   {
     key: 'src',

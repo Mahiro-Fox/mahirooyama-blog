@@ -153,8 +153,8 @@ export async function adminRenameBlogFile(
     const cleanNewSlug = newSlug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
 
     // 尝试找到原文件
-    let oldFilePath = path.join(BLOG_DIR, `${slug}.mdx`);
-    let oldExt = '.mdx';
+    const oldFilePath = path.join(BLOG_DIR, `${slug}.mdx`);
+    const oldExt = '.mdx';
     try {
       await fs.access(oldFilePath);
     } catch {

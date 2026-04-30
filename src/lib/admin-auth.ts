@@ -1,5 +1,4 @@
 import { cookies } from 'next/headers';
-import { sessionStore } from '@/store/session-store';
 import { jwtVerify, type JWTPayload } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(

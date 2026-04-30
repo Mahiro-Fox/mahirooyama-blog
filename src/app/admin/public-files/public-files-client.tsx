@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { resolveImageSrc } from '@/utils/client-image-utils';
+import { formatDate } from '@/utils/utils';
 import {
   ArrowLeft,
   Copy,
@@ -84,12 +85,6 @@ const formatSize = (bytes: number) => {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-};
-
-// 格式化日期
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('zh-CN');
 };
 
 // 是否是图片文件

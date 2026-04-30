@@ -11,6 +11,7 @@ import {
   adminUpdateBlogFile,
   type MdxFile,
 } from '@/actions/admin/blog-actions';
+import { formatDate } from '@/utils/utils';
 import Editor from '@monaco-editor/react';
 import { Plus, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -40,12 +41,6 @@ const formatSize = (bytes: number) => {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
-// 格式化日期
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('zh-CN');
-};
-
 // 表格列定义
 const columns: Column<MdxFile>[] = [
   {
@@ -71,7 +66,7 @@ const columns: Column<MdxFile>[] = [
   },
   {
     key: 'lastUpdated',
-    header: '日期',
+    header: '更新时间',
     render: (file) => formatDate(file.lastUpdated),
   },
   {

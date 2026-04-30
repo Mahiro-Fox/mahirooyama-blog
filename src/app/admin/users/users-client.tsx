@@ -13,9 +13,11 @@ import {
   adminUpdateUserPassword,
 } from '@/actions/admin/user-actions';
 import type { UserResponse } from '@/store/user-store';
+import { formatDate } from '@/utils/utils';
 import { KeyRound, Loader2, Plus, Shield, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Permission } from '@/lib/permissions';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,
@@ -43,7 +45,7 @@ interface CurrentUser {
 }
 
 interface PermissionDef {
-  value: string;
+  value: Permission;
   label: string;
   description: string;
 }
@@ -56,10 +58,6 @@ interface PermissionGroup {
 // 获取角色显示文本
 const getRoleDisplay = (role: string) =>
   role === 'super_admin' ? '超级管理员' : '普通用户';
-
-// 格式化日期
-const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleString('zh-CN');
 
 export default function UsersClient({
   initialUsers,
@@ -87,7 +85,9 @@ export default function UsersClient({
   const [editingRole, setEditingRole] = useState<'user' | 'super_admin' | null>(
     null
   );
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>(
+    []
+  );
 
   // 表单状态
   const [newUsername, setNewUsername] = useState('');
@@ -217,8 +217,8 @@ export default function UsersClient({
   const openPermissionDialog = async (role: 'user' | 'super_admin') => {
     const data = await fetchRolePermissions();
     setEditingRole(role);
-    if (data && role === 'user' && (data.permissions as any)[role]) {
-      setSelectedPermissions((data.permissions as any)[role]);
+    if (data && role === 'user' && data.permissions[role]) {
+      setSelectedPermissions(data.permissions[role]);
     } else {
       setSelectedPermissions([]);
     }
@@ -226,7 +226,7 @@ export default function UsersClient({
   };
 
   // 切换权限选择
-  const togglePermission = (permission: string) => {
+  const togglePermission = (permission: Permission) => {
     setSelectedPermissions((prev) =>
       prev.includes(permission)
         ? prev.filter((p) => p !== permission)
@@ -242,7 +242,7 @@ export default function UsersClient({
     try {
       const result = await adminUpdateRolePermissions({
         role: editingRole,
-        permissions: selectedPermissions as any,
+        permissions: selectedPermissions,
       });
 
       if (!result.success) {
@@ -271,8 +271,8 @@ export default function UsersClient({
         throw new Error(result.error || '重置权限配置失败');
       }
       toast.success('权限配置已重置为默认值');
-      if (editingRole && (result.permissions as any)[editingRole]) {
-        setSelectedPermissions((result.permissions as any)[editingRole]);
+      if (editingRole && result.permissions[editingRole]) {
+        setSelectedPermissions(result.permissions[editingRole]);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '重置权限配置失败');

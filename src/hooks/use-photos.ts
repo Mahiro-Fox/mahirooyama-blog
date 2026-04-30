@@ -5,17 +5,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GalleryImageItem } from '@/lib/public-gallery';
 import { getPhotos } from '@/app/(app)/photos/actions';
 
-interface PhotosResponse {
-  images: GalleryImageItem[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
-}
-
 interface UsePhotosOptions {
   initialPage?: number;
   limit?: number;
