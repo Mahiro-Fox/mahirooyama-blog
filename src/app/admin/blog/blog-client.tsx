@@ -70,9 +70,9 @@ const columns: Column<MdxFile>[] = [
     ),
   },
   {
-    key: 'createdAt',
+    key: 'lastUpdated',
     header: '日期',
-    render: (file) => formatDate(file.createdAt),
+    render: (file) => formatDate(file.lastUpdated),
   },
   {
     key: 'tags',
@@ -140,7 +140,7 @@ title: ''
 description: ''
 thumbnail: ''
 tags: []
-createdAt: '${new Date().toISOString().split('T')[0]}'
+lastUpdated: '${new Date().toISOString().split('T')[0]}'
 ---
 
 `);

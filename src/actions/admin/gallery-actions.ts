@@ -16,7 +16,7 @@ export interface GalleryFile {
   src: string;
   tags: string[];
   size: number;
-  updatedAt: string;
+  lastUpdated: string;
 }
 
 // GET - 获取图库文件列表
@@ -48,7 +48,7 @@ export async function adminGetGalleryFiles(): Promise<
           src: parsed.data.thumbnail || '',
           tags: parsed.data.tags || [],
           size: (await fs.stat(filePath)).size,
-          updatedAt: (await fs.stat(filePath)).mtime.toISOString(),
+          lastUpdated: parsed.data.lastUpdated || '',
         };
       })
     );
@@ -56,7 +56,7 @@ export async function adminGetGalleryFiles(): Promise<
     // 按更新时间排序
     images.sort(
       (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
     );
 
     return { success: true, files: images };

@@ -12,8 +12,7 @@ export interface Tag {
   icon: string;
   type: TagType;
   description?: string;
-  createdAt: string;
-  updatedAt: string;
+  lastUpdated: string;
 }
 
 export interface TagsData {
@@ -29,8 +28,7 @@ const DEFAULT_TAGS: TagsData = {
       icon: 'mdx',
       type: 'blog',
       description: 'MDX 相关文章',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     github: {
       id: 'github',
@@ -38,8 +36,7 @@ const DEFAULT_TAGS: TagsData = {
       icon: 'gitHub',
       type: 'blog',
       description: 'GitHub 相关',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     linux: {
       id: 'linux',
@@ -47,8 +44,7 @@ const DEFAULT_TAGS: TagsData = {
       icon: 'linux',
       type: 'blog',
       description: 'Linux 系统',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     nextjs: {
       id: 'nextjs',
@@ -56,8 +52,7 @@ const DEFAULT_TAGS: TagsData = {
       icon: 'nextjs',
       type: 'blog',
       description: 'Next.js 框架',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     tailwind: {
       id: 'tailwind',
@@ -65,8 +60,7 @@ const DEFAULT_TAGS: TagsData = {
       icon: 'tailwind',
       type: 'blog',
       description: 'Tailwind CSS',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     typescript: {
       id: 'typescript',
@@ -74,8 +68,7 @@ const DEFAULT_TAGS: TagsData = {
       icon: 'ts',
       type: 'blog',
       description: 'TypeScript',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
   },
   gallery: {
@@ -84,48 +77,42 @@ const DEFAULT_TAGS: TagsData = {
       name: 'Nekonacho',
       icon: 'default',
       type: 'gallery',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     bluearchive: {
       id: 'bluearchive',
       name: 'Blue Archive',
       icon: 'default',
       type: 'gallery',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     lime: {
       id: 'lime',
       name: 'Lime',
       icon: 'default',
       type: 'gallery',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     meiyun: {
       id: 'meiyun',
       name: 'Meiyun',
       icon: 'default',
       type: 'gallery',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     vrchat: {
       id: 'vrchat',
       name: 'VRChat',
       icon: 'vrchat',
       type: 'gallery',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
     bilibili: {
       id: 'bilibili',
       name: 'Bilibili',
       icon: 'bilibili',
       type: 'gallery',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     },
   },
 };
@@ -175,12 +162,11 @@ export const tagStore = {
   },
 
   // 创建标签
-  async create(tag: Omit<Tag, 'createdAt' | 'updatedAt'>): Promise<Tag> {
+  async create(tag: Omit<Tag, 'lastUpdated'>): Promise<Tag> {
     const tags = await readTags();
     const newTag: Tag = {
       ...tag,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     };
     tags[tag.type][tag.id] = newTag;
     await writeTags(tags);
@@ -191,7 +177,7 @@ export const tagStore = {
   async update(
     id: string,
     type: TagType,
-    updates: Partial<Omit<Tag, 'id' | 'type' | 'createdAt'>>
+    updates: Partial<Omit<Tag, 'id' | 'type' | 'lastUpdated'>>
   ): Promise<Tag | null> {
     const tags = await readTags();
     const tag = tags[type][id];
@@ -200,7 +186,7 @@ export const tagStore = {
     const updatedTag: Tag = {
       ...tag,
       ...updates,
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     };
     tags[type][id] = updatedTag;
     await writeTags(tags);

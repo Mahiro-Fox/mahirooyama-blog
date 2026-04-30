@@ -55,7 +55,7 @@ export default async function IndexPage() {
                     title={gallery.metadata.title}
                     imageUrl={gallery.metadata.thumbnail || '/og.webp'}
                     link={`/gallery/${gallery.slug}`}
-                    badgeText={formatDate(gallery.metadata.createdAt)}
+                    badgeText={formatDate(gallery.metadata.lastUpdated)}
                     description={gallery.metadata.description}
                     priority={index === 0} // 首屏第一张优先加载
                     isPortrait={gallery.isPortrait}
@@ -111,7 +111,7 @@ export default async function IndexPage() {
                   title={post.metadata.title}
                   imageUrl={post.metadata.thumbnail || '/og.webp'}
                   link={`/blog/${post.slug}`}
-                  badgeText={formatDate(post.metadata.createdAt)}
+                  badgeText={formatDate(post.metadata.lastUpdated)}
                   description={post.metadata.description}
                   priority={true}
                   isPortrait={post.isPortrait}

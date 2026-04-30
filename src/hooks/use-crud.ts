@@ -50,7 +50,7 @@ export function useCrud<T extends Record<string, any>>(config: CrudConfig<T>) {
 
   // 创建
   const createItem = useCallback(
-    async (data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>) => {
+    async (data: Omit<T, 'id' | 'lastUpdated'>) => {
       setState((prev) => ({ ...prev, isSubmitting: true }));
       try {
         const response = await fetch(config.apiPath, {

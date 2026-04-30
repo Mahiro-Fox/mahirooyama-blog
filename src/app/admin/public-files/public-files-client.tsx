@@ -65,8 +65,7 @@ interface FileItem {
   path: string;
   type: 'file' | 'directory';
   size: number;
-  createdAt: string;
-  updatedAt: string;
+  lastUpdated: string;
   extension?: string;
 }
 
@@ -510,7 +509,7 @@ export default function PublicFilesClient({
                     <TableCell className="text-muted-foreground">
                       {item.type === 'directory' ? '-' : formatSize(item.size)}
                     </TableCell>
-                    <TableCell>{formatDate(item.updatedAt)}</TableCell>
+                    <TableCell>{formatDate(item.lastUpdated)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         {item.type === 'file' && isImage(item) && (

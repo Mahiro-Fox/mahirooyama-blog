@@ -8,7 +8,7 @@ export type SearchResult = {
   slug: string;
   thumbnail?: string;
   tags?: string[];
-  createdAt: string;
+  lastUpdated: string;
   matchScore: number;
 };
 
@@ -87,7 +87,7 @@ async function searchBlogPosts(keyword: string): Promise<SearchResult[]> {
         slug: `/blog/${post.slug}`,
         thumbnail: post.metadata.thumbnail,
         tags: post.metadata.tags,
-        createdAt: post.metadata.createdAt,
+        lastUpdated: post.metadata.lastUpdated,
         matchScore: maxScore,
       });
     }
@@ -135,7 +135,7 @@ async function searchGalleryItems(keyword: string): Promise<SearchResult[]> {
         slug: `/gallery/${item.slug}`,
         thumbnail: item.metadata.thumbnail,
         tags: item.metadata.tags,
-        createdAt: item.metadata.createdAt,
+        lastUpdated: item.metadata.lastUpdated,
         matchScore: maxScore,
       });
     }

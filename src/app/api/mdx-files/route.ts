@@ -23,10 +23,9 @@ export async function GET() {
           fileName: file,
           title: parsed.data.title || '无标题',
           description: parsed.data.description || '',
-          createdAt: parsed.data.createdAt || '',
+          lastUpdated: parsed.data.lastUpdated || '',
           tags: parsed.data.tags || [],
           size: (await fs.stat(filePath)).size,
-          updatedAt: (await fs.stat(filePath)).mtime.toISOString(),
         };
       })
     );
@@ -34,8 +33,8 @@ export async function GET() {
     // 按日期排序
     posts.sort(
       (a, b) =>
-        new Date(b.createdAt || 0).getTime() -
-        new Date(a.createdAt || 0).getTime()
+        new Date(b.lastUpdated || 0).getTime() -
+        new Date(a.lastUpdated || 0).getTime()
     );
 
     return NextResponse.json(posts);
@@ -71,9 +70,9 @@ export async function POST(request: NextRequest) {
 
     // 验证 MDX 格式 - 检查是否有 frontmatter
     const parsed = matter(content);
-    if (!parsed.data.title || !parsed.data.createdAt) {
+    if (!parsed.data.title || !parsed.data.lastUpdated) {
       return NextResponse.json(
-        { error: 'MDX 文件缺少必需的 frontmatter 字段 (title, createdAt)' },
+        { error: 'MDX 文件缺少必需的 frontmatter 字段 (title, lastUpdated)' },
         { status: 400 }
       );
     }

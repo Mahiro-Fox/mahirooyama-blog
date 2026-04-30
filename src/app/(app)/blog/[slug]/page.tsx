@@ -111,10 +111,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               <header className="mb-10 space-y-2 md:space-y-6">
                 {/* Date & Time */}
                 <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-[11px] md:text-xs">
-                  {post.metadata.createdAt && (
+                  {post.metadata.lastUpdated && (
                     <div className="inline-flex items-center gap-1">
-                      <time dateTime={post.metadata.createdAt}>
-                        {`${formatDate(post.metadata.createdAt)}`}
+                      <time dateTime={post.metadata.lastUpdated}>
+                        {`${formatDate(post.metadata.lastUpdated)}`}
                       </time>
                     </div>
                   )}

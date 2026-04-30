@@ -110,7 +110,7 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
                   title={item.metadata.title}
                   imageUrl={item.metadata.thumbnail || '/og.webp'}
                   link={`/gallery/${item.slug}`}
-                  badgeText={formatDate(item.metadata.createdAt || '')}
+                  badgeText={formatDate(item.metadata.lastUpdated || '')}
                   description={item.metadata.description}
                   priority={true}
                   isPortrait={item.isPortrait}

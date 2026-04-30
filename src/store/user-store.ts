@@ -12,8 +12,7 @@ export interface User {
   avatar: string;
   passwordHash: string;
   role: UserRole;
-  createdAt: string;
-  updatedAt: string;
+  lastUpdated: string;
   // 用户自定义权限（可选，用于覆盖默认权限）
   permissions?: {
     canCreate?: boolean;
@@ -46,8 +45,7 @@ export interface UserResponse {
   username: string;
   avatar: string;
   role: UserRole;
-  createdAt: string;
-  updatedAt: string;
+  lastUpdated: string;
   permissions?: User['permissions'];
 }
 
@@ -120,8 +118,7 @@ async function ensureDataFile(): Promise<void> {
       avatar: '/images/avatar/default-avatar.webp',
       passwordHash: await bcrypt.hash('admin123', 10),
       role: 'super_admin',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     };
     await fs.writeFile(USERS_FILE, JSON.stringify([defaultAdmin], null, 2));
   }
@@ -191,8 +188,7 @@ export const userStore = {
       avatar: '/images/avatar/default-avatar.webp',
       passwordHash: await bcrypt.hash(request.password, 10),
       role: request.role,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
       permissions: request.permissions,
     };
 
@@ -229,7 +225,7 @@ export const userStore = {
     if (request.role) user.role = request.role;
     if (request.permissions !== undefined)
       user.permissions = request.permissions;
-    user.updatedAt = new Date().toISOString();
+    user.lastUpdated = new Date().toISOString();
 
     await writeUsers(users);
     return toUserResponse(user);

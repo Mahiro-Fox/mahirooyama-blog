@@ -25,7 +25,7 @@ export async function GET() {
                 <title><![CDATA[${post.metadata.title}]]></title>
                 <link>${baseUrl}/blog/${post.slug}</link>
                 <guid isPermaLink="true">${baseUrl}/blog/${post.slug}</guid>
-                <pubDate>${new Date(post.metadata.createdAt).toUTCString()}</pubDate>
+                <pubDate>${new Date(post.metadata.lastUpdated).toUTCString()}</pubDate>
                 <description><![CDATA[${post.metadata.description || ''}]]></description>
                 ${
                   post.metadata.tags
@@ -46,8 +46,8 @@ export async function GET() {
                 <link>${baseUrl}/gallery/${gallery.slug}</link>
                 <guid isPermaLink="true">${baseUrl}/gallery/${gallery.slug}</guid>
                 <pubDate>${
-                  gallery.metadata.createdAt
-                    ? new Date(gallery.metadata.createdAt).toUTCString()
+                  gallery.metadata.lastUpdated
+                    ? new Date(gallery.metadata.lastUpdated).toUTCString()
                     : ''
                 }</pubDate>
                 <description><![CDATA[${gallery.metadata.description || ''}]]></description>

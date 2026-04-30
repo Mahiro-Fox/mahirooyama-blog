@@ -28,7 +28,7 @@ export async function GET() {
           thumbnail: parsed.data.thumbnail || '',
           tags: parsed.data.tags || [],
           size: (await fs.stat(filePath)).size,
-          updatedAt: (await fs.stat(filePath)).mtime.toISOString(),
+          lastUpdated: parsed.data.lastUpdated || '',
         };
       })
     );
@@ -36,7 +36,7 @@ export async function GET() {
     // 按更新时间排序
     images.sort(
       (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
     );
 
     return NextResponse.json(images);

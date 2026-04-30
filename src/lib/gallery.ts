@@ -11,7 +11,7 @@ export type GalleryImage<T = {}> = {
   title: string;
   description: string;
   thumbnail: string;
-  createdAt: string;
+  lastUpdated: string;
   tags?: string[];
 } & T;
 
@@ -37,7 +37,7 @@ export async function getAllGalleryImages<T = {}>({
 
   if (sortBy === 'date') {
     return images.sort((a, b) =>
-      b.metadata.createdAt.localeCompare(a.metadata.createdAt)
+      b.metadata.lastUpdated.localeCompare(a.metadata.lastUpdated)
     );
   }
   return images.sort((a, b) => a.slug.localeCompare(b.slug));

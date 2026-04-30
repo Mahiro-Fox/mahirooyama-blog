@@ -9,7 +9,7 @@ export type SearchResult = {
   slug: string;
   thumbnail?: string;
   tags?: string[];
-  createdAt: string;
+  lastUpdated: string;
   matchScore: number;
 };
 

@@ -13,7 +13,7 @@ import { paginateItems, PaginationResult } from '@/lib/pagination';
  */
 export type Frontmatter<T = {}> = {
   title: string;
-  createdAt: string;
+  lastUpdated: string;
   description: string;
 } & T;
 
@@ -46,8 +46,8 @@ export async function getAllBlogPosts(): Promise<BlogPost[]> {
   const posts = await getMDXData(BLOG_DIR);
   return posts.sort(
     (a, b) =>
-      new Date(b.metadata.createdAt).getTime() -
-      new Date(a.metadata.createdAt).getTime()
+      new Date(b.metadata.lastUpdated).getTime() -
+      new Date(a.metadata.lastUpdated).getTime()
   );
 }
 /**

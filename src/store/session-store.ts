@@ -2,7 +2,7 @@
 interface SessionInfo {
   userId: string;
   sessionId: string;
-  createdAt: string;
+  lastUpdated: string;
   lastUsedAt: string;
   userAgent?: string;
   ip?: string;
@@ -30,11 +30,11 @@ export const sessionStore = {
   // 创建新会话，使旧会话失效（单设备登录）
   create: (
     token: string,
-    sessionInfo: Omit<SessionInfo, 'createdAt' | 'lastUsedAt'>
+    sessionInfo: Omit<SessionInfo, 'lastUpdated' | 'lastUsedAt'>
   ): void => {
     sessions.set(token, {
       ...sessionInfo,
-      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
       lastUsedAt: new Date().toISOString(),
     });
   },

@@ -15,8 +15,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "clean": "rm -rf .next/ node_modules/",
-    "convert": "tsx scripts/convert-to-webp.ts",
-    "create-module": "node scripts/create-module.mjs"
+    "convert": "tsx scripts/convert-to-webp.ts"
   },
   "packageManager": "pnpm@10.14.0",
   "dependencies": {

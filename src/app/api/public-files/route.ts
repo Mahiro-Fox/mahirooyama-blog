@@ -13,8 +13,7 @@ interface FileItem {
   path: string;
   type: 'file' | 'directory';
   size: number;
-  createdAt: string;
-  updatedAt: string;
+  lastUpdated: string;
   extension?: string;
 }
 
@@ -56,8 +55,7 @@ export async function GET(request: NextRequest) {
           path: webPath,
           type: entry.isDirectory() ? 'directory' : 'file',
           size: stats.size,
-          createdAt: stats.birthtime.toISOString(),
-          updatedAt: stats.mtime.toISOString(),
+          lastUpdated: stats.birthtime.toISOString(),
           extension: entry.isDirectory()
             ? undefined
             : path.extname(entry.name).toLowerCase(),

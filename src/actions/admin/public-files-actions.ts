@@ -2,8 +2,8 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-
 import { FileUtils } from '@/utils/file-utils';
+
 import { requirePermission } from '@/lib/permissions';
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
@@ -13,8 +13,7 @@ export interface FileItem {
   path: string;
   type: 'file' | 'directory';
   size: number;
-  createdAt: string;
-  updatedAt: string;
+  lastUpdated: string;
   extension?: string;
 }
 
@@ -27,7 +26,9 @@ export interface FileListResponse {
 // GET - 获取文件列表
 export async function adminGetPublicFiles(
   relativePath: string = ''
-): Promise<{ success: true; data: FileListResponse } | { success: false; error: string }> {
+): Promise<
+  { success: true; data: FileListResponse } | { success: false; error: string }
+> {
   const permissionCheck = await requirePermission('files:read');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
@@ -67,8 +68,7 @@ export async function adminGetPublicFiles(
           path: webPath,
           type: entry.isDirectory() ? 'directory' : 'file',
           size: stats.size,
-          createdAt: stats.birthtime.toISOString(),
-          updatedAt: stats.mtime.toISOString(),
+          lastUpdated: stats.birthtime.toISOString(),
           extension: entry.isDirectory()
             ? undefined
             : path.extname(entry.name).toLowerCase(),

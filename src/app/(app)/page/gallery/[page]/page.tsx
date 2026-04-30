@@ -66,7 +66,7 @@ export default async function GalleryListPage({
                     title={post.metadata.title}
                     imageUrl={post.metadata.thumbnail}
                     link={`/gallery/${post.slug}`}
-                    badgeText={formatDate(post.metadata.createdAt)}
+                    badgeText={formatDate(post.metadata.lastUpdated)}
                     description={post.metadata.description}
                     priority={isPriority}
                     isPortrait={post.isPortrait}

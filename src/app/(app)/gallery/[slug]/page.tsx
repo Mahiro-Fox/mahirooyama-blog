@@ -90,10 +90,10 @@ export default async function GalleryImagePage({
           <div className="container flex flex-col gap-8">
             <section className="flex-1">
               <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-2 text-[11px] md:text-xs">
-                {image.metadata.createdAt && (
+                {image.metadata.lastUpdated && (
                   <div className="inline-flex items-center gap-1">
-                    <time dateTime={image.metadata.createdAt}>
-                      {`${formatDate(image.metadata.createdAt)}`}
+                    <time dateTime={image.metadata.lastUpdated}>
+                      {`${formatDate(image.metadata.lastUpdated)}`}
                     </time>
                   </div>
                 )}

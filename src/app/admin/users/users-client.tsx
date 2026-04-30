@@ -1,21 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { KeyRound, Loader2, Plus, Shield, Trash2, User } from 'lucide-react';
-import { toast } from 'sonner';
-
+import {
+  adminGetRolePermissions,
+  adminResetRolePermissions,
+  adminUpdateRolePermissions,
+} from '@/actions/admin/role-permission-actions';
 import {
   adminCreateUser,
   adminDeleteUser,
   adminGetUsers,
   adminUpdateUserPassword,
 } from '@/actions/admin/user-actions';
-import {
-  adminGetRolePermissions,
-  adminResetRolePermissions,
-  adminUpdateRolePermissions,
-} from '@/actions/admin/role-permission-actions';
 import type { UserResponse } from '@/store/user-store';
+import { KeyRound, Loader2, Plus, Shield, Trash2, User } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,
@@ -341,14 +341,9 @@ export default function UsersClient({
       render: (user) => getRoleDisplay(user.role),
     },
     {
-      key: 'createdAt',
-      header: '创建时间',
-      render: (user) => formatDate(user.createdAt),
-    },
-    {
-      key: 'updatedAt',
+      key: 'lastUpdated',
       header: '更新时间',
-      render: (user) => formatDate(user.updatedAt),
+      render: (user) => formatDate(user.lastUpdated),
     },
   ];
 
@@ -561,7 +556,10 @@ export default function UsersClient({
       />
 
       {/* 权限编辑对话框 */}
-      <Dialog open={permissionDialogOpen} onOpenChange={setPermissionDialogOpen}>
+      <Dialog
+        open={permissionDialogOpen}
+        onOpenChange={setPermissionDialogOpen}
+      >
         <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>修改角色权限</DialogTitle>

@@ -13,10 +13,9 @@ export interface MdxFile {
   fileName: string;
   title: string;
   description: string;
-  createdAt: string;
+  lastUpdated: string;
   tags: string[];
   size: number;
-  updatedAt: string;
 }
 
 // GET - 获取 MDX 文件列表
@@ -43,10 +42,9 @@ export async function adminGetBlogFiles(): Promise<
           fileName: file,
           title: parsed.data.title || '无标题',
           description: parsed.data.description || '',
-          createdAt: parsed.data.createdAt || '',
+          lastUpdated: parsed.data.lastUpdated || '',
           tags: parsed.data.tags || [],
           size: (await fs.stat(filePath)).size,
-          updatedAt: (await fs.stat(filePath)).mtime.toISOString(),
         };
       })
     );
@@ -54,8 +52,8 @@ export async function adminGetBlogFiles(): Promise<
     // 按日期排序
     posts.sort(
       (a, b) =>
-        new Date(b.createdAt || 0).getTime() -
-        new Date(a.createdAt || 0).getTime()
+        new Date(b.lastUpdated || 0).getTime() -
+        new Date(a.lastUpdated || 0).getTime()
     );
 
     return { success: true, files: posts };

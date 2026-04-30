@@ -60,7 +60,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
                   title={post.metadata.title}
                   imageUrl={post.metadata.thumbnail || '/og.webp'}
                   link={`/blog/${post.slug}`}
-                  badgeText={formatDate(post.metadata.createdAt)}
+                  badgeText={formatDate(post.metadata.lastUpdated)}
                   description={post.metadata.description}
                   priority={true}
                   isPortrait={post.isPortrait}
