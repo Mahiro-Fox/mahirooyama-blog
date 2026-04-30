@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { resolveImageSrc } from '@/utils/client-image-utils';
 import {
@@ -114,6 +114,7 @@ export default function PublicFilesClient({
 }: PublicFilesClientProps) {
   const [currentPath, setCurrentPath] = useState(initialData.currentPath);
   const [data, setData] = useState<FileListResponse>(initialData);
+  const hasMountedRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<FileItem | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -145,9 +146,12 @@ export default function PublicFilesClient({
   }, []);
 
   useEffect(() => {
-    if (currentPath !== initialData.currentPath) {
-      fetchFiles(currentPath);
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
     }
+
+    fetchFiles(currentPath);
   }, [currentPath, fetchFiles, initialData.currentPath]);
 
   // 进入文件夹
