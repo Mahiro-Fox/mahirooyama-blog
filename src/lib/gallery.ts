@@ -21,9 +21,9 @@ export type GalleryImageData<T = {}> = {
   isPortrait: boolean;
 };
 
-export async function getAllGalleryImages<T = {}>({
-  sortBy = 'date',
-}: { sortBy?: 'date' | 'slug' } = {}): Promise<GalleryImageData<T>[]> {
+export async function getAllGalleryImages<T = {}>(): Promise<
+  GalleryImageData<T>[]
+> {
   try {
     await fs.promises.access(GALLERY_DIR);
   } catch {
@@ -35,12 +35,11 @@ export async function getAllGalleryImages<T = {}>({
     files.map((file) => readGalleryFile<T>(path.join(GALLERY_DIR, file)))
   );
 
-  if (sortBy === 'date') {
-    return images.sort((a, b) =>
-      b.metadata.lastUpdated.localeCompare(a.metadata.lastUpdated)
-    );
-  }
-  return images.sort((a, b) => a.slug.localeCompare(b.slug));
+  return images.sort(
+    (a, b) =>
+      new Date(b.metadata.lastUpdated).getTime() -
+      new Date(a.metadata.lastUpdated).getTime()
+  );
 }
 
 export async function getGalleryPostsByTagSlug(
