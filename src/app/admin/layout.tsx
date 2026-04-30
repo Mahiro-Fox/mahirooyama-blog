@@ -4,6 +4,7 @@ import type { UserRole } from '@/store/user-store';
 import { jwtVerify } from 'jose';
 
 import AdminShell from '@/components/admin/admin-shell';
+import { QueryToast } from '@/components/admin/query-toast';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
@@ -49,15 +50,18 @@ export default async function AdminLayout({
   }
 
   return (
-    <AdminShell
-      currentUser={{
-        id: currentUser.id,
-        username: currentUser.username,
-        avatar: currentUser.avatar,
-        role: currentUser.role as UserRole,
-      }}
-    >
-      {children}
-    </AdminShell>
+    <>
+      <QueryToast />
+      <AdminShell
+        currentUser={{
+          id: currentUser.id,
+          username: currentUser.username,
+          avatar: currentUser.avatar,
+          role: currentUser.role as UserRole,
+        }}
+      >
+        {children}
+      </AdminShell>
+    </>
   );
 }

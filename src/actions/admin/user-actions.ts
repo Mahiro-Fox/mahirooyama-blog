@@ -1,6 +1,10 @@
 'use server';
 
-import { userStore, type UserResponse, type UserRole } from '@/store/user-store';
+import {
+  userStore,
+  type UserResponse,
+  type UserRole,
+} from '@/store/user-store';
 
 import { requireAuth, requirePermission } from '@/lib/permissions';
 
@@ -87,7 +91,7 @@ export async function adminUpdateUserPassword(input: {
     if (!isSelf) {
       const permCheck = await requirePermission('users:update');
       if (!permCheck.allowed) {
-        return { success: false, error: 'forbidden' };
+        return { success: false, error: 'unauthorized' };
       }
     }
   } else {
@@ -98,11 +102,13 @@ export async function adminUpdateUserPassword(input: {
 
     const permCheck = await requirePermission('users:updatePassword');
     if (!permCheck.allowed) {
-      return { success: false, error: 'forbidden' };
+      return { success: false, error: 'unauthorized' };
     }
   }
 
-  const updated = await userStore.update(input.id, { password: input.password });
+  const updated = await userStore.update(input.id, {
+    password: input.password,
+  });
   if (!updated) {
     return { success: false, error: '目标用户不存在' };
   }

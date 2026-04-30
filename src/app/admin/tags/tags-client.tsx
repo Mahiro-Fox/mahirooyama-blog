@@ -1,10 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { TagType as TagCategory, Tag as TagModel, TagsData } from '@/store/tag-store';
-import { Plus, RefreshCw, Tag } from 'lucide-react';
-import { toast } from 'sonner';
-
 import {
   adminCreateTag,
   adminDeleteTag,
@@ -12,6 +8,14 @@ import {
   adminResetTags,
   adminUpdateTag,
 } from '@/actions/admin/tag-actions';
+import type {
+  TagType as TagCategory,
+  Tag as TagModel,
+  TagsData,
+} from '@/store/tag-store';
+import { Plus, RefreshCw, Tag } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { getTagTypeConfig, TAG_TYPES } from '@/config/tag-config';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -196,8 +200,8 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       }
       toast.success('已重置为默认标签');
       setTags(result.tags);
-    } catch {
-      toast.error('重置标签失败');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '重置标签失败');
     } finally {
       setIsSubmitting(false);
     }

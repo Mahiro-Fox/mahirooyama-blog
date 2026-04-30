@@ -1,6 +1,9 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { userStore } from '@/store/user-store';
 import { jwtVerify } from 'jose';
+
+import { requirePermission } from '@/lib/permissions';
 
 import UsersClient from './users-client';
 
@@ -28,6 +31,12 @@ async function getCurrentUser() {
 }
 
 export default async function UsersPage() {
+  // Check permission
+  const permissionCheck = await requirePermission('users:read');
+  if (!permissionCheck.allowed) {
+    redirect('/admin?toast=unauthorized&message=无权限访问用户管理');
+  }
+
   // Auth is handled by parent layout, just get current user for client
   const currentUser = await getCurrentUser();
   const users = await userStore.getAll();

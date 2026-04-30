@@ -50,7 +50,7 @@ export default function AdminShell({
     try {
       const result = await adminRevalidateAll();
       if (!result.success) {
-        throw new Error('刷新失败');
+        throw new Error(result.error || '刷新失败');
       }
       toast.success('所有页面缓存已刷新√');
       console.log('刷新结果:', result.results);
