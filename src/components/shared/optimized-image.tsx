@@ -66,6 +66,20 @@ export function OptimizedImage({
     setHasError(true);
   }, []);
 
+  // 本地图片通过 API 路由获取，解决生产环境无法访问运行时上传文件的问题
+  const resolvedSrc = resolveImageSrc(src);
+
+  // 外部图片或通过 API 路由获取的图片都不需要 Next.js 优化
+  const shouldUnoptimize = unoptimized ?? shouldUnoptimizeImage(src);
+
+  const handleClick = useCallback(() => {
+    if (previewable && resolvedSrc) {
+      openPreview({ src: resolvedSrc, alt, width, height });
+    }
+  }, [previewable, alt, width, height, openPreview, resolvedSrc]);
+
+  const imageProps = fill ? { fill, sizes } : { width, height, sizes };
+
   // 错误回退
   if (hasError || !src) {
     return (
@@ -87,20 +101,6 @@ export function OptimizedImage({
       </div>
     );
   }
-
-  const imageProps = fill ? { fill, sizes } : { width, height, sizes };
-
-  // 本地图片通过 API 路由获取，解决生产环境无法访问运行时上传文件的问题
-  const resolvedSrc = resolveImageSrc(src);
-
-  // 外部图片或通过 API 路由获取的图片都不需要 Next.js 优化
-  const shouldUnoptimize = unoptimized ?? shouldUnoptimizeImage(src);
-
-  const handleClick = useCallback(() => {
-    if (previewable && resolvedSrc) {
-      openPreview({ src: resolvedSrc, alt, width, height });
-    }
-  }, [previewable, alt, width, height, openPreview, resolvedSrc]);
 
   return (
     <div

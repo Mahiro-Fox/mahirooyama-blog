@@ -8,7 +8,7 @@ import { OptimizedImage } from '@/components/shared/optimized-image';
 
 export function PhotosGallery() {
   const { images, isLoading, isLoadingMore, error, hasMore, loadMoreRef } =
-    usePhotos({ limit: 4 });
+    usePhotos({ limit: 8 });
 
   if (isLoading) {
     return (
