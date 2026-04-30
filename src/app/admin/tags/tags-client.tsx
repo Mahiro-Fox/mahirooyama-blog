@@ -14,6 +14,7 @@ import type {
   Tag as TagModel,
   TagsData,
 } from '@/store/tag-store';
+import { formatDate } from '@/utils/utils';
 import { Tag as LucideTag, Plus, RefreshCw, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -73,6 +74,15 @@ const getColumns = (type: TagCategory): Column<TagModel>[] => [
     key: 'name',
     header: '名称',
     render: (tag) => <span className="font-medium">{tag.name}</span>,
+  },
+  {
+    key: 'lastUpdated',
+    header: '更新时间',
+    render: (tag) => (
+      <span className="text-muted-foreground">
+        {formatDate(tag.lastUpdated)}
+      </span>
+    ),
   },
   {
     key: 'description',
