@@ -46,7 +46,7 @@ export function AdminPageLayout({
             <div className="flex items-center gap-2">
               {icon}
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="mb-2 flex items-center gap-2">
                   {title}
                 </CardTitle>
                 {description && (

@@ -4,6 +4,7 @@ import {
   FolderOpen,
   ImageIcon,
   LucideIcon,
+  Music,
   Shield,
   Tag,
 } from 'lucide-react';
@@ -92,6 +93,15 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     icon: Tag,
     title: '管理博客和图库标签',
     description: '创建、编辑、删除标签分类，用于文章和图库的分类管理。',
+  },
+  {
+    name: 'MIDI',
+    navHref: '/midi',
+    adminHref: '/admin/midi',
+    label: 'MIDI 播放',
+    title: 'MIDI 播放',
+    icon: Music,
+    description: 'MIDI 播放',
   },
 ];
 

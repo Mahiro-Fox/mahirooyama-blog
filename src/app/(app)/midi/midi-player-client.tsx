@@ -65,9 +65,6 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Music className="text-muted-foreground mb-4 h-12 w-12" />
         <p className="text-muted-foreground text-lg">No MIDI files found</p>
-        <p className="text-muted-foreground text-sm">
-          Add .mid files to the public/midisongs folder
-        </p>
       </div>
     );
   }

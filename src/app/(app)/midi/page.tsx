@@ -16,7 +16,16 @@ export default async function MidiPage() {
         <div className="mb-8 flex flex-col gap-2">
           <h1 className="text-3xl font-medium tracking-tight">MIDI Player</h1>
           <p className="text-muted-foreground">
-            Web MIDI Player for automatic piano playback via loopMIDI
+            Web MIDI Player for automatic piano playback via loopMIDI, here is
+            the setup guide:{' '}
+            <a
+              href="https://github.com/mahirooyama/mahirooyama-blog/blob/main/docs/midi-setup.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              MIDI Setup Guide
+            </a>
           </p>
         </div>
 

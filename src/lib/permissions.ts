@@ -47,6 +47,13 @@ export type Permission =
   | 'files:update'
   | 'files:delete'
   | 'files:manageFolder' // 创建/删除文件夹
+
+  // MIDI 文件管理权限
+  | 'midi:read'
+  | 'midi:create'
+  | 'midi:update'
+  | 'midi:delete'
+
   // 系统特殊权限
   | 'system:revalidate' // 刷新缓存
   | 'system:convertImages' // 转换图片
@@ -92,6 +99,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'files:update',
     'files:delete',
     'files:manageFolder',
+
+    // MIDI 文件权限：完整的CRUD
+    'midi:read',
+    'midi:create',
+    'midi:update',
+    'midi:delete',
 
     // 系统权限：可以刷新缓存
     'system:revalidate',
