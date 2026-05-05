@@ -3,7 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { MIDI_DIR } from '@/constant/dir';
-import { checkFileConflict, ensureDirectory, sanitizeFileName } from '@/utils/file-utils';
+import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -27,7 +27,9 @@ export async function adminGetMidiFiles(): Promise<
   try {
     await ensureDirectory(MIDI_DIR);
     const files = await fs.readdir(MIDI_DIR);
-    const midiFiles = files.filter((file) => file.toLowerCase().endsWith('.mid'));
+    const midiFiles = files.filter((file) =>
+      file.toLowerCase().endsWith('.mid')
+    );
 
     const filesWithStats = await Promise.all(
       midiFiles.map(async (file) => {
@@ -46,7 +48,8 @@ export async function adminGetMidiFiles(): Promise<
 
     // 按修改时间排序
     filesWithStats.sort(
-      (a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+      (a, b) =>
+        new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
     );
 
     return { success: true, files: filesWithStats };
@@ -76,9 +79,10 @@ export async function adminUploadMidiFile(
       return { success: false, error: '只支持 .mid 文件' };
     }
 
-    // 清理文件名
-    const cleanName = sanitizeFileName(path.basename(file.name, '.mid'));
-    const fileName = `${cleanName}.mid`;
+    // 获取文件名（不含扩展名）
+    const baseName = path.basename(file.name, '.mid');
+
+    const fileName = `${baseName}.mid`;
     const filePath = path.join(MIDI_DIR, fileName);
 
     // 检查文件是否已存在
@@ -149,10 +153,7 @@ export async function adminRenameMidiFile(
     if (!oldPath.startsWith(MIDI_DIR)) {
       return { success: false, error: '非法路径' };
     }
-
-    // 清理新文件名
-    const cleanName = sanitizeFileName(newName.trim());
-    const newFileName = `${cleanName}.mid`;
+    const newFileName = `${newName.trim()}.mid`;
     const newPath = path.join(MIDI_DIR, newFileName);
 
     // 检查新名称是否已存在

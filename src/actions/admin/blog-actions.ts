@@ -3,7 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { BLOG_DIR } from '@/constant/dir';
-import { checkFileConflict } from '@/utils/file-utils';
+import { checkFileConflict, validateSlug } from '@/utils/file-utils';
 import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
@@ -118,6 +118,25 @@ export async function adminCreateBlogFile({
   }
 
   try {
+    if (!slug || !content) {
+      return { success: false, error: '缺少必需字段 (slug, content)' };
+    }
+    // 检查文件名是否合法
+    const cleanSlug = slug.trim().toLowerCase();
+    const nameCheck = validateSlug(cleanSlug);
+    if (nameCheck) {
+      return { success: false, error: nameCheck.error };
+    }
+
+    // 验证 mdx 格式
+    const parsed = matter(content);
+    if (!parsed.data.title || !parsed.data.thumbnail) {
+      return {
+        success: false,
+        error: 'mdx 内容缺少必需的字段 (title, thumbnail)',
+      };
+    }
+
     const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
 
     // 检查文件冲突
@@ -145,12 +164,12 @@ export async function adminRenameBlogFile(
   }
 
   try {
-    if (!newSlug || newSlug.trim() === '') {
-      return { success: false, error: '新文件名不能为空' };
+    // 检查新文件名是否合法
+    const cleanNewSlug = newSlug.trim().toLowerCase();
+    const nameCheck = validateSlug(cleanNewSlug);
+    if (nameCheck) {
+      return { success: false, error: nameCheck.error };
     }
-
-    // 清理新文件名
-    const cleanNewSlug = newSlug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
 
     // 尝试找到原文件
     const oldFilePath = path.join(BLOG_DIR, `${slug}.mdx`);

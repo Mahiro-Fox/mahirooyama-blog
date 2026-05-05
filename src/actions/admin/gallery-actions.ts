@@ -3,7 +3,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { GALLERY_DIR } from '@/constant/dir';
-import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
+import {
+  checkFileConflict,
+  ensureDirectory,
+  validateSlug,
+} from '@/utils/file-utils';
 import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
@@ -111,6 +115,13 @@ export async function adminCreateGalleryFile(input: {
       return { success: false, error: '缺少必需字段 (slug, content)' };
     }
 
+    // 检查文件名是否合法
+    const cleanSlug = slug.trim().toLowerCase();
+    const nameCheck = validateSlug(cleanSlug);
+    if (nameCheck) {
+      return { success: false, error: nameCheck.error };
+    }
+
     // 验证 YAML 格式
     const parsed = matter(content);
     if (!parsed.data.title || !parsed.data.thumbnail) {
@@ -120,8 +131,6 @@ export async function adminCreateGalleryFile(input: {
       };
     }
 
-    // 清理文件名
-    const cleanSlug = slug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
     const fileName = `${cleanSlug}.yml`;
     const filePath = path.join(GALLERY_DIR, fileName);
 
@@ -182,12 +191,12 @@ export async function adminRenameGalleryFile(
   }
 
   try {
-    if (!newSlug || newSlug.trim() === '') {
-      return { success: false, error: '新文件名不能为空' };
+    // 检查新文件名是否合法
+    const cleanNewSlug = newSlug.trim().toLowerCase();
+    const nameCheck = validateSlug(cleanNewSlug);
+    if (nameCheck) {
+      return { success: false, error: nameCheck.error };
     }
-
-    // 清理新文件名
-    const cleanNewSlug = newSlug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
 
     // 尝试找到原文件（支持 .yml 和 .yaml）
     let oldFilePath = path.join(GALLERY_DIR, `${slug}.yml`);
