@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   AlertCircle,
   Download,
+  LocateFixed,
   Music,
   Pause,
   Play,
@@ -29,6 +31,8 @@ function formatDuration(seconds: number): string {
 
 export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const parentRef = useRef<HTMLDivElement>(null);
+  const currentIndexRef = useRef<number>(-1);
 
   const {
     currentPlayingId,
@@ -50,6 +54,25 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
     );
   }, [initialFiles, searchQuery]);
 
+  // Virtual list setup
+  const virtualizer = useVirtualizer({
+    count: filteredFiles.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 56, // Base row height
+    measureElement: (element) => element.getBoundingClientRect().height,
+  });
+
+  // Find current playing index
+  const currentPlayingIndex = useMemo(() => {
+    if (!currentPlayingId) return -1;
+    return filteredFiles.findIndex((file) => file.path === currentPlayingId);
+  }, [filteredFiles, currentPlayingId]);
+
+  // Update ref when current index changes
+  useEffect(() => {
+    currentIndexRef.current = currentPlayingIndex;
+  }, [currentPlayingIndex]);
+
   // Handle download
   const handleDownload = (file: MidiFile) => {
     const link = document.createElement('a');
@@ -58,6 +81,16 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Scroll to currently playing row
+  const scrollToCurrent = () => {
+    if (currentPlayingIndex >= 0 && virtualizer) {
+      virtualizer.scrollToIndex(currentPlayingIndex, {
+        align: 'center',
+        behavior: 'smooth',
+      });
+    }
   };
 
   if (initialFiles.length === 0) {
@@ -106,6 +139,17 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
         />
+        {currentPlayingId && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={scrollToCurrent}
+            title="定位到当前播放"
+            className="absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2"
+          >
+            <LocateFixed className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="bg-card overflow-hidden rounded-lg border">
@@ -115,76 +159,96 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
           <div className="w-32 text-right">Action</div>
         </div>
 
-        <div className="divide-y">
-          {filteredFiles.map((file: MidiFile) => {
-            const isCurrentFile = currentPlayingId === file.path;
-            const isCurrentlyPlaying = isCurrentFile && isPlaying;
+        <div ref={parentRef} className="max-h-[60vh] overflow-auto">
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const file = filteredFiles[virtualItem.index];
+              const isCurrentFile = currentPlayingId === file.path;
+              const isCurrentlyPlaying = isCurrentFile && isPlaying;
 
-            return (
-              <div
-                key={file.path}
-                className="hover:bg-muted/50 px-4 py-3 transition-colors"
-              >
-                <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Music className="text-muted-foreground h-4 w-4 shrink-0" />
-                    <span
-                      className="max-w-[200px] truncate text-sm sm:max-w-[300px] md:max-w-[400px] lg:max-w-[500px]"
-                      title={file.name}
-                    >
-                      {file.name}
-                    </span>
-                  </div>
-                  <div className="text-muted-foreground w-16 text-right text-sm whitespace-nowrap">
-                    {formatDuration(file.duration)}
-                  </div>
-                  <div className="flex w-32 items-center justify-end gap-2">
-                    <Button
-                      variant="default"
-                      size="icon-sm"
-                      onClick={() => handleDownload(file)}
-                      title="Download"
-                      className="h-8 w-8"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={isCurrentlyPlaying ? 'secondary' : 'default'}
-                      size="sm"
-                      onClick={() => togglePlay(file)}
-                      disabled={isLoading && !isCurrentFile}
-                      className="w-20"
-                    >
-                      {isLoading && isCurrentFile ? (
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      ) : isCurrentlyPlaying ? (
-                        <>
-                          <Pause className="mr-1 h-4 w-4" />
-                          Pause
-                        </>
-                      ) : (
-                        <>
-                          <Play className="mr-1 h-4 w-4" />
-                          Play
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                {/* Progress bar - only show for currently playing file */}
-                {isCurrentFile && isPlaying && duration > 0 && (
-                  <div className="mt-2">
-                    <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
-                      <div
-                        className="bg-primary h-full transition-all duration-100 ease-linear"
-                        style={{ width: `${Math.min(progress, 100)}%` }}
-                      />
+              return (
+                <div
+                  key={file.path}
+                  ref={virtualizer.measureElement}
+                  data-index={virtualItem.index}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                  className={`hover:bg-muted/50 px-4 py-3 transition-colors ${
+                    isCurrentFile ? 'bg-primary/5' : ''
+                  }`}
+                >
+                  <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Music className="text-muted-foreground h-4 w-4 shrink-0" />
+                      <span
+                        className="max-w-[200px] truncate text-sm sm:max-w-[300px] md:max-w-[400px] lg:max-w-[500px]"
+                        title={file.name}
+                      >
+                        {file.name}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground w-16 text-right text-sm whitespace-nowrap">
+                      {formatDuration(file.duration)}
+                    </div>
+                    <div className="flex w-32 items-center justify-end gap-2">
+                      <Button
+                        variant="default"
+                        size="icon-sm"
+                        onClick={() => handleDownload(file)}
+                        title="Download"
+                        className="h-8 w-8"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={isCurrentlyPlaying ? 'secondary' : 'default'}
+                        size="sm"
+                        onClick={() => togglePlay(file)}
+                        disabled={isLoading && !isCurrentFile}
+                        className="w-20"
+                      >
+                        {isLoading && isCurrentFile ? (
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : isCurrentlyPlaying ? (
+                          <>
+                            <Pause className="mr-1 h-4 w-4" />
+                            Pause
+                          </>
+                        ) : (
+                          <>
+                            <Play className="mr-1 h-4 w-4" />
+                            Play
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
+                  {/* Progress bar - only show for currently playing file */}
+                  {isCurrentFile && isPlaying && duration > 0 && (
+                    <div className="mt-2">
+                      <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
+                        <div
+                          className="bg-primary h-full transition-all duration-100 ease-linear"
+                          style={{ width: `${Math.min(progress, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
