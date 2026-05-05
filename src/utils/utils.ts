@@ -67,3 +67,14 @@ export function throttle<T extends (...args: any[]) => any>(
     }
   };
 }
+
+/**
+ * 格式化文件大小为人类可读格式
+ * @param bytes 字节数
+ * @returns 格式化后的字符串
+ */
+export function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}

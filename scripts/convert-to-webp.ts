@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { formatSize } from '@/utils/utils';
 import sharp from 'sharp';
 
 // 获取脚本所在目录，确保路径正确
@@ -78,15 +79,6 @@ async function convertToWebp(
 
     return false;
   }
-}
-
-/**
- * 格式化文件大小
- */
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 /**

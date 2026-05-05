@@ -3,7 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { GALLERY_DIR } from '@/constant/dir';
-import { checkFileConflict, FileUtils } from '@/utils/file-utils';
+import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
 import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
@@ -132,7 +132,7 @@ export async function adminCreateGalleryFile(input: {
     }
 
     // 确保目录存在
-    await FileUtils.ensureDirectory(GALLERY_DIR);
+    await ensureDirectory(GALLERY_DIR);
 
     // 写入文件
     await fs.writeFile(filePath, content, 'utf-8');

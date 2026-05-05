@@ -1,7 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkFileConflict, FileUtils } from '@/utils/file-utils';
+import {
+  checkFileConflict,
+  ensureDirectory,
+  isPathSafe,
+} from '@/utils/file-utils';
 import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
@@ -25,7 +29,7 @@ export async function GET(request: NextRequest) {
     const targetDir = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!FileUtils.isPathSafe(targetDir, PUBLIC_DIR)) {
+    if (!isPathSafe(targetDir, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -100,7 +104,7 @@ export async function POST(request: NextRequest) {
     const targetDir = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!FileUtils.isPathSafe(targetDir, PUBLIC_DIR)) {
+    if (!isPathSafe(targetDir, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -112,7 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 确保目录存在
-    await FileUtils.ensureDirectory(targetDir);
+    await ensureDirectory(targetDir);
 
     const results = await Promise.all(
       files.map(async (file) => {
@@ -214,14 +218,14 @@ export async function PATCH(request: NextRequest) {
     const targetDir = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!FileUtils.isPathSafe(targetDir, PUBLIC_DIR)) {
+    if (!isPathSafe(targetDir, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
     const newFolderPath = path.join(targetDir, folderName.trim());
 
     // 安全检查
-    if (!FileUtils.isPathSafe(newFolderPath, PUBLIC_DIR)) {
+    if (!isPathSafe(newFolderPath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法文件夹名称' }, { status: 403 });
     }
 
@@ -234,7 +238,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await FileUtils.ensureDirectory(newFolderPath);
+    await ensureDirectory(newFolderPath);
 
     return NextResponse.json({
       message: '文件夹创建成功',

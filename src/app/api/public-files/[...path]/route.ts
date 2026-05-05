@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkFileConflict, FileUtils } from '@/utils/file-utils';
+import { checkFileConflict, isPathSafe } from '@/utils/file-utils';
 import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const filePath = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!FileUtils.isPathSafe(filePath, PUBLIC_DIR)) {
+    if (!isPathSafe(filePath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -190,7 +190,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const targetPath = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!FileUtils.isPathSafe(targetPath, PUBLIC_DIR)) {
+    if (!isPathSafe(targetPath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -229,7 +229,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const oldPath = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!FileUtils.isPathSafe(oldPath, PUBLIC_DIR)) {
+    if (!isPathSafe(oldPath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法路径' }, { status: 403 });
     }
 
@@ -238,7 +238,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const newPath = path.join(dir, newName.trim());
 
     // 安全检查
-    if (!FileUtils.isPathSafe(newPath, PUBLIC_DIR)) {
+    if (!isPathSafe(newPath, PUBLIC_DIR)) {
       return NextResponse.json({ error: '非法名称' }, { status: 403 });
     }
 

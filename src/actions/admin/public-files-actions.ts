@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { FileUtils } from '@/utils/file-utils';
+import { isPathSafe } from '@/utils/file-utils';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -38,7 +38,7 @@ export async function adminGetPublicFiles(
     const targetDir = path.join(PUBLIC_DIR, relativePath);
 
     // 安全检查
-    if (!FileUtils.isPathSafe(targetDir, PUBLIC_DIR)) {
+    if (!isPathSafe(targetDir, PUBLIC_DIR)) {
       return { success: false, error: '非法路径' };
     }
 

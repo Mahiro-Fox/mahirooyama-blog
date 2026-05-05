@@ -11,7 +11,7 @@ import {
   adminUpdateBlogFile,
   type MdxFile,
 } from '@/actions/admin/blog-actions';
-import { formatDate } from '@/utils/utils';
+import { formatDate, formatSize } from '@/utils/utils';
 import Editor from '@monaco-editor/react';
 import { Plus, Save, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -33,13 +33,6 @@ import {
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
-
-// 格式化文件大小
-const formatSize = (bytes: number) => {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-};
 
 // 表格列定义
 const columns: Column<MdxFile>[] = [

@@ -7,3 +7,4 @@ export const GALLERY_DIR = path.join(
   'content',
   'gallery'
 );
+export const MIDI_DIR = path.join(process.cwd(), 'public', 'midisongs');
