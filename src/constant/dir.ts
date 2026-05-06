@@ -8,3 +8,4 @@ export const GALLERY_DIR = path.join(
   'gallery'
 );
 export const MIDI_DIR = path.join(process.cwd(), 'public', 'midisongs');
+export const PUBLIC_DIR = path.join(process.cwd(), 'public');

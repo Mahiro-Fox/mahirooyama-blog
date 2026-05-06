@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { login, verifyAuth } from '@/actions/auth';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/shadcn-ui/button';
@@ -44,8 +45,8 @@ function LoginForm() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/verify');
-        if (response.ok) {
+        const result = await verifyAuth();
+        if (result.success) {
           // 已登录，跳转到管理后台
           const redirect = searchParams.get('redirect') || '/admin';
           router.replace(redirect);
@@ -64,22 +65,10 @@ function LoginForm() {
     setRateLimitTime(null);
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const result = await login(username, password);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        // 处理速率限制错误
-        if (response.status === 429) {
-          setRateLimitTime(data.retryAfter || 300);
-        }
-        toast.error(data.error || '登录失败');
+      if (!result.success) {
+        toast.error(result.error || '登录失败');
       } else {
         toast.success('登录成功');
         // 登录成功，跳转到原目标页面或管理后台

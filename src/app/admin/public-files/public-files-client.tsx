@@ -2,6 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import {
+  convertImages,
+  createFolder,
+  deleteFile,
+  getPublicFiles,
+  renameFile,
+} from '@/actions/file-management';
 import { resolveImageSrc } from '@/utils/client-image-utils';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
@@ -119,12 +126,12 @@ export default function PublicFilesClient({
   const fetchFiles = useCallback(async (path: string = '') => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/public-files?path=${encodeURIComponent(path)}`
-      );
-      if (!response.ok) throw new Error('获取失败');
-      const result = await response.json();
-      setData(result);
+      const result = await getPublicFiles(path);
+      if (result.success && result.data) {
+        setData(result.data);
+      } else {
+        toast.error(result.error || '获取文件列表失败');
+      }
     } catch (error) {
       toast.error('获取文件列表失败');
     } finally {
@@ -172,26 +179,16 @@ export default function PublicFilesClient({
 
     setIsCreatingFolder(true);
     try {
-      const response = await fetch(
-        `/api/public-files?path=${encodeURIComponent(currentPath)}`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ folderName: newFolderName.trim() }),
-        }
-      );
+      const result = await createFolder(currentPath, newFolderName.trim());
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '创建失败');
+      if (result.success) {
+        toast.success('文件夹创建成功');
+        setIsNewFolderDialogOpen(false);
+        setNewFolderName('');
+        await fetchFiles(currentPath);
+      } else {
+        toast.error(result.error || '创建失败');
       }
-
-      toast.success('文件夹创建成功');
-      setIsNewFolderDialogOpen(false);
-      setNewFolderName('');
-      fetchFiles(currentPath);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '创建失败');
     } finally {
@@ -256,18 +253,18 @@ export default function PublicFilesClient({
     if (!selectedItem) return;
 
     try {
-      const response = await fetch(`/api/public-files${selectedItem.path}`, {
-        method: 'DELETE',
-      });
+      const result = await deleteFile(selectedItem.path);
 
-      if (!response.ok) throw new Error('删除失败');
-
-      toast.success(
-        selectedItem.type === 'directory' ? '文件夹删除成功' : '文件删除成功'
-      );
-      setIsDeleteDialogOpen(false);
-      setSelectedItem(null);
-      fetchFiles(currentPath);
+      if (result.success) {
+        toast.success(
+          selectedItem.type === 'directory' ? '文件夹删除成功' : '文件删除成功'
+        );
+        setIsDeleteDialogOpen(false);
+        setSelectedItem(null);
+        fetchFiles(currentPath);
+      } else {
+        toast.error(result.error || '删除失败');
+      }
     } catch (error) {
       toast.error('删除失败');
     }
@@ -279,23 +276,16 @@ export default function PublicFilesClient({
 
     setIsRenaming(true);
     try {
-      const response = await fetch(`/api/public-files${selectedItem.path}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ newName: newName.trim() }),
-      });
+      const result = await renameFile(selectedItem.path, newName.trim());
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '重命名失败');
+      if (result.success) {
+        toast.success('重命名成功');
+        setIsRenameDialogOpen(false);
+        setNewName('');
+        fetchFiles(currentPath);
+      } else {
+        toast.error(result.error || '重命名失败');
       }
-
-      toast.success('重命名成功');
-      setIsRenameDialogOpen(false);
-      setNewName('');
-      fetchFiles(currentPath);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '重命名失败');
     } finally {
@@ -320,18 +310,14 @@ export default function PublicFilesClient({
   const handleConvert = async () => {
     setIsConverting(true);
     try {
-      const response = await fetch('/api/convert-images', {
-        method: 'POST',
-      });
+      const result = await convertImages();
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || '转换失败');
+      if (result.success) {
+        toast.success(result.message || '转换完成');
+        fetchFiles(currentPath);
+      } else {
+        toast.error(result.error || '转换失败');
       }
-
-      toast.success(result.message || '转换完成');
-      fetchFiles(currentPath);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '转换失败');
     } finally {

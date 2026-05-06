@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { debounce } from '@/utils/utils';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   AlertCircle,
@@ -33,6 +34,12 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const parentRef = useRef<HTMLDivElement>(null);
   const currentIndexRef = useRef<number>(-1);
+
+  // 创建防抖的搜索函数
+  const debouncedSearch = useMemo(
+    () => debounce((value: string) => setSearchQuery(value), 300),
+    []
+  );
 
   const {
     currentPlayingId,
@@ -136,7 +143,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
         <Input
           placeholder="Search / 搜索"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => debouncedSearch(e.target.value)}
           className="pl-10"
         />
         {currentPlayingId && (

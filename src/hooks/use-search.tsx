@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { searchContent } from '@/actions/search';
 
 export type SearchResult = {
   type: 'blog' | 'gallery';
@@ -32,14 +33,13 @@ export function useSearch(limit = 10) {
 
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(query)}&limit=${limit}`
-        );
-        if (!response.ok) {
-          throw new Error('Search failed');
+        const result = await searchContent(query, limit);
+        if (result.success) {
+          setResults(result.results || []);
+        } else {
+          console.error('Search error:', result.error);
+          setResults([]);
         }
-        const data = await response.json();
-        setResults(data.results || []);
       } catch (error) {
         console.error('Search error:', error);
         setResults([]);
