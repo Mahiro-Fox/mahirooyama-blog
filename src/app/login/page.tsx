@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { login, verifyAuth } from '@/actions/auth';
+import { login, verifyAuth } from '@/actions/admin/auth';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/shadcn-ui/button';

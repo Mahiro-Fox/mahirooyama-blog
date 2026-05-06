@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { cachePublicPath } from '@/actions/admin/public-files-actions';
 import {
   convertImages,
   createFolder,
   deleteFile,
   getPublicFiles,
   renameFile,
-} from '@/actions/file-management';
+} from '@/actions/admin/file-management';
+import { cachePublicPath } from '@/actions/admin/public-files-actions';
 import { resolveImageSrc } from '@/utils/client-image-utils';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
