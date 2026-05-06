@@ -19,20 +19,17 @@ import { Tag as LucideTag, Plus, RefreshCw, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { getTagTypeConfig, TAG_TYPES } from '@/config/tag-config';
-import { Button } from '@/components/shadcn-ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/shadcn-ui/card';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@/components/shadcn-ui/tabs';
+import {
+  AdminPageLayout,
+  createAddAction,
+  createRefreshAction,
+} from '@/components/admin/admin-page-layout';
 import { DataTable, type Column } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { TagFormDialog } from '@/components/admin/tag-form-dialog';
@@ -261,72 +258,52 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                标签管理
-              </CardTitle>
-              <CardDescription>管理博客文章和图库的标签分类</CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReset}
-                disabled={isSubmitting}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                重置默认
-              </Button>
-              <Button size="sm" onClick={openCreateDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                创建标签
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={activeTab}
-            onValueChange={(v: string) => setActiveTab(v as TagCategory)}
-          >
-            <TabsList className="mb-4 flex gap-2">
-              {TAG_TYPES.map((type) => {
-                const Icon = type.icon;
-                return (
-                  <TabsTrigger
-                    key={type.id}
-                    value={type.id}
-                    className="flex items-center gap-2"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {type.label}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
+      <AdminPageLayout
+        title="标签管理"
+        description="管理博客文章和图库的标签分类"
+        actions={[
+          createRefreshAction(handleReset, isSubmitting),
+          createAddAction(openCreateDialog, '创建标签'),
+        ]}
+        loading={isLoading}
+      >
+        <Tabs
+          value={activeTab}
+          onValueChange={(v: string) => setActiveTab(v as TagCategory)}
+        >
+          <TabsList className="mb-4 flex gap-2">
+            {TAG_TYPES.map((type) => {
+              const Icon = type.icon;
+              return (
+                <TabsTrigger
+                  key={type.id}
+                  value={type.id}
+                  className="flex items-center gap-2"
+                >
+                  <Icon className="h-4 w-4" />
+                  {type.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-            {TAG_TYPES.map((type) => (
-              <TabsContent key={type.id} value={type.id}>
-                <DataTable
-                  data={Object.values(tags[type.id])}
-                  columns={getColumns(type.id)}
-                  isLoading={isLoading}
-                  loadingText="加载中..."
-                  emptyText="暂无标签，点击上方按钮创建"
-                  keyExtractor={(tag) => tag.id}
-                  onEdit={openEditDialog}
-                  onDelete={openDeleteDialog}
-                  actions={{ edit: true, delete: true }}
-                />
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
+          {TAG_TYPES.map((type) => (
+            <TabsContent key={type.id} value={type.id}>
+              <DataTable
+                data={Object.values(tags[type.id])}
+                columns={getColumns(type.id)}
+                isLoading={isLoading}
+                loadingText="加载中..."
+                emptyText="暂无标签，点击上方按钮创建"
+                keyExtractor={(tag) => tag.id}
+                onEdit={openEditDialog}
+                onDelete={openDeleteDialog}
+                actions={{ edit: true, delete: true }}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
+      </AdminPageLayout>
 
       {/* 创建标签对话框 */}
       <TagFormDialog

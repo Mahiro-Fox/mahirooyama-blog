@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode } from 'react';
-import { Loader2, Plus, RefreshCw } from 'lucide-react';
+import { ReactNode, useState } from 'react';
+import { ChevronDown, Loader2, Plus, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -26,6 +26,7 @@ interface AdminPageLayoutProps {
   description?: string;
   icon?: ReactNode;
   actions?: PageAction[];
+  primaryActions?: ReactNode[];
   children: ReactNode;
   loading?: boolean;
 }
@@ -35,59 +36,61 @@ export function AdminPageLayout({
   description,
   icon,
   actions = [],
+  primaryActions = [],
   children,
   loading = false,
 }: AdminPageLayoutProps) {
   return (
-    <div className="px-4 py-8">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {icon}
-              <div>
-                <CardTitle className="mb-2 flex items-center gap-2">
-                  {title}
-                </CardTitle>
-                {description && (
-                  <CardDescription>{description}</CardDescription>
-                )}
-              </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {icon}
+            <div>
+              <CardTitle className="mb-2 flex items-center gap-2">
+                {title}
+              </CardTitle>
+              {description && <CardDescription>{description}</CardDescription>}
             </div>
-            {actions.length > 0 && (
-              <div className="flex gap-2">
-                {actions.map((action, index) => (
-                  <Button
-                    key={index}
-                    variant={action.variant || 'default'}
-                    size="sm"
-                    onClick={action.onClick}
-                    disabled={action.disabled || action.loading}
-                  >
-                    {action.loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      action.icon
-                    )}
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
-            )}
           </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              <span className="text-muted-foreground">加载中...</span>
+          {actions.length > 0 && (
+            <div className="flex gap-2">
+              {actions.map((action, index) => (
+                <Button
+                  key={index}
+                  variant={action.variant || 'default'}
+                  size="sm"
+                  onClick={action.onClick}
+                  disabled={action.disabled || action.loading}
+                >
+                  {action.loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    action.icon
+                  )}
+                  {action.label}
+                </Button>
+              ))}
+              {primaryActions.length > 0 &&
+                primaryActions.map((action) => action)}
             </div>
-          ) : (
-            children
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardHeader>
+
+      {/* Primary Actions Area */}
+
+      <CardContent>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            <span className="text-muted-foreground">加载中...</span>
+          </div>
+        ) : (
+          children
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

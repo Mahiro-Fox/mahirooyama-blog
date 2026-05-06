@@ -29,10 +29,13 @@ import {
 import { Input } from '@/components/shadcn-ui/input';
 import {
   AdminPageLayout,
+  createAddAction,
   createRefreshAction,
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { EditorDialog } from '@/components/admin/editor-dialog';
+import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
 
 // 表格列定义
 const columns: Column<MdxFile>[] = [
@@ -127,8 +130,10 @@ export default function BlogClient({
 title: ''
 description: ''
 thumbnail: ''
-tags: []
 lastUpdated: '${new Date().toISOString().split('T')[0]}'
+tags:
+  - 
+  - 
 ---
 
 `);
@@ -216,9 +221,9 @@ lastUpdated: '${new Date().toISOString().split('T')[0]}'
     }
   };
 
-  // 上传文件（保持 API Route 方式）
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  // 上传文件（使用 FileUploadTrigger 组件）
+  const handleUpload = async (files: FileList) => {
+    const file = files[0];
     if (!file) return;
     if (!file.name.endsWith('.mdx')) {
       toast.error('只支持 .mdx 文件');
@@ -239,7 +244,6 @@ lastUpdated: '${new Date().toISOString().split('T')[0]}'
       toast.error(error instanceof Error ? error.message : '上传失败');
     } finally {
       setIsUploading(false);
-      e.target.value = '';
     }
   };
 
@@ -273,32 +277,21 @@ lastUpdated: '${new Date().toISOString().split('T')[0]}'
         description={`共 ${files.length} 篇文章`}
         actions={[
           createRefreshAction(fetchItems, loading),
-          {
-            label: '新增 MDX',
-            icon: <Plus className="mr-2 h-4 w-4" />,
-            onClick: handleCreate,
-            variant: 'default',
-          },
-          {
-            label: isUploading ? '上传中...' : '上传 MDX',
-            icon: <Upload className="mr-2 h-4 w-4" />,
-            onClick: () => document.getElementById('mdx-upload')?.click(),
-            disabled: isUploading,
-            variant: 'outline',
-          },
+          createAddAction(handleCreate, '新增 MDX'),
+        ]}
+        primaryActions={[
+          <FileUploadTrigger
+            key="upload"
+            id="mdx-upload"
+            accept=".mdx"
+            disabled={isUploading}
+            onFileSelect={handleUpload}
+          >
+            {isUploading ? '上传中...' : '上传 MDX'}
+            <Upload className="mr-2 h-4 w-4" />
+          </FileUploadTrigger>,
         ]}
       >
-        {/* 隐藏的文件输入 */}
-        <Input
-          type="file"
-          accept=".mdx"
-          onChange={handleUpload}
-          disabled={isUploading}
-          className="hidden"
-          id="mdx-upload"
-        />
-
-        {/* 数据表格 */}
         <DataTable
           data={files}
           columns={columns}
@@ -313,74 +306,37 @@ lastUpdated: '${new Date().toISOString().split('T')[0]}'
       </AdminPageLayout>
 
       {/* 编辑对话框 */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editMode === 'create'
-                ? '新增 MDX 文件'
-                : `编辑: ${selectedFile?.title}`}
-            </DialogTitle>
-            <DialogDescription>
-              {editMode === 'create'
-                ? '请输入文件名并编辑内容'
-                : `文件名：${selectedFile?.fileName}`}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-2">
-            <Input
-              placeholder="文件名称 (不含 .mdx 后缀)"
-              value={editFileName}
-              onChange={(e) => setEditFileName(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <div className="mt-4 h-[60vh] w-full">
-            <Editor
-              height="100%"
-              defaultLanguage="markdown"
-              value={editContent}
-              onChange={(value) => setEditContent(value || '')}
-              options={{
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                wordWrap: 'on',
-                lineNumbers: 'on',
-                folding: true,
-                automaticLayout: true,
-                tabSize: 2,
-                fontSize: 14,
-              }}
-              theme="vs-dark"
-            />
-          </div>
-          <DialogFooter className="mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-              disabled={isSaving}
-            >
-              <X className="mr-2 h-4 w-4" />
-              取消
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={
-                isSaving || (editMode === 'create' && !editFileName.trim())
-              }
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving
-                ? editMode === 'create'
-                  ? '创建中...'
-                  : '保存中...'
-                : editMode === 'create'
-                  ? '创建'
-                  : '保存'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditorDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        title={
+          editMode === 'create'
+            ? '新增 MDX 文件'
+            : `编辑: ${selectedFile?.title}`
+        }
+        description={
+          editMode === 'create'
+            ? '请输入文件名并编辑内容'
+            : `文件名：${selectedFile?.fileName}`
+        }
+        fileName={editFileName}
+        content={editContent}
+        onFileNameChange={setEditFileName}
+        onContentChange={setEditContent}
+        onSave={handleSave}
+        isSaving={isSaving}
+        saveButtonText={
+          isSaving
+            ? editMode === 'create'
+              ? '创建中...'
+              : '保存中...'
+            : editMode === 'create'
+              ? '创建'
+              : '保存'
+        }
+        language="markdown"
+        showFileName={true}
+      />
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog

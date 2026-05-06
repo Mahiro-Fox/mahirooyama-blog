@@ -29,6 +29,7 @@ import {
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
 
 // 表格列定义
 const columns: Column<MidiAdminFile>[] = [
@@ -82,18 +83,12 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
     }
   }, []);
 
-  // 触发文件选择器
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  // 处理文件选择和上传
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (!selectedFiles || selectedFiles.length === 0) return;
+  // 处理文件选择和上传（使用 FileUploadTrigger 组件）
+  const handleFileSelect = async (files: FileList) => {
+    if (!files || files.length === 0) return;
 
     // 过滤出 .mid 文件
-    const midFiles = Array.from(selectedFiles).filter((file) =>
+    const midFiles = Array.from(files).filter((file) =>
       file.name.toLowerCase().endsWith('.mid')
     );
 
@@ -102,44 +97,46 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
       return;
     }
 
-    if (midFiles.length !== selectedFiles.length) {
-      toast.warning(
-        `已过滤 ${selectedFiles.length - midFiles.length} 个非 .mid 文件`
-      );
+    if (midFiles.length !== files.length) {
+      toast.warning('已过滤非 .mid 文件');
     }
 
     setIsUploading(true);
+    try {
+      const uploadPromises = midFiles.map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
 
-    // 并行上传所有文件
-    const uploadPromises = midFiles.map(async (file) => {
-      const formData = new FormData();
-      formData.append('file', file);
+        const result = await adminUploadMidiFile(formData);
+        return { file, result };
+      });
 
-      const result = await adminUploadMidiFile(formData);
-      return { file, result };
-    });
+      const results = await Promise.all(uploadPromises);
 
-    const results = await Promise.all(uploadPromises);
-    setIsUploading(false);
+      const successCount = results.filter(
+        ({ result }) => result.success
+      ).length;
+      const failCount = results.length - successCount;
 
-    // 统计结果
-    const successCount = results.filter((r) => r.result.success).length;
-    const failCount = results.length - successCount;
+      if (failCount === 0) {
+        toast.success(`成功上传 ${successCount} 个文件`);
+      } else {
+        toast.warning(`${successCount} 成功, ${failCount} 失败`);
+        const errorMessages = results
+          .map(({ result, file }) =>
+            result.success ? '' : `${file.name}: ${result.error}`
+          )
+          .filter((msg) => msg !== '')
+          .join('\n');
+        toast.error(errorMessages);
+      }
 
-    if (successCount > 0) {
-      toast.success(`成功上传 ${successCount} 个文件`);
+      await refreshFiles();
+    } catch (error) {
+      toast.error('上传失败');
+    } finally {
+      setIsUploading(false);
     }
-    if (failCount > 0) {
-      toast.error(`${failCount} 个文件上传失败`);
-    }
-
-    // 清空 input 以便下次选择相同文件
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-
-    // 刷新列表
-    await refreshFiles();
   };
 
   // 删除文件
@@ -193,14 +190,19 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
     <AdminPageLayout
       title="MIDI 文件管理"
       description="管理 MIDI 音乐文件"
-      actions={[
-        createRefreshAction(refreshFiles),
-        {
-          label: '上传mid文件',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: triggerFileInput,
-          disabled: isUploading,
-        },
+      actions={[createRefreshAction(refreshFiles)]}
+      primaryActions={[
+        <FileUploadTrigger
+          key="upload"
+          id="midi-upload"
+          accept=".mid,.midi"
+          multiple
+          disabled={isUploading}
+          onFileSelect={handleFileSelect}
+        >
+          {isUploading ? '上传中...' : '上传 MIDI 文件'}
+          <Plus className="mr-2 h-4 w-4" />
+        </FileUploadTrigger>,
       ]}
     >
       <DataTable
@@ -211,16 +213,6 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
         onEdit={openRenameDialog}
         actions={{ edit: true, delete: true }}
         emptyText="暂无 MIDI 文件"
-      />
-
-      {/* 隐藏的文件选择 input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".mid,.midi"
-        multiple
-        onChange={handleFileSelect}
-        className="hidden"
       />
 
       {/* 删除确认对话框 */}

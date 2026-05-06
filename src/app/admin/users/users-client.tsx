@@ -35,6 +35,11 @@ import {
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
+import {
+  AdminPageLayout,
+  createAddAction,
+  createRefreshAction,
+} from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 
@@ -351,78 +356,69 @@ export default function UsersClient({
 
   return (
     <>
-      {/* 主内容 */}
-      <div>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex flex-col gap-4">
-              <CardTitle>用户列表</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                管理系统用户账号和权限
-              </p>
-            </div>
-            {isSuperAdmin && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => openPermissionDialog('user')}
-                >
-                  <KeyRound className="mr-2 h-4 w-4" /> 修改权限
-                </Button>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> 创建用户
-                </Button>
-              </div>
-            )}
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              data={users}
-              columns={columns}
-              isLoading={isLoading}
-              loadingText="加载用户列表..."
-              emptyText="暂无用户"
-              keyExtractor={(user) => user.id}
-              actions={{ custom: renderActions }}
-            />
-          </CardContent>
-        </Card>
+      <AdminPageLayout
+        title="用户列表"
+        description="管理系统用户账号和权限"
+        actions={[
+          createRefreshAction(refreshUsers, isLoading),
+          ...(isSuperAdmin
+            ? [
+                {
+                  label: '修改权限',
+                  icon: <KeyRound className="mr-2 h-4 w-4" />,
+                  onClick: () => openPermissionDialog('user'),
+                  variant: 'outline' as const,
+                },
+                createAddAction(() => setCreateDialogOpen(true), '创建用户'),
+              ]
+            : []),
+        ]}
+      >
+        <DataTable
+          data={users}
+          columns={columns}
+          isLoading={isLoading}
+          loadingText="加载用户列表..."
+          emptyText="暂无用户"
+          keyExtractor={(user) => user.id}
+          actions={{ custom: renderActions }}
+        />
+      </AdminPageLayout>
 
-        {/* 权限说明 */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>权限说明</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 font-medium">
-                  <Shield className="h-5 w-5 text-blue-500" /> 超级管理员
-                  (super_admin)
-                </div>
-                <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
-                  <li>查看所有用户数据</li>
-                  <li>创建新用户</li>
-                  <li>修改任何用户信息</li>
-                  <li>删除用户（不能删除自己）</li>
-                  <li>管理所有内容</li>
-                </ul>
+      {/* 权限说明 */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>权限说明</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 font-medium">
+                <Shield className="h-5 w-5 text-blue-500" /> 超级管理员
+                (super_admin)
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 font-medium">
-                  <User className="h-5 w-5 text-gray-500" /> 普通用户 (user)
-                </div>
-                <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
-                  <li>查看用户列表</li>
-                  <li>创建新内容</li>
-                  <li>修改自己的密码</li>
-                  <li>⚠️ 默认禁止：修改他人信息、删除操作</li>
-                </ul>
-              </div>
+              <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
+                <li>查看所有用户数据</li>
+                <li>创建新用户</li>
+                <li>修改任何用户信息</li>
+                <li>删除用户（不能删除自己）</li>
+                <li>管理所有内容</li>
+              </ul>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 font-medium">
+                <User className="h-5 w-5 text-gray-500" /> 普通用户 (user)
+              </div>
+              <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
+                <li>查看用户列表</li>
+                <li>创建新内容</li>
+                <li>修改自己的密码</li>
+                <li>⚠️ 默认禁止：修改他人信息、删除操作</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 创建用户对话框 */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>

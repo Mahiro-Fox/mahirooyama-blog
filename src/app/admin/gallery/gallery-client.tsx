@@ -29,10 +29,13 @@ import {
 import { Input } from '@/components/shadcn-ui/input';
 import {
   AdminPageLayout,
+  createAddAction,
   createRefreshAction,
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { EditorDialog } from '@/components/admin/editor-dialog';
+import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
 
 // 截断文本
 const truncate = (text: string, maxLen: number) => {
@@ -147,7 +150,10 @@ export default function GalleryClient({
 title: ''
 description: ''
 thumbnail: ''
-tags: []
+lastUpdated: '${new Date().toISOString().split('T')[0]}'
+tags:
+  - 
+  - 
 ---
 `);
     setIsEditDialogOpen(true);
@@ -222,9 +228,9 @@ tags: []
     }
   }, [selectedFile, editMode, editFileName, editContent]);
 
-  // 上传文件（保持 API Route 方式，因为 Server Action 处理文件上传较复杂）
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  // 上传文件（使用 FileUploadTrigger 组件）
+  const handleUpload = async (files: FileList) => {
+    const file = files[0];
     if (!file) return;
     const isYaml = file.name.endsWith('.yml') || file.name.endsWith('.yaml');
     if (!isYaml) {
@@ -246,7 +252,6 @@ tags: []
       toast.error(error instanceof Error ? error.message : '上传失败');
     } finally {
       setIsUploading(false);
-      e.target.value = '';
     }
   };
 
@@ -280,31 +285,21 @@ tags: []
         description={`共 ${files.length} 张图片`}
         actions={[
           createRefreshAction(fetchItems, loading),
-          {
-            label: '新增 YML',
-            icon: <Plus className="mr-2 h-4 w-4" />,
-            onClick: handleCreate,
-            variant: 'outline',
-          },
-          {
-            label: isUploading ? '上传中...' : '上传 YML',
-            icon: <Upload className="mr-2 h-4 w-4" />,
-            onClick: () => document.getElementById('yaml-upload')?.click(),
-            disabled: isUploading,
-            variant: 'default',
-          },
+          createAddAction(handleCreate, '新增 YML'),
+        ]}
+        primaryActions={[
+          <FileUploadTrigger
+            key="upload"
+            id="yaml-upload"
+            accept=".yml,.yaml"
+            disabled={isUploading}
+            onFileSelect={handleUpload}
+          >
+            {isUploading ? '上传中...' : '上传 YML'}
+            <Upload className="mr-2 h-4 w-4" />
+          </FileUploadTrigger>,
         ]}
       >
-        {/* 隐藏的文件输入 */}
-        <Input
-          type="file"
-          accept=".yml,.yaml"
-          onChange={handleUpload}
-          disabled={isUploading}
-          className="hidden"
-          id="yaml-upload"
-        />
-
         {/* 数据表格 */}
         <DataTable
           data={files}
@@ -320,82 +315,37 @@ tags: []
       </AdminPageLayout>
 
       {/* 编辑/新增对话框 */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>
-              {editMode === 'create'
-                ? '新增 YML 文件'
-                : `编辑: ${selectedFile?.title}`}
-            </DialogTitle>
-            <DialogDescription>
-              {editMode === 'create'
-                ? '创建新的 Gallery 配置文件'
-                : selectedFile?.fileName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4 space-y-4">
-            <div>
-              <label className="text-sm font-medium">文件名称 (slug)</label>
-              <Input
-                value={editFileName}
-                onChange={(e) => setEditFileName(e.target.value)}
-                placeholder="例如: my-image"
-                disabled={editMode === 'edit' && isSaving}
-                className="mt-1"
-              />
-              <p className="text-muted-foreground mt-1 text-xs">
-                {editMode === 'edit' &&
-                originalFileName !== `${editFileName}.yml`
-                  ? '修改文件名将会重命名文件'
-                  : '将生成文件: ' +
-                    (editFileName ? `${editFileName}.yml` : '...')}
-              </p>
-            </div>
-            <div className="h-[50vh] w-full">
-              <Editor
-                height="100%"
-                defaultLanguage="yaml"
-                value={editContent}
-                onChange={(value) => setEditContent(value || '')}
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  lineNumbers: 'on',
-                  folding: true,
-                  automaticLayout: true,
-                  tabSize: 2,
-                  fontSize: 14,
-                }}
-                theme="vs-dark"
-              />
-            </div>
-          </div>
-          <DialogFooter className="mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-              disabled={isSaving}
-            >
-              <X className="mr-2 h-4 w-4" /> 取消
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || !editFileName.trim()}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isSaving
-                ? editMode === 'create'
-                  ? '创建中...'
-                  : '保存中...'
-                : editMode === 'create'
-                  ? '创建'
-                  : '保存'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditorDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        title={
+          editMode === 'create'
+            ? '新增 YML 文件'
+            : `编辑: ${selectedFile?.title}`
+        }
+        description={
+          editMode === 'create'
+            ? '创建新的 Gallery 配置文件'
+            : selectedFile?.fileName
+        }
+        fileName={editFileName}
+        content={editContent}
+        onFileNameChange={setEditFileName}
+        onContentChange={setEditContent}
+        onSave={handleSave}
+        isSaving={isSaving}
+        saveButtonText={
+          isSaving
+            ? editMode === 'create'
+              ? '创建中...'
+              : '保存中...'
+            : editMode === 'create'
+              ? '创建'
+              : '保存'
+        }
+        language="yaml"
+        showFileName={true}
+      />
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog
