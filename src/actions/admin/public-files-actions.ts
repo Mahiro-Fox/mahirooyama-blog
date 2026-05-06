@@ -2,6 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { pathCacheStore } from '@/store/path-cache-store';
 import { isPathSafe } from '@/utils/file-utils';
 
 import { requirePermission } from '@/lib/permissions';
@@ -32,6 +33,14 @@ export async function adminGetPublicFiles(
   const permissionCheck = await requirePermission('files:read');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 如果没有提供路径，尝试从缓存中获取
+  if (!relativePath && permissionCheck.user?.id) {
+    const cachedPath = pathCacheStore.get(permissionCheck.user.id);
+    if (cachedPath !== null) {
+      relativePath = cachedPath;
+    }
   }
 
   try {
@@ -99,5 +108,29 @@ export async function adminGetPublicFiles(
   } catch (error) {
     console.error('获取文件列表失败:', error);
     return { success: false, error: '获取文件列表失败' };
+  }
+}
+
+// 缓存用户当前路径
+export async function cachePublicPath(
+  path: string
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    const permissionCheck = await requirePermission('files:read');
+    if (!permissionCheck.allowed) {
+      return { success: false, error: 'unauthorized' };
+    }
+
+    if (!permissionCheck.user?.id) {
+      return { success: false, error: '用户ID不存在' };
+    }
+
+    // 更新用户路径缓存
+    pathCacheStore.update(permissionCheck.user.id, path);
+
+    return { success: true };
+  } catch (error) {
+    console.error('缓存路径失败:', error);
+    return { success: false, error: '缓存路径失败' };
   }
 }

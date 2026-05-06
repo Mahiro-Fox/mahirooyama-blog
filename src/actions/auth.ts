@@ -1,10 +1,9 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { sessionStore } from '@/store/session-store';
 import { userStore } from '@/store/user-store';
-import { SignJWT, jwtVerify } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
@@ -52,7 +51,7 @@ export async function login(username: string, password: string) {
     // 记录会话
     const userAgent = 'server-action';
     const clientIp = 'server-action';
-    
+
     // 删除旧会话
     sessionStore.deleteByUserId(user.id);
 
@@ -68,7 +67,7 @@ export async function login(username: string, password: string) {
       process.env.COOKIE_SECURE === 'true' ||
       (process.env.COOKIE_SECURE !== 'false' &&
         process.env.NODE_ENV === 'production');
-    
+
     const cookieStore = await cookies();
     cookieStore.set('admin-session', token, {
       httpOnly: true,
@@ -110,9 +109,9 @@ export async function verifyAuth() {
 
     // 检查会话是否存在
     if (!sessionStore.exists(token.value)) {
-      return { 
-        success: false, 
-        error: '会话已在其他设备上失效，请重新登录' 
+      return {
+        success: false,
+        error: '会话已在其他设备上失效，请重新登录',
       };
     }
 

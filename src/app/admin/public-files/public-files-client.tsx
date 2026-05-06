@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { cachePublicPath } from '@/actions/admin/public-files-actions';
 import {
   convertImages,
   createFolder,
@@ -147,6 +148,22 @@ export default function PublicFilesClient({
 
     fetchFiles(currentPath);
   }, [currentPath, fetchFiles, initialData.currentPath]);
+
+  // 缓存当前路径到服务端
+  useEffect(() => {
+    const cachePath = async () => {
+      const result = await cachePublicPath(currentPath);
+      if (!result.success) {
+        console.error('缓存路径失败:', result.error);
+      }
+    };
+
+    cachePath();
+    // 组件卸载时缓存路径
+    return () => {
+      cachePath();
+    };
+  }, [currentPath]);
 
   // 进入文件夹
   const enterFolder = (folder: FileItem) => {
