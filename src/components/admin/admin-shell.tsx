@@ -309,14 +309,14 @@ export default function AdminShell({
       {/* 主内容区域 */}
       <main className="flex-1 lg:ml-64">
         {/* 桌面端顶部Header */}
-        <header className="bg-background sticky top-0 z-20 hidden h-14 items-center justify-between border-b px-6 lg:flex">
+        <header className="bg-background sticky top-0 z-20 hidden items-center justify-between border-b p-4 lg:flex">
           <h1 className="text-lg font-semibold">{getCurrentPageTitle()}</h1>
           <div className="flex items-center gap-4">
             {/* 用户头像下拉菜单 */}
             <div className="relative">
               <button
                 onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
-                className="hover:bg-muted flex items-center gap-3 rounded-lg px-2 py-1 transition-colors"
+                className="hover:bg-muted flex items-center gap-3 rounded-lg transition-colors"
               >
                 <Image
                   src={currentUser.avatar}

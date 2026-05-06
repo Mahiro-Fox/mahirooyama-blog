@@ -1,6 +1,6 @@
 'use server';
 
-import { getPublicGalleryImages, GalleryImageItem } from '@/lib/public-gallery';
+import { GalleryImageItem, getPublicGalleryImages } from '@/lib/public-gallery';
 
 interface PhotosResponse {
   images: GalleryImageItem[];

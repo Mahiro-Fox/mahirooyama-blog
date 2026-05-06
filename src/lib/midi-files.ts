@@ -55,7 +55,6 @@ function parseMidiDuration(buffer: Buffer): number {
   }
 
   const headerLength = readUint32();
-  const format = readUint16();
   const numTracks = readUint16();
   const ticksPerBeat = readUint16();
 
@@ -89,7 +88,7 @@ function parseMidiDuration(buffer: Buffer): number {
       }
 
       if (pos >= data.length) break;
-      let byte = readUint8();
+      const byte = readUint8();
 
       // Meta event (0xFF)
       if (byte === 0xff) {
@@ -120,7 +119,6 @@ function parseMidiDuration(buffer: Buffer): number {
         }
 
         const type = status >> 4;
-        const channel = status & 0x0f;
 
         // Skip data bytes based on message type
         if (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import {
   adminDeleteMidiFile,
@@ -71,7 +71,6 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
   const [fileToRename, setFileToRename] = useState<MidiAdminFile | null>(null);
   const [newName, setNewName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 刷新文件列表
   const refreshFiles = useCallback(async () => {

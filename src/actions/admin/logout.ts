@@ -1,7 +1,6 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
 import { sessionStore } from '@/store/session-store';
 
 export async function adminLogout() {

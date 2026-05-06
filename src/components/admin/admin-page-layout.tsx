@@ -1,7 +1,7 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
-import { ChevronDown, Loader2, Plus, RefreshCw } from 'lucide-react';
+import { ReactNode } from 'react';
+import { Loader2, Plus, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/shadcn-ui/button';
 import {

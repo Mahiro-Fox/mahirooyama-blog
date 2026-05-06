@@ -12,21 +12,10 @@ import {
   type GalleryFile,
 } from '@/actions/admin/gallery-actions';
 import { formatDate, formatSize } from '@/utils/utils';
-import Editor from '@monaco-editor/react';
-import { Plus, Save, Upload, X } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/shadcn-ui/badge';
-import { Button } from '@/components/shadcn-ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/shadcn-ui/dialog';
-import { Input } from '@/components/shadcn-ui/input';
 import {
   AdminPageLayout,
   createAddAction,
@@ -121,7 +110,6 @@ export default function GalleryClient({
   const [editMode, setEditMode] = useState<'create' | 'edit'>('edit');
   const [editContent, setEditContent] = useState('');
   const [editFileName, setEditFileName] = useState('');
-  const [originalFileName, setOriginalFileName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   // 刷新文件列表
@@ -145,7 +133,6 @@ export default function GalleryClient({
     setEditMode('create');
     setSelectedFile(null);
     setEditFileName('');
-    setOriginalFileName('');
     setEditContent(`---
 title: ''
 description: ''
@@ -169,7 +156,6 @@ tags:
       setEditMode('edit');
       setSelectedFile(file);
       setEditFileName(file.slug);
-      setOriginalFileName(file.fileName);
       setEditContent(result.content);
       setIsEditDialogOpen(true);
     } catch (error) {

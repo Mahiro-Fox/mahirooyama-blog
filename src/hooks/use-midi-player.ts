@@ -86,12 +86,11 @@ function parseMidiFile(buffer: ArrayBuffer): ParsedMidi {
 
     while (pos < trackEnd) {
       const deltaTime = readVariableLength();
-      let byte = data[pos++];
+      const byte = data[pos++];
 
       // Meta event or SysEx
       if (byte === 0xff || byte === 0xf0 || byte === 0xf7) {
         if (byte === 0xff) {
-          const metaType = data[pos++];
           const length = readVariableLength();
           pos += length;
         } else {

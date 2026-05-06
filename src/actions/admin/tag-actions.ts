@@ -1,6 +1,6 @@
 'use server';
 
-import { tagStore, type TagType, type TagsData } from '@/store/tag-store';
+import { tagStore, type TagsData, type TagType } from '@/store/tag-store';
 
 import { requirePermission } from '@/lib/permissions';
 

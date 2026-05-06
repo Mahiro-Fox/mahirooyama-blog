@@ -15,7 +15,7 @@ import type {
   TagsData,
 } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
-import { Tag as LucideTag, Plus, RefreshCw, Tag } from 'lucide-react';
+import { Tag as LucideTag } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { getTagTypeConfig, TAG_TYPES } from '@/config/tag-config';

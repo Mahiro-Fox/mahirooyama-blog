@@ -14,7 +14,7 @@ import {
 } from '@/actions/admin/user-actions';
 import type { UserResponse } from '@/store/user-store';
 import { formatDate } from '@/utils/utils';
-import { KeyRound, Loader2, Plus, Shield, Trash2, User } from 'lucide-react';
+import { KeyRound, Loader2, Shield, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Permission } from '@/lib/permissions';

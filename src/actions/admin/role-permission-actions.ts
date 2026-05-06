@@ -28,7 +28,10 @@ export async function adminUpdateRolePermissions(input: {
   }
 
   if (!input.role || !Array.isArray(input.permissions)) {
-    return { success: false as const, error: '缺少必要字段：role 和 permissions' };
+    return {
+      success: false as const,
+      error: '缺少必要字段：role 和 permissions',
+    };
   }
 
   if (input.role === 'super_admin') {

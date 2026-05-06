@@ -1,7 +1,7 @@
 'use client';
 
 import { Tag } from 'lucide-react';
-import { BrandIcons } from './brand-icons';
+
 import {
   Select,
   SelectContent,
@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/shadcn-ui/select';
+
+import { BrandIcons } from './brand-icons';
 
 const AVAILABLE_ICONS = [
   { value: 'default', label: 'Default' },
@@ -36,7 +38,11 @@ interface IconPickerProps {
   placeholder?: string;
 }
 
-export function IconPicker({ value, onChange, placeholder = '选择图标' }: IconPickerProps) {
+export function IconPicker({
+  value,
+  onChange,
+  placeholder = '选择图标',
+}: IconPickerProps) {
   const SelectedIcon = value
     ? BrandIcons[value as keyof typeof BrandIcons] || Tag
     : Tag;
@@ -51,7 +57,8 @@ export function IconPicker({ value, onChange, placeholder = '选择图标' }: Ic
       </SelectTrigger>
       <SelectContent>
         {AVAILABLE_ICONS.map((icon) => {
-          const IconComponent = BrandIcons[icon.value as keyof typeof BrandIcons] || Tag;
+          const IconComponent =
+            BrandIcons[icon.value as keyof typeof BrandIcons] || Tag;
           return (
             <SelectItem key={icon.value} value={icon.value}>
               <div className="flex items-center gap-2">
