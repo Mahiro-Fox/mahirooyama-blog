@@ -25,7 +25,7 @@ export default async function MidiPage() {
             这是一个通过 loopMIDI 实现自动钢琴播放的 Web MIDI
             播放器，设置指南请查看:{' '}
             <a
-              href="https://github.com/mahirooyama/mahirooyama-blog/blob/main/docs/midi-setup.md"
+              href="/blog/how-to-set-up-your-loopMIDI-to-play-piano-in-VRChat"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
