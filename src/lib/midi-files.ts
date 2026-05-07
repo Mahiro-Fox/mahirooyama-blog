@@ -269,7 +269,6 @@ async function readMidiFile(filePath: string): Promise<MidiFile> {
   // Read file and parse duration
   const buffer = await fs.promises.readFile(filePath);
   const duration = parseMidiDuration(buffer);
-  console.log(duration);
 
   return {
     name: fileName.replace(/\.mid$/i, ''),

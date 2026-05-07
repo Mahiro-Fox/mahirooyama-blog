@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Midi } from '@tonejs/midi';
 
 import type { MidiFile } from '@/lib/midi-files';
 
@@ -25,121 +26,6 @@ interface ParsedMidi {
     ticksPerBeat: number;
   };
   tracks: MidiTrack[];
-}
-
-// Simple MIDI file parser
-function parseMidiFile(buffer: ArrayBuffer): ParsedMidi {
-  const data = new Uint8Array(buffer);
-  let pos = 0;
-
-  function readUint32(): number {
-    return (
-      (data[pos++] << 24) |
-      (data[pos++] << 16) |
-      (data[pos++] << 8) |
-      data[pos++]
-    );
-  }
-
-  function readUint16(): number {
-    return (data[pos++] << 8) | data[pos++];
-  }
-
-  function readVariableLength(): number {
-    let value = 0;
-    let byte;
-    do {
-      byte = data[pos++];
-      value = (value << 7) | (byte & 0x7f);
-    } while (byte & 0x80);
-    return value;
-  }
-
-  // Read header
-  const headerChunk = String.fromCharCode(...data.slice(pos, pos + 4));
-  pos += 4;
-  if (headerChunk !== 'MThd') {
-    throw new Error('Invalid MIDI file: missing MThd header');
-  }
-
-  const headerLength = readUint32();
-  pos += headerLength - 6;
-
-  const format = readUint16();
-  const numTracks = readUint16();
-  const ticksPerBeat = readUint16();
-
-  const tracks: MidiTrack[] = [];
-
-  // Read tracks
-  for (let i = 0; i < numTracks; i++) {
-    const trackChunk = String.fromCharCode(...data.slice(pos, pos + 4));
-    pos += 4;
-    if (trackChunk !== 'MTrk') {
-      throw new Error(`Invalid track header at track ${i}`);
-    }
-
-    const trackLength = readUint32();
-    const trackEnd = pos + trackLength;
-    const events: MidiEvent[] = [];
-    let runningStatus = 0;
-
-    while (pos < trackEnd) {
-      const deltaTime = readVariableLength();
-      const byte = data[pos++];
-
-      // Meta event or SysEx
-      if (byte === 0xff || byte === 0xf0 || byte === 0xf7) {
-        if (byte === 0xff) {
-          const length = readVariableLength();
-          pos += length;
-        } else {
-          const length = readVariableLength();
-          pos += length;
-        }
-        events.push({ deltaTime, type: 'meta' });
-      } else {
-        // MIDI channel event
-        let status = byte;
-        if ((byte & 0x80) === 0) {
-          status = runningStatus;
-          pos--;
-        } else {
-          runningStatus = status;
-        }
-
-        const type = status >> 4;
-        const channel = status & 0x0f;
-
-        let noteNumber: number | undefined;
-        let velocity: number | undefined;
-
-        if (type === 0x8 || type === 0x9) {
-          noteNumber = data[pos++];
-          velocity = data[pos++];
-        } else if (type === 0xa || type === 0xb || type === 0xe) {
-          pos += 2;
-        } else if (type === 0xc || type === 0xd) {
-          pos += 1;
-        }
-
-        events.push({
-          deltaTime,
-          type: type === 0x9 && velocity && velocity > 0 ? 'noteOn' : 'noteOff',
-          channel,
-          noteNumber,
-          velocity,
-        });
-      }
-    }
-
-    tracks.push({ events });
-  }
-
-  return {
-    header: { format, numTracks, ticksPerBeat },
-    tracks,
-  };
 }
 
 export interface MidiPlayerState {
@@ -260,7 +146,7 @@ export function useMidiPlayer(): MidiPlayerState & MidiPlayerActions {
         // Fetch and parse MIDI file
         const response = await fetch(file.path);
         const arrayBuffer = await response.arrayBuffer();
-        const parsedMidi = parseMidiFile(arrayBuffer);
+        const parsedMidi = new Midi(arrayBuffer);
 
         // Get MIDI output
         const outputs = Array.from(midiAccess.outputs.values());
@@ -274,31 +160,27 @@ export function useMidiPlayer(): MidiPlayerState & MidiPlayerActions {
 
         const output = outputs[0];
 
-        // Schedule playback
-        const ticksPerBeat = parsedMidi.header.ticksPerBeat;
-        const tempo = 500000; // Default 120 BPM
-        const secondsPerTick = tempo / ticksPerBeat / 1000000;
-
         const scheduledEvents: { time: number; data: number[] }[] = [];
 
-        // Collect all note events with timestamps
         for (const track of parsedMidi.tracks) {
-          let trackTick = 0;
-          for (const event of track.events) {
-            if (event.type === 'noteOn' || event.type === 'noteOff') {
-              trackTick += event.deltaTime;
-              const time = trackTick * secondsPerTick * 1000;
-              const status =
-                event.type === 'noteOn'
-                  ? 0x90 | (event.channel || 0)
-                  : 0x80 | (event.channel || 0);
-              scheduledEvents.push({
-                time,
-                data: [status, event.noteNumber || 0, event.velocity || 0],
-              });
-            } else {
-              trackTick += event.deltaTime;
-            }
+          for (const note of track.notes) {
+            const channel = track.channel ?? 0;
+
+            // Note On
+            scheduledEvents.push({
+              time: note.time * 1000,
+              data: [
+                0x90 | channel,
+                note.midi,
+                Math.floor(note.velocity * 127),
+              ],
+            });
+
+            // Note Off
+            scheduledEvents.push({
+              time: (note.time + note.duration) * 1000,
+              data: [0x80 | channel, note.midi, 0],
+            });
           }
         }
 
