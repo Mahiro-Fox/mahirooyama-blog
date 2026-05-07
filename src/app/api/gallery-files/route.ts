@@ -10,25 +10,23 @@ import { requirePermission } from '@/lib/permissions';
 export async function GET() {
   try {
     const files = await fs.readdir(GALLERY_DIR);
-    const yamlFiles = files.filter(
-      (file) => file.endsWith('.yml') || file.endsWith('.yaml')
-    );
+    const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
     const images = await Promise.all(
-      yamlFiles.map(async (file) => {
+      jsonFiles.map(async (file) => {
         const filePath = path.join(GALLERY_DIR, file);
         const content = await fs.readFile(filePath, 'utf-8');
-        const parsed = matter(content);
+        const parsed = JSON.parse(content);
 
         return {
           slug: path.basename(file, path.extname(file)),
           fileName: file,
-          title: parsed.data.title || '无标题',
-          description: parsed.data.description || '',
-          thumbnail: parsed.data.thumbnail || '',
-          tags: parsed.data.tags || [],
+          title: parsed.title || '无标题',
+          description: parsed.description || '',
+          thumbnail: parsed.thumbnail || '',
+          tags: parsed.tags || [],
           size: (await fs.stat(filePath)).size,
-          lastUpdated: parsed.data.lastUpdated || '',
+          lastUpdated: parsed.lastUpdated || '',
         };
       })
     );
@@ -62,28 +60,34 @@ export async function POST(request: NextRequest) {
     if (contentType.includes('application/json')) {
       // JSON 格式：直接创建文件
       const json = await request.json();
-      const { slug, content: yamlContent } = json;
+      const { slug, content: jsonContent } = json;
 
-      if (!slug || !yamlContent) {
+      if (!slug || !jsonContent) {
         return NextResponse.json(
           { error: '缺少必需字段 (slug, content)' },
           { status: 400 }
         );
       }
 
-      // 验证 YAML 格式
-      const parsed = matter(yamlContent);
-      if (!parsed.data.title || !parsed.data.thumbnail) {
+      // 验证 JSON 格式
+      let parsed;
+      try {
+        parsed = JSON.parse(jsonContent);
+      } catch (e) {
+        return NextResponse.json({ error: 'JSON 格式无效' }, { status: 400 });
+      }
+
+      if (!parsed.title || !parsed.thumbnail) {
         return NextResponse.json(
-          { error: 'YAML 内容缺少必需的字段 (title, thumbnail)' },
+          { error: 'JSON 内容缺少必需的字段 (title, thumbnail)' },
           { status: 400 }
         );
       }
 
       // 清理文件名
       const cleanSlug = slug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
-      fileName = `${cleanSlug}.yml`;
-      content = yamlContent;
+      fileName = `${cleanSlug}.json`;
+      content = JSON.stringify(parsed, null, 2);
     } else {
       // FormData 格式：文件上传
       const formData = await request.formData();
@@ -95,15 +99,12 @@ export async function POST(request: NextRequest) {
       }
 
       // 验证文件类型
-      const isYaml =
-        file.name.endsWith('.yml') ||
-        file.name.endsWith('.yaml') ||
-        file.type === 'application/x-yaml' ||
-        file.type === 'text/yaml';
+      const isJson =
+        file.name.endsWith('.json') || file.type === 'application/json';
 
-      if (!isYaml) {
+      if (!isJson) {
         return NextResponse.json(
-          { error: '只接受 .yml 或 .yaml 文件' },
+          { error: '只接受 .json 文件' },
           { status: 400 }
         );
       }
@@ -111,18 +112,27 @@ export async function POST(request: NextRequest) {
       // 读取文件内容
       content = await file.text();
 
-      // 验证 YAML 格式
-      const parsed = matter(content);
-      if (!parsed.data.title || !parsed.data.thumbnail) {
+      // 验证 JSON 格式
+      let parsed;
+      try {
+        parsed = JSON.parse(content);
+      } catch (e) {
         return NextResponse.json(
-          { error: 'YAML 文件缺少必需的字段 (title, thumbnail)' },
+          { error: 'JSON 文件格式无效' },
+          { status: 400 }
+        );
+      }
+
+      if (!parsed.title || !parsed.thumbnail) {
+        return NextResponse.json(
+          { error: 'JSON 文件缺少必需的字段 (title, thumbnail)' },
           { status: 400 }
         );
       }
 
       // 确定文件名
       fileName = slug
-        ? `${slug}.yml`
+        ? `${slug}.json`
         : file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
     }
 

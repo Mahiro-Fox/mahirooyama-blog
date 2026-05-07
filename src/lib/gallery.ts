@@ -66,7 +66,7 @@ export async function getGalleryImageBySlug<T = {}>(
 
 async function getGalleryFiles(): Promise<string[]> {
   return (await fs.promises.readdir(GALLERY_DIR)).filter(
-    (file) => path.extname(file) === '.yml' || path.extname(file) === '.yaml'
+    (file) => path.extname(file) === '.json'
   );
 }
 
@@ -74,7 +74,7 @@ async function readGalleryFile<T>(
   filePath: string
 ): Promise<GalleryImageData<T>> {
   const rawContent = await fs.promises.readFile(filePath, 'utf-8');
-  const { data } = matter(rawContent);
+  const data = JSON.parse(rawContent);
 
   // 判断是否为竖屏图片
   const isPortrait = await isPortraitImage(data.thumbnail);

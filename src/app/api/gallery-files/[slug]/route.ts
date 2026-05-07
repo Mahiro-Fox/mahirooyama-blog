@@ -14,14 +14,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
 
-    // 尝试 .yml 和 .yaml 扩展名
-    let filePath = path.join(GALLERY_DIR, `${slug}.yml`);
-    try {
-      await fs.access(filePath);
-    } catch {
-      filePath = path.join(GALLERY_DIR, `${slug}.yaml`);
-    }
-
+    // 尝试 .json 扩展名
+    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
     const content = await fs.readFile(filePath, 'utf-8');
 
     return NextResponse.json({ content });
@@ -45,13 +39,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     const { slug } = await params;
 
-    // 尝试 .yml 和 .yaml 扩展名
-    let filePath = path.join(GALLERY_DIR, `${slug}.yml`);
-    try {
-      await fs.access(filePath);
-    } catch {
-      filePath = path.join(GALLERY_DIR, `${slug}.yaml`);
-    }
+    // 尝试 .json 扩展名
+    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
 
     await fs.unlink(filePath);
 
@@ -75,9 +64,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const { slug } = await params;
-    const { content, ext = 'yml' } = await request.json();
+    const { content } = await request.json();
 
-    const filePath = path.join(GALLERY_DIR, `${slug}.${ext}`);
+    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
 
     await fs.writeFile(filePath, content, 'utf-8');
 
@@ -107,27 +96,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // 清理新文件名
     const cleanNewSlug = newSlug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
 
-    // 尝试找到原文件（支持 .yml 和 .yaml）
-    let oldFilePath = path.join(GALLERY_DIR, `${slug}.yml`);
-    let oldExt = '.yml';
+    // 尝试找到原文件
+    const oldFilePath = path.join(GALLERY_DIR, `${slug}.json`);
     try {
       await fs.access(oldFilePath);
     } catch {
-      oldFilePath = path.join(GALLERY_DIR, `${slug}.yaml`);
-      oldExt = '.yaml';
-      try {
-        await fs.access(oldFilePath);
-      } catch {
-        return NextResponse.json({ error: '原文件不存在' }, { status: 404 });
-      }
+      return NextResponse.json({ error: '原文件不存在' }, { status: 404 });
     }
 
     // 检查新文件名是否已存在
-    const newFilePath = path.join(GALLERY_DIR, `${cleanNewSlug}${oldExt}`);
+    const newFilePath = path.join(GALLERY_DIR, `${cleanNewSlug}.json`);
     try {
       await fs.access(newFilePath);
       return NextResponse.json(
-        { error: `文件 ${cleanNewSlug}${oldExt} 已存在` },
+        { error: `文件 ${cleanNewSlug}.json 已存在` },
         { status: 409 }
       );
     } catch {
@@ -141,7 +123,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       message: '文件重命名成功',
       oldSlug: slug,
       newSlug: cleanNewSlug,
-      fileName: `${cleanNewSlug}${oldExt}`,
+      fileName: `${cleanNewSlug}.json`,
     });
   } catch (error) {
     console.error('重命名图库文件失败:', error);

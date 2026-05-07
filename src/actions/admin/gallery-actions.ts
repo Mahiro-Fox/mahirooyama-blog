@@ -8,7 +8,6 @@ import {
   ensureDirectory,
   validateSlug,
 } from '@/utils/file-utils';
-import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -34,25 +33,23 @@ export async function adminGetGalleryFiles(): Promise<
 
   try {
     const files = await fs.readdir(GALLERY_DIR);
-    const yamlFiles = files.filter(
-      (file) => file.endsWith('.yml') || file.endsWith('.yaml')
-    );
+    const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
     const images = await Promise.all(
-      yamlFiles.map(async (file) => {
+      jsonFiles.map(async (file) => {
         const filePath = path.join(GALLERY_DIR, file);
         const content = await fs.readFile(filePath, 'utf-8');
-        const parsed = matter(content);
+        const parsed = JSON.parse(content);
 
         return {
           slug: path.basename(file, path.extname(file)),
           fileName: file,
-          title: parsed.data.title || '无标题',
-          description: parsed.data.description || '',
-          src: parsed.data.thumbnail || '',
-          tags: parsed.data.tags || [],
+          title: parsed.title || '无标题',
+          description: parsed.description || '',
+          src: parsed.thumbnail || '',
+          tags: parsed.tags || [],
           size: (await fs.stat(filePath)).size,
-          lastUpdated: parsed.data.lastUpdated || '',
+          lastUpdated: parsed.lastUpdated || '',
         };
       })
     );
@@ -82,13 +79,8 @@ export async function adminGetGalleryFile(
   }
 
   try {
-    // 尝试 .yml 和 .yaml 扩展名
-    let filePath = path.join(GALLERY_DIR, `${slug}.yml`);
-    try {
-      await fs.access(filePath);
-    } catch {
-      filePath = path.join(GALLERY_DIR, `${slug}.yaml`);
-    }
+    // 使用 .json 扩展名
+    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
 
     const content = await fs.readFile(filePath, 'utf-8');
     return { success: true, content };
@@ -122,16 +114,25 @@ export async function adminCreateGalleryFile(input: {
       return { success: false, error: nameCheck.error };
     }
 
-    // 验证 YAML 格式
-    const parsed = matter(content);
-    if (!parsed.data.title || !parsed.data.thumbnail) {
+    // 验证 JSON 格式
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
       return {
         success: false,
-        error: 'YAML 内容缺少必需的字段 (title, thumbnail)',
+        error: 'JSON 格式无效',
       };
     }
 
-    const fileName = `${cleanSlug}.yml`;
+    if (!parsed.title || !parsed.thumbnail) {
+      return {
+        success: false,
+        error: 'JSON 内容缺少必需的字段 (title, thumbnail)',
+      };
+    }
+
+    const fileName = `${cleanSlug}.json`;
     const filePath = path.join(GALLERY_DIR, fileName);
 
     // 检查文件是否已存在
@@ -143,8 +144,9 @@ export async function adminCreateGalleryFile(input: {
     // 确保目录存在
     await ensureDirectory(GALLERY_DIR);
 
-    // 写入文件
-    await fs.writeFile(filePath, content, 'utf-8');
+    // 格式化JSON并写入文件
+    const formattedContent = JSON.stringify(parsed, null, 2);
+    await fs.writeFile(filePath, formattedContent, 'utf-8');
 
     return { success: true };
   } catch (error) {
@@ -164,15 +166,19 @@ export async function adminUpdateGalleryFile(
   }
 
   try {
-    // 尝试 .yml 和 .yaml 扩展名
-    let filePath = path.join(GALLERY_DIR, `${slug}.yml`);
+    // 使用 .json 扩展名
+    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
+
+    // 验证JSON格式并格式化
+    let parsed;
     try {
-      await fs.access(filePath);
-    } catch {
-      filePath = path.join(GALLERY_DIR, `${slug}.yaml`);
+      parsed = JSON.parse(content);
+    } catch (e) {
+      return { success: false, error: 'JSON 格式无效' };
     }
 
-    await fs.writeFile(filePath, content, 'utf-8');
+    const formattedContent = JSON.stringify(parsed, null, 2);
+    await fs.writeFile(filePath, formattedContent, 'utf-8');
     return { success: true };
   } catch (error) {
     console.error('更新图库文件失败:', error);
@@ -198,23 +204,18 @@ export async function adminRenameGalleryFile(
       return { success: false, error: nameCheck.error };
     }
 
-    // 尝试找到原文件（支持 .yml 和 .yaml）
-    let oldFilePath = path.join(GALLERY_DIR, `${slug}.yml`);
-    let oldExt = '.yml';
+    // 使用 .json 扩展名
+    const oldFilePath = path.join(GALLERY_DIR, `${slug}.json`);
+    const newFilePath = path.join(GALLERY_DIR, `${cleanNewSlug}.json`);
+
+    // 检查原文件是否存在
     try {
       await fs.access(oldFilePath);
     } catch {
-      oldFilePath = path.join(GALLERY_DIR, `${slug}.yaml`);
-      oldExt = '.yaml';
-      try {
-        await fs.access(oldFilePath);
-      } catch {
-        return { success: false, error: '原文件不存在' };
-      }
+      return { success: false, error: '原文件不存在' };
     }
 
     // 检查新文件名是否已存在
-    const newFilePath = path.join(GALLERY_DIR, `${cleanNewSlug}${oldExt}`);
     const conflictCheck = await checkFileConflict(newFilePath);
     if (conflictCheck) {
       return { success: false, error: conflictCheck.error || '文件已存在' };
@@ -240,13 +241,8 @@ export async function adminDeleteGalleryFile(
   }
 
   try {
-    // 尝试 .yml 和 .yaml 扩展名
-    let filePath = path.join(GALLERY_DIR, `${slug}.yml`);
-    try {
-      await fs.access(filePath);
-    } catch {
-      filePath = path.join(GALLERY_DIR, `${slug}.yaml`);
-    }
+    // 使用 .json 扩展名
+    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
 
     await fs.unlink(filePath);
     return { success: true };

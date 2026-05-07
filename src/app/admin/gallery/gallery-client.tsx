@@ -133,16 +133,13 @@ export default function GalleryClient({
     setEditMode('create');
     setSelectedFile(null);
     setEditFileName('');
-    setEditContent(`---
-title: ''
-description: ''
-thumbnail: ''
-lastUpdated: '${new Date().toISOString().split('T')[0]}'
-tags:
-  - 
-  - 
----
-`);
+    setEditContent(`{
+  "title": "",
+  "description": "",
+  "thumbnail": "",
+  "lastUpdated": "${new Date().toISOString().split('T')[0]}",
+  "tags": []
+}`);
     setIsEditDialogOpen(true);
   };
 
@@ -218,9 +215,9 @@ tags:
   const handleUpload = async (files: FileList) => {
     const file = files[0];
     if (!file) return;
-    const isYaml = file.name.endsWith('.yml') || file.name.endsWith('.yaml');
-    if (!isYaml) {
-      toast.error('只支持 .yml 或 .yaml 文件');
+    const isJson = file.name.endsWith('.json');
+    if (!isJson) {
+      toast.error('只支持 .json 文件');
       return;
     }
     setIsUploading(true);
@@ -271,17 +268,17 @@ tags:
         description={`共 ${files.length} 张图片`}
         actions={[
           createRefreshAction(fetchItems, loading),
-          createAddAction(handleCreate, '新增 YML'),
+          createAddAction(handleCreate, '新增 JSON'),
         ]}
         primaryActions={[
           <FileUploadTrigger
             key="upload"
-            id="yaml-upload"
-            accept=".yml,.yaml"
+            id="json-upload"
+            accept=".json"
             disabled={isUploading}
             onFileSelect={handleUpload}
           >
-            {isUploading ? '上传中...' : '上传 YML'}
+            {isUploading ? '上传中...' : '上传 JSON'}
             <Upload className="mr-2 h-4 w-4" />
           </FileUploadTrigger>,
         ]}
@@ -292,7 +289,7 @@ tags:
           columns={columns}
           isLoading={loading}
           loadingText="加载图片列表..."
-          emptyText="暂无图片，请上传 YML 文件或新增配置"
+          emptyText="暂无图片，请上传 JSON 文件或新增配置"
           keyExtractor={(file) => file.slug}
           onEdit={handleEdit}
           onDelete={openDelete}
@@ -306,7 +303,7 @@ tags:
         onOpenChange={setIsEditDialogOpen}
         title={
           editMode === 'create'
-            ? '新增 YML 文件'
+            ? '新增 JSON 文件'
             : `编辑: ${selectedFile?.title}`
         }
         description={
@@ -329,7 +326,7 @@ tags:
               ? '创建'
               : '保存'
         }
-        language="yaml"
+        language="json"
         showFileName={true}
       />
 

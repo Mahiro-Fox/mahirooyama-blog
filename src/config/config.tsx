@@ -45,7 +45,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '管理博客文章和 MDX 文件',
     icon: FileText,
     description:
-      '上传、编辑、删除博客文章，支持 Markdown 格式和 YAML Frontmatter。',
+      '上传、编辑、删除博客文章，支持 Markdown 格式和 JSON Frontmatter。',
   },
   {
     name: 'Gallery',
