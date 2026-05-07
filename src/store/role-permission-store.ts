@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { DATA_DIR } from '@/constant/dir';
 import type { UserRole } from '@/store/user-store';
 
 import type { Permission } from '@/lib/permissions';
@@ -9,7 +10,6 @@ import type { Permission } from '@/lib/permissions';
  * 管理 data/role-permissions.json 文件
  */
 
-const DATA_DIR = path.join(process.cwd(), 'data');
 const ROLE_PERMISSIONS_FILE = path.join(DATA_DIR, 'role-permissions.json');
 
 /**

@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { GALLERY_DIR } from '@/constant/dir';
 import sharp from 'sharp';
 
-const galleryDir = path.join(process.cwd(), 'public', 'images', 'gallery');
-const compressedDir = path.join(galleryDir, '.compressed');
+const compressedDir = path.join(GALLERY_DIR, '.compressed');
 
 // 压缩配置
 const COMPRESSION_CONFIG = {
@@ -96,12 +96,12 @@ async function getCompressedImagePath(
  */
 export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
   try {
-    await fs.promises.access(galleryDir);
+    await fs.promises.access(GALLERY_DIR);
   } catch {
     return [];
   }
 
-  const files = await fs.promises.readdir(galleryDir);
+  const files = await fs.promises.readdir(GALLERY_DIR);
   const imageFiles = files.filter((file) => {
     const ext = path.extname(file).toLowerCase();
     // 排除压缩目录和隐藏文件
@@ -111,7 +111,7 @@ export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
 
   const images = await Promise.all(
     imageFiles.map(async (filename) => {
-      const filePath = path.join(galleryDir, filename);
+      const filePath = path.join(GALLERY_DIR, filename);
       const id = path.basename(filename, path.extname(filename));
 
       try {

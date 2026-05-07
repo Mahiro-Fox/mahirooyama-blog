@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { DATA_DIR } from '@/constant/dir';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
 const TAGS_FILE = path.join(DATA_DIR, 'tags.json');
 
 export type TagType = 'blog' | 'gallery';

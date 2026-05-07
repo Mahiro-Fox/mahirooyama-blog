@@ -1,12 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { AVATAR_DIR } from '@/constant/dir';
 import { userStore } from '@/store/user-store';
 import sharp from 'sharp';
 
 import { verifyAuth } from '@/lib/auth';
-
-const AVATAR_DIR = path.join(process.cwd(), 'public', 'image', 'avatar');
 
 // POST /api/users/avatar - 上传用户头像
 export async function POST(request: NextRequest) {

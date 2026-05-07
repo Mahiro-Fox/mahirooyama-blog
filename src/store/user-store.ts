@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { DATA_DIR } from '@/constant/dir';
 import bcrypt from 'bcryptjs';
 
 // 用户角色类型
@@ -97,7 +98,6 @@ export class PermissionChecker {
   }
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 // 确保数据目录和文件存在

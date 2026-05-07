@@ -1,12 +1,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { PUBLIC_DIR } from '@/constant/dir';
 import { checkFileConflict, isPathSafe } from '@/utils/file-utils';
 import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
-
-const PUBLIC_DIR = path.join(process.cwd(), 'public');
 
 interface RouteParams {
   params: Promise<{ path: string[] }>;

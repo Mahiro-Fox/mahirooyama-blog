@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { PUBLIC_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
   ensureDirectory,
@@ -9,8 +10,6 @@ import {
 import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
-
-const PUBLIC_DIR = path.join(process.cwd(), 'public');
 
 interface FileItem {
   name: string;

@@ -2,12 +2,11 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { PUBLIC_DIR } from '@/constant/dir';
 import { pathCacheStore } from '@/store/path-cache-store';
 import { isPathSafe } from '@/utils/file-utils';
 
 import { requirePermission } from '@/lib/permissions';
-
-const PUBLIC_DIR = path.join(process.cwd(), 'public');
 
 export interface FileItem {
   name: string;
