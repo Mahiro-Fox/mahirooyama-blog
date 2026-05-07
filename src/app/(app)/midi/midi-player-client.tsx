@@ -5,6 +5,7 @@ import { debounce } from '@/utils/utils';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   AlertCircle,
+  CircleCheck,
   Download,
   LocateFixed,
   Music,
@@ -117,23 +118,34 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
           <div>
             <p className="text-destructive font-medium">MIDI Access Denied</p>
             <p className="text-destructive/80 text-sm">
-              Web MIDI API permission was denied. Please allow MIDI access in
-              your browser settings and refresh.
+              Web MIDI API权限被拒绝。请允许MIDI访问
+              请检查您的浏览器设置并刷新。
+            </p>
+          </div>
+        </div>
+      )}
+
+      {permissionStatus === 'granted' && midiOutputs.length <= 0 && (
+        <div className="border-destructive/50 bg-destructive/10 mb-4 flex items-center gap-3 rounded-lg border p-4">
+          <AlertCircle className="text-destructive h-5 w-5 shrink-0" />
+          <div>
+            <p className="text-destructive font-medium">
+              未找到loopMIDI端口，请确保开启了任意端口。
             </p>
           </div>
         </div>
       )}
 
       {permissionStatus === 'granted' && midiOutputs.length > 0 && (
-        <div className="bg-muted/50 mb-4 rounded-lg p-4">
-          <p className="text-muted-foreground text-sm">
-            <span className="font-medium">MIDI Outputs:</span>{' '}
-            {midiOutputs.join(', ') || 'None'}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            Make sure loopMIDI virtual port is running and connected to your
-            piano software.
-          </p>
+        <div className="border-brand-line/50 bg-brand-line/10 mb-4 flex flex-col gap-3 rounded-lg border p-4">
+          <div className="flex items-center gap-3">
+            <CircleCheck className="text-brand-line h-5 w-5 shrink-0" />
+            <p className="text-muted-foreground text-sm">
+              <span className="font-medium">MIDI Outputs:</span>{' '}
+              {midiOutputs.join(', ') || 'None'}
+            </p>
+          </div>
+          <p className="text-xs text-green-400">已成功连接loopMIDI。</p>
         </div>
       )}
 
