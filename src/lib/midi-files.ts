@@ -8,156 +8,232 @@ export interface MidiFile {
   duration: number; // duration in seconds
 }
 
-// MIDI parser to extract duration
-function parseMidiDuration(buffer: Buffer): number {
-  let pos = 0;
-  const data = new Uint8Array(buffer);
+/**
+ * 解析 MIDI 文件总时长（秒）
+ *
+ * 支持：
+ * - Standard MIDI File (SMF) format 0 / 1
+ * - Tempo Change（0xFF 0x51）
+ * - 多 Track 合并时间线
+ *
+ * 不支持：
+ * - SMPTE time division（极少见）
+ *
+ * 返回：
+ * - MIDI 总时长（秒）
+ */
 
-  function readUint32(): number {
-    if (pos + 4 > data.length) return 0;
-    return (
-      (data[pos++] << 24) |
-      (data[pos++] << 16) |
-      (data[pos++] << 8) |
-      data[pos++]
-    );
-  }
+export function parseMidiDuration(buffer: Buffer): number {
+  let offset = 0;
 
-  function readUint16(): number {
-    if (pos + 2 > data.length) return 0;
-    return (data[pos++] << 8) | data[pos++];
-  }
-
-  function readUint8(): number {
-    if (pos >= data.length) return 0;
-    return data[pos++];
-  }
-
-  function readVariableLength(): number {
-    let value = 0;
-    let byte;
-    let count = 0;
-    do {
-      if (pos >= data.length || count > 4) return value; // Prevent infinite loop
-      byte = data[pos++];
-      value = (value << 7) | (byte & 0x7f);
-      count++;
-    } while (byte & 0x80);
+  function readUInt32(): number {
+    const value = buffer.readUInt32BE(offset);
+    offset += 4;
     return value;
   }
 
-  // Read header
-  if (pos + 4 > data.length) return 0;
-  const headerChunk = String.fromCharCode(...data.slice(pos, pos + 4));
-  pos += 4;
-  if (headerChunk !== 'MThd') {
-    return 0;
+  function readUInt16(): number {
+    const value = buffer.readUInt16BE(offset);
+    offset += 2;
+    return value;
   }
 
-  const headerLength = readUint32();
-  const numTracks = readUint16();
-  const ticksPerBeat = readUint16();
-
-  // Skip any extra header bytes if headerLength > 6
-  if (headerLength > 6) {
-    pos += headerLength - 6;
+  function readString(length: number): string {
+    const value = buffer.toString('ascii', offset, offset + length);
+    offset += length;
+    return value;
   }
 
-  let maxTick = 0;
-  let defaultTempo = 500000; // Default 120 BPM in microseconds per beat
+  function readVarLen(trackBuffer: Buffer, state: { pos: number }): number {
+    let value = 0;
 
-  // Read tracks
-  for (let i = 0; i < numTracks && pos < data.length; i++) {
-    if (pos + 4 > data.length) break;
-    const trackChunk = String.fromCharCode(...data.slice(pos, pos + 4));
-    pos += 4;
-    if (trackChunk !== 'MTrk') {
-      continue;
+    while (true) {
+      const b = trackBuffer[state.pos++];
+      value = (value << 7) | (b & 0x7f);
+
+      if ((b & 0x80) === 0) {
+        break;
+      }
     }
 
-    const trackLength = readUint32();
-    const trackEnd = pos + trackLength;
+    return value;
+  }
+
+  // -------------------------
+  // Header Chunk
+  // -------------------------
+
+  const headerId = readString(4);
+
+  if (headerId !== 'MThd') {
+    throw new Error('Invalid MIDI file');
+  }
+
+  const headerLength = readUInt32();
+
+  if (headerLength < 6) {
+    throw new Error('Invalid MIDI header length');
+  }
+
+  const format = readUInt16();
+  const trackCount = readUInt16();
+  const division = readUInt16();
+
+  // 跳过额外 header 数据
+  offset += headerLength - 6;
+
+  // 不支持 SMPTE timing
+  if ((division & 0x8000) !== 0) {
+    throw new Error('SMPTE time division is not supported');
+  }
+
+  const ticksPerQuarter = division;
+
+  type TempoEvent = {
+    tick: number;
+    tempo: number; // microseconds per quarter note
+  };
+
+  type MidiEvent = {
+    tick: number;
+    type: 'tempo' | 'end';
+    tempo?: number;
+  };
+
+  const events: MidiEvent[] = [];
+
+  let maxTick = 0;
+
+  // 默认 tempo = 120 BPM
+  // 500000 microseconds per quarter note
+  events.push({
+    tick: 0,
+    type: 'tempo',
+    tempo: 500000,
+  });
+
+  // -------------------------
+  // Parse Tracks
+  // -------------------------
+
+  for (let t = 0; t < trackCount; t++) {
+    const trackId = readString(4);
+
+    if (trackId !== 'MTrk') {
+      throw new Error(`Invalid track header at track ${t}`);
+    }
+
+    const trackLength = readUInt32();
+
+    const trackStart = offset;
+    const trackEnd = trackStart + trackLength;
+
+    const trackBuffer = buffer.subarray(trackStart, trackEnd);
+
+    offset = trackEnd;
+
+    const state = { pos: 0 };
+
     let currentTick = 0;
     let runningStatus = 0;
 
-    while (pos < trackEnd && pos < data.length) {
-      const deltaTime = readVariableLength();
-      currentTick += deltaTime;
+    while (state.pos < trackBuffer.length) {
+      const delta = readVarLen(trackBuffer, state);
+
+      currentTick += delta;
+
       if (currentTick > maxTick) {
         maxTick = currentTick;
       }
 
-      if (pos >= data.length) break;
-      const byte = readUint8();
+      let statusByte = trackBuffer[state.pos];
 
-      // Meta event (0xFF)
-      if (byte === 0xff) {
-        if (pos >= data.length) break;
-        const metaType = readUint8();
-        const length = readVariableLength();
-        if (metaType === 0x51 && length === 3 && pos + 3 <= data.length) {
-          // Set Tempo
-          defaultTempo =
-            (data[pos] << 16) | (data[pos + 1] << 8) | data[pos + 2];
+      // Running Status
+      if (statusByte < 0x80) {
+        if (runningStatus === 0) {
+          throw new Error('Invalid running status');
         }
-        pos += length;
+
+        statusByte = runningStatus;
+      } else {
+        state.pos++;
+        runningStatus = statusByte;
       }
-      // SysEx (0xF0, 0xF7)
-      else if (byte === 0xf0 || byte === 0xf7) {
-        const length = readVariableLength();
-        pos += length;
+
+      // Meta Event
+      if (statusByte === 0xff) {
+        const metaType = trackBuffer[state.pos++];
+        const length = readVarLen(trackBuffer, state);
+
+        // Tempo Change
+        if (metaType === 0x51 && length === 3) {
+          const tempo =
+            (trackBuffer[state.pos] << 16) |
+            (trackBuffer[state.pos + 1] << 8) |
+            trackBuffer[state.pos + 2];
+
+          events.push({
+            tick: currentTick,
+            type: 'tempo',
+            tempo,
+          });
+        }
+
+        state.pos += length;
+        continue;
       }
-      // MIDI channel event
-      else {
-        let status = byte;
-        // Running status: if high bit is not set, use previous status
-        if ((byte & 0x80) === 0) {
-          status = runningStatus;
-          // Don't consume next byte, it was the first data byte
+
+      // SysEx
+      if (statusByte === 0xf0 || statusByte === 0xf7) {
+        const length = readVarLen(trackBuffer, state);
+        state.pos += length;
+        continue;
+      }
+
+      // Channel Voice Messages
+      const eventType = statusByte >> 4;
+
+      // Program Change / Channel Pressure -> 1 data byte
+      if (eventType === 0xc || eventType === 0xd) {
+        if (trackBuffer[state.pos] >= 0x80) {
+          // running status case already consumed none
         } else {
-          runningStatus = status;
+          state.pos += 1;
         }
-
-        const type = status >> 4;
-
-        // Skip data bytes based on message type
-        if (
-          type === 0x8 ||
-          type === 0x9 ||
-          type === 0xa ||
-          type === 0xb ||
-          type === 0xe
-        ) {
-          // Note Off, Note On, Poly Pressure, Control Change, Pitch Bend: 2 data bytes
-          pos += (byte & 0x80) === 0 ? 1 : 2; // Running status uses 1 less byte
-        } else if (type === 0xc || type === 0xd) {
-          // Program Change, Channel Pressure: 1 data byte
-          pos += (byte & 0x80) === 0 ? 0 : 1; // Running status uses 1 less byte
-        } else if (type === 0xf) {
-          // System messages (shouldn't appear in files, but handle them)
-          const systemType = status & 0x0f;
-          if (systemType === 0x2) {
-            // Song Position Pointer: 2 bytes
-            pos += 2;
-          } else if (systemType === 0x3) {
-            // Song Select: 1 byte
-            pos += 1;
-          }
-          // Other system messages have no data bytes
+      } else {
+        // Others -> 2 data bytes
+        if (trackBuffer[state.pos] >= 0x80) {
+          // running status case
+        } else {
+          state.pos += 2;
         }
       }
-    }
-
-    // Ensure we don't get stuck due to parsing errors
-    if (pos > trackEnd) {
-      pos = trackEnd;
     }
   }
 
-  // Convert ticks to seconds
-  if (ticksPerBeat === 0) return 0;
-  const secondsPerTick = defaultTempo / ticksPerBeat / 1000000;
-  return Math.round(maxTick * secondsPerTick);
+  // -------------------------
+  // 计算总时长
+  // -------------------------
+
+  const tempoEvents = events
+    .filter((e): e is Required<MidiEvent> => e.type === 'tempo')
+    .sort((a, b) => a.tick - b.tick);
+
+  let totalSeconds = 0;
+
+  for (let i = 0; i < tempoEvents.length; i++) {
+    const current = tempoEvents[i];
+    const nextTick =
+      i + 1 < tempoEvents.length ? tempoEvents[i + 1].tick : maxTick;
+
+    const deltaTicks = nextTick - current.tick;
+
+    const secondsPerTick = current.tempo / 1_000_000 / ticksPerQuarter;
+
+    totalSeconds += deltaTicks * secondsPerTick;
+  }
+
+  return Math.round(totalSeconds);
 }
 
 export async function getAllMidiFiles(): Promise<MidiFile[]> {
@@ -193,6 +269,7 @@ async function readMidiFile(filePath: string): Promise<MidiFile> {
   // Read file and parse duration
   const buffer = await fs.promises.readFile(filePath);
   const duration = parseMidiDuration(buffer);
+  console.log(duration);
 
   return {
     name: fileName.replace(/\.mid$/i, ''),
