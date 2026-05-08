@@ -81,16 +81,6 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
     currentIndexRef.current = currentPlayingIndex;
   }, [currentPlayingIndex]);
 
-  // Handle download
-  const handleDownload = (file: MidiFile) => {
-    const link = document.createElement('a');
-    link.href = file.path;
-    link.download = file.name + '.mid';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   // Scroll to currently playing row
   const scrollToCurrent = () => {
     if (currentPlayingIndex >= 0 && virtualizer) {
@@ -224,11 +214,12 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
                       <Button
                         variant="default"
                         size="icon-sm"
-                        onClick={() => handleDownload(file)}
                         title="Download"
                         className="h-8 w-8"
                       >
-                        <Download className="h-4 w-4" />
+                        <a href={`/midisongs/${file.name}.mid`} download>
+                          <Download className="h-4 w-4" />
+                        </a>
                       </Button>
                       <Button
                         variant={isCurrentlyPlaying ? 'secondary' : 'default'}

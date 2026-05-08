@@ -7,6 +7,7 @@ import {
   shouldUnoptimizeImage,
 } from '@/utils/client-image-utils';
 import { cn } from '@/utils/utils';
+import { RefreshCw } from 'lucide-react';
 
 import { useImagePreview } from './image-preview-provider';
 
@@ -56,14 +57,23 @@ export function OptimizedImage({
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const { openPreview } = useImagePreview();
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
+    setHasError(false);
   }, []);
 
   const handleError = useCallback(() => {
     setHasError(true);
+    setIsRetrying(false);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    setHasError(false);
+    setIsRetrying(true);
+    setIsLoaded(false);
   }, []);
 
   // 本地图片通过 API 路由获取，解决生产环境无法访问运行时上传文件的问题
@@ -97,7 +107,24 @@ export function OptimizedImage({
               : undefined
         }
       >
-        <span className="text-muted-foreground/30 text-4xl">🖼️</span>
+        <p className="text-muted-foreground/30 flex items-center">
+          <span>failed to load image.</span>
+          {src && (
+            <button
+              onClick={handleRetry}
+              className={cn(
+                'text-muted-foreground/50 hover:text-muted-foreground transition-colors',
+                'hover:bg-muted/80 rounded-full p-2',
+                'focus:ring-primary/20 focus:ring-2 focus:outline-none'
+              )}
+              title="重新加载图片"
+            >
+              <RefreshCw
+                className={cn('h-4 w-4', isRetrying && 'animate-spin')}
+              />
+            </button>
+          )}
+        </p>
       </div>
     );
   }
@@ -131,6 +158,7 @@ export function OptimizedImage({
       )}
 
       <Image
+        key={isRetrying ? `retry-${Date.now()}` : resolvedSrc}
         src={resolvedSrc}
         alt={alt}
         {...imageProps}
