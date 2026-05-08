@@ -4,5 +4,6 @@ export const DATA_DIR = path.join(process.cwd(), 'data');
 export const PUBLIC_DIR = path.join(process.cwd(), 'public');
 export const BLOG_DIR = path.join(PUBLIC_DIR, 'content', 'blog');
 export const GALLERY_DIR = path.join(PUBLIC_DIR, 'content', 'gallery');
-export const AVATAR_DIR = path.join(PUBLIC_DIR, 'image', 'avatar');
+export const AVATAR_DIR = path.join(PUBLIC_DIR, 'images', 'avatar');
+export const PHOTO_DIR = path.join(PUBLIC_DIR, 'images', 'gallery');
 export const MIDI_DIR = path.join(PUBLIC_DIR, 'midisongs');
