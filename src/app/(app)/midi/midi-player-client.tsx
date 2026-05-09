@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { debounce } from '@/utils/utils';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
@@ -33,14 +33,26 @@ function formatDuration(seconds: number): string {
 
 export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [filteredFiles, setFilteredFiles] = useState<MidiFile[]>(initialFiles);
   const parentRef = useRef<HTMLDivElement>(null);
-  const currentIndexRef = useRef<number>(-1);
 
-  // 创建防抖的搜索函数
-  const debouncedSearch = useMemo(
-    () => debounce((value: string) => setSearchQuery(value), 300),
-    []
+  const search = useCallback(
+    (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed) {
+        setFilteredFiles(initialFiles);
+        return;
+      }
+
+      const q = trimmed.toLowerCase();
+      setFilteredFiles(
+        initialFiles.filter((file) => file.name.toLowerCase().includes(q))
+      );
+    },
+    [initialFiles]
   );
+
+  const debounceSearch = useCallback(debounce(search, 300), [search]);
 
   const {
     currentPlayingId,
@@ -53,14 +65,10 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
     togglePlay,
   } = useMidiPlayer();
 
-  // Filter files based on search query
-  const filteredFiles = useMemo(() => {
-    if (!searchQuery.trim()) return initialFiles;
-    const query = searchQuery.toLowerCase();
-    return initialFiles.filter((file) =>
-      file.name.toLowerCase().includes(query)
-    );
-  }, [initialFiles, searchQuery]);
+  const handleInputChange = (value: string) => {
+    setSearchQuery(value);
+    debounceSearch(value);
+  };
 
   // Virtual list setup
   const virtualizer = useVirtualizer({
@@ -75,11 +83,6 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
     if (!currentPlayingId) return -1;
     return filteredFiles.findIndex((file) => file.path === currentPlayingId);
   }, [filteredFiles, currentPlayingId]);
-
-  // Update ref when current index changes
-  useEffect(() => {
-    currentIndexRef.current = currentPlayingIndex;
-  }, [currentPlayingIndex]);
 
   // Scroll to currently playing row
   const scrollToCurrent = () => {
@@ -145,7 +148,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
         <Input
           placeholder="Search / 搜索"
           value={searchQuery}
-          onChange={(e) => debouncedSearch(e.target.value)}
+          onChange={(e) => handleInputChange(e.target.value)}
           className="pl-10"
         />
         {currentPlayingId && (

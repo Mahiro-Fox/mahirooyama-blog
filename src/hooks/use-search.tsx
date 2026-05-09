@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { searchContent } from '@/actions/search';
+import { debounce } from '@/utils/utils';
 
 export type SearchResult = {
   type: 'blog' | 'gallery';
@@ -22,7 +23,6 @@ export function useSearch(limit = 10) {
   const [keyword, setKeyword] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const search = useCallback(
     async (query: string) => {
@@ -50,18 +50,7 @@ export function useSearch(limit = 10) {
     [limit]
   );
 
-  const debouncedSearch = useCallback(
-    (query: string) => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
-
-      debounceRef.current = setTimeout(() => {
-        search(query);
-      }, 300);
-    },
-    [search]
-  );
+  const debouncedSearch = useCallback(debounce(search, 300), [search]);
 
   const handleKeywordChange = useCallback(
     (value: string) => {
@@ -74,9 +63,6 @@ export function useSearch(limit = 10) {
   const clearSearch = useCallback(() => {
     setKeyword('');
     setResults([]);
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
   }, []);
 
   return {
