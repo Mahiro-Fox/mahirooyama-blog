@@ -35,6 +35,21 @@ const nextConfig = {
           },
         ],
       },
+      // 生产环境：静态资源长期缓存（public 下的图片/字体/媒体等）
+      ...(process.env.NODE_ENV === 'production'
+        ? [
+            {
+              source:
+                '/:path*\\.(avif|webp|png|jpg|jpeg|gif|svg|ico|woff2|woff|ttf|otf|mp4|webm|mp3|wav)',
+              headers: [
+                {
+                  key: 'Cache-Control',
+                  value: 'public, max-age=31536000, immutable',
+                },
+              ],
+            },
+          ]
+        : []),
       {
         source: '/admin/:path*',
         headers: [

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
@@ -146,6 +147,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       }
     }
 
+    const etag = crypto.createHash('sha1').update(content).digest('hex');
+
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch && ifNoneMatch.replace(/\"/g, '') === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          ETag: `"${etag}"`,
+        },
+      });
+    }
+
     const uint8Array = new Uint8Array(content);
 
     // 根据扩展名设置 Content-Type
@@ -164,9 +177,23 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       '.md': 'text/markdown',
     };
 
+    const contentType = contentTypeMap[ext] || 'application/octet-stream';
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isImage = contentType.startsWith('image/');
+    const isFont =
+      ext === '.woff2' || ext === '.woff' || ext === '.ttf' || ext === '.otf';
+
+    const cacheControl =
+      isProduction && (isImage || isFont)
+        ? 'public, max-age=31536000, immutable'
+        : 'public, max-age=3600, s-maxage=3600';
+
     return new NextResponse(uint8Array, {
       headers: {
-        'Content-Type': contentTypeMap[ext] || 'application/octet-stream',
+        'Content-Type': contentType,
+        'Cache-Control': cacheControl,
+        ETag: `"${etag}"`,
       },
     });
   } catch (error) {
