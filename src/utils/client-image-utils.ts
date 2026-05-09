@@ -37,8 +37,12 @@ export function resolveImageSrc(src: string | undefined): string {
     return src;
   }
 
-  // 本地图片通过 API 路由获取
-  return `/api/public-files${src}`;
+  // 仅运行时文件（如 /uploads）通过 API 路由获取；public 下的静态资源直接走原始路径
+  if (src.startsWith('/uploads/')) {
+    return `/api/public-files${src}`;
+  }
+
+  return src;
 }
 
 /**
