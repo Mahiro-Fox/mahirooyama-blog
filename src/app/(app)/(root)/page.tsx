@@ -104,7 +104,7 @@ export default async function IndexPage() {
             <h2 className="text-2xl font-medium tracking-tight">Blogs</h2>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {allPosts.slice(0, 6).map((post) => (
+            {allPosts.slice(0, 6).map((post, index) => (
               <BlurFade inView key={post.slug}>
                 <LinkCard
                   key={post.slug}
@@ -113,7 +113,7 @@ export default async function IndexPage() {
                   link={`/blog/${post.slug}`}
                   badgeText={formatDate(post.metadata.lastUpdated)}
                   description={post.metadata.description}
-                  priority={true}
+                  priority={index === 0}
                   isPortrait={post.isPortrait}
                 />
               </BlurFade>
