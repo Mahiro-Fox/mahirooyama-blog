@@ -94,6 +94,9 @@ const nextConfig = {
       },
     ];
   },
+  experimental: {
+    proxyClientMaxBodySize: '20mb', // 增加请求头大小限制
+  },
 };
 
 export default nextConfig;
