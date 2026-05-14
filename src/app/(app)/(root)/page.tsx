@@ -1,20 +1,29 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getHomeBannerImages } from '@/actions/home-banner';
 import { tagStore, type Tag } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
 
-import { GalleryImageData, getAllGalleryImages } from '@/lib/gallery';
+import { siteConfig } from '@/config/config';
+import { getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
+import { TextAnimate } from '@/components/shadcn-ui/text-animate';
 import { AboutCta } from '@/components/shared/about-cta';
+import { HomeBanner } from '@/components/shared/home-banner';
 import { LinkCard } from '@/components/shared/link-card';
-import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
+import {
+  imageSizes,
+  OptimizedImage,
+} from '@/components/shared/optimized-image';
 
-const title = 'Lightweight and Minimalistic Next.js Blog Template';
-const description =
-  'A minimalistic, easy-to-use blog template built with Next.js. Customize it to your liking and use it for personal blogs, portfolio sites, or tech documentation.';
+const title = "欢迎来到 mahirooyama 的网站喵~ - Welcome to mahiooyama's blog";
+const description = `本网站主要内容是一些照片，例如和朋友在VRChat里拍的照片。如果想上传照片，可以在 VRChat 联系我哦~ 次要内容是一些编程笔记和其他技术分享，后续也可能加入一些新的内容与功能~ 源代码在 GitHub ，欢迎查看哦~ - 
+  The main content of this website consists of some photos, such as those taken in VRChat with friends. If you'd like to upload photos, feel free to contact me in VRChat~
+  The secondary content includes some programming notes and other technical shares, with potential additions of new content and features in the future
+  The source code is on GitHub. Feel free to check it out~`;
 
 export const metadata: Metadata = {
   title,
@@ -24,18 +33,18 @@ export const metadata: Metadata = {
 export default async function IndexPage() {
   const allPosts = await getAllBlogPosts();
   const galleryImages = await getAllGalleryImages();
+  const bannerData = await getHomeBannerImages();
 
   const tags = await tagStore.getAll();
 
   return (
-    <div className="relative flex h-[500px] w-full flex-1 flex-col overflow-hidden">
-      <section className="py-8">
-        <h2 className="sr-only">Hero Carousel Items</h2>
-        <HeroCarousel galleryImages={galleryImages} />
-      </section>
+    <div className="relative flex w-full flex-1 flex-col">
+      {/* Hero Banner - 100vh */}
+      {bannerData && <HomeBanner images={bannerData} />}
+      {/* About Section */}
       <BlurFade inView duration={0.6}>
         <div className="container-wrapper">
-          <div className="container py-6">
+          <div className="container py-12">
             <AboutCta />
           </div>
         </div>
@@ -134,18 +143,4 @@ export default async function IndexPage() {
       </div>
     </div>
   );
-}
-
-async function HeroCarousel({
-  galleryImages,
-}: {
-  galleryImages: GalleryImageData[];
-}) {
-  const carouselItems = galleryImages.slice(0, 5).map((image) => ({
-    title: image.metadata.title,
-    href: `/gallery/${image.slug}`,
-    imageUrl: image.metadata.thumbnail,
-  }));
-
-  return <PartialViewCarousel items={carouselItems} />;
 }

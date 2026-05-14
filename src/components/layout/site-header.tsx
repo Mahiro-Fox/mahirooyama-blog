@@ -104,12 +104,6 @@ export function SiteHeader() {
           </Sheet>
           <Search />
           <div className="flex items-center gap-2 md:flex-1 md:justify-end">
-            <a
-              href="/midi"
-              className="font-medium text-green-400 underline underline-offset-4"
-            >
-              小功能上线了喵~
-            </a>
             <Button
               asChild
               size="sm"

@@ -98,6 +98,19 @@ html::-webkit-scrollbar-thumb:hover {
   background: var(--foreground);
 }
 
+@theme {
+  --animate-homefadeIn: homefadeIn 2s ease-in-out;
+  @keyframes homefadeIn {
+    from {
+      scale: 1.2;
+      opacity: 0;
+    }
+    to {
+      scale: 1;
+      opacity: 1;
+    }
+  }
+}
 :root {
   --radius: 0.5rem;
   --background: oklch(1 0 0);
