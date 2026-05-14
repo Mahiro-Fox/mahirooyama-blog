@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'; // 也可以换成普�
 interface CarouselProps {
   className?: string;
   images: string[];
+  random?: boolean;
   autoPlayInterval?: number;
   arrow?: boolean;
   indicator?: boolean;
@@ -14,12 +15,14 @@ interface CarouselProps {
 export const FadeCarousel: React.FC<CarouselProps> = ({
   className,
   images,
+  random = true,
   itemRender,
   autoPlayInterval = 5000,
   arrow = true,
   indicator = true,
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const initRandomIndex = Math.floor(Math.random() * images.length);
+  const [currentIndex, setCurrentIndex] = useState(initRandomIndex);
 
   // 下一张
   const nextSlide = useCallback(() => {
@@ -31,11 +34,21 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
+  const randomSlide =  () => {
+    setCurrentIndex(pre =>{
+      let randomIndex = Math.floor(Math.random() * images.length);
+      while (pre === randomIndex) {
+        randomIndex = Math.floor(Math.random() * images.length);
+      }
+      return randomIndex
+    });
+  };
+
   // 自动播放
   useEffect(() => {
-    const timer = setInterval(nextSlide, autoPlayInterval);
+    const timer = setInterval(random ? randomSlide : nextSlide, autoPlayInterval);
     return () => clearInterval(timer);
-  }, [nextSlide, autoPlayInterval]);
+  }, [random, nextSlide, randomSlide, autoPlayInterval]);
 
   return (
     <div
