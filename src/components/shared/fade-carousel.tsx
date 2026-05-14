@@ -23,7 +23,6 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
 
   // 下一张
   const nextSlide = useCallback(() => {
-    console.log(currentIndex, images.length - 1);
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   }, [images.length]);
 
@@ -47,24 +46,24 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
     >
       {/* 图片容器 */}
       {images.map((image, index) =>
-        itemRender ? (
-          itemRender(image, index)
-        ) : (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            className={`absolute inset-0 transition-opacity duration-2000 ease-in-out ${
               index === currentIndex ? 'z-10 opacity-100' : 'z-0 opacity-0'
             }`}
           >
-            <img
-              src={image}
-              alt={`Slide ${index}`}
-              className="h-full w-full object-cover"
-            />
+            {
+              itemRender ? itemRender(image,index) :
+              <img
+                src={image}
+                alt={`Slide ${index}`}
+                className="h-full w-full object-cover"
+              />
+            }
             {/* 渐变遮罩 (可选，增加文字可读性) */}
             <div className="absolute inset-0 bg-black/20" />
           </div>
-        )
+        
       )}
 
       {/* 左右箭头 - 仅在悬停时显示 */}

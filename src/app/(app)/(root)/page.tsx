@@ -4,20 +4,14 @@ import { getHomeBannerImages } from '@/actions/home-banner';
 import { tagStore, type Tag } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
-
-import { siteConfig } from '@/config/config';
-import { getAllGalleryImages } from '@/lib/gallery';
+import { GalleryImageData, getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
-import { TextAnimate } from '@/components/shadcn-ui/text-animate';
 import { AboutCta } from '@/components/shared/about-cta';
 import { HomeBanner } from '@/components/shared/home-banner';
 import { LinkCard } from '@/components/shared/link-card';
-import {
-  imageSizes,
-  OptimizedImage,
-} from '@/components/shared/optimized-image';
+import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
 
 const title = "欢迎来到 mahirooyama 的网站喵~ - Welcome to mahiooyama's blog";
 const description = `本网站主要内容是一些照片，例如和朋友在VRChat里拍的照片。如果想上传照片，可以在 VRChat 联系我哦~ 次要内容是一些编程笔记和其他技术分享，后续也可能加入一些新的内容与功能~ 源代码在 GitHub ，欢迎查看哦~ - 
@@ -34,13 +28,16 @@ export default async function IndexPage() {
   const allPosts = await getAllBlogPosts();
   const galleryImages = await getAllGalleryImages();
   const bannerData = await getHomeBannerImages();
-
   const tags = await tagStore.getAll();
 
   return (
     <div className="relative flex w-full flex-1 flex-col">
       {/* Hero Banner - 100vh */}
       {bannerData && <HomeBanner images={bannerData} />}
+      <section className="py-8">
+        <h2 className="sr-only">Hero Carousel Items</h2>
+        <HeroCarousel galleryImages={galleryImages} />
+      </section>
       {/* About Section */}
       <BlurFade inView duration={0.6}>
         <div className="container-wrapper">
@@ -143,4 +140,17 @@ export default async function IndexPage() {
       </div>
     </div>
   );
+}
+async function HeroCarousel({
+  galleryImages,
+}: {
+  galleryImages: GalleryImageData[];
+}) {
+  const carouselItems = galleryImages.slice(0, 5).map((image) => ({
+    title: image.metadata.title,
+    href: `/gallery/${image.slug}`,
+    imageUrl: image.metadata.thumbnail,
+  }));
+
+  return <PartialViewCarousel items={carouselItems} />;
 }
