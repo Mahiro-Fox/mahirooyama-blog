@@ -19,9 +19,8 @@ export const HomeBanner: React.FC<HomeBannerImage> = ({ images }) => {
   return (
     <section className="relative h-[calc(100vh-48px)] w-full md:h-[calc(100vh-64px)]">
       <div className="relative h-full w-full">
-   
         <FadeCarousel
-          className="w-full h-full max-w-none rounded-none"
+          className="h-full w-full max-w-none rounded-none"
           arrow={false}
           indicator={false}
           autoPlayInterval={10000}
@@ -38,7 +37,7 @@ export const HomeBanner: React.FC<HomeBannerImage> = ({ images }) => {
           )}
         />
         {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-5" /> */}
-        <div className="absolute inset-0 flex items-center justify-center px-6 z-10">
+        <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
           <div className="text-center">
             <TextAnimate
               className="text-4xl font-bold text-white md:text-5xl"

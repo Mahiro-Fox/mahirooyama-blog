@@ -21,8 +21,11 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
   arrow = true,
   indicator = true,
 }) => {
-  const initRandomIndex = Math.floor(Math.random() * images.length);
-  const [currentIndex, setCurrentIndex] = useState(initRandomIndex);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    setCurrentIndex(Math.floor(Math.random() * images.length));
+  }, [images.length]);
 
   // 下一张
   const nextSlide = useCallback(() => {
