@@ -3,7 +3,6 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { GALLERY_DIR } from '@/constant/dir';
 import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
-import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { siteConfig } from '@/config/config';
 import { GalleryImageItem } from '@/lib/public-gallery';
@@ -40,9 +40,10 @@ export const HomeBanner: React.FC<HomeBannerImage> = ({ images }) => {
         <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
           <div className="text-center">
             <TextAnimate
+              once
               className="text-4xl font-bold text-white md:text-5xl"
               animation="blurInUp"
-              as="h1"
+              as="h2"
               by="character"
               duration={1}
             >

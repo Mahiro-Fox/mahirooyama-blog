@@ -3,7 +3,6 @@ import path from 'path';
 import { GALLERY_DIR } from '@/constant/dir';
 import { DEFAULT_GALLERY_LIST_LIMIT } from '@/constant/limit';
 import { isPortraitImage } from '@/utils/image-utils';
-import matter from 'gray-matter';
 
 import { paginateItems, PaginationResult } from '@/lib/pagination';
 

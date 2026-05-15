@@ -19,15 +19,6 @@ interface MidiTrack {
   events: MidiEvent[];
 }
 
-interface ParsedMidi {
-  header: {
-    format: number;
-    numTracks: number;
-    ticksPerBeat: number;
-  };
-  tracks: MidiTrack[];
-}
-
 export interface MidiPlayerState {
   currentPlayingId: string | null;
   isPlaying: boolean;

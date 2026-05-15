@@ -89,11 +89,6 @@ export function parseMidiDuration(buffer: Buffer): number {
 
   const ticksPerQuarter = division;
 
-  type TempoEvent = {
-    tick: number;
-    tempo: number; // microseconds per quarter note
-  };
-
   type MidiEvent = {
     tick: number;
     type: 'tempo' | 'end';

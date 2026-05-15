@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { debounce } from '@/utils/utils';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {

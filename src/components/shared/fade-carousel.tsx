@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/utils/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react'; // 也可以换成普通的文字箭头
+import Image from 'next/image';
 
 interface CarouselProps {
   className?: string;
@@ -37,21 +38,21 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
-  const randomSlide =  () => {
-    setCurrentIndex(pre =>{
-      let randomIndex = Math.floor(Math.random() * images.length);
-      while (pre === randomIndex) {
-        randomIndex = Math.floor(Math.random() * images.length);
-      }
-      return randomIndex
-    });
-  };
-
+  
   // 自动播放
   useEffect(() => {
+    const randomSlide =  () => {
+      setCurrentIndex(pre =>{
+        let randomIndex = Math.floor(Math.random() * images.length);
+        while (pre === randomIndex) {
+          randomIndex = Math.floor(Math.random() * images.length);
+        }
+        return randomIndex
+      });
+    };
     const timer = setInterval(random ? randomSlide : nextSlide, autoPlayInterval);
     return () => clearInterval(timer);
-  }, [random, nextSlide, randomSlide, autoPlayInterval]);
+  }, [random, nextSlide, autoPlayInterval]);
 
   return (
     <div
@@ -70,7 +71,7 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
           >
             {
               itemRender ? itemRender(image,index) :
-              <img
+              <Image
                 src={image}
                 alt={`Slide ${index}`}
                 className="h-full w-full object-cover"
