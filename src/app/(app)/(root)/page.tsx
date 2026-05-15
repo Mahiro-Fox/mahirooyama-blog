@@ -12,6 +12,7 @@ import { AboutCta } from '@/components/shared/about-cta';
 import { HomeBanner } from '@/components/shared/home-banner';
 import { LinkCard } from '@/components/shared/link-card';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
+import { siteConfig } from '@/config/config';
 
 const title = "欢迎来到 mahirooyama 的网站喵~ - Welcome to mahiooyama's blog";
 const description = `本网站主要内容是一些照片，例如和朋友在VRChat里拍的照片。如果想上传照片，可以在 VRChat 联系我哦~ 次要内容是一些编程笔记和其他技术分享，后续也可能加入一些新的内容与功能~ 源代码在 GitHub ，欢迎查看哦~ - 
@@ -59,7 +60,7 @@ export default async function IndexPage() {
                   <LinkCard
                     key={gallery.slug}
                     title={gallery.metadata.title}
-                    imageUrl={gallery.metadata.thumbnail || '/og.webp'}
+                    imageUrl={gallery.metadata.thumbnail || siteConfig.ogImage}
                     link={`/gallery/${gallery.slug}`}
                     badgeText={formatDate(gallery.metadata.lastUpdated)}
                     description={gallery.metadata.description}
@@ -115,7 +116,7 @@ export default async function IndexPage() {
                 <LinkCard
                   key={post.slug}
                   title={post.metadata.title}
-                  imageUrl={post.metadata.thumbnail || '/og.webp'}
+                  imageUrl={post.metadata.thumbnail || siteConfig.ogImage}
                   link={`/blog/${post.slug}`}
                   badgeText={formatDate(post.metadata.lastUpdated)}
                   description={post.metadata.description}

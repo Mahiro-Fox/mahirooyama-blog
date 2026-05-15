@@ -12,10 +12,10 @@ import {
 export const siteConfig = {
   name: 'mahirooyama-blog',
   description: "this is mahirooyama's blog, welcome to visit!",
-  url: 'https://mahirooyama-blog-delta.vercel.app/',
-  ogImage: 'https://mahirooyama-blog-delta.vercel.app/og.webp',
+  url: 'https://mahirooyama.cn/',
+  ogImage: 'https://mahirooyama.cn/images/avatar/mahirooyama.webp',
   links: {
-    twitter: 'https://twitter.com/mahirooyama',
+    twitter: 'https://twitter.com/Mahiro___Oyama',
     github: 'https://github.com/Misterwanghaoyu/mahirooyama-blog',
     vrchat:
       'https://vrchat.com/home/user/usr_f938bc37-4d62-48d8-98eb-955f10f464e0',
@@ -33,7 +33,6 @@ export interface PageRouteConfig {
   description: string;
   icon: LucideIcon;
   hideInNav?: boolean;
-  permissions?: string[];
 }
 
 export const pageRoutesConfig: PageRouteConfig[] = [
@@ -109,7 +108,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
 export const navRoutesConfig = pageRoutesConfig.filter(
   (route) => !route.hideInNav
 );
-
+// 管理员端路由（包含 adminHref）
 export const adminRoutesConfig = pageRoutesConfig.filter(
   (route) => route.adminHref
 );

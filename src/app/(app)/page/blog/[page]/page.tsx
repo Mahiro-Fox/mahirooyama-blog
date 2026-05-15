@@ -5,6 +5,7 @@ import { getBlogPosts } from '@/lib/mdx';
 import { AboutCta } from '@/components/shared/about-cta';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
+import { siteConfig } from '@/config/config';
 
 interface BlogListPageProps {
   params: Promise<{ page: string }>;
@@ -58,7 +59,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
                 <LinkCard
                   key={post.slug}
                   title={post.metadata.title}
-                  imageUrl={post.metadata.thumbnail || '/og.webp'}
+                  imageUrl={post.metadata.thumbnail || siteConfig.ogImage}
                   link={`/blog/${post.slug}`}
                   badgeText={formatDate(post.metadata.lastUpdated)}
                   description={post.metadata.description}

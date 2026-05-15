@@ -108,7 +108,7 @@ export default async function BlogTagPage({ params }: BlogTagPageProps) {
                 <LinkCard
                   key={item.slug}
                   title={item.metadata.title}
-                  imageUrl={item.metadata.thumbnail || '/og.webp'}
+                  imageUrl={item.metadata.thumbnail || siteConfig.ogImage}
                   link={`/blog/${item.slug}`}
                   badgeText={formatDate(item.metadata.lastUpdated)}
                   description={item.metadata.description}

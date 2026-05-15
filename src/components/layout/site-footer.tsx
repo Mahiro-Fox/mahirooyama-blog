@@ -52,11 +52,23 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
               <BrandIcons.gitHub className="size-4" />
             </Link>
           )}
+          {siteConfig.links.twitter && (
+            <Link
+              href={siteConfig.links.twitter}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonVariants({ variant: 'outline', size: 'icon' })}
+              aria-label="Twitter"
+              title="Twitter (Mahiro___Oyama)"
+            >
+              <BrandIcons.x className="size-4" />
+            </Link>
+          )}
           <Link
             href="/rss.xml"
             className={buttonVariants({ variant: 'outline', size: 'icon' })}
             aria-label="RSS"
-            title="RSS Feed (cakegaly -dot- com)"
+            title="RSS Feed (mahirooyama-blog)"
           >
             <RssIcon className="size-4" />
           </Link>
