@@ -1,4 +1,4 @@
-// 路径缓存存储（内存存储，生产环境建议使用 Redis）
+// 后台管理系统public管理的路径缓存存储（内存存储，生产环境建议使用 Redis）
 interface PathCacheInfo {
   userId: string;
   path: string;

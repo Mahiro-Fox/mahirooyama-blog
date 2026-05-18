@@ -21,7 +21,7 @@ export const siteConfig = {
       'https://vrchat.com/home/user/usr_f938bc37-4d62-48d8-98eb-955f10f464e0',
   },
   copyRight: 'mahirooyama',
-  email: 'wanghaoyu510902@gmail.com',
+  email: 'why510902@163.com',
 };
 
 export interface PageRouteConfig {
