@@ -11,7 +11,7 @@ import {
 } from '@/actions/admin/tag-actions';
 
 import { formatDate } from '@/utils/utils';
-import { Tag as LucideTag } from 'lucide-react';
+import { Tag as LucideTag, RefreshCwIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { getTagTypeConfig } from '@/config/tag-config';
@@ -114,10 +114,6 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    // server 已给首屏数据，这里不强制刷新
-  }, []);
 
   // 打开创建对话框
   const openCreateDialog = () => {
@@ -251,7 +247,13 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
         title="标签管理"
         description="管理博客文章和图库的标签分类"
         actions={[
-          createRefreshAction(handleReset, isSubmitting),
+          {
+            label: '重置为默认标签',
+            icon: <RefreshCwIcon className="mr-2 h-4 w-4" />,
+            onClick: () => handleReset(),
+            variant: 'outline' as const,
+          },
+          createRefreshAction(fetchTags, isSubmitting),
           createAddAction(openCreateDialog, '创建标签'),
         ]}
         loading={isLoading}
