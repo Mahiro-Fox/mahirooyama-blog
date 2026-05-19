@@ -56,24 +56,15 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                 <p className="mb-4 text-base">{moment.content}</p>
 
                 {/* 配图 */}
-                {moment.imageUrl && (
-                  <div className="group relative cursor-pointer overflow-hidden rounded-lg">
+                {moment.imageUrl && 
+                  <div className="relative inline-block">
                     <img
                       src={moment.imageUrl}
                       alt="配图"
-                      className="w-full object-cover transition-transform group-hover:scale-105"
-                      onClick={() => {
-                        // 简单的灯箱效果，可以后续优化
-                        window.open(moment.imageUrl, '_blank');
-                      }}
+                      className="max-h-48 max-w-xs rounded-lg object-cover"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-colors group-hover:bg-black/10 group-hover:opacity-100">
-                      <span className="text-sm font-medium text-white">
-                        点击放大
-                      </span>
-                    </div>
                   </div>
-                )}
+                }
               </div>
             </BlurFade>
           </motion.div>

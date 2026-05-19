@@ -220,7 +220,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
                         title="Download"
                         className="h-8 w-8"
                       >
-                        <a href={`/midisongs/${file.name}.mid`} download>
+                        <a href={file.path} download>
                           <Download className="h-4 w-4" />
                         </a>
                       </Button>
