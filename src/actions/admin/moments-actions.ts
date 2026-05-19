@@ -24,6 +24,13 @@ export async function adminGetMoments(): Promise<
   }
 
   try {
+    // 如果不存在文件，创建文件
+    try {
+      await fs.access(MOMENTS_FILE);
+    } catch {
+      await fs.writeFile(MOMENTS_FILE, '[]', 'utf-8');
+    }
+
     const content = await fs.readFile(MOMENTS_FILE, 'utf-8');
     const moments: Moment[] = JSON.parse(content);
 

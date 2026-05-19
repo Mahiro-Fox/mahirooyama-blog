@@ -2,6 +2,7 @@
 
 import fs from 'fs/promises';
 import { GUESTBOOK_FILE } from '@/constant/dir';
+
 import { requirePermission } from '@/lib/permissions';
 
 export interface GuestbookEntry {
@@ -18,7 +19,8 @@ export interface GuestbookEntry {
 
 // GET - 获取所有留言（管理员视图）
 export async function adminGetGuestbookEntries(): Promise<
-  { success: true; entries: GuestbookEntry[] } | { success: false; error: string }
+  | { success: true; entries: GuestbookEntry[] }
+  | { success: false; error: string }
 > {
   const permissionCheck = await requirePermission('guestbook:read');
   if (!permissionCheck.allowed) {
@@ -26,12 +28,19 @@ export async function adminGetGuestbookEntries(): Promise<
   }
 
   try {
+    // 如果不存在文件，创建文件
+    try {
+      await fs.access(GUESTBOOK_FILE);
+    } catch {
+      await fs.writeFile(GUESTBOOK_FILE, '[]', 'utf-8');
+    }
     const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
     const entries: GuestbookEntry[] = JSON.parse(content);
 
     // 按创建时间倒序排列
     entries.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     return { success: true, entries };
@@ -93,7 +102,11 @@ export async function adminCreateGuestbookEntry(input: {
     entries.push(newEntry);
 
     // 写入文件
-    await fs.writeFile(GUESTBOOK_FILE, JSON.stringify(entries, null, 2), 'utf-8');
+    await fs.writeFile(
+      GUESTBOOK_FILE,
+      JSON.stringify(entries, null, 2),
+      'utf-8'
+    );
 
     return { success: true, id };
   } catch (error) {
@@ -149,7 +162,11 @@ export async function submitGuestbookEntry(input: {
     entries.push(newEntry);
 
     // 写入文件
-    await fs.writeFile(GUESTBOOK_FILE, JSON.stringify(entries, null, 2), 'utf-8');
+    await fs.writeFile(
+      GUESTBOOK_FILE,
+      JSON.stringify(entries, null, 2),
+      'utf-8'
+    );
 
     return { success: true, id };
   } catch (error) {
@@ -215,7 +232,11 @@ export async function adminUpdateGuestbookEntry(
     }
 
     // 写入文件
-    await fs.writeFile(GUESTBOOK_FILE, JSON.stringify(entries, null, 2), 'utf-8');
+    await fs.writeFile(
+      GUESTBOOK_FILE,
+      JSON.stringify(entries, null, 2),
+      'utf-8'
+    );
 
     return { success: true };
   } catch (error) {
@@ -253,7 +274,11 @@ export async function adminReplyGuestbookEntry(
     entries[index].replyAt = new Date().toISOString();
 
     // 写入文件
-    await fs.writeFile(GUESTBOOK_FILE, JSON.stringify(entries, null, 2), 'utf-8');
+    await fs.writeFile(
+      GUESTBOOK_FILE,
+      JSON.stringify(entries, null, 2),
+      'utf-8'
+    );
 
     return { success: true };
   } catch (error) {
@@ -286,7 +311,11 @@ export async function adminApproveGuestbookEntry(
     entries[index].isApproved = isApproved;
 
     // 写入文件
-    await fs.writeFile(GUESTBOOK_FILE, JSON.stringify(entries, null, 2), 'utf-8');
+    await fs.writeFile(
+      GUESTBOOK_FILE,
+      JSON.stringify(entries, null, 2),
+      'utf-8'
+    );
 
     return { success: true };
   } catch (error) {
@@ -317,7 +346,11 @@ export async function adminDeleteGuestbookEntry(
     }
 
     // 写入文件
-    await fs.writeFile(GUESTBOOK_FILE, JSON.stringify(filtered, null, 2), 'utf-8');
+    await fs.writeFile(
+      GUESTBOOK_FILE,
+      JSON.stringify(filtered, null, 2),
+      'utf-8'
+    );
 
     return { success: true };
   } catch (error) {
@@ -328,7 +361,8 @@ export async function adminDeleteGuestbookEntry(
 
 // GET - 获取公开的留言列表（用于前端展示，只显示已审核的）
 export async function getPublicGuestbookEntries(): Promise<
-  { success: true; entries: GuestbookEntry[] } | { success: false; error: string }
+  | { success: true; entries: GuestbookEntry[] }
+  | { success: false; error: string }
 > {
   try {
     const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
@@ -339,7 +373,8 @@ export async function getPublicGuestbookEntries(): Promise<
 
     // 按创建时间倒序排列
     approvedEntries.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     return { success: true, entries: approvedEntries };

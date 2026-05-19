@@ -1,5 +1,6 @@
 import { getPublicGuestbookEntries } from '@/actions/admin/guestbook-actions';
 
+import { GuestbookWallDialog } from './guestbook-dialog';
 import { GuestbookWall } from './guestbook-wall';
 
 export default async function GuestbookPage() {
@@ -14,13 +15,13 @@ export default async function GuestbookPage() {
           有什么想对我说的话，都可以在这里留下喵~
         </p>
       </div>
-      {entries.length === 0 ? (
+      {entries.length === 0 && (
         <div className="text-muted-foreground py-12 text-center">
           还没有留言，成为第一个留言的人吧！
         </div>
-      ) : (
-        <GuestbookWall entries={entries} />
       )}
+      <GuestbookWallDialog />
+      {entries.length !== 0 && <GuestbookWall entries={entries} />}
     </div>
   );
 }
