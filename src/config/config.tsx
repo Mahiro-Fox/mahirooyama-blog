@@ -4,8 +4,11 @@ import {
   FolderOpen,
   ImageIcon,
   LucideIcon,
+  MessageSquare,
   Music,
   Shield,
+  Smile,
+  Sticker,
   Tag,
 } from 'lucide-react';
 
@@ -101,6 +104,24 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: 'MIDI 播放',
     icon: Music,
     description: 'MIDI 播放',
+  },
+  {
+    name: 'Moments',
+    navHref: '/moments',
+    adminHref: '/admin/moments',
+    label: '碎碎念管理',
+    title: '管理碎碎念',
+    icon: Smile,
+    description: '发布和管理日常碎碎念，支持文字、图片、心情和位置。',
+  },
+  {
+    name: 'Guestbook',
+    navHref: '/guestbook',
+    adminHref: '/admin/guestbook',
+    label: '留言墙管理',
+    title: '管理留言墙',
+    icon: MessageSquare,
+    description: '审核和管理访客留言，支持回复和审核功能。',
   },
 ];
 

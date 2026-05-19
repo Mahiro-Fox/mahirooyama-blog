@@ -54,6 +54,19 @@ export type Permission =
   | 'midi:update'
   | 'midi:delete'
 
+  // 碎碎念管理权限
+  | 'moments:read'
+  | 'moments:create'
+  | 'moments:update'
+  | 'moments:delete'
+
+  // 留言墙管理权限
+  | 'guestbook:read'
+  | 'guestbook:create'
+  | 'guestbook:update'
+  | 'guestbook:delete'
+  | 'guestbook:approve' // 审核留言
+
   // 系统特殊权限
   | 'system:revalidate' // 刷新缓存
   | 'system:convertImages' // 转换图片
@@ -105,6 +118,19 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'midi:create',
     'midi:update',
     'midi:delete',
+
+    // 碎碎念权限：完整的CRUD
+    'moments:read',
+    'moments:create',
+    'moments:update',
+    'moments:delete',
+
+    // 留言墙权限：完整的CRUD + 审核
+    'guestbook:read',
+    'guestbook:create',
+    'guestbook:update',
+    'guestbook:delete',
+    'guestbook:approve',
 
     // 系统权限：可以刷新缓存
     'system:revalidate',
