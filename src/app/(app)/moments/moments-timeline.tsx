@@ -57,11 +57,11 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
 
                 {/* 配图 */}
                 {moment.imageUrl && 
-                  <div className="relative inline-block">
+                  <div className="relative inline-block w-full">
                     <img
                       src={moment.imageUrl}
                       alt="配图"
-                      className="max-h-48 max-w-xs rounded-lg object-cover"
+                      className="w-full max-h-48 max-w-xs rounded-lg object-cover"
                     />
                   </div>
                 }
