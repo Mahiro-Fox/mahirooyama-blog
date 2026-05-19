@@ -1,20 +1,17 @@
 import fs from 'fs/promises';
-import path from 'path';
-import { DATA_DIR } from '@/constant/dir';
+import { DATA_DIR, ROLE_PERMISSIONS_FILE } from '@/constant/dir';
 import type { UserRole } from '@/store/user-store';
 
 import {
-  type Permission,
-  DEFAULT_ROLE_PERMISSIONS,
   ALL_PERMISSIONS,
-} from '@/lib/permissions';
+  DEFAULT_ROLE_PERMISSIONS,
+  type Permission,
+} from '@/constant';
 
 /**
  * 角色权限配置存储
  * 管理 data/role-permissions.json 文件
  */
-
-const ROLE_PERMISSIONS_FILE = path.join(DATA_DIR, 'role-permissions.json');
 
 // 内存缓存
 let cachedRolePermissions: Record<UserRole, Permission[]> | null = null;

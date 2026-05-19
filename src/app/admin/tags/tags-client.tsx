@@ -9,16 +9,12 @@ import {
   adminResetTags,
   adminUpdateTag,
 } from '@/actions/admin/tag-actions';
-import type {
-  TagType as TagCategory,
-  Tag as TagModel,
-  TagsData,
-} from '@/store/tag-store';
+
 import { formatDate } from '@/utils/utils';
 import { Tag as LucideTag } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { getTagTypeConfig, TAG_TYPES } from '@/config/tag-config';
+import { getTagTypeConfig } from '@/config/tag-config';
 import {
   Tabs,
   TabsContent,
@@ -34,17 +30,10 @@ import { DataTable, type Column } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { TagFormDialog } from '@/components/admin/tag-form-dialog';
 import { BrandIcons } from '@/components/shared/brand-icons';
-
-// 表单数据初始状态
-const INITIAL_FORM_DATA = {
-  id: '',
-  name: '',
-  icon: 'default',
-  description: '',
-};
+import { INITIAL_FORM_DATA, Tag, TAG_TYPES, TagsData, TagType } from '@/constant';
 
 // 表格列定义
-const getColumns = (type: TagCategory): Column<TagModel>[] => [
+const getColumns = (type: TagType): Column<Tag>[] => [
   {
     key: 'icon',
     header: '图标',
@@ -96,14 +85,14 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   const [tags, setTags] = useState<TagsData>(initialTags);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<TagCategory>('blog');
+  const [activeTab, setActiveTab] = useState<TagType>('blog');
 
   // 对话框状态
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingTag, setEditingTag] = useState<TagModel | null>(null);
-  const [deletingTag, setDeletingTag] = useState<TagModel | null>(null);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
 
   // 表单状态
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
@@ -137,7 +126,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   };
 
   // 打开编辑对话框
-  const openEditDialog = (tag: TagModel) => {
+  const openEditDialog = (tag: Tag) => {
     setEditingTag(tag);
     setFormData({
       id: tag.id,
@@ -149,7 +138,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   };
 
   // 打开删除对话框
-  const openDeleteDialog = (tag: TagModel) => {
+  const openDeleteDialog = (tag: Tag) => {
     setDeletingTag(tag);
     setDeleteDialogOpen(true);
   };
@@ -269,7 +258,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       >
         <Tabs
           value={activeTab}
-          onValueChange={(v: string) => setActiveTab(v as TagCategory)}
+          onValueChange={(v: string) => setActiveTab(v as TagType)}
         >
           <TabsList className="mb-4 flex gap-2">
             {TAG_TYPES.map((type) => {

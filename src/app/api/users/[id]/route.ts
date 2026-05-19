@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userStore } from '@/store/user-store';
 
-import { requireAuth, requirePermission } from '@/lib/permissions';
+import {  requirePermission } from '@/lib/permissions';
+import { verifyAuth } from '@/lib/auth';
 
 // PATCH /api/users/[id] - 更新用户
 // - super_admin 可以修改任何用户
@@ -14,13 +15,13 @@ export async function PATCH(
     const { id } = await params;
 
     // 获取当前认证用户
-    const authCheck = await requireAuth();
-    if (!authCheck.allowed) {
-      return authCheck.response;
+    const authCheck = await verifyAuth();
+    if (!authCheck.success) {
+      return NextResponse.json({ error: authCheck.error }, { status: 401 });
     }
 
-    const currentUser = authCheck.user!;
-    const isSelf = currentUser.id === id;
+    const currentUser = authCheck;
+    const isSelf = currentUser.userId === id;
     const isSuperAdmin = currentUser.role === 'super_admin';
 
     // 获取目标用户
@@ -135,3 +136,7 @@ export async function DELETE(
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+function requireAuth() {
+  throw new Error('Function not implemented.');
+}
+

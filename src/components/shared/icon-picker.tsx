@@ -11,26 +11,7 @@ import {
 } from '@/components/shadcn-ui/select';
 
 import { BrandIcons } from './brand-icons';
-
-const AVAILABLE_ICONS = [
-  { value: 'default', label: 'Default' },
-  { value: 'mdx', label: 'MDX' },
-  { value: 'gitHub', label: 'GitHub' },
-  { value: 'linux', label: 'Linux' },
-  { value: 'nextjs', label: 'Next.js' },
-  { value: 'tailwind', label: 'Tailwind' },
-  { value: 'ts', label: 'TypeScript' },
-  { value: 'vrchat', label: 'VRChat' },
-  { value: 'bilibili', label: 'Bilibili' },
-  { value: 'facebook', label: 'Facebook' },
-  { value: 'instagram', label: 'Instagram' },
-  { value: 'x', label: 'X' },
-  { value: 'css', label: 'CSS' },
-  { value: 'html', label: 'HTML' },
-  { value: 'js', label: 'JavaScript' },
-  { value: 'react', label: 'React' },
-  { value: 'vercel', label: 'Vercel' },
-];
+import { AVAILABLE_ICONS } from '@/constant';
 
 interface IconPickerProps {
   value: string;

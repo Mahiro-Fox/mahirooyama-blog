@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import {
   adminApproveGuestbookEntry,
   adminDeleteGuestbookEntry,
@@ -10,12 +10,12 @@ import {
   type GuestbookEntry,
 } from '@/actions/admin/guestbook-actions';
 import { formatDate } from '@/utils/utils';
-import { Check, Trash2, Edit, MessageSquare, X } from 'lucide-react';
+import { Check, Edit, MessageSquare, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
-import { Badge } from '@/components/shadcn-ui/badge';
 import {
   AdminPageLayout,
   createRefreshAction,
@@ -23,15 +23,7 @@ import {
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 
-// 莫兰迪色系颜色选项
-const COLOR_OPTIONS = [
-  { name: '淡粉', value: '#FADADD' },
-  { name: '淡蓝', value: '#AEC6CF' },
-  { name: '淡绿', value: '#77DD77' },
-  { name: '淡黄', value: '#FDFD96' },
-  { name: '淡紫', value: '#B39EB5' },
-  { name: '淡橙', value: '#FFB347' },
-];
+import { COLOR_OPTIONS } from '@/constant';
 
 export default function GuestbookClient({
   initialEntries,
@@ -42,7 +34,9 @@ export default function GuestbookClient({
   const [loading, setLoading] = useState(false);
 
   // 本地状态
-  const [selectedEntry, setSelectedEntry] = useState<GuestbookEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<GuestbookEntry | null>(
+    null
+  );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
@@ -168,7 +162,10 @@ export default function GuestbookClient({
     if (!selectedEntry) return;
     setIsSubmitting(true);
     try {
-      const result = await adminReplyGuestbookEntry(selectedEntry.id, replyContent);
+      const result = await adminReplyGuestbookEntry(
+        selectedEntry.id,
+        replyContent
+      );
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -207,40 +204,42 @@ export default function GuestbookClient({
         {/* 留言列表 */}
         <div className="space-y-4">
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               加载中...
             </div>
           ) : entries.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               暂无留言
             </div>
           ) : (
             entries.map((entry) => (
               <div
                 key={entry.id}
-                className="border rounded-lg p-4 space-y-3 hover:bg-accent/50 transition-colors"
+                className="hover:bg-accent/50 space-y-3 rounded-lg border p-4 transition-colors"
                 style={{ backgroundColor: `${entry.bgColor}20` }}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{entry.nickname}</span>
-                      <Badge variant={entry.isApproved ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={entry.isApproved ? 'default' : 'secondary'}
+                      >
                         {entry.isApproved ? '已审核' : '待审核'}
                       </Badge>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         {formatDate(entry.createdAt)}
                       </span>
                     </div>
                     <p className="text-sm">{entry.content}</p>
                     {entry.contact && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         联系方式: {entry.contact}
                       </p>
                     )}
                     {entry.replyContent && (
-                      <div className="mt-2 p-2 bg-primary/10 rounded border-l-2 border-primary">
-                        <div className="flex items-center gap-2 text-xs font-medium mb-1">
+                      <div className="bg-primary/10 border-primary mt-2 rounded border-l-2 p-2">
+                        <div className="mb-1 flex items-center gap-2 text-xs font-medium">
                           <MessageSquare className="h-3 w-3" />
                           博主回复
                           <span className="text-muted-foreground">
@@ -314,7 +313,7 @@ export default function GuestbookClient({
       >
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">昵称</label>
+            <label className="mb-2 block text-sm font-medium">昵称</label>
             <Input
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
@@ -323,14 +322,14 @@ export default function GuestbookClient({
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">背景颜色</label>
+            <label className="mb-2 block text-sm font-medium">背景颜色</label>
             <div className="flex flex-wrap gap-2">
               {COLOR_OPTIONS.map((color) => (
                 <button
                   key={color.value}
                   type="button"
                   onClick={() => setBgColor(color.value)}
-                  className={`w-8 h-8 rounded-full border-2 transition-transform ${
+                  className={`h-8 w-8 rounded-full border-2 transition-transform ${
                     bgColor === color.value
                       ? 'border-primary scale-110'
                       : 'border-gray-300'
@@ -343,7 +342,7 @@ export default function GuestbookClient({
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">联系方式</label>
+            <label className="mb-2 block text-sm font-medium">联系方式</label>
             <Input
               value={contact}
               onChange={(e) => setContact(e.target.value)}
@@ -352,7 +351,7 @@ export default function GuestbookClient({
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">留言内容</label>
+            <label className="mb-2 block text-sm font-medium">留言内容</label>
             <textarea
               value={content}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
@@ -361,9 +360,9 @@ export default function GuestbookClient({
               placeholder="留下你的足迹...（最多300字）"
               maxLength={300}
               rows={4}
-              className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="focus:ring-primary w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
             />
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-muted-foreground mt-1 text-xs">
               {content.length}/300
             </div>
           </div>
@@ -381,11 +380,11 @@ export default function GuestbookClient({
         submitLabel="回复"
       >
         <div className="space-y-4">
-          <div className="p-3 bg-muted rounded text-sm">
+          <div className="bg-muted rounded p-3 text-sm">
             {selectedEntry?.content}
           </div>
           <div>
-            <label className="text-sm font-medium mb-2 block">回复内容</label>
+            <label className="mb-2 block text-sm font-medium">回复内容</label>
             <textarea
               value={replyContent}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
@@ -393,7 +392,7 @@ export default function GuestbookClient({
               }
               placeholder="写下你的回复..."
               rows={4}
-              className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="focus:ring-primary w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
             />
           </div>
         </div>
@@ -406,7 +405,8 @@ export default function GuestbookClient({
         title="确认删除"
         description={
           <>
-            确定要删除 <strong>{selectedEntry?.nickname}</strong> 的留言吗？此操作不可恢复。
+            确定要删除 <strong>{selectedEntry?.nickname}</strong>{' '}
+            的留言吗？此操作不可恢复。
           </>
         }
         onConfirm={handleDelete}
@@ -423,8 +423,8 @@ async function adminCreateGuestbookEntry(input: {
   contact?: string;
   content: string;
 }): Promise<{ success: true; id: string } | { success: false; error: string }> {
-  const {
-    adminCreateGuestbookEntry: createEntry,
-  } = await import('@/actions/admin/guestbook-actions');
+  const { adminCreateGuestbookEntry: createEntry } = await import(
+    '@/actions/admin/guestbook-actions'
+  );
   return createEntry(input);
 }

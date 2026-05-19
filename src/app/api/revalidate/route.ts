@@ -2,17 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requirePermission } from '@/lib/permissions';
-
-// 需要重新验证的路径列表
-const PATHS_TO_REVALIDATE = [
-  '/', // 首页
-  '/blog', // 博客列表
-  '/gallery', // 画廊列表
-  '/page/blog/[page]', // 博客分页
-  '/page/gallery/[page]', // 画廊分页
-  '/tag/blog/[slug]', // 博客标签
-  '/tag/gallery/[slug]', // 画廊标签
-];
+import { PATHS_TO_REVALIDATE } from '@/constant';
 
 export async function POST(request: NextRequest) {
   // 验证刷新缓存权限

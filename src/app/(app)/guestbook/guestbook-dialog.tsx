@@ -16,14 +16,7 @@ import {
 import { Input } from '@/components/shadcn-ui/input';
 
 // 莫兰迪色系颜色选项
-const COLOR_OPTIONS = [
-  { name: '淡粉', value: '#FADADD' },
-  { name: '淡蓝', value: '#AEC6CF' },
-  { name: '淡绿', value: '#77DD77' },
-  { name: '淡黄', value: '#FDFD96' },
-  { name: '淡紫', value: '#B39EB5' },
-  { name: '淡橙', value: '#FFB347' },
-];
+import { COLOR_OPTIONS } from '@/constant';
 
 export function GuestbookWallDialog() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);

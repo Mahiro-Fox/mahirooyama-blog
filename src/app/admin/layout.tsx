@@ -5,10 +5,7 @@ import { jwtVerify } from 'jose';
 
 import AdminShell from '@/components/admin/admin-shell';
 import { QueryToast } from '@/components/admin/query-toast';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
+import { JWT_SECRET } from '@/constant';
 
 async function getCurrentUserFromCookie() {
   try {

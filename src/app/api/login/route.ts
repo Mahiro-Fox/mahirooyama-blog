@@ -3,13 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sessionStore } from '@/store/session-store';
 import { userStore } from '@/store/user-store';
 import { SignJWT } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
-
-// 24小时过期时间（秒）
-const SESSION_EXPIRY = 24 * 60 * 60;
+import { JWT_SECRET, SESSION_EXPIRY } from '@/constant';
 
 export async function POST(request: NextRequest) {
   try {

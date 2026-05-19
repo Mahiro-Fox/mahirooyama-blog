@@ -217,9 +217,7 @@ export async function adminUpdateGuestbookEntry(
       entries[index].bgColor = bgColor.trim();
     }
 
-    if (contact !== undefined) {
-      entries[index].contact = contact.trim() || undefined;
-    }
+    entries[index].contact = contact?.trim() || undefined;
 
     if (content !== undefined) {
       if (content.trim().length === 0) {

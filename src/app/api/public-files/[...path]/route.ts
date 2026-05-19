@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
-import { PUBLIC_DIR } from '@/constant/dir';
+import { PUBLIC_DIR, MAX_FILE_SIZE, SUPPORTED_IMAGE_EXTS } from '@/constant';
 import { checkFileConflict, isPathSafe } from '@/utils/file-utils';
 import sharp from 'sharp';
 
@@ -11,12 +11,6 @@ import { requirePermission } from '@/lib/permissions';
 interface RouteParams {
   params: Promise<{ path: string[] }>;
 }
-
-// 2MB 字节数
-const MAX_FILE_SIZE = 2 * 1024 * 1024;
-
-// 支持的图片格式
-const SUPPORTED_IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.avif'];
 
 /**
  * 压缩图片到 2MB 以下

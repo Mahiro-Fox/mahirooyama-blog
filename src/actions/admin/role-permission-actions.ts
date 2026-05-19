@@ -3,8 +3,8 @@
 import { rolePermissionStore } from '@/store/role-permission-store';
 import type { UserRole } from '@/store/user-store';
 
-import type { Permission } from '@/lib/permissions';
 import { requirePermission } from '@/lib/permissions';
+import { Permission } from '@/constant';
 
 export async function adminGetRolePermissions() {
   const permissionCheck = await requirePermission('users:read');

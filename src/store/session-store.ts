@@ -1,4 +1,6 @@
 // 简单的内存会话存储（生产环境建议使用 Redis）
+import { SESSION_MAX_AGE } from '@/constant';
+
 interface SessionInfo {
   userId: string;
   sessionId: string;
@@ -9,9 +11,6 @@ interface SessionInfo {
 }
 
 const sessions: Map<string, SessionInfo> = new Map();
-
-// 清理过期会话（24小时无活动）
-const SESSION_MAX_AGE = 24 * 60 * 60 * 1000; // 24小时
 
 function cleanupExpiredSessions() {
   const now = Date.now();

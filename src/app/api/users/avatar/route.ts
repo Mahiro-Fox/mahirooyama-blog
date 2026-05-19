@@ -12,8 +12,8 @@ export async function POST(request: NextRequest) {
   try {
     // 1. 验证登录状态
     const payload = await verifyAuth();
-    if (!payload) {
-      return NextResponse.json({ error: '未登录' }, { status: 401 });
+    if (!payload.success) {
+      return NextResponse.json({ error: payload.error }, { status: 401 });
     }
 
     const userId = payload.userId as string;

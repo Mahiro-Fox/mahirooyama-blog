@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getHomeBannerImages } from '@/actions/home-banner';
-import { tagStore, type Tag } from '@/store/tag-store';
+import { tagStore } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
 import { GalleryImageData, getAllGalleryImages } from '@/lib/gallery';

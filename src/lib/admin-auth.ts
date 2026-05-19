@@ -1,9 +1,6 @@
 import { cookies } from 'next/headers';
 import { jwtVerify, type JWTPayload } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
+import { JWT_SECRET } from '@/constant';
 
 type AdminSessionPayload = JWTPayload & {
   userId?: string;

@@ -2,8 +2,8 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { MOMENTS_FILE, UPLOADS_DIR } from '@/constant/dir';
 import sharp from 'sharp';
-import { GALLERY_DIR, MOMENTS_FILE, UPLOADS_DIR } from '@/constant/dir';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -109,7 +109,7 @@ export async function adminUploadMomentImage(
     // 8. 生成缩略图
     const thumbFileName = `${originalName}_${timestamp}_thumb.webp`;
     const thumbFilePath = path.join(momentsUploadDir, thumbFileName);
-    
+
     await sharp(buffer)
       .resize(400, 400, {
         fit: 'cover',
@@ -179,11 +179,6 @@ export async function adminCreateMoment(input: {
 
     // 写入文件
     await fs.writeFile(MOMENTS_FILE, JSON.stringify(moments, null, 2), 'utf-8');
-
-    // 如果有图片，同步到Gallery的"日常随笔"分类
-    if (imageUrl) {
-      await syncToGallery(newMoment);
-    }
 
     return { success: true, id };
   } catch (error) {
@@ -284,33 +279,6 @@ export async function adminDeleteMoment(
   } catch (error) {
     console.error('删除碎碎念失败:', error);
     return { success: false, error: '删除失败' };
-  }
-}
-
-// 同步到Gallery的"日常随笔"分类
-async function syncToGallery(moment: Moment): Promise<void> {
-  if (!moment.imageUrl) return;
-
-  try {
-    const gallerySlug = `moment-${moment.id}`;
-    const galleryFilePath = `${GALLERY_DIR}/${gallerySlug}.json`;
-
-    const galleryData = {
-      title: `碎碎念 - ${moment.content.slice(0, 20)}...`,
-      description: moment.content,
-      thumbnail: moment.imageUrl,
-      lastUpdated: moment.createdAt.split('T')[0],
-      tags: ['日常随笔'],
-    };
-
-    await fs.writeFile(
-      galleryFilePath,
-      JSON.stringify(galleryData, null, 2),
-      'utf-8'
-    );
-  } catch (error) {
-    console.error('同步到Gallery失败:', error);
-    // 不影响主流程，只记录错误
   }
 }
 

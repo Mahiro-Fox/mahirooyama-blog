@@ -4,12 +4,9 @@ import { userStore } from '@/store/user-store';
 import { jwtVerify } from 'jose';
 
 import { requirePermission } from '@/lib/permissions';
+import { JWT_SECRET } from '@/constant';
 
 import UsersClient from './users-client';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
 
 async function getCurrentUser() {
   try {

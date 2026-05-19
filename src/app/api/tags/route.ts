@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { tagStore, TagType } from '@/store/tag-store';
+import { tagStore } from '@/store/tag-store';
+import { TagType } from '@/constant/tag';
 
 import { requirePermission } from '@/lib/permissions';
 

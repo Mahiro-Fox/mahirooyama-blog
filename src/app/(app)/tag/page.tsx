@@ -1,10 +1,11 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { tagStore, Tag as TagType } from '@/store/tag-store';
+import { tagStore } from '@/store/tag-store';
 import { FileText, Image, Tag } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/shadcn-ui/card';
 import { BrandIcons } from '@/components/shared/brand-icons';
+import { Tag as TagType } from '@/constant/tag';
 
 export const metadata: Metadata = {
   title: '标签列表',

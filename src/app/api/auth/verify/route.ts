@@ -3,9 +3,7 @@ import { NextResponse } from 'next/server';
 import { sessionStore } from '@/store/session-store';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
+import { JWT_SECRET } from '@/constant';
 
 export async function GET() {
   try {

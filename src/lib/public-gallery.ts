@@ -1,17 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { PHOTO_DIR } from '@/constant/dir';
+import { PHOTO_DIR, COMPRESSION_CONFIG } from '@/constant';
 import sharp from 'sharp';
 
 const compressedDir = path.join(PHOTO_DIR, '.compressed');
-
-// 压缩配置
-const COMPRESSION_CONFIG = {
-  quality: 80, // WebP 质量 0-100
-  maxWidth: 1920, // 最大宽度限制
-  maxHeight: 1920, // 最大高度限制
-  effort: 4, // 压缩 effort (0-6, 越高越慢但更小)
-};
 
 export interface GalleryImageItem {
   id: string;

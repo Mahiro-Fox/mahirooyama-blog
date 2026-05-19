@@ -1,4 +1,6 @@
 // 后台管理系统public管理的路径缓存存储（内存存储，生产环境建议使用 Redis）
+import { CACHE_MAX_AGE } from '@/constant';
+
 interface PathCacheInfo {
   userId: string;
   path: string;
@@ -6,9 +8,6 @@ interface PathCacheInfo {
 }
 
 const pathCaches: Map<string, PathCacheInfo> = new Map();
-
-// 清理过期缓存（7天无活动）
-const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7天
 
 function cleanupExpiredCaches() {
   const now = Date.now();

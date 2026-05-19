@@ -1,7 +1,8 @@
 import fs from 'fs/promises';
-import path from 'path';
-import { DATA_DIR } from '@/constant/dir';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+
+import { USERS_FILE, DATA_DIR } from '@/constant';
 
 // 用户角色类型
 export type UserRole = 'super_admin' | 'user';
@@ -98,7 +99,7 @@ export class PermissionChecker {
   }
 }
 
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
+
 
 // 确保数据目录和文件存在
 async function ensureDataFile(): Promise<void> {

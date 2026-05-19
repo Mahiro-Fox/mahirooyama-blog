@@ -9,8 +9,9 @@ import {
   type UserRole,
 } from '@/store/user-store';
 
-import { requireAuth, requirePermission } from '@/lib/permissions';
+import { requirePermission } from '@/lib/permissions';
 import { AVATAR_DIR } from '@/constant/dir';
+import { verifyAuth } from '@/lib/auth';
 
 export async function adminGetUsers(): Promise<
   { success: true; users: UserResponse[] } | { success: false; error: string }
@@ -59,12 +60,12 @@ export async function adminUploadAvatar(
 > {
   try {
     // 1. 验证登录状态
-    const authCheck = await requireAuth();
-    if (!authCheck.allowed) {
+    const authCheck = await verifyAuth();
+    if (!authCheck.success) {
       return { success: false, error: '未登录' };
     }
 
-    const userId = authCheck.user!.id;
+    const userId = authCheck.userId as string;
 
     // 2. 获取用户信息
     const user = await userStore.getById(userId);
@@ -168,13 +169,13 @@ export async function adminUpdateUserPassword(input: {
   id: string;
   password: string;
 }): Promise<{ success: true } | { success: false; error: string }> {
-  const authCheck = await requireAuth();
-  if (!authCheck.allowed) {
+  const authCheck = await verifyAuth();
+  if (!authCheck.success) {
     return { success: false, error: 'unauthorized' };
   }
 
-  const currentUser = authCheck.user!;
-  const isSelf = currentUser.id === input.id;
+  const currentUser = authCheck;
+  const isSelf = currentUser.userId === input.id;
   const isSuperAdmin = currentUser.role === 'super_admin';
 
   if (!input.password) {

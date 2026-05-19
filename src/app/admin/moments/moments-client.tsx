@@ -9,6 +9,7 @@ import {
   adminUploadMomentImage,
   type Moment,
 } from '@/actions/admin/moments-actions';
+import { MOOD_OPTIONS } from '@/constant/moods';
 import { formatDate } from '@/utils/utils';
 import { Edit, Image as ImageIcon, MapPin, Smile, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,20 +24,6 @@ import {
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
-
-// 心情选项
-const MOOD_OPTIONS = [
-  { emoji: '☀️', label: '晴天' },
-  { emoji: '☕', label: '喝咖啡中' },
-  { emoji: '🍲', label: '想吃火锅' },
-  { emoji: '😊', label: '开心' },
-  { emoji: '😴', label: '困了' },
-  { emoji: '🎵', label: '听音乐' },
-  { emoji: '📚', label: '阅读中' },
-  { emoji: '🏃', label: '运动中' },
-  { emoji: '🌙', label: '晚安' },
-  { emoji: '✨', label: '美好时刻' },
-];
 
 export default function MomentsClient({
   initialMoments,
