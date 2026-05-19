@@ -232,7 +232,6 @@ export async function getPublicMoments(): Promise<
 > {
   try {
     const content = await fs.readFile(MOMENTS_FILE, 'utf-8');
-    console.log('content', content);
     const moments: Moment[] = JSON.parse(content);
 
     // 按创建时间倒序排列
