@@ -14,8 +14,10 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
 import { Search } from '@/components/content/search';
 import { BrandIcons } from '@/components/shared/brand-icons';
@@ -64,21 +66,18 @@ export function SiteHeader() {
               </Button>
             ))}
           </nav>
-          {/* 移动端菜单按钮 */}
-          <Menu className="md:hidden" onClick={() => setIsOpen(true)} />
           {/* 移动端侧边栏导航 */}
-          <Sheet open={isOpen}>
-            <SheetContent
-              side="left"
-              className="relative w-[280px] sm:w-[350px]"
-            >
-              <SheetHeader className="border-b pb-4">
-                <SheetTitle className="flex items-center gap-2">
-                  <SiteLogo className="h-8 w-8 overflow-hidden rounded-full" />
-                  <span className="text-lg font-semibold">
-                    {siteConfig.name}
-                  </span>
-                </SheetTitle>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Menu className="md:hidden" />
+            </SheetTrigger>
+            <SheetContent side="left">
+              <SheetHeader>
+                <SheetTitle>Edit profile</SheetTitle>
+                <SheetDescription>
+                  Make changes to your profile here. Click save when you&apos;re
+                  done.
+                </SheetDescription>
               </SheetHeader>
               <nav className="mt-6 flex flex-col gap-2">
                 {navRoutesConfig.map((item) => (
@@ -96,10 +95,6 @@ export function SiteHeader() {
                   </SheetClose>
                 ))}
               </nav>
-              <Menu
-                onClick={() => setIsOpen(false)}
-                className="absolute right-4 bottom-4 cursor-pointer"
-              />
             </SheetContent>
           </Sheet>
           <Search />

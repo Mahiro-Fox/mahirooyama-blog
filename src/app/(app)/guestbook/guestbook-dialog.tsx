@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { submitGuestbookEntry } from '@/actions/admin/guestbook-actions';
-import { Send, Sticker } from 'lucide-react';
+import { Send, Sticker, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/shadcn-ui/button';
@@ -76,7 +76,7 @@ export function GuestbookWallDialog() {
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="relative m-auto sm:max-w-md">
           <DialogHeader>
             <DialogTitle>留下你的足迹</DialogTitle>
             <DialogDescription>选择喜欢的颜色，写下你的留言</DialogDescription>
@@ -147,6 +147,10 @@ export function GuestbookWallDialog() {
               <Send className="ml-2 h-4 w-4" />
             </Button>
           </form>
+          <X
+            className="absolute top-4 right-4 cursor-pointer"
+            onClick={() => setIsDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>
