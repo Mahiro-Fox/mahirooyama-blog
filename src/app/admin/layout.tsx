@@ -1,31 +1,10 @@
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { UserRole } from '@/store/user-store';
-import { jwtVerify } from 'jose';
 
 import AdminShell from '@/components/admin/admin-shell';
 import { QueryToast } from '@/components/admin/query-toast';
-import { JWT_SECRET } from '@/constant';
-
-async function getCurrentUserFromCookie() {
-  try {
-    const cookieStore = await cookies();
-    const tokenCookie = cookieStore.get('admin-session');
-    if (!tokenCookie?.value) return null;
-
-    const { payload } = await jwtVerify(tokenCookie.value, JWT_SECRET);
-    if (!payload.userId || !payload.username) return null;
-
-    return {
-      id: String(payload.userId),
-      username: String(payload.username),
-      avatar: String(payload.avatar || '/images/avatar/default-avatar.webp'),
-      role: String(payload.role || 'user'),
-    };
-  } catch {
-    return null;
-  }
-}
+import { verifyAuth } from '@/lib/auth';
 
 export default async function AdminLayout({
   children,
@@ -34,9 +13,9 @@ export default async function AdminLayout({
 }) {
   // Auth is handled by middleware first, but we double-check here for safety
   // This also gets user info for the AdminShell UI
-  const currentUser = await getCurrentUserFromCookie();
+  const authCheck = await verifyAuth();
 
-  if (!currentUser) {
+  if (!authCheck.success) {
     // Get current pathname for redirect
     const headersList = await headers();
     const pathname = headersList.get('x-pathname') || '';
@@ -46,14 +25,16 @@ export default async function AdminLayout({
     redirect(redirectUrl);
   }
 
+  const currentUser = authCheck;
+
   return (
     <>
       <QueryToast />
       <AdminShell
         currentUser={{
-          id: currentUser.id,
-          username: currentUser.username,
-          avatar: currentUser.avatar,
+          id: String(currentUser.userId),
+          username: String(currentUser.username),
+          avatar: String(currentUser.avatar || '/images/avatar/default-avatar.webp'),
           role: currentUser.role as UserRole,
         }}
       >

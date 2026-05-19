@@ -20,10 +20,19 @@ export async function verifyAuth() {
 
     // 检查会话是否存在
     if (!sessionStore.exists(token.value)) {
-      return {
-        success: false,
-        error: '会话已在其他设备上失效，请重新登录',
-      };
+      // 如果 JWT 有效但内存会话丢失（通常是因为服务器重启）
+      // 我们基于 JWT payload 恢复会话，以避免用户被迫重新登录
+      if (payload.userId && payload.sessionId) {
+        sessionStore.create(token.value, {
+          userId: String(payload.userId),
+          sessionId: String(payload.sessionId),
+        });
+      } else {
+        return {
+          success: false,
+          error: '会话已在其他设备上失效，请重新登录',
+        };
+      }
     }
 
     // 更新会话最后使用时间
