@@ -1,7 +1,7 @@
 'use client';
 
 import type { Moment } from '@/actions/admin/moments-actions';
-import { formatDate } from '@/utils/utils';
+import { formatDateWithSecond } from '@/utils/utils';
 import { MapPin, Smile } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -36,7 +36,7 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                 {/* 时间和标签 */}
                 <div className="text-muted-foreground mb-3 flex items-center gap-3 text-sm">
                   <span className="text-foreground font-medium">
-                    {formatDate(moment.createdAt)}
+                    {formatDateWithSecond(moment.createdAt)}
                   </span>
                   {moment.moodEmoji && (
                     <span className="flex items-center gap-1">

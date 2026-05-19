@@ -14,7 +14,18 @@ export function formatDate(input: string | number): string {
     day: 'numeric',
   });
 }
-
+export function formatDateWithSecond(input: string | number): string {
+  const date = new Date(input);
+  return date.toLocaleDateString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
 export function absoluteUrl(path: string): string {
   return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
 }
