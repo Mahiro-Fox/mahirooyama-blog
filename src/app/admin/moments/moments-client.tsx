@@ -6,6 +6,7 @@ import {
   adminDeleteMoment,
   adminGetMoments,
   adminUpdateMoment,
+  adminUploadMomentImage,
   type Moment,
 } from '@/actions/admin/moments-actions';
 import { formatDate } from '@/utils/utils';
@@ -164,11 +165,21 @@ export default function MomentsClient({
     const file = files[0];
     if (!file) return;
 
-    // 这里应该调用文件上传API，暂时直接使用文件名
-    // 实际项目中需要上传到服务器或CDN
-    const fileName = `/uploads/moments/${Date.now()}-${file.name}`;
-    setImageUrl(fileName);
-    toast.success('图片上传成功（模拟）');
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const result = await adminUploadMomentImage(formData);
+
+      if (!result.success) {
+        throw new Error(result.error || '上传失败');
+      }
+
+      setImageUrl(result.imageUrl);
+      toast.success(result.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '图片上传失败');
+    }
   };
 
   return (

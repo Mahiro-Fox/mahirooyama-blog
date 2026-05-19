@@ -1,7 +1,9 @@
 'use server';
 
 import fs from 'fs/promises';
-import { GALLERY_DIR, MOMENTS_FILE } from '@/constant/dir';
+import path from 'path';
+import sharp from 'sharp';
+import { GALLERY_DIR, MOMENTS_FILE, UPLOADS_DIR } from '@/constant/dir';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -44,6 +46,92 @@ export async function adminGetMoments(): Promise<
   } catch (error) {
     console.error('获取碎碎念列表失败:', error);
     return { success: false, error: '获取碎碎念列表失败' };
+  }
+}
+
+// POST - 上传碎碎念图片
+export async function adminUploadMomentImage(
+  formData: FormData
+): Promise<
+  | { success: true; imageUrl: string; message: string }
+  | { success: false; error: string }
+> {
+  const permissionCheck = await requirePermission('moments:create');
+  if (!permissionCheck.allowed) {
+    return { success: false, error: 'unauthorized' };
+  }
+
+  try {
+    // 1. 解析上传的文件
+    const file = formData.get('image') as File | null;
+
+    if (!file) {
+      return { success: false, error: '未提供图片文件' };
+    }
+
+    // 2. 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      return { success: false, error: '只允许上传图片文件' };
+    }
+
+    // 3. 验证文件大小 (最大 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return { success: false, error: '图片大小不能超过 5MB' };
+    }
+
+    // 4. 确保上传目录存在
+    const momentsUploadDir = path.join(UPLOADS_DIR, 'moments');
+    try {
+      await fs.access(momentsUploadDir);
+    } catch {
+      await fs.mkdir(momentsUploadDir, { recursive: true });
+    }
+
+    // 5. 读取文件并处理
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // 6. 生成唯一文件名
+    const timestamp = Date.now();
+    const originalName = file.name.replace(/\.[^/.]+$/, '');
+    const fileName = `${originalName}_${timestamp}.webp`;
+    const filePath = path.join(momentsUploadDir, fileName);
+
+    // 7. 使用 sharp 压缩并转换为 WebP
+    await sharp(buffer)
+      .resize(1200, 1200, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 85 })
+      .toFile(filePath);
+
+    // 8. 生成缩略图
+    const thumbFileName = `${originalName}_${timestamp}_thumb.webp`;
+    const thumbFilePath = path.join(momentsUploadDir, thumbFileName);
+    
+    await sharp(buffer)
+      .resize(400, 400, {
+        fit: 'cover',
+        position: 'center',
+      })
+      .webp({ quality: 75 })
+      .toFile(thumbFilePath);
+
+    // 9. 返回图片URL
+    const imageUrl = `/uploads/moments/${fileName}`;
+    const thumbUrl = `/uploads/moments/${thumbFileName}`;
+
+    return {
+      success: true,
+      imageUrl,
+      message: '图片上传成功',
+    };
+  } catch (error) {
+    console.error('碎碎念图片上传失败:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : '图片上传失败';
+    return { success: false, error: errorMessage };
   }
 }
 

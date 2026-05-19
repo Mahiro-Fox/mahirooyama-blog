@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { adminLogout } from '@/actions/admin/logout';
 import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
+import { adminUploadAvatar } from '@/actions/admin/user-actions';
 import type { UserRole } from '@/store/user-store';
 import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -94,19 +95,14 @@ export default function AdminShell({
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await fetch('/api/users/avatar', {
-        method: 'POST',
-        body: formData,
-      });
+      const result = await adminUploadAvatar(formData);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || '上传失败');
+      if (!result.success) {
+        throw new Error(result.error || '上传失败');
       }
 
-      setCurrentUser((prev) => ({ ...prev, avatar: data.avatar }));
-      toast.success('头像更新成功');
+      setCurrentUser((prev) => ({ ...prev, avatar: result.avatar }));
+      toast.success(result.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '头像上传失败');
     } finally {

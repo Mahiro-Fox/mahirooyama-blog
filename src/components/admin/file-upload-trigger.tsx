@@ -53,6 +53,7 @@ export const FileUploadTrigger = forwardRef<
     return (
       <>
         <Button
+          type='button'
           ref={ref}
           variant={variant}
           size={size}
