@@ -8,7 +8,6 @@ import {
   Music,
   Shield,
   Smile,
-  Sticker,
   Tag,
 } from 'lucide-react';
 

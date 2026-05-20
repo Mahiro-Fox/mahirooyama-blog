@@ -160,9 +160,21 @@ export const ALL_PERMISSIONS: {
   {
     group: '博客管理',
     permissions: [
-      { value: 'blog:read', label: '查看文章', description: '查看博客文章列表' },
-      { value: 'blog:create', label: '发布文章', description: '发布新博客文章' },
-      { value: 'blog:update', label: '修改文章', description: '修改已有博客文章' },
+      {
+        value: 'blog:read',
+        label: '查看文章',
+        description: '查看博客文章列表',
+      },
+      {
+        value: 'blog:create',
+        label: '发布文章',
+        description: '发布新博客文章',
+      },
+      {
+        value: 'blog:update',
+        label: '修改文章',
+        description: '修改已有博客文章',
+      },
       { value: 'blog:delete', label: '删除文章', description: '删除博客文章' },
     ],
   },
@@ -171,8 +183,16 @@ export const ALL_PERMISSIONS: {
     permissions: [
       { value: 'gallery:read', label: '查看图库', description: '查看图库列表' },
       { value: 'gallery:create', label: '上传图片', description: '上传新图片' },
-      { value: 'gallery:update', label: '修改图片', description: '修改图片信息' },
-      { value: 'gallery:delete', label: '删除图片', description: '删除图库图片' },
+      {
+        value: 'gallery:update',
+        label: '修改图片',
+        description: '修改图片信息',
+      },
+      {
+        value: 'gallery:delete',
+        label: '删除图片',
+        description: '删除图库图片',
+      },
     ],
   },
   {
@@ -189,44 +209,112 @@ export const ALL_PERMISSIONS: {
     group: '文件管理',
     permissions: [
       { value: 'files:read', label: '查看文件', description: '查看服务器文件' },
-      { value: 'files:upload', label: '上传文件', description: '上传文件到服务器' },
-      { value: 'files:update', label: '修改文件', description: '重命名或移动文件' },
-      { value: 'files:delete', label: '删除文件', description: '从服务器删除文件' },
-      { value: 'files:manageFolder', label: '管理文件夹', description: '创建或删除文件夹' },
+      {
+        value: 'files:upload',
+        label: '上传文件',
+        description: '上传文件到服务器',
+      },
+      {
+        value: 'files:update',
+        label: '修改文件',
+        description: '重命名或移动文件',
+      },
+      {
+        value: 'files:delete',
+        label: '删除文件',
+        description: '从服务器删除文件',
+      },
+      {
+        value: 'files:manageFolder',
+        label: '管理文件夹',
+        description: '创建或删除文件夹',
+      },
     ],
   },
   {
     group: 'MIDI 管理',
     permissions: [
-      { value: 'midi:read', label: '查看 MIDI', description: '查看 MIDI 文件列表' },
-      { value: 'midi:create', label: '上传 MIDI', description: '上传新 MIDI 文件' },
-      { value: 'midi:update', label: '修改 MIDI', description: '修改 MIDI 信息' },
-      { value: 'midi:delete', label: '删除 MIDI', description: '删除 MIDI 文件' },
+      {
+        value: 'midi:read',
+        label: '查看 MIDI',
+        description: '查看 MIDI 文件列表',
+      },
+      {
+        value: 'midi:create',
+        label: '上传 MIDI',
+        description: '上传新 MIDI 文件',
+      },
+      {
+        value: 'midi:update',
+        label: '修改 MIDI',
+        description: '修改 MIDI 信息',
+      },
+      {
+        value: 'midi:delete',
+        label: '删除 MIDI',
+        description: '删除 MIDI 文件',
+      },
     ],
   },
   {
     group: '碎碎念管理',
     permissions: [
-      { value: 'moments:read', label: '查看碎碎念', description: '查看碎碎念列表' },
-      { value: 'moments:create', label: '发布碎碎念', description: '发布新碎碎念' },
-      { value: 'moments:update', label: '修改碎碎念', description: '修改碎碎念内容' },
-      { value: 'moments:delete', label: '删除碎碎念', description: '删除碎碎念' },
+      {
+        value: 'moments:read',
+        label: '查看碎碎念',
+        description: '查看碎碎念列表',
+      },
+      {
+        value: 'moments:create',
+        label: '发布碎碎念',
+        description: '发布新碎碎念',
+      },
+      {
+        value: 'moments:update',
+        label: '修改碎碎念',
+        description: '修改碎碎念内容',
+      },
+      {
+        value: 'moments:delete',
+        label: '删除碎碎念',
+        description: '删除碎碎念',
+      },
     ],
   },
   {
     group: '留言墙管理',
     permissions: [
-      { value: 'guestbook:read', label: '查看留言', description: '查看留言列表' },
-      { value: 'guestbook:create', label: '发布留言', description: '发布新留言' },
-      { value: 'guestbook:update', label: '修改留言', description: '修改留言内容' },
+      {
+        value: 'guestbook:read',
+        label: '查看留言',
+        description: '查看留言列表',
+      },
+      {
+        value: 'guestbook:create',
+        label: '发布留言',
+        description: '发布新留言',
+      },
+      {
+        value: 'guestbook:update',
+        label: '修改留言',
+        description: '修改留言内容',
+      },
       { value: 'guestbook:delete', label: '删除留言', description: '删除留言' },
-      { value: 'guestbook:approve', label: '审核留言', description: '审核或取消审核留言' },
+      {
+        value: 'guestbook:approve',
+        label: '审核留言',
+        description: '审核或取消审核留言',
+      },
     ],
   },
   {
     group: '系统管理',
     permissions: [
-      { value: 'system:revalidate', label: '刷新缓存', description: '手动触发页面重新验证' },
+      {
+        value: 'system:revalidate',
+        label: '刷新缓存',
+        description: '手动触发页面重新验证',
+      },
     ],
   },
 ];

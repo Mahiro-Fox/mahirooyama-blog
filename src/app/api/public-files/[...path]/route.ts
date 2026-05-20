@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
-import { PUBLIC_DIR, MAX_FILE_SIZE, SUPPORTED_IMAGE_EXTS } from '@/constant';
+import { MAX_FILE_SIZE, PUBLIC_DIR, SUPPORTED_IMAGE_EXTS } from '@/constant';
 import { checkFileConflict, isPathSafe } from '@/utils/file-utils';
 import sharp from 'sharp';
 

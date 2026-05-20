@@ -9,6 +9,7 @@ import {
   adminUpdateGuestbookEntry,
   type GuestbookEntry,
 } from '@/actions/admin/guestbook-actions';
+import { COLOR_OPTIONS } from '@/constant';
 import { formatDate } from '@/utils/utils';
 import { Check, Edit, MessageSquare, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,8 +23,6 @@ import {
 } from '@/components/admin/admin-page-layout';
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
-
-import { COLOR_OPTIONS } from '@/constant';
 
 export default function GuestbookClient({
   initialEntries,

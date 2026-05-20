@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { submitGuestbookEntry } from '@/actions/admin/guestbook-actions';
+// 莫兰迪色系颜色选项
+import { COLOR_OPTIONS } from '@/constant';
 import { Send, Sticker, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -14,9 +16,6 @@ import {
   DialogTitle,
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
-
-// 莫兰迪色系颜色选项
-import { COLOR_OPTIONS } from '@/constant';
 
 export function GuestbookWallDialog() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);

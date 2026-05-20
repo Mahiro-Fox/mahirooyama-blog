@@ -4,6 +4,8 @@ import { getHomeBannerImages } from '@/actions/home-banner';
 import { tagStore } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
+
+import { siteConfig } from '@/config/config';
 import { GalleryImageData, getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
@@ -12,7 +14,6 @@ import { AboutCta } from '@/components/shared/about-cta';
 import { HomeBanner } from '@/components/shared/home-banner';
 import { LinkCard } from '@/components/shared/link-card';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
-import { siteConfig } from '@/config/config';
 
 const title = "欢迎来到 mahirooyama 的网站喵~ - Welcome to mahiooyama's blog";
 const description = `本网站主要内容是一些照片，例如和朋友在VRChat里拍的照片。如果想上传照片，可以在 VRChat 联系我哦~ 次要内容是一些编程笔记和其他技术分享，后续也可能加入一些新的内容与功能~ 源代码在 GitHub ，欢迎查看哦~ - 

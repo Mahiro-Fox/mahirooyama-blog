@@ -1,10 +1,10 @@
 'use server';
 
+import { Permission } from '@/constant';
 import { rolePermissionStore } from '@/store/role-permission-store';
 import type { UserRole } from '@/store/user-store';
 
 import { requirePermission } from '@/lib/permissions';
-import { Permission } from '@/constant';
 
 export async function adminGetRolePermissions() {
   const permissionCheck = await requirePermission('users:read');

@@ -3,5 +3,5 @@ export const INITIAL_FORM_DATA = {
   id: '',
   name: '',
   icon: 'default',
-  description: ''
-}
+  description: '',
+};

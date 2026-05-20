@@ -1,8 +1,7 @@
-import fs from 'fs/promises';
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-
-import { USERS_FILE, DATA_DIR } from '@/constant';
+import fs from 'fs/promises';
+import { DATA_DIR, USERS_FILE } from '@/constant';
+import bcrypt from 'bcryptjs';
 
 // 用户角色类型
 export type UserRole = 'super_admin' | 'user';
@@ -98,8 +97,6 @@ export class PermissionChecker {
     }
   }
 }
-
-
 
 // 确保数据目录和文件存在
 async function ensureDataFile(): Promise<void> {

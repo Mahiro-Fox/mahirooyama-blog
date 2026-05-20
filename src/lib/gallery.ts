@@ -33,7 +33,7 @@ export async function getAllGalleryImages<T = {}>(): Promise<
   const images = await Promise.all(
     files.map((file) => readGalleryFile<T>(path.join(GALLERY_DIR, file)))
   );
-  
+
   return images.sort(
     (a, b) =>
       new Date(b.metadata.lastUpdated).getTime() -

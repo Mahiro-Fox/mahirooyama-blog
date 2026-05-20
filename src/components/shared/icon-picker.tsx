@@ -1,5 +1,6 @@
 'use client';
 
+import { AVAILABLE_ICONS } from '@/constant';
 import { Tag } from 'lucide-react';
 
 import {
@@ -11,7 +12,6 @@ import {
 } from '@/components/shadcn-ui/select';
 
 import { BrandIcons } from './brand-icons';
-import { AVAILABLE_ICONS } from '@/constant';
 
 interface IconPickerProps {
   value: string;

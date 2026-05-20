@@ -1,10 +1,9 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
-
 import { JWT_SECRET } from '@/constant';
 import { sessionStore } from '@/store/session-store';
+import { jwtVerify } from 'jose';
 
 export async function verifyAuth() {
   try {

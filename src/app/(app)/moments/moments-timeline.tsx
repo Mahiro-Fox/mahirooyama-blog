@@ -56,15 +56,16 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                 <p className="mb-4 text-base">{moment.content}</p>
 
                 {/* 配图 */}
-                {moment.imageUrl && 
+                {moment.imageUrl && (
                   <div className="relative inline-block w-full">
                     <img
                       src={moment.imageUrl}
                       alt="配图"
-                      className="w-full max-h-48 max-w-xs rounded-lg object-cover"
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      className="max-h-48 w-full max-w-xs rounded-lg object-cover"
                     />
                   </div>
-                }
+                )}
               </div>
             </BlurFade>
           </motion.div>

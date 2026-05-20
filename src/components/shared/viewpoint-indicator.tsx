@@ -1,7 +1,8 @@
 'use client';
 
-import { useMediaQuery } from '@/hooks/use-media-query';
 import { MOBILE_BREAKPOINT } from '@/constant';
+
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 export function ViewpointIndicator() {
   const isDesktop = useMediaQuery(`(min-width: ${MOBILE_BREAKPOINT}px)`);

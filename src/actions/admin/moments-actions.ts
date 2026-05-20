@@ -106,22 +106,8 @@ export async function adminUploadMomentImage(
       .webp({ quality: 85 })
       .toFile(filePath);
 
-    // 8. 生成缩略图
-    const thumbFileName = `${originalName}_${timestamp}_thumb.webp`;
-    const thumbFilePath = path.join(momentsUploadDir, thumbFileName);
-
-    await sharp(buffer)
-      .resize(400, 400, {
-        fit: 'cover',
-        position: 'center',
-      })
-      .webp({ quality: 75 })
-      .toFile(thumbFilePath);
-
-    // 9. 返回图片URL
+    // 8. 返回图片URL
     const imageUrl = `/uploads/moments/${fileName}`;
-    const thumbUrl = `/uploads/moments/${thumbFileName}`;
-
     return {
       success: true,
       imageUrl,

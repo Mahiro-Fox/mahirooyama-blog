@@ -2,9 +2,9 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { UserRole } from '@/store/user-store';
 
+import { verifyAuth } from '@/lib/auth';
 import AdminShell from '@/components/admin/admin-shell';
 import { QueryToast } from '@/components/admin/query-toast';
-import { verifyAuth } from '@/lib/auth';
 
 export default async function AdminLayout({
   children,
@@ -34,7 +34,9 @@ export default async function AdminLayout({
         currentUser={{
           id: String(currentUser.userId),
           username: String(currentUser.username),
-          avatar: String(currentUser.avatar || '/images/avatar/default-avatar.webp'),
+          avatar: String(
+            currentUser.avatar || '/images/avatar/default-avatar.webp'
+          ),
           role: currentUser.role as UserRole,
         }}
       >

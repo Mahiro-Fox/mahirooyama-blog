@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import {
   adminCreateMoment,
   adminDeleteMoment,
@@ -217,6 +217,7 @@ export default function MomentsClient({
                       <div className="relative inline-block">
                         <img
                           src={moment.imageUrl}
+                          loading="lazy"
                           alt="配图"
                           className="max-h-48 max-w-xs rounded-lg object-cover"
                         />

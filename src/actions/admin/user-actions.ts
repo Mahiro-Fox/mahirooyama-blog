@@ -2,16 +2,16 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import sharp from 'sharp';
+import { AVATAR_DIR } from '@/constant/dir';
 import {
   userStore,
   type UserResponse,
   type UserRole,
 } from '@/store/user-store';
+import sharp from 'sharp';
 
-import { requirePermission } from '@/lib/permissions';
-import { AVATAR_DIR } from '@/constant/dir';
 import { verifyAuth } from '@/lib/auth';
+import { requirePermission } from '@/lib/permissions';
 
 export async function adminGetUsers(): Promise<
   { success: true; users: UserResponse[] } | { success: false; error: string }

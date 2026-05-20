@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   adminCreateTag,
@@ -9,7 +9,13 @@ import {
   adminResetTags,
   adminUpdateTag,
 } from '@/actions/admin/tag-actions';
-
+import {
+  INITIAL_FORM_DATA,
+  Tag,
+  TAG_TYPES,
+  TagsData,
+  TagType,
+} from '@/constant';
 import { formatDate } from '@/utils/utils';
 import { Tag as LucideTag, RefreshCwIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,7 +36,6 @@ import { DataTable, type Column } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { TagFormDialog } from '@/components/admin/tag-form-dialog';
 import { BrandIcons } from '@/components/shared/brand-icons';
-import { INITIAL_FORM_DATA, Tag, TAG_TYPES, TagsData, TagType } from '@/constant';
 
 // 表格列定义
 const getColumns = (type: TagType): Column<Tag>[] => [

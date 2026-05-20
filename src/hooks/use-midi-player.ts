@@ -5,20 +5,6 @@ import { Midi } from '@tonejs/midi';
 
 import type { MidiFile } from '@/lib/midi-files';
 
-// MIDI Parser Types
-interface MidiEvent {
-  deltaTime: number;
-  type: string;
-  channel?: number;
-  noteNumber?: number;
-  velocity?: number;
-  data?: number[];
-}
-
-interface MidiTrack {
-  events: MidiEvent[];
-}
-
 export interface MidiPlayerState {
   currentPlayingId: string | null;
   isPlaying: boolean;

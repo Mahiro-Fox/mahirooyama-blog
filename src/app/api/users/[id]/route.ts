@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userStore } from '@/store/user-store';
 
-import {  requirePermission } from '@/lib/permissions';
 import { verifyAuth } from '@/lib/auth';
+import { requirePermission } from '@/lib/permissions';
 
 // PATCH /api/users/[id] - 更新用户
 // - super_admin 可以修改任何用户
@@ -136,7 +136,3 @@ export async function DELETE(
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-function requireAuth() {
-  throw new Error('Function not implemented.');
-}
-

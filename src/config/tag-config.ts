@@ -1,4 +1,3 @@
-import { type LucideIcon } from 'lucide-react';
 import { TAG_TYPES, type TagTypeConfig } from '@/constant';
 
 // 获取标签类型配置

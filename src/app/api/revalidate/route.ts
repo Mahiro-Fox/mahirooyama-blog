@@ -1,8 +1,8 @@
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
+import { PATHS_TO_REVALIDATE } from '@/constant';
 
 import { requirePermission } from '@/lib/permissions';
-import { PATHS_TO_REVALIDATE } from '@/constant';
 
 export async function POST(request: NextRequest) {
   // 验证刷新缓存权限

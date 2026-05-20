@@ -1,9 +1,9 @@
 'use server';
 
-import { tagStore} from '@/store/tag-store';
+import { TagsData, TagType } from '@/constant';
+import { tagStore } from '@/store/tag-store';
 
 import { requirePermission } from '@/lib/permissions';
-import { TagsData, TagType } from '@/constant';
 
 export async function adminGetTags(): Promise<
   { success: true; tags: TagsData } | { success: false; error: string }

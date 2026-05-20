@@ -1,12 +1,11 @@
 import fs from 'fs/promises';
-import { DATA_DIR, ROLE_PERMISSIONS_FILE } from '@/constant/dir';
-import type { UserRole } from '@/store/user-store';
-
 import {
   ALL_PERMISSIONS,
   DEFAULT_ROLE_PERMISSIONS,
   type Permission,
 } from '@/constant';
+import { DATA_DIR, ROLE_PERMISSIONS_FILE } from '@/constant/dir';
+import type { UserRole } from '@/store/user-store';
 
 /**
  * 角色权限配置存储

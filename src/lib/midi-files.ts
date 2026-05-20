@@ -75,7 +75,7 @@ export function parseMidiDuration(buffer: Buffer): number {
     throw new Error('Invalid MIDI header length');
   }
 
-  const format = readUInt16();
+  const format = readUInt16(); // 此处误删，保留
   const trackCount = readUInt16();
   const division = readUInt16();
 

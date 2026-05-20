@@ -1,5 +1,12 @@
 import fs from 'fs/promises';
-import { DATA_DIR, TAGS_FILE, DEFAULT_TAGS, type Tag, type TagType, type TagsData } from '@/constant';
+import {
+  DATA_DIR,
+  DEFAULT_TAGS,
+  TAGS_FILE,
+  type Tag,
+  type TagsData,
+  type TagType,
+} from '@/constant';
 
 async function ensureDataDir(): Promise<void> {
   try {

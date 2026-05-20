@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { cn } from '@/utils/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react'; // 也可以换成普通的文字箭头
-import Image from 'next/image';
 
 interface CarouselProps {
   className?: string;
@@ -38,21 +38,23 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
-  
   // 自动播放
   useEffect(() => {
-    const randomSlide =  () => {
-      setCurrentIndex(pre =>{
+    const randomSlide = () => {
+      setCurrentIndex((pre) => {
         let randomIndex = Math.floor(Math.random() * images.length);
         while (pre === randomIndex) {
           randomIndex = Math.floor(Math.random() * images.length);
         }
-        return randomIndex
+        return randomIndex;
       });
     };
-    const timer = setInterval(random ? randomSlide : nextSlide, autoPlayInterval);
+    const timer = setInterval(
+      random ? randomSlide : nextSlide,
+      autoPlayInterval
+    );
     return () => clearInterval(timer);
-  }, [random, nextSlide, autoPlayInterval]);
+  }, [random, nextSlide, autoPlayInterval, images.length]);
 
   return (
     <div
@@ -62,26 +64,26 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
       )}
     >
       {/* 图片容器 */}
-      {images.map((image, index) =>
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-2000 ease-in-out ${
-              index === currentIndex ? 'z-10 opacity-100' : 'z-0 opacity-0'
-            }`}
-          >
-            {
-              itemRender ? itemRender(image,index) :
-              <Image
-                src={image}
-                alt={`Slide ${index}`}
-                className="h-full w-full object-cover"
-              />
-            }
-            {/* 渐变遮罩 (可选，增加文字可读性) */}
-            <div className="absolute inset-0 bg-black/20" />
-          </div>
-        
-      )}
+      {images.map((image, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-2000 ease-in-out ${
+            index === currentIndex ? 'z-10 opacity-100' : 'z-0 opacity-0'
+          }`}
+        >
+          {itemRender ? (
+            itemRender(image, index)
+          ) : (
+            <Image
+              src={image}
+              alt={`Slide ${index}`}
+              className="h-full w-full object-cover"
+            />
+          )}
+          {/* 渐变遮罩 (可选，增加文字可读性) */}
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+      ))}
 
       {/* 左右箭头 - 仅在悬停时显示 */}
       {arrow && (

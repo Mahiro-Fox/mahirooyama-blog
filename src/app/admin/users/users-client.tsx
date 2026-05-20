@@ -12,6 +12,7 @@ import {
   adminGetUsers,
   adminUpdateUserPassword,
 } from '@/actions/admin/user-actions';
+import { Permission } from '@/constant';
 import type { UserResponse } from '@/store/user-store';
 import { formatDate } from '@/utils/utils';
 import { KeyRound, Loader2, Shield, Trash2, User } from 'lucide-react';
@@ -41,7 +42,6 @@ import {
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
-import { Permission } from '@/constant';
 
 interface CurrentUser {
   id: string;

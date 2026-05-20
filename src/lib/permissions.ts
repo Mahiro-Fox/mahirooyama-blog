@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server';
+import { DEFAULT_ROLE_PERMISSIONS, type Permission } from '@/constant';
 import { rolePermissionStore } from '@/store/role-permission-store';
-import {
-  PermissionChecker,
-  userStore,
-  type User,
-  type UserRole,
-} from '@/store/user-store';
-import {
-  DEFAULT_ROLE_PERMISSIONS,
-  type Permission,
-} from '@/constant';
+import { PermissionChecker, userStore, type User } from '@/store/user-store';
 
 import { verifyAuth } from './auth';
 
