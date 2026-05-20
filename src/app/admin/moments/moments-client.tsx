@@ -7,6 +7,7 @@ import {
   adminGetMoments,
   adminUpdateMoment,
   adminUploadMomentImage,
+  MomentImage,
   type Moment,
 } from '@/actions/admin/moments-actions';
 import { MOOD_OPTIONS } from '@/constant/moods';
@@ -42,7 +43,7 @@ export default function MomentsClient({
 
   // 表单状态
   const [content, setContent] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [image, setImage] = useState<MomentImage | null>(null);
   const [moodEmoji, setMoodEmoji] = useState('');
   const [location, setLocation] = useState('');
 
@@ -69,7 +70,7 @@ export default function MomentsClient({
     setEditMode('create');
     setSelectedMoment(null);
     setContent('');
-    setImageUrl('');
+    setImage(null);
     setMoodEmoji('');
     setLocation('');
     setIsFormDialogOpen(true);
@@ -80,7 +81,7 @@ export default function MomentsClient({
     setEditMode('edit');
     setSelectedMoment(moment);
     setContent(moment.content);
-    setImageUrl(moment.imageUrl || '');
+    setImage(moment.image || null);
     setMoodEmoji(moment.moodEmoji || '');
     setLocation(moment.location || '');
     setIsFormDialogOpen(true);
@@ -94,7 +95,7 @@ export default function MomentsClient({
       if (editMode === 'create') {
         const result = await adminCreateMoment({
           content,
-          imageUrl: imageUrl || undefined,
+          image: image || undefined,
           moodEmoji: moodEmoji || undefined,
           location: location || undefined,
         });
@@ -106,7 +107,7 @@ export default function MomentsClient({
         if (!selectedMoment) return;
         const result = await adminUpdateMoment(selectedMoment.id, {
           content,
-          imageUrl: imageUrl || undefined,
+          image: image || undefined,
           moodEmoji: moodEmoji || undefined,
           location: location || undefined,
         });
@@ -162,7 +163,7 @@ export default function MomentsClient({
         throw new Error(result.error || '上传失败');
       }
 
-      setImageUrl(result.imageUrl);
+      setImage(result.image);
       toast.success(result.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '图片上传失败');
@@ -213,11 +214,20 @@ export default function MomentsClient({
                       )}
                     </div>
                     <p className="text-sm">{moment.content}</p>
-                    {moment.imageUrl && (
+                    {moment.image && (
                       <div className="relative inline-block">
                         <img
-                          src={moment.imageUrl}
-                          loading="lazy"
+                          src={moment.image.url}
+                          width={moment.image.width}
+                          height={moment.image.height}
+                          loading={
+                            Math.max(
+                              moments[0].image?.ratio || 0,
+                              moments[1].image?.ratio || 0
+                            ) === moment.image.ratio
+                              ? 'eager'
+                              : 'lazy'
+                          }
                           alt="配图"
                           className="max-h-48 max-w-xs rounded-lg object-cover"
                         />
@@ -279,8 +289,15 @@ export default function MomentsClient({
             <label className="mb-2 block text-sm font-medium">配图</label>
             <div className="flex gap-2">
               <Input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                value={image?.url || ''}
+                onChange={(e) =>
+                  setImage({
+                    url: e.target.value,
+                    width: 0,
+                    height: 0,
+                    ratio: 0,
+                  })
+                }
                 placeholder="图片URL"
               />
               <FileUploadTrigger

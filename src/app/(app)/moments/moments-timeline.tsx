@@ -56,12 +56,22 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                 <p className="mb-4 text-base">{moment.content}</p>
 
                 {/* 配图 */}
-                {moment.imageUrl && (
+                {moment.image && (
                   <div className="relative inline-block w-full">
                     <img
-                      src={moment.imageUrl}
+                      src={moment.image.url}
+                      width={moment.image.width}
+                      height={moment.image.height}
                       alt="配图"
-                      loading={index === 0 ? 'eager' : 'lazy'}
+                      // 前两个数据中ratio最大的那个设置为eager，其他的设置为lazy，优化LCP
+                      loading={
+                        Math.max(
+                          moments[0].image?.ratio || 0,
+                          moments[1].image?.ratio || 0
+                        ) === moment.image.ratio
+                          ? 'eager'
+                          : 'lazy'
+                      }
                       className="max-h-48 w-full max-w-xs rounded-lg object-cover"
                     />
                   </div>

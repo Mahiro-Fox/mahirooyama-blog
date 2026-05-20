@@ -7,11 +7,18 @@ import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
 
+export interface MomentImage {
+  url: string;
+  width: number;
+  height: number;
+  ratio: number;
+}
+
 export interface Moment {
   id: string;
   createdAt: string;
   content: string;
-  imageUrl?: string;
+  image?: MomentImage;
   moodEmoji?: string;
   location?: string;
 }
@@ -53,7 +60,7 @@ export async function adminGetMoments(): Promise<
 export async function adminUploadMomentImage(
   formData: FormData
 ): Promise<
-  | { success: true; imageUrl: string; message: string }
+  | { success: true; image: MomentImage; message: string }
   | { success: false; error: string }
 > {
   const permissionCheck = await requirePermission('moments:create');
@@ -98,19 +105,19 @@ export async function adminUploadMomentImage(
     const filePath = path.join(momentsUploadDir, fileName);
 
     // 7. 使用 sharp 压缩并转换为 WebP
-    await sharp(buffer)
-      .resize(1200, 1200, {
-        fit: 'inside',
-        withoutEnlargement: true,
-      })
-      .webp({ quality: 85 })
-      .toFile(filePath);
+    await sharp(buffer).webp({ quality: 85 }).toFile(filePath);
 
-    // 8. 返回图片URL
+    // 8. 返回图片URL和尺寸信息
     const imageUrl = `/uploads/moments/${fileName}`;
+    const { width, height } = await sharp(buffer).metadata();
     return {
       success: true,
-      imageUrl,
+      image: {
+        url: imageUrl,
+        width: width || 0,
+        height: height || 0,
+        ratio: width && height ? width / height : 1,
+      },
       message: '图片上传成功',
     };
   } catch (error) {
@@ -124,7 +131,7 @@ export async function adminUploadMomentImage(
 // POST - 创建碎碎念
 export async function adminCreateMoment(input: {
   content: string;
-  imageUrl?: string;
+  image?: MomentImage;
   moodEmoji?: string;
   location?: string;
 }): Promise<{ success: true; id: string } | { success: false; error: string }> {
@@ -134,7 +141,7 @@ export async function adminCreateMoment(input: {
   }
 
   try {
-    const { content, imageUrl, moodEmoji, location } = input;
+    const { content, image, moodEmoji, location } = input;
 
     if (!content || content.trim().length === 0) {
       return { success: false, error: '内容不能为空' };
@@ -156,7 +163,7 @@ export async function adminCreateMoment(input: {
       id,
       createdAt,
       content: content.trim(),
-      imageUrl: imageUrl?.trim() || undefined,
+      image: image || undefined,
       moodEmoji: moodEmoji?.trim() || undefined,
       location: location?.trim() || undefined,
     };
@@ -178,7 +185,7 @@ export async function adminUpdateMoment(
   id: string,
   input: {
     content?: string;
-    imageUrl?: string;
+    image?: MomentImage;
     moodEmoji?: string;
     location?: string;
   }
@@ -189,7 +196,7 @@ export async function adminUpdateMoment(
   }
 
   try {
-    const { content, imageUrl, moodEmoji, location } = input;
+    const { content, image, moodEmoji, location } = input;
 
     // 读取现有数据
     const fileContent = await fs.readFile(MOMENTS_FILE, 'utf-8');
@@ -211,8 +218,8 @@ export async function adminUpdateMoment(
       moments[index].content = content.trim();
     }
 
-    if (imageUrl !== undefined) {
-      moments[index].imageUrl = imageUrl.trim() || undefined;
+    if (image !== undefined) {
+      moments[index].image = image || undefined;
     }
 
     if (moodEmoji !== undefined) {
