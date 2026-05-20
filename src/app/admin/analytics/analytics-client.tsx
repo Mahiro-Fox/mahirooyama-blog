@@ -85,7 +85,7 @@ const columns: Column<AnalyticsLog>[] = [
         <Globe className="h-4 w-4 text-muted-foreground" />
         <span>
           {log.location.country !== 'unknown'
-            ? log.location.country
+            ? `${log.location.country} - ${log.location.city} - ${log.location.region}`
             : '未知'}
         </span>
       </div>
