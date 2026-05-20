@@ -2,10 +2,28 @@ import fs from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { ANALYTICS_LOGS_FILE } from '@/constant';
-// 替换掉老旧的 geoip-lite，改用更轻量对打包友好的替代品（这里以现代替代库或轻量逻辑演示）
-// 如果你依然想保持原样，记得在 next.config.mjs 里加 serverExternalPackages: ['geoip-lite']
-import geoip from 'fast-geoip';
 import { UAParser } from 'ua-parser-js';
+
+/**
+ * 严格判断是否为公网 IP（排除本地回环和私有局域网 IP）
+ */
+function isPublicIp(ip: string): boolean {
+  if (!ip) return false;
+  // 排除 IPv4 本地/局域网
+  if (
+    ip === '127.0.0.1' ||
+    ip.startsWith('192.168.') ||
+    ip.startsWith('10.') ||
+    ip.startsWith('172.')
+  ) {
+    return false;
+  }
+  // 排除 IPv6 本地回环
+  if (ip === '::1' || ip === '::ffff:127.0.0.1') {
+    return false;
+  }
+  return true;
+}
 
 function maskIpAddress(ip: string): string {
   if (!ip) return 'unknown';
@@ -56,16 +74,29 @@ export async function POST(request: NextRequest) {
 
     const maskedIp = maskIpAddress(rawIp);
 
-    // 地理位置解析 (使用替代后的异步/同步库)
+    // 地理位置解析
     let location = { country: 'unknown', region: 'unknown', city: 'unknown' };
-    if (rawIp && rawIp !== '127.0.0.1' && !rawIp.startsWith('192.168')) {
-      const geo = await geoip.lookup(rawIp);
-      if (geo) {
-        location = {
-          country: geo.country || 'unknown',
-          region: geo.region || 'unknown',
-          city: geo.city || 'unknown',
-        };
+
+    if (rawIp && isPublicIp(rawIp)) {
+      try {
+        // 请求免费的高速 IP 解析接口
+        // ip-api.com 对非商业用途免费，且支持返回中英文
+        const res = await fetch(`http://ip-api.com/json/${rawIp}?lang=zh-CN`, {
+          next: { revalidate: 86400 }, // Next.js 缓存一天，避免重复请求相同 IP
+        });
+
+        if (res.ok) {
+          const geo = await res.json();
+          if (geo.status === 'success') {
+            location = {
+              country: geo.country || 'unknown',
+              region: geo.regionName || 'unknown',
+              city: geo.city || 'unknown',
+            };
+          }
+        }
+      } catch (e) {
+        console.error('解析地理位置发生错误:', e);
       }
     }
 
