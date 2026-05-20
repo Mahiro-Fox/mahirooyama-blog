@@ -1,8 +1,10 @@
 import fs from 'fs';
+import { promises as fsPromises } from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { ANALYTICS_LOGS_FILE } from '@/constant';
 import { UAParser } from 'ua-parser-js';
+import { AnalyticsLog } from '@/actions/admin/analytics-actions';
 
 /**
  * 严格判断是否为公网 IP（排除本地回环和私有局域网 IP）
@@ -36,40 +38,60 @@ function maskIpAddress(ip: string): string {
   }
   return ip;
 }
+// 内存中的临时队列
+const logQueue: AnalyticsLog[] = [];
+let isWriting = false; // 写入锁状态
+
+async function appendLogToFile(analyticsLog: AnalyticsLog) {
+  // 1. 收到埋点，立刻塞入内存队列（速度极快，不占用请求时间）
+  logQueue.push(analyticsLog);
+
+  // 2. 触发消费队列的方法
+  processQueue();
+}
 
 /**
- * 日志追加写入（数组形式）
+ * 队列消费者（互斥锁机制，保证同一时间只有一个文件读写在进行）
  */
-async function appendLogToFile(logEntry: any) {
+async function processQueue() {
+  // 如果当前正有写入任务在执行，直接返回，静静等待上一个任务完成
+  if (isWriting || logQueue.length === 0) return;
+
+  isWriting = true; // 上锁
+
   try {
     const dir = path.dirname(ANALYTICS_LOGS_FILE);
-    if (!fs.existsSync(dir)) {
-      await fs.promises.mkdir(dir, { recursive: true });
-    }
+    await fsPromises.mkdir(dir, { recursive: true });
 
-    let logs: any[] = [];
+    // 一次性取出当前队列里的所有数据，清空队列
+    // 这样哪怕并发再高，也是批量写入，极大地减少了磁盘 I/O 次数
+    const currentBatch = logQueue.splice(0, logQueue.length);
+
+    let logs: AnalyticsLog[] = [];
     try {
-      const content = await fs.promises.readFile(ANALYTICS_LOGS_FILE, 'utf-8');
-      if (content.trim()) {
-        logs = JSON.parse(content);
-        if (!Array.isArray(logs)) {
-          logs = [];
-        }
-      }
-    } catch {
+      const fileContent = await fsPromises.readFile(ANALYTICS_LOGS_FILE, 'utf-8');
+      logs = JSON.parse(fileContent);
+      if (!Array.isArray(logs)) logs = [];
+    } catch (err: unknown) {
+      // 文件不存在或解析失败，直接走空数组
       logs = [];
     }
 
-    logs.push(logEntry);
-    await fs.promises.writeFile(
-      ANALYTICS_LOGS_FILE,
-      JSON.stringify(logs, null, 2),
-      'utf-8'
-    );
+    // 将这一批数据合并进去
+    logs.push(...currentBatch);
 
-    console.log(`[Analytics] 埋点事件 ${logEntry.event} 写入成功`);
+    // 重新写回文件
+    await fsPromises.writeFile(ANALYTICS_LOGS_FILE, JSON.stringify(logs, null, 2), 'utf-8');
+    
   } catch (error) {
-    console.error('[Analytics] 写入埋点日志失败:', error);
+    console.error('[Analytics] 批量写入日志失败:', error);
+  } finally {
+    isWriting = false; // 释放锁
+    
+    // 关键：写入结束后，检查在写入期间有没有新进来的埋点，如果有，继续消费
+    if (logQueue.length > 0) {
+      processQueue();
+    }
   }
 }
 
@@ -125,7 +147,7 @@ export async function POST(request: NextRequest) {
       isMobile: device.type === 'mobile' || /mobile/i.test(userAgent),
     };
 
-    const logEntry = {
+    const analyticsLog: AnalyticsLog = {
       timestamp: timestamp || new Date().toISOString(),
       event,
       url,
@@ -137,13 +159,14 @@ export async function POST(request: NextRequest) {
       ip_masked: maskedIp,
     };
 
-    // 使用 Next.js 推荐的 Edge 安全后台等待机制，防止进程提前休漫
+    // 使用 Next.js 推荐的 Edge 安全后台等待机制，防止进程提前休眠
     // 如果你的 Next.js 版本不支持，可以直接去掉包裹，直接 await appendLogToFile(logEntry);
-    if (typeof process !== 'undefined' && (process as any).waitUntil) {
-      (process as any).waitUntil(appendLogToFile(logEntry));
+    const anyProcess = process as any;
+    if (typeof process !== 'undefined' && anyProcess.waitUntil) {
+      anyProcess.waitUntil(appendLogToFile(analyticsLog));
     } else {
       // 降级策略：虽然会稍微占用一点该请求的响应时间(极短)，但绝对安全，不会丢数据
-      await appendLogToFile(logEntry);
+      await appendLogToFile(analyticsLog);
     }
 
     return NextResponse.json({ success: true, message: '埋点数据接收成功' });
@@ -170,7 +193,7 @@ export async function GET() {
       'utf-8'
     );
 
-    const logs = JSON.parse(fileContent);
+    const logs: AnalyticsLog[] = JSON.parse(fileContent);
     if (!Array.isArray(logs)) {
       return NextResponse.json({ logs: [] });
     }

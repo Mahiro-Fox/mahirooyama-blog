@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { submitGuestbookEntry } from '@/actions/admin/guestbook-actions';
+import { trackEvent } from '@/utils/tracker';
 // 莫兰迪色系颜色选项
 import { Send, Sticker, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -45,6 +46,7 @@ export function GuestbookWallDialog() {
 
       if (result.success) {
         toast.success('留言提交成功，等待审核后显示');
+        trackEvent('submit_guestbook_success', { nickname });
         setIsDialogOpen(false);
         // 重置表单
         setNickname('');
@@ -62,7 +64,14 @@ export function GuestbookWallDialog() {
   };
   return (
     <div className="mb-8 flex justify-center">
-      <Button size="lg" className="gap-2" onClick={() => setIsDialogOpen(true)}>
+      <Button
+        size="lg"
+        className="gap-2"
+        onClick={() => {
+          setIsDialogOpen(true);
+          trackEvent('open_guestbook_dialog');
+        }}
+      >
         <Sticker className="h-5 w-5" />
         写一条！
       </Button>

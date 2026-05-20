@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { trackPageView } from '@/utils/tracker';
+import React from 'react';
 
 import { siteConfig } from '@/config/config';
 import { GalleryImageItem } from '@/lib/public-gallery';
@@ -17,10 +16,6 @@ interface HomeBannerImage {
 }
 
 export const HomeBanner: React.FC<HomeBannerImage> = ({ images }) => {
-  // 页面访问埋点
-  useEffect(() => {
-    trackPageView();
-  }, []);
   return (
     <section className="relative h-[calc(100vh-48px)] w-full md:h-[calc(100vh-64px)]">
       <div className="relative h-full w-full">
