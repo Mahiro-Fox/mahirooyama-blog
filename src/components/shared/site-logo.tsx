@@ -8,7 +8,6 @@ export const SiteLogo = (props: React.HTMLAttributes<HTMLDivElement>) => {
         alt="Logo"
         width={32}
         height={32}
-        priority
       />
     </div>
   );
