@@ -310,7 +310,7 @@ export default function GuestbookClient({
         isSubmitting={isSubmitting}
         submitLabel={editMode === 'create' ? '创建' : '保存'}
       >
-        <div className="space-y-4">
+        <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
           <div>
             <label className="mb-2 block text-sm font-medium">昵称</label>
             <Input
@@ -378,7 +378,7 @@ export default function GuestbookClient({
         isSubmitting={isSubmitting}
         submitLabel="回复"
       >
-        <div className="space-y-4">
+        <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
           <div className="bg-muted rounded p-3 text-sm">
             {selectedEntry?.content}
           </div>

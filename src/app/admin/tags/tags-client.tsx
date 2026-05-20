@@ -21,6 +21,8 @@ import { Tag as LucideTag, RefreshCwIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { getTagTypeConfig } from '@/config/tag-config';
+import { Input } from '@/components/shadcn-ui/input';
+import { Label } from '@/components/shadcn-ui/label';
 import {
   Tabs,
   TabsContent,
@@ -32,10 +34,11 @@ import {
   createAddAction,
   createRefreshAction,
 } from '@/components/admin/admin-page-layout';
+import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DataTable, type Column } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
-import { TagFormDialog } from '@/components/admin/tag-form-dialog';
 import { BrandIcons } from '@/components/shared/brand-icons';
+import { IconPicker } from '@/components/shared/icon-picker';
 
 // 表格列定义
 const getColumns = (type: TagType): Column<Tag>[] => [
@@ -93,8 +96,8 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   const [activeTab, setActiveTab] = useState<TagType>('blog');
 
   // 对话框状态
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
@@ -123,7 +126,9 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   // 打开创建对话框
   const openCreateDialog = () => {
     setFormData(INITIAL_FORM_DATA);
-    setCreateDialogOpen(true);
+    setIsEditing(false);
+    setEditingTag(null);
+    setDialogOpen(true);
   };
 
   // 打开编辑对话框
@@ -135,7 +140,8 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       icon: tag.icon,
       description: tag.description || '',
     });
-    setEditDialogOpen(true);
+    setIsEditing(true);
+    setDialogOpen(true);
   };
 
   // 打开删除对话框
@@ -162,7 +168,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       }
 
       toast.success('标签创建成功');
-      setCreateDialogOpen(false);
+      setDialogOpen(false);
       await fetchTags();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '创建标签失败');
@@ -191,7 +197,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       }
 
       toast.success('标签更新成功');
-      setEditDialogOpen(false);
+      setDialogOpen(false);
       setEditingTag(null);
       await fetchTags();
     } catch (error) {
@@ -301,31 +307,72 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
         </Tabs>
       </AdminPageLayout>
 
-      {/* 创建标签对话框 */}
-      <TagFormDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        title={`创建${activeConfig.name}标签`}
-        description={`创建一个新的${activeConfig.description}`}
-        data={formData}
-        onDataChange={setFormData}
-        onSubmit={handleCreate}
+      {/* 标签表单对话框 */}
+      <CrudFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        title={isEditing ? '编辑标签' : `创建${activeConfig.name}标签`}
+        description={
+          isEditing ? '修改标签信息' : `创建一个新的${activeConfig.description}`
+        }
+        onSubmit={isEditing ? handleUpdate : handleCreate}
         isSubmitting={isSubmitting}
-        isEditing={false}
-      />
+        submitLabel={isEditing ? '保存' : '创建'}
+      >
+        <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
+          <Label htmlFor="tag-id">标签 ID</Label>
+          <Input
+            id="tag-id"
+            value={formData.id}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+              })
+            }
+            placeholder="如: typescript"
+            disabled={isEditing}
+            required
+          />
+          {!isEditing && (
+            <p className="text-muted-foreground text-xs">
+              只能使用小写字母、数字和连字符
+            </p>
+          )}
+        </div>
 
-      {/* 编辑标签对话框 */}
-      <TagFormDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        title="编辑标签"
-        description="修改标签信息"
-        data={formData}
-        onDataChange={setFormData}
-        onSubmit={handleUpdate}
-        isSubmitting={isSubmitting}
-        isEditing={true}
-      />
+        <div className="space-y-2">
+          <Label htmlFor="tag-name">标签名称</Label>
+          <Input
+            id="tag-name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="如: TypeScript"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>图标</Label>
+          <IconPicker
+            value={formData.icon}
+            onChange={(value) => setFormData({ ...formData, icon: value })}
+            placeholder="选择图标"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="tag-description">描述（可选）</Label>
+          <Input
+            id="tag-description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            placeholder="简短描述这个标签"
+          />
+        </div>
+      </CrudFormDialog>
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog

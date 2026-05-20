@@ -32,7 +32,7 @@ function DialogContent({
   return (
     <div
       className={cn(
-        'bg-background w-full max-w-[calc(100%-2rem)] rounded-lg border p-6 shadow-lg sm:w-[75vw] sm:max-w-3xl',
+        'bg-background m-auto w-full max-w-[calc(100%-2rem)] rounded-lg border p-6 shadow-lg sm:w-[75vw] sm:max-w-3xl',
         className
       )}
       {...props}

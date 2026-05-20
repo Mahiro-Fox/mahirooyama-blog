@@ -47,6 +47,14 @@ export default function MomentsClient({
   const [moodEmoji, setMoodEmoji] = useState('');
   const [location, setLocation] = useState('');
 
+  const getRealImageHeight = (moment: Moment) => {
+    const scaleRatio = Math.round(
+      moment.image?.width ? moment.image.width / 320 : 1
+    );
+    return Math.round(
+      moment.image?.height ? moment.image.height / scaleRatio : 0
+    );
+  };
   // 刷新列表
   const fetchItems = async () => {
     setLoading(true);
@@ -220,11 +228,12 @@ export default function MomentsClient({
                           src={moment.image.url}
                           width={moment.image.width}
                           height={moment.image.height}
+                          // 前两个数据中高度最大的那个设置为eager，其他的设置为lazy，优化LCP
                           loading={
                             Math.max(
-                              moments[0].image?.ratio || 0,
-                              moments[1].image?.ratio || 0
-                            ) === moment.image.ratio
+                              getRealImageHeight(moments[0]),
+                              getRealImageHeight(moments[1])
+                            ) === getRealImageHeight(moment)
                               ? 'eager'
                               : 'lazy'
                           }
@@ -267,7 +276,7 @@ export default function MomentsClient({
         isSubmitting={isSubmitting}
         submitLabel={editMode === 'create' ? '发布' : '保存'}
       >
-        <div className="space-y-4">
+        <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
           <div>
             <label className="mb-2 block text-sm font-medium">内容</label>
             <textarea

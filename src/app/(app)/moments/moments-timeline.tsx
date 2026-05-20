@@ -12,6 +12,14 @@ interface MomentsTimelineProps {
 }
 
 export function MomentsTimeline({ moments }: MomentsTimelineProps) {
+  const getRealImageHeight = (moment: Moment) => {
+    const scaleRatio = Math.round(
+      moment.image?.width ? moment.image.width / 320 : 1
+    );
+    return Math.round(
+      moment.image?.height ? moment.image.height / scaleRatio : 0
+    );
+  };
   return (
     <div className="relative">
       {/* 时间轴线 */}
@@ -63,12 +71,12 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                       width={moment.image.width}
                       height={moment.image.height}
                       alt="配图"
-                      // 前两个数据中ratio最大的那个设置为eager，其他的设置为lazy，优化LCP
+                      // 前两个数据中高度最大的那个设置为eager，其他的设置为lazy，优化LCP
                       loading={
                         Math.max(
-                          moments[0].image?.ratio || 0,
-                          moments[1].image?.ratio || 0
-                        ) === moment.image.ratio
+                          getRealImageHeight(moments[0]),
+                          getRealImageHeight(moments[1])
+                        ) === getRealImageHeight(moment)
                           ? 'eager'
                           : 'lazy'
                       }
