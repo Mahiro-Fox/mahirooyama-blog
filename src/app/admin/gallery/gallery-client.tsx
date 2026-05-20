@@ -294,6 +294,11 @@ export default function GalleryClient({
           onEdit={handleEdit}
           onDelete={openDelete}
           actions={{ edit: true, delete: true }}
+          virtual={true}
+          virtualOptions={{
+            estimateSize: 50,
+            maxHeight: '65vh',
+          }}
         />
       </AdminPageLayout>
 

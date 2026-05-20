@@ -137,6 +137,11 @@ export default function AnalyticsClient({
         loadingText="加载访问日志..."
         emptyText="暂无访问日志"
         keyExtractor={(log) => `${log.timestamp}-${log.ip_masked}`}
+        virtual={true}
+        virtualOptions={{
+          estimateSize: 50,
+          maxHeight: '65vh',
+        }}
       />
     </AdminPageLayout>
   );

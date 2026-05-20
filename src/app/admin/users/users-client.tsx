@@ -382,6 +382,11 @@ export default function UsersClient({
           emptyText="暂无用户"
           keyExtractor={(user) => user.id}
           actions={{ custom: renderActions }}
+          virtual={true}
+          virtualOptions={{
+            estimateSize: 50,
+            maxHeight: '65vh',
+          }}
         />
       </AdminPageLayout>
 

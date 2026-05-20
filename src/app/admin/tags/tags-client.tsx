@@ -301,6 +301,11 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
                 onEdit={openEditDialog}
                 onDelete={openDeleteDialog}
                 actions={{ edit: true, delete: true }}
+                virtual={true}
+                virtualOptions={{
+                  estimateSize: 50,
+                  maxHeight: '65vh',
+                }}
               />
             </TabsContent>
           ))}

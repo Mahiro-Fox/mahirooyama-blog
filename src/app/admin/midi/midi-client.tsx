@@ -212,6 +212,11 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
         onEdit={openRenameDialog}
         actions={{ edit: true, delete: true }}
         emptyText="暂无 MIDI 文件"
+        virtual={true}
+        virtualOptions={{
+          estimateSize: 50,
+          maxHeight: '65vh',
+        }}
       />
 
       {/* 删除确认对话框 */}
