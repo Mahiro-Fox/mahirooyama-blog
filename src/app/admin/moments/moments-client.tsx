@@ -10,7 +10,7 @@ import {
   MomentImage,
   type Moment,
 } from '@/actions/admin/moments-actions';
-import { MOOD_OPTIONS } from '@/constant/moods';
+import { MOOD_OPTIONS } from '@/config';
 import { formatDate } from '@/utils/utils';
 import { Edit, Image as ImageIcon, MapPin, Smile, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';

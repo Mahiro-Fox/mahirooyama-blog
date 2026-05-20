@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { COMPRESSION_CONFIG, PHOTO_DIR } from '@/constant';
+import { COMPRESSION_CONFIG } from '@/config';
 import sharp from 'sharp';
+import { PHOTO_DIR } from '@/constant';
 
 const compressedDir = path.join(PHOTO_DIR, '.compressed');
 

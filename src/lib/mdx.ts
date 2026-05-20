@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { BLOG_DIR } from '@/constant/dir';
-import { DEFAULT_BLOG_LIST_LIMIT } from '@/constant/limit';
+import { BLOG_DIR } from '@/constant';
+import { DEFAULT_BLOG_LIST_LIMIT } from '@/config';
 import { isPortraitImage } from '@/utils/image-utils';
 import matter from 'gray-matter';
 

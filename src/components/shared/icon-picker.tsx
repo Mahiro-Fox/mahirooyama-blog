@@ -1,6 +1,6 @@
 'use client';
 
-import { AVAILABLE_ICONS } from '@/constant';
+import { AVAILABLE_ICONS } from '@/config';
 import { Tag } from 'lucide-react';
 
 import {

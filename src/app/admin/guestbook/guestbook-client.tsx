@@ -9,7 +9,7 @@ import {
   adminUpdateGuestbookEntry,
   type GuestbookEntry,
 } from '@/actions/admin/guestbook-actions';
-import { COLOR_OPTIONS } from '@/constant';
+import { COLOR_OPTIONS } from '@/config';
 import { formatDate } from '@/utils/utils';
 import { Check, Edit, MessageSquare, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';

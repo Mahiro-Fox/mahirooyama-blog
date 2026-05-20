@@ -1,6 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
-import { PATHS_TO_REVALIDATE } from '@/constant';
+import { PATHS_TO_REVALIDATE } from '@/config';
 
 import { requirePermission } from '@/lib/permissions';
 

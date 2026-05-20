@@ -1,2 +1,0 @@
-export const DEFAULT_GALLERY_LIST_LIMIT = 6;
-export const DEFAULT_BLOG_LIST_LIMIT = 6;

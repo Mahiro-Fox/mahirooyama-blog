@@ -2,11 +2,12 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
-import { MAX_FILE_SIZE, PUBLIC_DIR, SUPPORTED_IMAGE_EXTS } from '@/constant';
+import { MAX_FILE_SIZE, SUPPORTED_IMAGE_EXTS } from '@/config';
 import { checkFileConflict, isPathSafe } from '@/utils/file-utils';
 import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
+import { PUBLIC_DIR } from '@/constant';
 
 interface RouteParams {
   params: Promise<{ path: string[] }>;
