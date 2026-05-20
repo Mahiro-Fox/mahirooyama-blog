@@ -38,22 +38,34 @@ function maskIpAddress(ip: string): string {
 }
 
 /**
- * 高性能、并发安全的日志追加写入
- * 每一行是一个独立的 JSON 对象 (NDJSON 规范)
+ * 日志追加写入（数组形式）
  */
 async function appendLogToFile(logEntry: any) {
   try {
     const dir = path.dirname(ANALYTICS_LOGS_FILE);
-    // 确保目录存在（使用异步方法，不阻塞事件循环）
     if (!fs.existsSync(dir)) {
       await fs.promises.mkdir(dir, { recursive: true });
     }
 
-    // 将单条日志转为单行字符串，末尾加换行符
-    const logLine = JSON.stringify(logEntry) + '\n';
+    let logs: any[] = [];
+    try {
+      const content = await fs.promises.readFile(ANALYTICS_LOGS_FILE, 'utf-8');
+      if (content.trim()) {
+        logs = JSON.parse(content);
+        if (!Array.isArray(logs)) {
+          logs = [];
+        }
+      }
+    } catch {
+      logs = [];
+    }
 
-    // 使用 appendFile 追加，这是原子操作，能有效防止并发冲突
-    await fs.promises.appendFile(ANALYTICS_LOGS_FILE, logLine, 'utf-8');
+    logs.push(logEntry);
+    await fs.promises.writeFile(
+      ANALYTICS_LOGS_FILE,
+      JSON.stringify(logs, null, 2),
+      'utf-8'
+    );
 
     console.log(`[Analytics] 埋点事件 ${logEntry.event} 写入成功`);
   } catch (error) {
@@ -145,7 +157,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET 接口适配新的单行 JSON 格式读取
+ * GET 接口读取日志
  */
 export async function GET() {
   try {
@@ -158,11 +170,10 @@ export async function GET() {
       'utf-8'
     );
 
-    // 将单行日志重新拼装为前端需要的 JSON 数组形式
-    const logs = fileContent
-      .split('\n')
-      .filter((line) => line.trim() !== '')
-      .map((line) => JSON.parse(line));
+    const logs = JSON.parse(fileContent);
+    if (!Array.isArray(logs)) {
+      return NextResponse.json({ logs: [] });
+    }
 
     return NextResponse.json({ logs });
   } catch (error) {

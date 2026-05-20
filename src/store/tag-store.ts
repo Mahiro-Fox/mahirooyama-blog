@@ -7,17 +7,11 @@ import {
   type TagsData,
   type TagType,
 } from '@/constant';
+import { ensureDirectory } from '@/utils/file-utils';
 
-async function ensureDataDir(): Promise<void> {
-  try {
-    await fs.access(DATA_DIR);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  }
-}
 
 async function readTags(): Promise<TagsData> {
-  await ensureDataDir();
+  await ensureDirectory(DATA_DIR);
   try {
     const data = await fs.readFile(TAGS_FILE, 'utf-8');
     return JSON.parse(data);
@@ -29,7 +23,7 @@ async function readTags(): Promise<TagsData> {
 }
 
 async function writeTags(tags: TagsData): Promise<void> {
-  await ensureDataDir();
+  await ensureDirectory(DATA_DIR);
   await fs.writeFile(TAGS_FILE, JSON.stringify(tags, null, 2), 'utf-8');
 }
 

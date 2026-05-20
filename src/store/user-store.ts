@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import { DATA_DIR, USERS_FILE } from '@/constant';
 import bcrypt from 'bcryptjs';
+import { ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
 
 // 用户角色类型
 export type UserRole = 'super_admin' | 'user';
@@ -100,26 +101,18 @@ export class PermissionChecker {
 
 // 确保数据目录和文件存在
 async function ensureDataFile(): Promise<void> {
-  try {
-    await fs.access(DATA_DIR);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  }
+  await ensureDirectory(DATA_DIR);
 
-  try {
-    await fs.access(USERS_FILE);
-  } catch {
-    // 创建默认的超级管理员
-    const defaultAdmin: User = {
-      id: crypto.randomUUID(),
-      username: 'admin',
-      avatar: '/images/avatar/default-avatar.webp',
-      passwordHash: await bcrypt.hash('admin123', 10),
-      role: 'super_admin',
-      lastUpdated: new Date().toISOString(),
-    };
-    await fs.writeFile(USERS_FILE, JSON.stringify([defaultAdmin], null, 2));
-  }
+  // 创建默认的超级管理员
+  const defaultAdmin: User = {
+    id: crypto.randomUUID(),
+    username: 'admin',
+    avatar: '/images/avatar/default-avatar.webp',
+    passwordHash: await bcrypt.hash('admin123', 10),
+    role: 'super_admin',
+    lastUpdated: new Date().toISOString(),
+  };
+  await ensureFileInitialized(USERS_FILE, JSON.stringify([defaultAdmin], null, 2));
 }
 
 // 读取所有用户

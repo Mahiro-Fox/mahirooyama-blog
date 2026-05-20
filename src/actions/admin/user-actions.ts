@@ -12,6 +12,7 @@ import sharp from 'sharp';
 
 import { verifyAuth } from '@/lib/auth';
 import { requirePermission } from '@/lib/permissions';
+import { ensureDirectory } from '@/utils/file-utils';
 
 export async function adminGetUsers(): Promise<
   { success: true; users: UserResponse[] } | { success: false; error: string }
@@ -91,11 +92,7 @@ export async function adminUploadAvatar(
     }
 
     // 6. 确保头像目录存在
-    try {
-      await fs.access(AVATAR_DIR);
-    } catch {
-      await fs.mkdir(AVATAR_DIR, { recursive: true });
-    }
+    await ensureDirectory(AVATAR_DIR);
 
     // 7. 读取文件并处理
     const bytes = await file.arrayBuffer();

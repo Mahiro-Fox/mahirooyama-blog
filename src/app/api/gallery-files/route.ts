@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { GALLERY_DIR } from '@/constant/dir';
-import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
+import { checkFileConflict, ensureFileInitialized } from '@/utils/file-utils';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 确保目录存在
-    await ensureDirectory(GALLERY_DIR);
+    await ensureFileInitialized(GALLERY_DIR);
 
     // 写入文件
     await fs.writeFile(filePath, content, 'utf-8');

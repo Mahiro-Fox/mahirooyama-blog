@@ -5,7 +5,8 @@ import path from 'path';
 import { GALLERY_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
-  ensureDirectory,
+  ensureFileInitialized,
+  fileExists,
   validateSlug,
 } from '@/utils/file-utils';
 
@@ -142,7 +143,7 @@ export async function adminCreateGalleryFile(input: {
     }
 
     // 确保目录存在
-    await ensureDirectory(GALLERY_DIR);
+    await ensureFileInitialized(GALLERY_DIR);
 
     // 格式化JSON并写入文件
     const formattedContent = JSON.stringify(parsed, null, 2);
@@ -209,9 +210,9 @@ export async function adminRenameGalleryFile(
     const newFilePath = path.join(GALLERY_DIR, `${cleanNewSlug}.json`);
 
     // 检查原文件是否存在
-    try {
-      await fs.access(oldFilePath);
-    } catch {
+    const exists = await fileExists(oldFilePath);
+
+    if (!exists) {
       return { success: false, error: '原文件不存在' };
     }
 

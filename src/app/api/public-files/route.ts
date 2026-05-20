@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PUBLIC_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
-  ensureDirectory,
+  ensureFileInitialized,
   isPathSafe,
 } from '@/utils/file-utils';
 import sharp from 'sharp';
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 确保目录存在
-    await ensureDirectory(targetDir);
+    await ensureFileInitialized(targetDir);
 
     const results = await Promise.all(
       files.map(async (file) => {
@@ -237,7 +237,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await ensureDirectory(newFolderPath);
+    await ensureFileInitialized(newFolderPath);
 
     return NextResponse.json({
       message: '文件夹创建成功',

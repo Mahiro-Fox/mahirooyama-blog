@@ -52,6 +52,8 @@ export type Permission =
   | 'guestbook:update'
   | 'guestbook:delete'
   | 'guestbook:approve'
+  // 分析权限
+  | 'analytics:read'
   // 系统权限
   | 'system:revalidate'
   | 'system:convertImages'
@@ -113,6 +115,9 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'guestbook:update',
     'guestbook:delete',
     'guestbook:approve',
+
+    // 分析权限：只能查看访问日志
+    'analytics:read',
 
     // 系统权限：可以刷新缓存
     'system:revalidate',
@@ -304,6 +309,16 @@ export const ALL_PERMISSIONS: {
         value: 'guestbook:approve',
         label: '审核留言',
         description: '审核或取消审核留言',
+      },
+    ],
+  },
+  {
+    group: '分析管理',
+    permissions: [
+      {
+        value: 'analytics:read',
+        label: '查看访问日志',
+        description: '查看网站访问日志',
       },
     ],
   },

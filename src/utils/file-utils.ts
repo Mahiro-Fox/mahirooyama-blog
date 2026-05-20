@@ -15,11 +15,6 @@ export function isPathSafe(
   const resolvedBase = path.resolve(allowedBasePath);
   return resolvedPath.startsWith(resolvedBase);
 }
-
-/**
- * 检查并确保目录存在，如果不存在则创建
- * @param dirPath 目录路径
- */
 export async function ensureDirectory(dirPath: string): Promise<void> {
   try {
     await fs.access(dirPath);
@@ -39,6 +34,33 @@ export async function fileExists(filePath: string): Promise<boolean> {
     return true;
   } catch {
     return false;
+  }
+}
+/**
+ * 确保文件已初始化，如果不存在则创建
+ *  * @param filePath 完整文件路径
+ */
+export async function ensureFileInitialized(filePath: string, defaultContent: string = '[]',defaultOptions?: { encoding?: 'utf-8', flag?: 'wx' }) {
+  try {
+    // 尝试直接读取（生产环境通常总会先读取或追加）
+    await fs.readFile(filePath, defaultOptions?.encoding || 'utf-8');
+  } catch (error: any) {
+    // 只有当错误码是 ENOENT（文件或目录不存在）时，才去创建它
+    if (error.code === 'ENOENT') {
+      try {
+        const dir = path.dirname(filePath);
+        await fs.mkdir(dir, { recursive: true });
+        
+        // 使用 wx 模式：如果文件在这一瞬间被其他请求创建了，这里会报错而不会覆盖老数据
+        await fs.writeFile(filePath, defaultContent, defaultOptions);
+      } catch (writeError: any) {
+        // 如果报 EEXIST 说明别的请求已经抢先创建好了，直接忽略即可
+        if (writeError.code !== 'EEXIST') throw writeError;
+      }
+    } else {
+      // 如果是权限等其他错误，原样抛出，不要盲目初始化
+      throw error;
+    }
   }
 }
 

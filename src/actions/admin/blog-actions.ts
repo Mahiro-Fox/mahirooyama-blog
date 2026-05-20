@@ -3,7 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { BLOG_DIR } from '@/constant/dir';
-import { checkFileConflict, validateSlug } from '@/utils/file-utils';
+import { checkFileConflict, fileExists, validateSlug } from '@/utils/file-utils';
 import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
@@ -174,9 +174,9 @@ export async function adminRenameBlogFile(
     // 尝试找到原文件
     const oldFilePath = path.join(BLOG_DIR, `${slug}.mdx`);
     const oldExt = '.mdx';
-    try {
-      await fs.access(oldFilePath);
-    } catch {
+    const exists = await fileExists(oldFilePath);
+
+    if (!exists) {
       return { success: false, error: '原文件不存在' };
     }
 

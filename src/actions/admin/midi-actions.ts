@@ -3,7 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { MIDI_DIR } from '@/constant/dir';
-import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
+import { checkFileConflict, ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -92,7 +92,7 @@ export async function adminUploadMidiFile(
     }
 
     // 确保目录存在
-    await ensureDirectory(MIDI_DIR);
+    await ensureFileInitialized(MIDI_DIR);
 
     // 写入文件
     const bytes = await file.arrayBuffer();

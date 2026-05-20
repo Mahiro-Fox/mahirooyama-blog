@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import { GUESTBOOK_FILE } from '@/constant/dir';
 
 import { requirePermission } from '@/lib/permissions';
+import { ensureFileInitialized } from '@/utils/file-utils';
 
 export interface GuestbookEntry {
   id: string;
@@ -29,11 +30,8 @@ export async function adminGetGuestbookEntries(): Promise<
 
   try {
     // 如果不存在文件，创建文件
-    try {
-      await fs.access(GUESTBOOK_FILE);
-    } catch {
-      await fs.writeFile(GUESTBOOK_FILE, '[]', 'utf-8');
-    }
+    await ensureFileInitialized(GUESTBOOK_FILE);
+    
     const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
     const entries: GuestbookEntry[] = JSON.parse(content);
 

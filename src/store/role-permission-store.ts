@@ -6,6 +6,7 @@ import {
 } from '@/constant';
 import { DATA_DIR, ROLE_PERMISSIONS_FILE } from '@/constant/dir';
 import type { UserRole } from '@/store/user-store';
+import { ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
 
 /**
  * 角色权限配置存储
@@ -19,21 +20,8 @@ let cachedRolePermissions: Record<UserRole, Permission[]> | null = null;
  * 确保数据文件存在
  */
 async function ensureDataFile(): Promise<void> {
-  try {
-    await fs.access(DATA_DIR);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  }
-
-  try {
-    await fs.access(ROLE_PERMISSIONS_FILE);
-  } catch {
-    // 创建默认配置文件
-    await fs.writeFile(
-      ROLE_PERMISSIONS_FILE,
-      JSON.stringify(DEFAULT_ROLE_PERMISSIONS, null, 2)
-    );
-  }
+  await ensureDirectory(DATA_DIR);
+  await ensureFileInitialized(ROLE_PERMISSIONS_FILE, JSON.stringify(DEFAULT_ROLE_PERMISSIONS, null, 2));
 }
 
 /**

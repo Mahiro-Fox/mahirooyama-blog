@@ -5,7 +5,7 @@ import path from 'path';
 import { PUBLIC_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
-  ensureDirectory,
+  ensureFileInitialized,
   isPathSafe,
 } from '@/utils/file-utils';
 import sharp from 'sharp';
@@ -122,7 +122,7 @@ export async function createFolder(relativePath: string, folderName: string) {
       return { success: false, error: conflict.error };
     }
 
-    await ensureDirectory(newFolderPath);
+    await ensureFileInitialized(newFolderPath);
 
     return {
       success: true,

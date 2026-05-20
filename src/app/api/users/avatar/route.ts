@@ -6,6 +6,7 @@ import { userStore } from '@/store/user-store';
 import sharp from 'sharp';
 
 import { verifyAuth } from '@/lib/auth';
+import { ensureDirectory } from '@/utils/file-utils';
 
 // POST /api/users/avatar - 上传用户头像
 export async function POST(request: NextRequest) {
@@ -52,11 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. 确保头像目录存在
-    try {
-      await fs.access(AVATAR_DIR);
-    } catch {
-      await fs.mkdir(AVATAR_DIR, { recursive: true });
-    }
+    await ensureDirectory(AVATAR_DIR);
 
     // 7. 读取文件并处理
     const bytes = await file.arrayBuffer();

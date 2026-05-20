@@ -1,4 +1,5 @@
 import {
+  Activity,
   Camera,
   FileText,
   FolderOpen,
@@ -121,6 +122,16 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '管理留言墙',
     icon: MessageSquare,
     description: '审核和管理访客留言，支持回复和审核功能。',
+  },
+  {
+    name: 'Analytics',
+    navHref: '/admin/analytics',
+    adminHref: '/admin/analytics',
+    label: '访问日志',
+    title: '查看网站访问日志',
+    icon: Activity,
+    description: '查看网站访问日志，包括访问时间、页面、设备等信息。',
+    hideInNav: true,
   },
 ];
 
