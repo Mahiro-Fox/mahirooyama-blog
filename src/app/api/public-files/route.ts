@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PUBLIC_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
+  ensureDirectory,
   ensureFileInitialized,
   isPathSafe,
 } from '@/utils/file-utils';
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 确保目录存在
-    await ensureFileInitialized(targetDir);
+    await ensureDirectory(targetDir);
 
     const results = await Promise.all(
       files.map(async (file) => {
