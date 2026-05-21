@@ -3,7 +3,7 @@ import { getAllMidiFiles } from '@/lib/midi-files';
 import { MidiPlayerClient } from './midi-player-client';
 
 export const metadata = {
-  title: '中文吧自动钢琴',
+  title: '中文吧自动钢琴 - mahirooyama',
   description: '中文吧自动钢琴 - Web MIDI Player with automatic piano playback',
 };
 

@@ -5,8 +5,8 @@ import {
   adminGetAnalyticsLogs,
   type AnalyticsLog,
 } from '@/actions/admin/analytics-actions';
-import { formatDate } from '@/utils/utils';
-import { Globe, Smartphone, Monitor } from 'lucide-react';
+import { formatDateWithSecond } from '@/utils/utils';
+import { Globe, Monitor, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/shadcn-ui/badge';
@@ -21,7 +21,7 @@ const columns: Column<AnalyticsLog>[] = [
     key: 'timestamp',
     header: '时间',
     width: 'max-w-32',
-    render: (log) => formatDate(log.timestamp),
+    render: (log) => formatDateWithSecond(log.timestamp),
   },
   {
     key: 'event',
@@ -38,7 +38,7 @@ const columns: Column<AnalyticsLog>[] = [
     header: '访问页面',
     width: 'max-w-40',
     render: (log) => (
-      <span className="text-muted-foreground text-sm truncate" title={log.url}>
+      <span className="text-muted-foreground truncate text-sm" title={log.url}>
         {log.url}
       </span>
     ),
@@ -48,7 +48,10 @@ const columns: Column<AnalyticsLog>[] = [
     header: '来源',
     width: 'max-w-32',
     render: (log) => (
-      <span className="text-muted-foreground text-sm truncate" title={log.referrer}>
+      <span
+        className="text-muted-foreground truncate text-sm"
+        title={log.referrer}
+      >
         {log.referrer || '-'}
       </span>
     ),
@@ -60,9 +63,9 @@ const columns: Column<AnalyticsLog>[] = [
     render: (log) => (
       <div className="flex items-center gap-1">
         {log.device.isMobile ? (
-          <Smartphone className="h-4 w-4 text-muted-foreground" />
+          <Smartphone className="text-muted-foreground h-4 w-4" />
         ) : (
-          <Monitor className="h-4 w-4 text-muted-foreground" />
+          <Monitor className="text-muted-foreground h-4 w-4" />
         )}
         <span className="text-sm">{log.device.os}</span>
       </div>
@@ -72,9 +75,7 @@ const columns: Column<AnalyticsLog>[] = [
     key: 'browser',
     header: '浏览器',
     width: 'max-w-24',
-    render: (log) => (
-      <span className="text-sm">{log.device.browser}</span>
-    ),
+    render: (log) => <span className="text-sm">{log.device.browser}</span>,
   },
   {
     key: 'location',
@@ -82,10 +83,10 @@ const columns: Column<AnalyticsLog>[] = [
     width: 'max-w-28',
     render: (log) => (
       <div className="flex items-center gap-1 text-sm">
-        <Globe className="h-4 w-4 text-muted-foreground" />
+        <Globe className="text-muted-foreground h-4 w-4" />
         <span>
           {log.location.country !== 'unknown'
-            ? `${log.location.country} - ${log.location.city} - ${log.location.region}`
+            ? `${log.location.country} - ${log.location.region} - ${log.location.city}`
             : '未知'}
         </span>
       </div>

@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getPhotos } from '@/actions/photos';
 
 import { GalleryImageItem } from '@/lib/public-gallery';
-import { getPhotos } from '@/app/(app)/photos/actions';
 
 interface UsePhotosOptions {
   initialPage?: number;

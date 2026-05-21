@@ -8,8 +8,8 @@ import { Card, CardContent } from '@/components/shadcn-ui/card';
 import { BrandIcons } from '@/components/shared/brand-icons';
 
 export const metadata: Metadata = {
-  title: '标签列表',
-  description: '浏览所有博客文章和图库的标签分类',
+  title: '标签列表 - mahirooyama',
+  description: '浏览所有 blog 和 gallery 的标签',
 };
 
 function TagCard({ tag, type }: { tag: TagType; type: 'blog' | 'gallery' }) {

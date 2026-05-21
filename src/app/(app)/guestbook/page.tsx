@@ -1,7 +1,14 @@
+import { Metadata } from 'next';
 import { getPublicGuestbookEntries } from '@/actions/admin/guestbook-actions';
 
 import { GuestbookWallDialog } from './guestbook-dialog';
 import { GuestbookWall } from './guestbook-wall';
+
+export const metadata: Metadata = {
+  title:
+    "欢迎来到 mahirooyama 的留言墙喵~ - Welcome to mahiooyama's guestbook wall",
+  description: `有什么想对mahiro说的话，都可以在这里留下喵~ - Feel free to leave any messages for Mahiro here~`,
+};
 
 export default async function GuestbookPage() {
   const result = await getPublicGuestbookEntries();
