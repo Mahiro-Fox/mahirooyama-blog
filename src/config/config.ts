@@ -95,7 +95,6 @@ export const pageRoutesConfig: PageRouteConfig[] = [
   },
   {
     name: 'PublicFiles',
-    navHref: '/admin/public-files',
     adminHref: '/admin/public-files',
     label: 'Public 文件管理',
     title: '管理 Public 文件夹中的图片',
