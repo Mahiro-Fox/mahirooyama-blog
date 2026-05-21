@@ -43,7 +43,6 @@ export default function AdminShell({
   const pathname = usePathname();
 
   const [currentUser, setCurrentUser] = useState<CurrentUser>(initialUser);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isRevalidating, setIsRevalidating] = useState(false);
@@ -154,20 +153,31 @@ export default function AdminShell({
         {/* 导航 */}
         <nav className="flex-1 overflow-auto p-4">
           <div className="space-y-1">
-            {adminRoutesConfig.map((item) => (
-              <Link
-                key={item.adminHref}
-                href={item.adminHref}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  isActive(item.adminHref)
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-muted text-foreground'
-                }`}
-              >
-                {item.icon && <item.icon className="h-4 w-4" />}
-                {item.label}
-              </Link>
-            ))}
+            {adminRoutesConfig.map((item) =>
+              item.adminHref === '/' ? (
+                <Link
+                  key={item.adminHref}
+                  href={item.adminHref!}
+                  className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
+                >
+                  {item.icon && <item.icon className="h-4 w-4" />}
+                  {item.label}
+                </Link>
+              ) : (
+                <Link
+                  key={item.adminHref}
+                  href={item.adminHref!}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    isActive(item.adminHref!)
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted text-foreground'
+                  }`}
+                >
+                  {item.icon && <item.icon className="h-4 w-4" />}
+                  {item.label}
+                </Link>
+              )
+            )}
           </div>
           <Button
             variant="ghost"
@@ -211,11 +221,7 @@ export default function AdminShell({
         <div className="flex w-full items-center gap-3">
           <Sheet>
             <SheetTrigger asChild>
-              <Menu
-                className="h-5 w-5 md:hidden"
-                onClick={() => setMobileMenuOpen(true)}
-                aria-label="打开菜单"
-              />
+              <Menu className="h-5 w-5 md:hidden" aria-label="打开菜单" />
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
               <SheetHeader>
@@ -238,22 +244,32 @@ export default function AdminShell({
               {/* 导航 */}
               <nav className="flex-1 overflow-auto p-4">
                 <div className="space-y-1">
-                  {adminRoutesConfig.map((item) => (
-                    <SheetClose asChild key={item.adminHref}>
+                  {adminRoutesConfig.map((item) =>
+                    item.adminHref === '/' ? (
                       <Link
-                        href={item.adminHref}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                          isActive(item.adminHref)
-                            ? 'bg-primary text-primary-foreground'
-                            : 'hover:bg-muted text-foreground'
-                        }`}
+                        key={item.adminHref}
+                        href={item.adminHref!}
+                        className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
                       >
                         {item.icon && <item.icon className="h-4 w-4" />}
                         {item.label}
                       </Link>
-                    </SheetClose>
-                  ))}
+                    ) : (
+                      <SheetClose asChild key={item.adminHref}>
+                        <Link
+                          href={item.adminHref!}
+                          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                            isActive(item.adminHref!)
+                              ? 'bg-primary text-primary-foreground'
+                              : 'hover:bg-muted text-foreground'
+                          }`}
+                        >
+                          {item.icon && <item.icon className="h-4 w-4" />}
+                          {item.label}
+                        </Link>
+                      </SheetClose>
+                    )
+                  )}
                 </div>
                 <Button
                   variant="ghost"
@@ -288,20 +304,12 @@ export default function AdminShell({
                       {getRoleDisplay(currentUser.role)}
                     </p>
                   </div>
-                  <Menu
-                    className="h-5 w-5 md:hidden"
-                    onClick={() => setMobileMenuOpen(false)}
-                    aria-label="关闭菜单"
-                  />
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleLogout();
-                  }}
+                  onClick={handleLogout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   登出

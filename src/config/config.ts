@@ -1,6 +1,8 @@
 import {
   Activity,
   Camera,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   FolderOpen,
   ImageIcon,
@@ -11,6 +13,7 @@ import {
   Smile,
   Tag,
 } from 'lucide-react';
+
 // 配置选项常量
 
 // 图片压缩配置
@@ -20,17 +23,6 @@ export const COMPRESSION_CONFIG = {
   maxHeight: 1920, // 最大高度限制
   effort: 4, // 压缩 effort (0-6, 越高越慢但更小)
 };
-
-// 重新验证路径列表
-export const PATHS_TO_REVALIDATE = [
-  '/', // 首页
-  '/blog', // 博客列表
-  '/gallery', // 画廊列表
-  '/page/blog/[page]', // 博客分页
-  '/page/gallery/[page]', // 画廊分页
-  '/tag/blog/[slug]', // 博客标签
-  '/tag/gallery/[slug]', // 画廊标签
-];
 
 export const siteConfig = {
   name: 'mahirooyama-blog',
@@ -49,16 +41,31 @@ export const siteConfig = {
 
 export interface PageRouteConfig {
   name: string;
-  navHref: string;
-  adminHref: string;
+  navHref?: string;
+  adminHref?: string;
   label: string;
   title: string;
   description: string;
   icon: LucideIcon;
-  hideInNav?: boolean;
 }
 
 export const pageRoutesConfig: PageRouteConfig[] = [
+  {
+    name: '后台',
+    navHref: '/admin',
+    label: '后台页面',
+    title: '去往后台页面',
+    icon: ChevronRight,
+    description: '去往后台页面',
+  },
+  {
+    name: '前台',
+    adminHref: '/',
+    label: '前台页面',
+    title: '去往前台页面',
+    icon: ChevronLeft,
+    description: '去往前台页面',
+  },
   {
     name: 'Blog',
     navHref: '/page/blog/1',
@@ -81,7 +88,6 @@ export const pageRoutesConfig: PageRouteConfig[] = [
   {
     name: 'Photos',
     navHref: '/photos',
-    adminHref: '',
     label: 'Photos 管理',
     title: '瀑布流图片展示',
     icon: Camera,
@@ -95,17 +101,14 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '管理 Public 文件夹中的图片',
     icon: FolderOpen,
     description: '上传、删除、重命名 public/images 目录下的图片文件。',
-    hideInNav: true,
   },
   {
     name: 'UserManagement',
-    navHref: '/admin/users',
     adminHref: '/admin/users',
     label: '用户管理',
     title: '管理系统用户和权限',
     icon: Shield,
     description: '创建、编辑、删除用户账号，管理用户权限（仅超级管理员）.',
-    hideInNav: true,
   },
   {
     name: 'Tag',
@@ -145,19 +148,17 @@ export const pageRoutesConfig: PageRouteConfig[] = [
   },
   {
     name: 'Analytics',
-    navHref: '/admin/analytics',
     adminHref: '/admin/analytics',
     label: '访问日志',
     title: '查看网站访问日志',
     icon: Activity,
     description: '查看网站访问日志，包括访问时间、页面、设备等信息。',
-    hideInNav: true,
   },
 ];
 
-// 仅导航栏使用的路由（排除 hideInNav 的路由）
+// 仅导航栏使用的路由（包含 navHref）
 export const navRoutesConfig = pageRoutesConfig.filter(
-  (route) => !route.hideInNav
+  (route) => route.navHref
 );
 // 管理员端路由（包含 adminHref）
 export const adminRoutesConfig = pageRoutesConfig.filter(

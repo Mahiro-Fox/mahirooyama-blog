@@ -1,6 +1,5 @@
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
-import { PATHS_TO_REVALIDATE } from '@/config';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -19,15 +18,7 @@ export async function POST(request: NextRequest) {
 
     switch (type) {
       case 'all':
-        // 重新验证所有主要路径
-        for (const path of PATHS_TO_REVALIDATE) {
-          try {
-            revalidatePath(path, 'layout');
-            results.push(`✓ ${path}`);
-          } catch (error) {
-            results.push(`✗ ${path}: ${error}`);
-          }
-        }
+        revalidatePath('/', 'layout');
         break;
 
       case 'path':

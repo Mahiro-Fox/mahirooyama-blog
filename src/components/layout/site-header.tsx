@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { navRoutesConfig, siteConfig } from '@/config/config';
+import { verifyAuth } from '@/lib/auth';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import { Separator } from '@/components/shadcn-ui/separator';
@@ -27,10 +28,22 @@ export function SiteHeader() {
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
   const { setTheme, resolvedTheme } = useTheme();
+  const [isAdminAuth, setIsAdminAuth] = useState(false);
 
   const toggleTheme = useCallback(() => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   }, [resolvedTheme, setTheme]);
+  const auth = async () => {
+    const authCheck = await verifyAuth();
+    if (!authCheck.success) {
+      setIsAdminAuth(false);
+    } else {
+      setIsAdminAuth(true);
+    }
+  };
+  useEffect(() => {
+    auth();
+  }, []);
 
   return (
     <header className="bg-background sticky top-0 z-50 w-full">
@@ -50,26 +63,43 @@ export function SiteHeader() {
             </Button>
             {/* 桌面端导航 - 在中等屏幕以上显示 */}
             <nav className="hidden items-center gap-2 md:flex">
-              {navRoutesConfig.map((item) => (
-                <Button
-                  asChild
-                  variant="ghost"
-                  size="sm"
-                  className="h-8"
-                  key={item.navHref}
-                >
-                  <Link
-                    href={item.navHref}
-                    className={
-                      isActive(item.navHref)
-                        ? 'bg-accent'
-                        : 'hover:bg-transparent'
-                    }
+              {navRoutesConfig.map((item) => {
+                if (item.navHref === '/admin') {
+                  return isAdminAuth ? (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="h-8"
+                      key={item.navHref}
+                    >
+                      <Link href={item.navHref!}>
+                        {item.name}
+                      </Link>
+                    </Button>
+                  ) : null;
+                }
+                return (
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    key={item.navHref}
                   >
-                    {item.name}
-                  </Link>
-                </Button>
-              ))}
+                    <Link
+                      href={item.navHref!}
+                      className={
+                        isActive(item.navHref!)
+                          ? 'bg-accent'
+                          : 'hover:bg-transparent'
+                      }
+                    >
+                      {item.name}
+                    </Link>
+                  </Button>
+                );
+              })}
             </nav>
             {/* 移动端侧边栏导航 */}
             <Sheet>
@@ -94,21 +124,33 @@ export function SiteHeader() {
                   <SheetTitle>{siteConfig.name}</SheetTitle>
                   <SheetDescription>{siteConfig.description}</SheetDescription>
                 </SheetHeader>
-                <nav className="mt-6 flex flex-col gap-2">
-                  {navRoutesConfig.map((item) => (
-                    <SheetClose asChild key={item.navHref}>
-                      <Link
-                        href={item.navHref}
-                        className={`flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                          isActive(item.navHref)
-                            ? 'bg-accent text-accent-foreground'
-                            : 'hover:bg-muted'
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    </SheetClose>
-                  ))}
+                <nav className="flex flex-col gap-2">
+                  {navRoutesConfig.map((item) => {
+                    if (item.navHref === '/admin') {
+                      return isAdminAuth ? (
+                        <Link
+                          href={item.navHref!}
+                          className='flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors text-accent-foreground'
+                        >
+                          {item.name}
+                        </Link>
+                      ) : null;
+                    }
+                    return (
+                      <SheetClose asChild key={item.navHref}>
+                        <Link
+                          href={item.navHref!}
+                          className={`flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                            isActive(item.navHref!)
+                              ? 'bg-accent text-accent-foreground'
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          {item.name}
+                        </Link>
+                      </SheetClose>
+                    );
+                  })}
                 </nav>
               </SheetContent>
             </Sheet>
