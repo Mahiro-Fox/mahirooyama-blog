@@ -2,10 +2,6 @@
 
 import { useCallback, useState } from 'react';
 import Image from 'next/image';
-import {
-  resolveImageSrc,
-  shouldUnoptimizeImage,
-} from '@/utils/client-image-utils';
 import { cn } from '@/utils/utils';
 import { RefreshCw } from 'lucide-react';
 
@@ -51,7 +47,7 @@ export function OptimizedImage({
   hoverScale = false,
   aspectRatio,
   blurDataURL,
-  unoptimized,
+  unoptimized = true,
   previewable = false,
   isPortrait = false,
 }: OptimizedImageProps) {
@@ -76,17 +72,11 @@ export function OptimizedImage({
     setIsLoaded(false);
   }, []);
 
-  // 本地图片通过 API 路由获取，解决生产环境无法访问运行时上传文件的问题
-  const resolvedSrc = resolveImageSrc(src);
-
-  // 外部图片或通过 API 路由获取的图片都不需要 Next.js 优化
-  const shouldUnoptimize = unoptimized ?? shouldUnoptimizeImage(src);
-
   const handleClick = useCallback(() => {
-    if (previewable && resolvedSrc) {
-      openPreview({ src: resolvedSrc, alt, width, height });
+    if (previewable && src) {
+      openPreview({ src, alt, width, height });
     }
-  }, [previewable, alt, width, height, openPreview, resolvedSrc]);
+  }, [previewable, alt, width, height, openPreview]);
 
   const imageProps = fill ? { fill, sizes } : { width, height, sizes };
 
@@ -158,8 +148,8 @@ export function OptimizedImage({
       )}
 
       <Image
-        key={isRetrying ? `retry-${Date.now()}` : resolvedSrc}
-        src={resolvedSrc}
+        key={isRetrying ? `retry-${Date.now()}` : src}
+        src={src}
         alt={alt}
         {...imageProps}
         priority={priority}
@@ -175,7 +165,7 @@ export function OptimizedImage({
         )}
         onLoad={handleLoad}
         onError={handleError}
-        unoptimized={shouldUnoptimize}
+        unoptimized={unoptimized}
       />
     </div>
   );

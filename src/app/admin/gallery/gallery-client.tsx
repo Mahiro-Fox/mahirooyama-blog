@@ -9,22 +9,26 @@ import {
   adminGetGalleryFiles,
   adminRenameGalleryFile,
   adminUpdateGalleryFile,
+  adminUploadGalleryThumbnail,
   type GalleryFile,
 } from '@/actions/admin/gallery-actions';
 import { formatDate, formatSize } from '@/utils/utils';
-import { Upload } from 'lucide-react';
+import { Image as ImageIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/shadcn-ui/badge';
+import { Input } from '@/components/shadcn-ui/input';
+import { Label } from '@/components/shadcn-ui/label';
 import {
   AdminPageLayout,
   createAddAction,
   createRefreshAction,
 } from '@/components/admin/admin-page-layout';
+import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
-import { EditorDialog } from '@/components/admin/editor-dialog';
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
+import { TagPicker } from '@/components/shared/tag-picker';
 
 // 截断文本
 const truncate = (text: string, maxLen: number) => {
@@ -108,8 +112,11 @@ export default function GalleryClient({
   const [isUploading, setIsUploading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState<'create' | 'edit'>('edit');
-  const [editContent, setEditContent] = useState('');
   const [editFileName, setEditFileName] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editThumbnail, setEditThumbnail] = useState('');
+  const [editTags, setEditTags] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   // 刷新文件列表
@@ -133,13 +140,10 @@ export default function GalleryClient({
     setEditMode('create');
     setSelectedFile(null);
     setEditFileName('');
-    setEditContent(`{
-  "title": "",
-  "description": "",
-  "thumbnail": "",
-  "lastUpdated": "${new Date().toISOString().split('T')[0]}",
-  "tags": []
-}`);
+    setEditTitle('');
+    setEditDescription('');
+    setEditThumbnail('');
+    setEditTags([]);
     setIsEditDialogOpen(true);
   };
 
@@ -153,10 +157,44 @@ export default function GalleryClient({
       setEditMode('edit');
       setSelectedFile(file);
       setEditFileName(file.slug);
-      setEditContent(result.content);
+
+      // Parse JSON content
+      try {
+        const parsed = JSON.parse(result.content);
+        setEditTitle(parsed.title || '');
+        setEditDescription(parsed.description || '');
+        setEditThumbnail(parsed.thumbnail || '');
+        setEditTags(parsed.tags || []);
+      } catch (e) {
+        toast.error('JSON 解析失败');
+        return;
+      }
+
       setIsEditDialogOpen(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '获取文件内容失败');
+    }
+  };
+
+  // 缩略图上传处理
+  const handleThumbnailUpload = async (files: FileList) => {
+    const file = files[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const result = await adminUploadGalleryThumbnail(formData);
+
+      if (!result.success) {
+        throw new Error(result.error || '上传失败');
+      }
+
+      setEditThumbnail(result.url);
+      toast.success(result.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '图片上传失败');
     }
   };
 
@@ -164,6 +202,21 @@ export default function GalleryClient({
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
+      // Generate JSON content from form fields
+      const lastUpdated = new Date().toISOString().split('T')[0];
+
+      const jsonContent = JSON.stringify(
+        {
+          title: editTitle,
+          description: editDescription,
+          thumbnail: editThumbnail,
+          lastUpdated: lastUpdated,
+          tags: editTags,
+        },
+        null,
+        2
+      );
+
       if (editMode === 'create') {
         if (!editFileName.trim()) {
           toast.error('请输入文件名称');
@@ -172,7 +225,7 @@ export default function GalleryClient({
         }
         const result = await adminCreateGalleryFile({
           slug: editFileName.trim(),
-          content: editContent,
+          content: jsonContent,
         });
         if (!result.success) {
           throw new Error(result.error);
@@ -184,7 +237,7 @@ export default function GalleryClient({
         // 更新内容
         const saveResult = await adminUpdateGalleryFile(
           selectedFile.slug,
-          editContent
+          jsonContent
         );
         if (!saveResult.success) {
           throw new Error(saveResult.error);
@@ -209,7 +262,15 @@ export default function GalleryClient({
     } finally {
       setIsSaving(false);
     }
-  }, [selectedFile, editMode, editFileName, editContent]);
+  }, [
+    selectedFile,
+    editMode,
+    editFileName,
+    editTitle,
+    editDescription,
+    editThumbnail,
+    editTags,
+  ]);
 
   // 上传文件（使用 FileUploadTrigger 组件）
   const handleUpload = async (files: FileList) => {
@@ -303,7 +364,7 @@ export default function GalleryClient({
       </AdminPageLayout>
 
       {/* 编辑/新增对话框 */}
-      <EditorDialog
+      <CrudFormDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         title={
@@ -316,13 +377,12 @@ export default function GalleryClient({
             ? '创建新的 Gallery 配置文件'
             : selectedFile?.fileName
         }
-        fileName={editFileName}
-        content={editContent}
-        onFileNameChange={setEditFileName}
-        onContentChange={setEditContent}
-        onSave={handleSave}
-        isSaving={isSaving}
-        saveButtonText={
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
+        isSubmitting={isSaving}
+        submitLabel={
           isSaving
             ? editMode === 'create'
               ? '创建中...'
@@ -331,9 +391,60 @@ export default function GalleryClient({
               ? '创建'
               : '保存'
         }
-        language="json"
-        showFileName={true}
-      />
+      >
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="file-name">文件名</Label>
+            <Input
+              id="file-name"
+              value={editFileName}
+              onChange={(e) => setEditFileName(e.target.value)}
+              placeholder="请输入文件名"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="title">标题</Label>
+            <Input
+              id="title"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="请输入标题"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="description">描述</Label>
+            <textarea
+              id="description"
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="请输入描述"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="thumbnail">缩略图</Label>
+            <div className="flex gap-2">
+              <Input
+                id="thumbnail"
+                value={editThumbnail}
+                onChange={(e) => setEditThumbnail(e.target.value)}
+                placeholder="图片URL"
+              />
+              <FileUploadTrigger
+                id="gallery-thumbnail"
+                accept="image/*"
+                onFileSelect={handleThumbnailUpload}
+              >
+                <ImageIcon className="h-4 w-4" />
+              </FileUploadTrigger>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="tags">标签</Label>
+            <TagPicker value={editTags} onChange={setEditTags} type="gallery" />
+          </div>
+        </div>
+      </CrudFormDialog>
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog

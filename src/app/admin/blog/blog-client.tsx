@@ -9,22 +9,26 @@ import {
   adminGetBlogFiles,
   adminRenameBlogFile,
   adminUpdateBlogFile,
+  adminUploadBlogThumbnail,
   type MdxFile,
 } from '@/actions/admin/blog-actions';
 import { formatDate, formatSize } from '@/utils/utils';
-import { Upload } from 'lucide-react';
+import { Image as ImageIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/shadcn-ui/badge';
+import { Input } from '@/components/shadcn-ui/input';
+import { Label } from '@/components/shadcn-ui/label';
 import {
   AdminPageLayout,
   createAddAction,
   createRefreshAction,
 } from '@/components/admin/admin-page-layout';
+import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
-import { EditorDialog } from '@/components/admin/editor-dialog';
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
+import { TagPicker } from '@/components/shared/tag-picker';
 
 // 表格列定义
 const columns: Column<MdxFile>[] = [
@@ -91,8 +95,13 @@ export default function BlogClient({
   const [isUploading, setIsUploading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState<'create' | 'edit'>('edit');
-  const [editContent, setEditContent] = useState('');
+
   const [editFileName, setEditFileName] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editThumbnail, setEditThumbnail] = useState('');
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [editBody, setEditBody] = useState('');
 
   // 刷新文件列表
   const fetchItems = async () => {
@@ -115,24 +124,54 @@ export default function BlogClient({
     setEditMode('create');
     setSelectedFile(null);
     setEditFileName('');
-    setEditContent(`---
-title: ''
-description: ''
-thumbnail: ''
-lastUpdated: '${new Date().toISOString().split('T')[0]}'
-tags:
-  - 
-  - 
----
-
-`);
+    setEditTitle('');
+    setEditDescription('');
+    setEditThumbnail('');
+    setEditTags([]);
+    setEditBody('');
     setIsEditDialogOpen(true);
+  };
+
+  // 缩略图上传处理
+  const handleThumbnailUpload = async (files: FileList) => {
+    const file = files[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const result = await adminUploadBlogThumbnail(formData);
+
+      if (!result.success) {
+        throw new Error(result.error || '上传失败');
+      }
+
+      setEditThumbnail(result.url);
+      toast.success(result.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '图片上传失败');
+    }
   };
 
   // 保存（新增或编辑）
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
+      // Generate MDX content from form fields
+      const lastUpdated = new Date().toISOString().split('T')[0];
+
+      const mdxContent = `---
+title: '${editTitle}'
+description: '${editDescription}'
+thumbnail: '${editThumbnail}'
+lastUpdated: '${lastUpdated}'
+tags:
+${editTags.map((tag) => `  - '${tag}'`).join('\n')}
+---
+
+${editBody}`;
+
       if (editMode === 'create') {
         if (!editFileName.trim()) {
           toast.error('请输入文件名称');
@@ -141,7 +180,7 @@ tags:
         }
         const result = await adminCreateBlogFile({
           slug: editFileName.trim(),
-          content: editContent,
+          content: mdxContent,
         });
         if (!result.success) {
           throw new Error(result.error);
@@ -149,10 +188,7 @@ tags:
         toast.success('文件创建成功');
       } else {
         if (!selectedFile) return;
-        const result = await adminUpdateBlogFile(
-          selectedFile.slug,
-          editContent
-        );
+        const result = await adminUpdateBlogFile(selectedFile.slug, mdxContent);
 
         if (!result.success) {
           throw new Error(result.error);
@@ -177,7 +213,16 @@ tags:
     } finally {
       setIsSaving(false);
     }
-  }, [selectedFile, editMode, editFileName, editContent]);
+  }, [
+    selectedFile,
+    editMode,
+    editFileName,
+    editTitle,
+    editDescription,
+    editThumbnail,
+    editTags,
+    editBody,
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -191,7 +236,7 @@ tags:
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handleSave, selectedFile, editContent]);
+  }, [handleSave, selectedFile]);
 
   // 编辑文件
   const handleEdit = async (file: MdxFile) => {
@@ -203,7 +248,50 @@ tags:
       setEditMode('edit');
       setSelectedFile(file);
       setEditFileName(file.slug);
-      setEditContent(result.content);
+
+      // Parse MDX frontmatter
+      const frontmatterMatch = result.content.match(/^---\n([\s\S]*?)\n---/);
+      if (frontmatterMatch) {
+        const frontmatter = frontmatterMatch[1];
+        const titleMatch = frontmatter.match(/title:\s*(.*)/);
+        const descriptionMatch = frontmatter.match(/description:\s*(.*)/);
+        const thumbnailMatch = frontmatter.match(/thumbnail:\s*(.*)/);
+        const tagsMatch = frontmatter.match(/tags:\s*([\s\S]*?)(?=$|\n\w)/);
+
+        setEditTitle(
+          titleMatch ? titleMatch[1].trim().replace(/^['"]|['"]$/g, '') : ''
+        );
+        setEditDescription(
+          descriptionMatch
+            ? descriptionMatch[1].trim().replace(/^['"]|['"]$/g, '')
+            : ''
+        );
+        setEditThumbnail(
+          thumbnailMatch
+            ? thumbnailMatch[1].trim().replace(/^['"]|['"]$/g, '')
+            : ''
+        );
+
+        if (tagsMatch) {
+          const tags = tagsMatch[1]
+            .split('\n')
+            .map((line) =>
+              line
+                .trim()
+                .replace(/^\s*-\s*/, '')
+                .replace(/^['"]|['"]$/g, '')
+            )
+            .filter((tag) => tag.length > 0);
+          setEditTags(tags);
+        } else {
+          setEditTags([]);
+        }
+      }
+
+      // Extract body content (after frontmatter)
+      const bodyMatch = result.content.match(/^---[\s\S]*?---\n([\s\S]*)$/);
+      setEditBody(bodyMatch ? bodyMatch[1] : '');
+
       setIsEditDialogOpen(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '获取文件内容失败');
@@ -300,7 +388,7 @@ tags:
       </AdminPageLayout>
 
       {/* 编辑对话框 */}
-      <EditorDialog
+      <CrudFormDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         title={
@@ -310,16 +398,15 @@ tags:
         }
         description={
           editMode === 'create'
-            ? '请输入文件名并编辑内容'
+            ? '请填写文章信息'
             : `文件名：${selectedFile?.fileName}`
         }
-        fileName={editFileName}
-        content={editContent}
-        onFileNameChange={setEditFileName}
-        onContentChange={setEditContent}
-        onSave={handleSave}
-        isSaving={isSaving}
-        saveButtonText={
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
+        isSubmitting={isSaving}
+        submitLabel={
           isSaving
             ? editMode === 'create'
               ? '创建中...'
@@ -328,9 +415,70 @@ tags:
               ? '创建'
               : '保存'
         }
-        language="markdown"
-        showFileName={true}
-      />
+      >
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="file-name">文件名</Label>
+            <Input
+              id="file-name"
+              value={editFileName}
+              onChange={(e) => setEditFileName(e.target.value)}
+              placeholder="请输入文件名"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="title">标题</Label>
+            <Input
+              id="title"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="请输入标题"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="description">描述</Label>
+            <textarea
+              id="description"
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="请输入描述"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="thumbnail">缩略图</Label>
+            <div className="flex gap-2">
+              <Input
+                id="thumbnail"
+                value={editThumbnail}
+                onChange={(e) => setEditThumbnail(e.target.value)}
+                placeholder="图片URL"
+              />
+              <FileUploadTrigger
+                id="blog-thumbnail"
+                accept="image/*"
+                onFileSelect={handleThumbnailUpload}
+              >
+                <ImageIcon className="h-4 w-4" />
+              </FileUploadTrigger>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="tags">标签</Label>
+            <TagPicker value={editTags} onChange={setEditTags} type="blog" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="body">正文内容</Label>
+            <textarea
+              id="body"
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              placeholder="请输入正文内容（Markdown格式）"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[300px] w-full rounded-md border px-3 py-2 font-mono text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+        </div>
+      </CrudFormDialog>
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog

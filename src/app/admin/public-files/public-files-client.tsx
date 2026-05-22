@@ -10,7 +10,6 @@ import {
   renameFile,
 } from '@/actions/admin/file-management';
 import { cachePublicPath } from '@/actions/admin/public-files-actions';
-import { resolveImageSrc } from '@/utils/client-image-utils';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
   ArrowLeft,
@@ -571,7 +570,7 @@ export default function PublicFilesClient({
           <div className="flex justify-center py-4">
             {previewItem && (
               <Image
-                src={resolveImageSrc(previewItem.path)}
+                src={previewItem.path}
                 alt={previewItem.name}
                 className="max-h-[60vh] rounded-lg object-contain"
                 width={400}

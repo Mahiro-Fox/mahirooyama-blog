@@ -6,6 +6,7 @@ import { MapPin, Smile } from 'lucide-react';
 import { motion } from 'motion/react';
 
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface MomentsTimelineProps {
   moments: Moment[];
@@ -66,19 +67,19 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                 {/* 配图 */}
                 {moment.image && (
                   <div className="relative inline-block w-full">
-                    <img
+                    <OptimizedImage
                       src={moment.image.url}
                       width={moment.image.width}
                       height={moment.image.height}
                       alt="配图"
                       // 前两个数据中高度最大的那个设置为eager，其他的设置为lazy，优化LCP
-                      loading={
+                      priority={
                         Math.max(
                           getRealImageHeight(moments[0]),
                           getRealImageHeight(moments[1])
                         ) === getRealImageHeight(moment)
-                          ? 'eager'
-                          : 'lazy'
+                          ? true
+                          : false
                       }
                       className="max-h-48 w-full max-w-xs rounded-lg object-cover"
                     />

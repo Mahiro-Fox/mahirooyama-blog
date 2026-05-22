@@ -2,9 +2,14 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { BLOG_DIR } from '@/constant/dir';
-import { checkFileConflict, fileExists, validateSlug } from '@/utils/file-utils';
+import { BLOG_DIR, UPLOADS_DIR } from '@/constant/dir';
+import {
+  checkFileConflict,
+  fileExists,
+  validateSlug,
+} from '@/utils/file-utils';
 import matter from 'gray-matter';
+import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -213,5 +218,71 @@ export async function adminDeleteBlogFile(
   } catch (error) {
     console.error('删除 MDX 文件失败:', error);
     return { success: false, error: '删除失败，文件可能不存在' };
+  }
+}
+
+// POST - 上传博客缩略图
+export async function adminUploadBlogThumbnail(
+  formData: FormData
+): Promise<
+  | { success: true; url: string; message: string }
+  | { success: false; error: string }
+> {
+  const permissionCheck = await requirePermission('blog:create');
+  if (!permissionCheck.allowed) {
+    return { success: false, error: 'unauthorized' };
+  }
+
+  try {
+    // 1. 解析上传的文件
+    const file = formData.get('image') as File | null;
+
+    if (!file) {
+      return { success: false, error: '未提供图片文件' };
+    }
+
+    // 2. 验证文件类型
+    if (!file.type.startsWith('image/')) {
+      return { success: false, error: '只允许上传图片文件' };
+    }
+
+    // 3. 验证文件大小 (最大 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return { success: false, error: '图片大小不能超过 5MB' };
+    }
+
+    // 4. 确保上传目录存在
+    const blogUploadDir = path.join(UPLOADS_DIR, 'blog');
+    try {
+      await fs.access(blogUploadDir);
+    } catch {
+      await fs.mkdir(blogUploadDir, { recursive: true });
+    }
+
+    // 5. 读取文件并处理
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // 6. 生成唯一文件名
+    const timestamp = Date.now();
+    const originalName = file.name.replace(/\.[^/.]+$/, '');
+    const fileName = `${originalName}_${timestamp}.webp`;
+    const filePath = path.join(blogUploadDir, fileName);
+
+    // 7. 使用 sharp 压缩并转换为 WebP
+    await sharp(buffer).webp({ quality: 85 }).toFile(filePath);
+
+    // 8. 返回图片URL
+    const imageUrl = `/uploads/blog/${fileName}`;
+    return {
+      success: true,
+      url: imageUrl,
+      message: '图片上传成功',
+    };
+  } catch (error) {
+    console.error('博客缩略图上传失败:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : '图片上传失败';
+    return { success: false, error: errorMessage };
   }
 }

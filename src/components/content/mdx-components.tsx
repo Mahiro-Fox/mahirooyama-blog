@@ -1,4 +1,3 @@
-import { resolveImageSrc } from '@/utils/client-image-utils';
 import { cn } from '@/utils/utils';
 
 import { Button } from '@/components/shadcn-ui/button';
@@ -103,13 +102,12 @@ export const mdxComponents = {
   ),
   img: ({ className, alt, src, ...props }: React.ComponentProps<'img'>) => {
     const srcStr = typeof src === 'string' ? src : '';
-    const resolvedSrc = resolveImageSrc(srcStr);
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         className={cn('rounded-md', className)}
         alt={alt}
-        src={resolvedSrc}
+        src={srcStr}
         {...props}
       />
     );
