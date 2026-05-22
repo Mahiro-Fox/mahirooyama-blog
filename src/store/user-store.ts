@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import { DATA_DIR, USERS_FILE } from '@/constant';
-import bcrypt from 'bcryptjs';
 import { ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
+import bcrypt from 'bcryptjs';
 
 // 用户角色类型
 export type UserRole = 'super_admin' | 'user';
@@ -107,12 +107,15 @@ async function ensureDataFile(): Promise<void> {
   const defaultAdmin: User = {
     id: crypto.randomUUID(),
     username: 'admin',
-    avatar: '/images/avatar/default-avatar.webp',
+    avatar: '/uploads/images/avatar/default-avatar.webp',
     passwordHash: await bcrypt.hash('admin123', 10),
     role: 'super_admin',
     lastUpdated: new Date().toISOString(),
   };
-  await ensureFileInitialized(USERS_FILE, JSON.stringify([defaultAdmin], null, 2));
+  await ensureFileInitialized(
+    USERS_FILE,
+    JSON.stringify([defaultAdmin], null, 2)
+  );
 }
 
 // 读取所有用户
@@ -176,7 +179,7 @@ export const userStore = {
     const newUser: User = {
       id: crypto.randomUUID(),
       username: request.username,
-      avatar: '/images/avatar/default-avatar.webp',
+      avatar: '/uploads/images/avatar/default-avatar.webp',
       passwordHash: await bcrypt.hash(request.password, 10),
       role: request.role,
       lastUpdated: new Date().toISOString(),

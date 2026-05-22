@@ -3,7 +3,7 @@
 import React from 'react';
 
 import { siteConfig } from '@/config/config';
-import { GalleryImageItem } from '@/lib/public-gallery';
+import { PhotoItem } from '@/lib/photos';
 import { TextAnimate } from '@/components/shadcn-ui/text-animate';
 import { FadeCarousel } from '@/components/shared/fade-carousel';
 import {
@@ -12,7 +12,7 @@ import {
 } from '@/components/shared/optimized-image';
 
 interface HomeBannerImage {
-  images: GalleryImageItem[];
+  images: PhotoItem[];
   initialIndex?: number;
 }
 

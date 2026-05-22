@@ -5,7 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { PUBLIC_DIR } from '@/constant/dir';
+import { UPLOADS_DIR } from '@/constant/dir';
 import sharp from 'sharp';
 
 /**
@@ -17,7 +17,7 @@ export async function generateBlurDataURL(
   width: number = 10
 ): Promise<string | null> {
   try {
-    const fullPath = path.join(PUBLIC_DIR, imagePath);
+    const fullPath = path.join(UPLOADS_DIR, imagePath);
 
     if (!fs.existsSync(fullPath)) {
       return null;
@@ -42,7 +42,7 @@ export async function getBlurPlaceholder(
 ): Promise<string | null> {
   try {
     const blurPath = path.join(
-      PUBLIC_DIR,
+      UPLOADS_DIR,
       path.dirname(imagePath),
       'thumbs',
       'blur',
@@ -82,7 +82,7 @@ export function hasThumbnail(
   format: 'webp' | 'avif' = 'webp'
 ): boolean {
   const thumbPath = path.join(
-    PUBLIC_DIR,
+    UPLOADS_DIR,
     getThumbnailPath(originalPath, width, format)
   );
   return fs.existsSync(thumbPath);
@@ -95,7 +95,7 @@ export function hasThumbnail(
  */
 export async function isPortraitImage(imagePath: string): Promise<boolean> {
   try {
-    const fullPath = path.join(PUBLIC_DIR, imagePath);
+    const fullPath = path.join(UPLOADS_DIR, imagePath);
 
     if (!fs.existsSync(fullPath)) {
       return false;

@@ -286,7 +286,7 @@ export async function adminUploadGalleryThumbnail(
     }
 
     // 4. 确保上传目录存在
-    const galleryUploadDir = path.join(UPLOADS_DIR, 'gallery');
+    const galleryUploadDir = path.join(UPLOADS_DIR, 'images/gallery');
     try {
       await fs.access(galleryUploadDir);
     } catch {
@@ -307,7 +307,7 @@ export async function adminUploadGalleryThumbnail(
     await sharp(buffer).webp({ quality: 85 }).toFile(filePath);
 
     // 8. 返回图片URL
-    const imageUrl = `/uploads/gallery/${fileName}`;
+    const imageUrl = `/uploads/images/gallery/${fileName}`;
     return {
       success: true,
       url: imageUrl,

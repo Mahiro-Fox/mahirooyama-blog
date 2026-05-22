@@ -252,7 +252,7 @@ export async function adminUploadBlogThumbnail(
     }
 
     // 4. 确保上传目录存在
-    const blogUploadDir = path.join(UPLOADS_DIR, 'blog');
+    const blogUploadDir = path.join(UPLOADS_DIR, 'images/blog');
     try {
       await fs.access(blogUploadDir);
     } catch {
@@ -273,7 +273,7 @@ export async function adminUploadBlogThumbnail(
     await sharp(buffer).webp({ quality: 85 }).toFile(filePath);
 
     // 8. 返回图片URL
-    const imageUrl = `/uploads/blog/${fileName}`;
+    const imageUrl = `/uploads/images/blog/${fileName}`;
     return {
       success: true,
       url: imageUrl,

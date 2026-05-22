@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getPhotos } from '@/actions/photos';
+import { getPhotosAction } from '@/actions/photos';
 
-import { GalleryImageItem } from '@/lib/public-gallery';
+import { PhotoItem } from '@/lib/photos';
 
 interface UsePhotosOptions {
   initialPage?: number;
@@ -13,7 +13,7 @@ interface UsePhotosOptions {
 export function usePhotos(options: UsePhotosOptions = {}) {
   const { initialPage = 1, limit = 12 } = options;
 
-  const [images, setImages] = useState<GalleryImageItem[]>([]);
+  const [images, setImages] = useState<PhotoItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export function usePhotos(options: UsePhotosOptions = {}) {
       setError(null);
 
       try {
-        const data = await getPhotos(targetPage, limit);
+        const data = await getPhotosAction(targetPage, limit);
 
         if (isLoadMore) {
           setImages((prev) => [...prev, ...data.images]);

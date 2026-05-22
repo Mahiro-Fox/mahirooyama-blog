@@ -1,12 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import { COMPRESSION_CONFIG } from '@/config';
-import sharp from 'sharp';
 import { PHOTO_DIR } from '@/constant';
+import sharp from 'sharp';
 
 const compressedDir = path.join(PHOTO_DIR, '.compressed');
 
-export interface GalleryImageItem {
+export interface PhotoItem {
   id: string;
   src: string;
   filename: string;
@@ -84,10 +84,10 @@ async function getCompressedImagePath(
 }
 
 /**
- * 获取 public/images/gallery 目录下的所有图片
+ * 获取 uploads/images/photo 目录下的所有图片
  * 解析图片尺寸并计算宽高比，自动返回压缩版本
  */
-export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
+export async function getPhotos(): Promise<PhotoItem[]> {
   try {
     await fs.promises.access(PHOTO_DIR);
   } catch {
@@ -120,8 +120,8 @@ export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
         // 返回压缩版本的路径（相对于 public）
         const isCompressed = compressedPath.includes('.compressed');
         const src = isCompressed
-          ? `/images/gallery/.compressed/${filename}`
-          : `/images/gallery/${filename}`;
+          ? `${PHOTO_DIR}/.compressed/${filename}`
+          : `${PHOTO_DIR}/${filename}`;
 
         return {
           id,
@@ -139,5 +139,5 @@ export async function getPublicGalleryImages(): Promise<GalleryImageItem[]> {
     })
   );
 
-  return images.filter((img): img is GalleryImageItem => img !== null);
+  return images.filter((img): img is PhotoItem => img !== null);
 }

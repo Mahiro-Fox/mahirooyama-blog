@@ -28,7 +28,7 @@ export const siteConfig = {
   name: 'mahirooyama-blog',
   description: "this is mahirooyama's blog, welcome to visit!",
   url: 'https://mahirooyama.cn/',
-  ogImage: 'https://mahirooyama.cn/images/avatar/mahirooyama.webp',
+  ogImage: 'https://mahirooyama.cn/uploads/images/avatar/mahirooyama.webp',
   links: {
     twitter: 'https://twitter.com/Mahiro___Oyama',
     github: 'https://github.com/Misterwanghaoyu/mahirooyama-blog',

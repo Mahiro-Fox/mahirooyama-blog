@@ -2,16 +2,16 @@
 
 import { cache } from 'react';
 
-import { GalleryImageItem, getPublicGalleryImages } from '@/lib/public-gallery';
+import { getPhotos, PhotoItem } from '@/lib/photos';
 
 export const getHomeBannerImages = cache(
-  async (): Promise<GalleryImageItem[] | null> => {
-    const galleryImages = await getPublicGalleryImages();
+  async (): Promise<PhotoItem[] | null> => {
+    const photos = await getPhotos();
 
-    if (!galleryImages.length) {
+    if (!photos.length) {
       return null;
     }
-    const landscapeImages = galleryImages.filter((image) => image.ratio > 1.5);
+    const landscapeImages = photos.filter((photo) => photo.ratio > 1.5);
     return landscapeImages;
   }
 );

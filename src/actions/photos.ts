@@ -1,9 +1,9 @@
 'use server';
 
-import { GalleryImageItem, getPublicGalleryImages } from '@/lib/public-gallery';
+import { getPhotos, PhotoItem } from '@/lib/photos';
 
 interface PhotosResponse {
-  images: GalleryImageItem[];
+  images: PhotoItem[];
   pagination: {
     page: number;
     limit: number;
@@ -13,7 +13,7 @@ interface PhotosResponse {
   };
 }
 
-export async function getPhotos(
+export async function getPhotosAction(
   page: number = 1,
   limit: number = 12
 ): Promise<PhotosResponse> {
@@ -21,7 +21,7 @@ export async function getPhotos(
     throw new Error('Invalid pagination parameters');
   }
 
-  const allImages = await getPublicGalleryImages();
+  const allImages = await getPhotos();
 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;

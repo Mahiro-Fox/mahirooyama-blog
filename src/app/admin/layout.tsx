@@ -46,7 +46,7 @@ export default async function AdminLayout({
           id: String(currentUser.userId),
           username: String(currentUser.username),
           avatar: String(
-            currentUser.avatar || '/images/avatar/default-avatar.webp'
+            currentUser.avatar || '/uploads/images/avatar/default-avatar.webp'
           ),
           role: currentUser.role as UserRole,
         }}

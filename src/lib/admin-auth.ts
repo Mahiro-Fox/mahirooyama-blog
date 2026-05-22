@@ -37,7 +37,7 @@ export async function getCurrentAdminUser(): Promise<CurrentAdminUser | null> {
     return {
       id: String(p.userId),
       username: String(p.username),
-      avatar: String(p.avatar || '/images/avatar/default-avatar.webp'),
+      avatar: String(p.avatar || '/uploads/images/avatar/default-avatar.webp'),
       role: String(p.role || 'user'),
     };
   } catch {
