@@ -68,12 +68,10 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                 {moment.image && (
                   <div className="relative inline-block w-full">
                     <OptimizedImage
+                      previewable
                       src={moment.image.url}
-                      width={moment.image.width}
-                      height={moment.image.height}
-                      fill
                       alt="配图"
-                      // 前两个数据中高度最大的那个设置为eager，其他的设置为lazy，优化LCP
+                      // 优化LCP
                       priority={
                         Math.max(
                           getRealImageHeight(moments[0]),

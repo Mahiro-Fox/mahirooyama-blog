@@ -25,6 +25,7 @@ import {
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 export default function MomentsClient({
   initialMoments,
@@ -223,22 +224,21 @@ export default function MomentsClient({
                     </div>
                     <p className="text-sm">{moment.content}</p>
                     {moment.image && (
-                      <div className="relative inline-block">
-                        <img
+                      <div className="relative inline-block w-full">
+                        <OptimizedImage
+                          previewable
                           src={moment.image.url}
-                          width={moment.image.width}
-                          height={moment.image.height}
-                          // 前两个数据中高度最大的那个设置为eager，其他的设置为lazy，优化LCP
-                          loading={
+                          alt="配图"
+                          // 优化LCP
+                          priority={
                             Math.max(
                               getRealImageHeight(moments[0]),
                               getRealImageHeight(moments[1])
                             ) === getRealImageHeight(moment)
-                              ? 'eager'
-                              : 'lazy'
+                              ? true
+                              : false
                           }
-                          alt="配图"
-                          className="max-h-48 max-w-xs rounded-lg object-cover"
+                          className="max-h-48 w-full max-w-xs rounded-lg object-cover"
                         />
                       </div>
                     )}
