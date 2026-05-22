@@ -124,7 +124,7 @@ export async function adminUploadAvatar(
     }
 
     // 11. 更新用户头像路径
-    const avatarPath = `/image/avatar/${fileName}`;
+    const avatarPath = `/uploads/images/avatar/${fileName}`;
     await userStore.update(userId, { avatar: avatarPath });
 
     return {

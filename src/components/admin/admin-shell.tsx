@@ -25,6 +25,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface CurrentUser {
   id: string;
@@ -208,7 +209,7 @@ export default function AdminShell({
         {/* 用户信息 - 侧边栏底部 */}
         <div className="border-t p-4">
           <div className="flex items-center gap-3">
-            <Image
+            <OptimizedImage
               src={currentUser.avatar}
               alt={currentUser.username}
               className="h-10 w-10 rounded-full object-cover"
@@ -300,7 +301,7 @@ export default function AdminShell({
               {/* 用户信息 */}
               <SheetFooter className="border-t p-4">
                 <div className="mb-3 flex items-center gap-3">
-                  <Image
+                  <OptimizedImage
                     src={currentUser.avatar}
                     alt={currentUser.username}
                     className="h-10 w-10 rounded-full object-cover"
@@ -349,7 +350,7 @@ export default function AdminShell({
                 onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
                 className="hover:bg-muted flex items-center gap-3 rounded-lg transition-colors"
               >
-                <Image
+                <OptimizedImage
                   src={currentUser.avatar}
                   alt={currentUser.username}
                   className="h-8 w-8 rounded-full object-cover"
