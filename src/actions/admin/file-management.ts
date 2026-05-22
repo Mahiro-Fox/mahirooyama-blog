@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { PUBLIC_DIR } from '@/constant/dir';
+import { UPLOADS_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
   ensureFileInitialized,
@@ -21,12 +21,12 @@ interface FileItem {
   extension?: string;
 }
 
-export async function getPublicFiles(relativePath: string = '') {
+export async function adminGetUploadFiles(relativePath: string = '') {
   try {
-    const targetDir = path.join(PUBLIC_DIR, relativePath);
+    const targetDir = path.join(UPLOADS_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(targetDir, PUBLIC_DIR)) {
+    if (!isPathSafe(targetDir, UPLOADS_DIR)) {
       return { success: false, error: '非法路径' };
     }
 
@@ -47,9 +47,9 @@ export async function getPublicFiles(relativePath: string = '') {
         const fullPath = path.join(targetDir, entry.name);
         const stats = await fs.stat(fullPath);
 
-        // 构建相对 public 的路径
+        // 构建相对 uploads 的路径
         const itemRelativePath = path.join(relativePath, entry.name);
-        const webPath = '/' + itemRelativePath.replace(/\\/g, '/');
+        const webPath = '/uploads/' + itemRelativePath.replace(/\\/g, '/');
 
         return {
           name: entry.name,
@@ -102,17 +102,17 @@ export async function createFolder(relativePath: string, folderName: string) {
       return { success: false, error: '文件夹名称不能为空' };
     }
 
-    const targetDir = path.join(PUBLIC_DIR, relativePath);
+    const targetDir = path.join(UPLOADS_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(targetDir, PUBLIC_DIR)) {
+    if (!isPathSafe(targetDir, UPLOADS_DIR)) {
       return { success: false, error: '非法路径' };
     }
 
     const newFolderPath = path.join(targetDir, folderName.trim());
 
     // 安全检查
-    if (!isPathSafe(newFolderPath, PUBLIC_DIR)) {
+    if (!isPathSafe(newFolderPath, UPLOADS_DIR)) {
       return { success: false, error: '非法文件夹名称' };
     }
 
@@ -143,10 +143,10 @@ export async function deleteFile(filePath: string) {
       return { success: false, error: '权限不足' };
     }
 
-    const fullPath = path.join(PUBLIC_DIR, filePath.replace(/^\//, ''));
+    const fullPath = path.join(UPLOADS_DIR, filePath.replace(/^\//, ''));
 
     // 安全检查
-    if (!isPathSafe(fullPath, PUBLIC_DIR)) {
+    if (!isPathSafe(fullPath, UPLOADS_DIR)) {
       return { success: false, error: '非法路径' };
     }
 
@@ -183,14 +183,14 @@ export async function renameFile(oldPath: string, newName: string) {
       return { success: false, error: '新名称不能为空' };
     }
 
-    const fullOldPath = path.join(PUBLIC_DIR, oldPath.replace(/^\//, ''));
+    const fullOldPath = path.join(UPLOADS_DIR, oldPath.replace(/^\//, ''));
     const dirPath = path.dirname(fullOldPath);
     const fullNewPath = path.join(dirPath, newName.trim());
 
     // 安全检查
     if (
-      !isPathSafe(fullOldPath, PUBLIC_DIR) ||
-      !isPathSafe(fullNewPath, PUBLIC_DIR)
+      !isPathSafe(fullOldPath, UPLOADS_DIR) ||
+      !isPathSafe(fullNewPath, UPLOADS_DIR)
     ) {
       return { success: false, error: '非法路径' };
     }
@@ -262,7 +262,7 @@ export async function convertImages() {
                 })
                 .toFile(webpPath);
 
-              convertedFiles.push(path.relative(PUBLIC_DIR, webpPath));
+              convertedFiles.push(path.relative(UPLOADS_DIR, webpPath));
             } catch (error) {
               console.error(`转换失败: ${entry.name}`, error);
               errorFiles.push(entry.name);
@@ -272,7 +272,7 @@ export async function convertImages() {
       }
     }
 
-    await processDirectory(PUBLIC_DIR);
+    await processDirectory(UPLOADS_DIR);
 
     return {
       success: true,

@@ -1,22 +1,22 @@
 import { redirect } from 'next/navigation';
-import { adminGetPublicFiles } from '@/actions/admin/public-files-actions';
+import { adminGetUploadFiles } from '@/actions/admin/upload-files-actions';
 
 import { requirePermission } from '@/lib/permissions';
 
-import PublicFilesClient from './public-files-client';
+import UploadFilesClient from './upload-files-client';
 
-export default async function PublicFilesAdminPage() {
+export default async function UploadFilesAdminPage() {
   // Check permission
   const permissionCheck = await requirePermission('files:read');
   if (!permissionCheck.allowed) {
     redirect('/admin?toast=unauthorized&message=无权限访问文件管理');
   }
 
-  // 调用adminGetPublicFiles，自动从缓存中获取路径
-  const result = await adminGetPublicFiles();
+  // 调用adminGetUploadFiles，自动从缓存中获取路径
+  const result = await adminGetUploadFiles();
   const initialData = result.success
     ? result.data
     : { items: [], currentPath: '', breadcrumb: [] };
 
-  return <PublicFilesClient initialData={initialData} />;
+  return <UploadFilesClient initialData={initialData} />;
 }

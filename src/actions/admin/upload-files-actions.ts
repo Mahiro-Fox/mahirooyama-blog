@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { PUBLIC_DIR } from '@/constant/dir';
+import { UPLOADS_DIR } from '@/constant/dir';
 import { pathCacheStore } from '@/store/path-cache-store';
 import { isPathSafe } from '@/utils/file-utils';
 
@@ -24,7 +24,7 @@ export interface FileListResponse {
 }
 
 // GET - 获取文件列表
-export async function adminGetPublicFiles(
+export async function adminGetUploadFiles(
   relativePath: string = ''
 ): Promise<
   { success: true; data: FileListResponse } | { success: false; error: string }
@@ -43,10 +43,10 @@ export async function adminGetPublicFiles(
   }
 
   try {
-    const targetDir = path.join(PUBLIC_DIR, relativePath);
+    const targetDir = path.join(UPLOADS_DIR, relativePath);
 
     // 安全检查
-    if (!isPathSafe(targetDir, PUBLIC_DIR)) {
+    if (!isPathSafe(targetDir, UPLOADS_DIR)) {
       return { success: false, error: '非法路径' };
     }
 
@@ -67,7 +67,7 @@ export async function adminGetPublicFiles(
         const fullPath = path.join(targetDir, entry.name);
         const stats = await fs.stat(fullPath);
 
-        // 构建相对 public 的路径
+        // 构建相对 uploads 的路径
         const itemRelativePath = path.join(relativePath, entry.name);
         const webPath = '/' + itemRelativePath.replace(/\\/g, '/');
 
@@ -111,7 +111,7 @@ export async function adminGetPublicFiles(
 }
 
 // 缓存用户当前路径
-export async function cachePublicPath(
+export async function cacheUploadPath(
   path: string
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {

@@ -6,10 +6,10 @@ import {
   convertImages,
   createFolder,
   deleteFile,
-  getPublicFiles,
+  adminGetUploadFiles,
   renameFile,
 } from '@/actions/admin/file-management';
-import { cachePublicPath } from '@/actions/admin/public-files-actions';
+import { cacheUploadPath } from '@/actions/admin/upload-files-actions';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
   ArrowLeft,
@@ -126,7 +126,7 @@ export default function PublicFilesClient({
   const fetchFiles = useCallback(async (path: string = '') => {
     try {
       setLoading(true);
-      const result = await getPublicFiles(path);
+      const result = await adminGetUploadFiles(path);
       if (result.success && result.data) {
         setData(result.data);
       } else {
@@ -151,7 +151,7 @@ export default function PublicFilesClient({
   // 缓存当前路径到服务端
   useEffect(() => {
     const cachePath = async () => {
-      const result = await cachePublicPath(currentPath);
+      const result = await cacheUploadPath(currentPath);
       if (!result.success) {
         console.error('缓存路径失败:', result.error);
       }
@@ -226,7 +226,7 @@ export default function PublicFilesClient({
       }
 
       const response = await fetch(
-        `/api/public-files?path=${encodeURIComponent(currentPath)}`,
+        `/api/upload-files?path=${encodeURIComponent(currentPath)}`,
         {
           method: 'POST',
           body: formData,
@@ -348,7 +348,7 @@ export default function PublicFilesClient({
       if (isImage(item)) {
         if (item.size <= 50 * 1024) {
           return (
-            <Image src={item.path} alt={item.name} width={32} height={32} />
+            <img src={item.path} alt={item.name} width={32} height={32} />
           );
         } else {
           return <p>图片过大，请点击预览按钮进行预览</p>;
@@ -386,7 +386,7 @@ export default function PublicFilesClient({
                       onClick={() => setCurrentPath('')}
                       className="cursor-pointer"
                     >
-                      public
+                      uploads
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   {data?.breadcrumb.map((part, index) => (

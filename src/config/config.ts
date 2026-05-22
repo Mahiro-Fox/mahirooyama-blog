@@ -94,12 +94,12 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     description: '以瀑布流形式展示 public/images/gallery 目录下的图片。',
   },
   {
-    name: 'PublicFiles',
-    adminHref: '/admin/public-files',
-    label: 'Public 文件管理',
-    title: '管理 Public 文件夹中的图片',
+    name: 'UploadFiles',
+    adminHref: '/admin/upload-files',
+    label: 'Upload 文件管理',
+    title: '管理 Upload 文件夹中的文件',
     icon: FolderOpen,
-    description: '上传、删除、重命名 public/images 目录下的图片文件。',
+    description: '上传、删除、重命名 uploads 目录下的文件。',
   },
   {
     name: 'UserManagement',
