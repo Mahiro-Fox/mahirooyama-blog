@@ -342,6 +342,24 @@ export default function PublicFilesClient({
     }
   };
 
+  const Thumbnail = ({ item }: { item: FileItem }) => {
+    if (item.type === 'directory') {
+      return <Folder className="h-6 w-6 text-blue-500" />;
+    } else {
+      if (isImage(item)) {
+        if (item.size <= 50 * 1024) {
+          return (
+            <Image src={item.path} alt={item.name} width={32} height={32} />
+          );
+        } else {
+          return <p>图片过大，请点击预览按钮进行预览</p>;
+        }
+      } else {
+        return <FileIcon className="h-6 w-6 text-gray-500" />;
+      }
+    }
+  };
+
   const items = data?.items || [];
 
   return (
@@ -474,13 +492,7 @@ export default function PublicFilesClient({
                     }
                   >
                     <TableCell>
-                      {item.type === 'directory' ? (
-                        <Folder className="h-6 w-6 text-blue-500" />
-                      ) : isImage(item) ? (
-                        <p>不展示预览，请点击预览按钮进行预览</p>
-                      ) : (
-                        <FileIcon className="h-6 w-6 text-gray-500" />
-                      )}
+                      <Thumbnail item={item} />
                     </TableCell>
                     <TableCell className="max-w-20 overflow-hidden font-medium text-ellipsis">
                       {item.name}
