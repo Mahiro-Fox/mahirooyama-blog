@@ -1,10 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { PHOTO_DIR } from '@/constant';
-import { compressImage } from '@/utils/image-utils';
+import { processAndSaveImage } from '@/utils/image-utils';
 import sharp from 'sharp';
-
-const compressedDir = path.join(PHOTO_DIR, '.compressed');
 
 export interface PhotoItem {
   id: string;
@@ -14,58 +12,6 @@ export interface PhotoItem {
   height: number;
   ratio: number;
   alt: string;
-}
-
-/**
- * 确保压缩目录存在
- */
-async function ensureCompressedDir(): Promise<void> {
-  try {
-    await fs.promises.access(compressedDir);
-  } catch {
-    await fs.promises.mkdir(compressedDir, { recursive: true });
-  }
-}
-
-/**
- * 获取压缩后的图片路径
- * 如果压缩版本不存在，则创建
- */
-async function getCompressedImagePath(
-  originalPath: string,
-  filename: string
-): Promise<string> {
-  await ensureCompressedDir();
-
-  const compressedFilename = filename;
-  const compressedPath = path.join(compressedDir, compressedFilename);
-
-  // 检查压缩版本是否存在且比原文件新
-  try {
-    const [origStat, compressedStat] = await Promise.all([
-      fs.promises.stat(originalPath),
-      fs.promises.stat(compressedPath),
-    ]);
-
-    if (compressedStat.mtime >= origStat.mtime) {
-      return compressedPath;
-    }
-  } catch {
-    // 压缩文件不存在，继续创建
-  }
-
-  // 创建压缩版本
-  try {
-    const buffer = await fs.promises.readFile(originalPath);
-    const ext = path.extname(originalPath).toLowerCase();
-    const compressedBuffer = await compressImage(buffer, ext);
-    await fs.promises.writeFile(compressedPath, compressedBuffer);
-    return compressedPath;
-  } catch (error) {
-    console.error(`压缩图片失败 ${filename}:`, error);
-    // 压缩失败返回原路径
-    return originalPath;
-  }
 }
 
 /**
@@ -93,20 +39,12 @@ export async function getPhotos(): Promise<PhotoItem[]> {
       const id = path.basename(filename, path.extname(filename));
 
       try {
-        // 获取压缩版本路径
-        const compressedPath = await getCompressedImagePath(filePath, filename);
-
-        // 从压缩版本读取元数据
-        const metadata = await sharp(compressedPath).metadata();
+        const metadata = await sharp(filePath).metadata();
         const width = metadata.width || 0;
         const height = metadata.height || 0;
         const ratio = width > 0 && height > 0 ? width / height : 1;
 
-        // 返回压缩版本的路径（相对于 uploads）
-        const isCompressed = compressedPath.includes('.compressed');
-        const src = isCompressed
-          ? `/uploads/images/gallery/.compressed/${filename}`
-          : `/uploads/images/gallery/${filename}`;
+        const src = `/uploads/images/gallery/${filename}`
 
         return {
           id,

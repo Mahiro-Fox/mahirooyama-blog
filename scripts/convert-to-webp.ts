@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { formatSize } from '@/utils/utils';
-import { compressImage } from '@/utils/image-utils';
+import { processAndSaveImage } from '@/utils/image-utils';
 
 // 获取脚本所在目录，确保路径正确
 const __filename = fileURLToPath(import.meta.url);
@@ -35,11 +35,13 @@ async function convertToWebp(
     // 确保输出目录存在
     await fs.mkdir(path.dirname(targetPath), { recursive: true });
 
-    // 使用 compressImage 转换
+    // 使用 processAndSaveImage 转换
     const buffer = await fs.readFile(filePath);
-    const ext = path.extname(filePath).toLowerCase();
-    const compressedBuffer = await compressImage(buffer, ext);
-    await fs.writeFile(targetPath, compressedBuffer);
+    const compressedBuffer = await processAndSaveImage(buffer, {
+      dir: OUTPUT_DIR,
+      fileName: outputFile,
+    });
+    await fs.writeFile(targetPath, compressedBuffer.url);
 
     // 验证输出文件
     const outputStats = await fs.stat(targetPath);

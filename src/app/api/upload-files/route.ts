@@ -5,12 +5,12 @@ import { UPLOADS_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
   ensureDirectory,
-  ensureFileInitialized,
   isPathSafe,
 } from '@/utils/file-utils';
-import { compressImage } from '@/utils/image-utils';
+import { processAndSaveImage } from '@/utils/image-utils';
 
 import { requirePermission } from '@/lib/permissions';
+import sharp from 'sharp';
 
 // 上传文件到指定目录（需要 files:upload 权限）
 export async function POST(request: NextRequest) {
@@ -70,9 +70,7 @@ export async function POST(request: NextRequest) {
             const webpPath = path.join(targetDir, webpName);
 
             // 转换图片为 WebP
-            const compressedBuffer = await compressImage(buffer, ext);
-            await fs.writeFile(webpPath, compressedBuffer);
-
+            await sharp(buffer).webp({quality:50}).toFile(webpPath);
             const webpRelativePath = path.join(relativePath, webpName);
             const webpWebPath = '/uploads/' + webpRelativePath.replace(/\\/g, '/');
 

@@ -11,7 +11,7 @@ import {
   checkFileConflict,
   ensureDirectory,
 } from '@/utils/file-utils';
-import { compressImage } from '@/utils/image-utils';
+import { processAndSaveImage } from '@/utils/image-utils';
 
 export interface FileItem {
   name: string;
@@ -308,12 +308,13 @@ export async function convertImages() {
                 // 不存在，继续转换
               }
 
-              // 转换图片为 WebP
+              // 转换图片为 WebP 格式
               const buffer = await fs.readFile(fullPath);
-              const compressedBuffer = await compressImage(buffer, ext);
-              await fs.writeFile(webpPath, compressedBuffer);
-
-              convertedFiles.push(path.relative(UPLOADS_DIR, webpPath));
+              const compressedBuffer = await processAndSaveImage(buffer, {
+                dir: dirPath,
+                fileName: webpName,
+              });
+              convertedFiles.push(compressedBuffer.url);
             } catch (error) {
               console.error(`转换失败: ${entry.name}`, error);
               errorFiles.push(entry.name);

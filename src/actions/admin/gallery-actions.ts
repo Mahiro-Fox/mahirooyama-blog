@@ -2,11 +2,10 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { GALLERY_DIR, UPLOADS_DIR } from '@/constant/dir';
+import { GALLERY_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
   ensureDirectory,
-  ensureFileInitialized,
   fileExists,
   validateSlug,
 } from '@/utils/file-utils';

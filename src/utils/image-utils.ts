@@ -134,7 +134,7 @@ export async function processAndSaveImage(
   const {
     dir,
     fileName,
-    quality = 85,
+    quality = 50,
     width,
     height,
     fit = 'cover',
@@ -176,87 +176,4 @@ export async function processAndSaveImage(
     height: info.height,
     size: info.size,
   };
-}
-
-/**
- * 压缩图片到 2MB 以下
- * 策略：先降低质量，如果仍然超过限制则降低尺寸
- */
-export async function compressImage(buffer: Buffer, ext: string): Promise<Buffer> {
-  const image = sharp(buffer);
-  const metadata = await image.metadata();
-
-  // 如果无法获取元数据，直接返回原图
-  if (!metadata.width || !metadata.height) {
-    return buffer;
-  }
-
-  // 检查当前尺寸
-  let currentBuffer = buffer;
-  let quality = 80;
-  let width = metadata.width;
-  let height = metadata.height;
-
-  // 循环压缩直到小于 100kb
-  while (currentBuffer.length > COMPRESSED_MAX_IMAGE_FILE_SIZE) {
-    // 先尝试降低质量
-    if (quality > 30) {
-      quality -= 10;
-      if (ext === '.jpg' || ext === '.jpeg') {
-        currentBuffer = await sharp(buffer)
-          .resize(width, height)
-          .jpeg({ quality, progressive: true })
-          .toBuffer();
-      } else if (ext === '.png') {
-        currentBuffer = await sharp(buffer)
-          .resize(width, height)
-          .png({ quality, compressionLevel: 9 })
-          .toBuffer();
-      } else if (ext === '.webp') {
-        currentBuffer = await sharp(buffer)
-          .resize(width, height)
-          .webp({ quality, effort: 6 })
-          .toBuffer();
-      } else if (ext === '.avif') {
-        currentBuffer = await sharp(buffer)
-          .resize(width, height)
-          .avif({ quality, effort: 4 })
-          .toBuffer();
-      }
-    } else {
-      // 质量降到 30 还超，开始降低尺寸
-      width = Math.floor(width * 0.9);
-      height = Math.floor(height * 0.9);
-      quality = 80; // 重置质量
-
-      if (ext === '.jpg' || ext === '.jpeg') {
-        currentBuffer = await sharp(buffer)
-          .resize(width, height, { fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality, progressive: true })
-          .toBuffer();
-      } else if (ext === '.png') {
-        currentBuffer = await sharp(buffer)
-          .resize(width, height, { fit: 'inside', withoutEnlargement: true })
-          .png({ quality, compressionLevel: 9 })
-          .toBuffer();
-      } else if (ext === '.webp') {
-        currentBuffer = await sharp(buffer)
-          .resize(width, height, { fit: 'inside', withoutEnlargement: true })
-          .webp({ quality, effort: 6 })
-          .toBuffer();
-      } else if (ext === '.avif') {
-        currentBuffer = await sharp(buffer)
-          .resize(width, height, { fit: 'inside', withoutEnlargement: true })
-          .avif({ quality, effort: 4 })
-          .toBuffer();
-      }
-    }
-
-    // 防止无限循环：如果尺寸降到 100px 还超，直接返回当前结果
-    if (width < 100 || height < 100) {
-      break;
-    }
-  }
-
-  return currentBuffer;
 }
