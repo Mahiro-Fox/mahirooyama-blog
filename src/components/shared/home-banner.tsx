@@ -13,25 +13,30 @@ import {
 
 interface HomeBannerImage {
   images: GalleryImageItem[];
+  initialIndex?: number;
 }
 
-export const HomeBanner: React.FC<HomeBannerImage> = ({ images }) => {
+export const HomeBanner: React.FC<HomeBannerImage> = ({
+  images,
+  initialIndex = 0,
+}) => {
   return (
     <section className="relative h-[calc(100vh-48px)] w-full md:h-[calc(100vh-64px)]">
       <div className="relative h-full w-full">
         <FadeCarousel
           className="h-full w-full max-w-none rounded-none"
+          initialIndex={initialIndex}
           arrow={false}
           indicator={false}
           autoPlayInterval={10000}
-          images={images.map((image) => image.src)}
-          itemRender={(image, index) => (
+          items={images.map((image) => ({ id: image.id, image: image.src }))}
+          itemRender={(item, { index }) => (
             <OptimizedImage
-              key={index}
-              src={image}
+              key={item.id}
+              src={item.image}
               alt={siteConfig.name}
               fill
-              priority
+              priority={initialIndex === index}
               sizes={imageSizes.hero}
             />
           )}

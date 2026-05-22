@@ -1,60 +1,77 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/utils/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react'; // 也可以换成普通的文字箭头
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface CarouselProps {
+interface CarouselItem {
+  id: string;
+  image: string;
+}
+
+interface CarouselProps<T> {
   className?: string;
-  images: string[];
+  initialIndex?: number;
+  items: T[];
   random?: boolean;
   autoPlayInterval?: number;
   arrow?: boolean;
   indicator?: boolean;
-  itemRender?: (image: string, index: number) => React.ReactNode;
+  itemRender?: (
+    item: T,
+    state: {
+      active: boolean;
+      index: number;
+    }
+  ) => React.ReactNode;
 }
 
-export const FadeCarousel: React.FC<CarouselProps> = ({
+export function FadeCarousel<T extends CarouselItem>({
+  items,
   className,
-  images,
-  random = true,
-  itemRender,
   autoPlayInterval = 5000,
   arrow = true,
   indicator = true,
-}) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    setCurrentIndex(Math.floor(Math.random() * images.length));
-  }, [images.length]);
+  initialIndex = 0,
+  random = false,
+  itemRender,
+}: CarouselProps<T>) {
+  // 【LCP 优化 1】将随机逻辑直接收敛在 useState 初始化函数中
+  // 避免在 useEffect 中二次修改 index 导致浏览器重复请求首屏无关图片
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   // 下一张
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  }, [images.length]);
+    setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
+  }, [items.length]);
 
   // 上一张
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
   };
 
-  // 自动播放
+  // 自动播放逻辑保持不变
   useEffect(() => {
+    if (items.length <= 1) return;
+
     const randomSlide = () => {
       setCurrentIndex((pre) => {
-        let randomIndex = Math.floor(Math.random() * images.length);
+        let randomIndex = Math.floor(Math.random() * items.length);
         while (pre === randomIndex) {
-          randomIndex = Math.floor(Math.random() * images.length);
+          randomIndex = Math.floor(Math.random() * items.length);
         }
         return randomIndex;
       });
     };
+
     const timer = setInterval(
       random ? randomSlide : nextSlide,
       autoPlayInterval
     );
     return () => clearInterval(timer);
-  }, [random, nextSlide, autoPlayInterval, images.length]);
+  }, [random, nextSlide, autoPlayInterval, items.length]);
+
+  // 如果没有数据，直接返回 null 避免报错
+  if (!items || items.length === 0) return null;
 
   return (
     <div
@@ -64,29 +81,48 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
       )}
     >
       {/* 图片容器 */}
-      {images.map((image, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-2000 ease-in-out ${
-            index === currentIndex ? 'z-10 opacity-100' : 'z-0 opacity-0'
-          }`}
-        >
-          {itemRender ? (
-            itemRender(image, index)
-          ) : (
-            <Image
-              src={image}
-              alt={`Slide ${index}`}
-              className="h-full w-full object-cover"
-            />
-          )}
-          {/* 渐变遮罩 (可选，增加文字可读性) */}
-          <div className="absolute inset-0 bg-black/20" />
-        </div>
-      ))}
+      {items.map((item, index) => {
+        const isCurrent = index === currentIndex;
+
+        // 【LCP 优化 2】虚拟化/条件渲染 DOM
+        // 计算当前节点是否需要存在于 DOM 中。
+        // 为了照顾 2000ms 的淡入淡出过渡动画，我们需要同时保留【当前张】、【上一张】和【下一张】
+        const isNext = index === (currentIndex + 1) % items.length;
+        const isPrev =
+          index === (currentIndex - 1 + items.length) % items.length;
+
+        // 如果既不是当前显示的，也不是即将过渡的，直接不渲染 DOM
+        // 从而从根本上阻止浏览器发送非必要图片请求，腾出带宽给 LCP 元素
+        if (!isCurrent && !isNext && !isPrev) {
+          return null;
+        }
+
+        return (
+          <div
+            key={item.id || index} // 推荐优先使用独一无二的 item.id 提升 React DOM Diff 效率
+            className={`absolute inset-0 transition-opacity duration-2000 ease-in-out ${
+              isCurrent ? 'z-10 opacity-100' : 'z-0 opacity-0'
+            }`}
+          >
+            {itemRender ? (
+              itemRender(item, { active: isCurrent, index })
+            ) : (
+              <Image
+                src={item.image}
+                alt={`Slide ${index}`}
+                className="h-full w-full object-cover"
+                // 【LCP 优化 3】精准赋予初始显示的图片最高下载优先级
+                priority={isCurrent}
+              />
+            )}
+            {/* 渐变遮罩 */}
+            <div className="absolute inset-0 bg-black/20" />
+          </div>
+        );
+      })}
 
       {/* 左右箭头 - 仅在悬停时显示 */}
-      {arrow && (
+      {arrow && items.length > 1 && (
         <>
           <button
             onClick={prevSlide}
@@ -104,9 +140,9 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
       )}
 
       {/* 指示器 (Dots) */}
-      {indicator && (
+      {indicator && items.length > 1 && (
         <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 space-x-2">
-          {images.map((_, index) => (
+          {items.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
@@ -119,4 +155,4 @@ export const FadeCarousel: React.FC<CarouselProps> = ({
       )}
     </div>
   );
-};
+}

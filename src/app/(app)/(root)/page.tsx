@@ -32,10 +32,15 @@ export default async function IndexPage() {
   const bannerData = await getHomeBannerImages();
   const tags = await tagStore.getAll();
 
+  const initialIndex = bannerData
+    ? Math.floor(Math.random() * bannerData.length)
+    : 0;
   return (
     <div className="relative flex w-full flex-1 flex-col">
       {/* Hero Banner - 100vh */}
-      {bannerData && <HomeBanner images={bannerData} />}
+      {bannerData && (
+        <HomeBanner images={bannerData} initialIndex={initialIndex} />
+      )}
       <section className="py-8">
         <h2 className="sr-only">Hero Carousel Items</h2>
         <HeroCarousel galleryImages={galleryImages} />
