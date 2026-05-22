@@ -120,8 +120,8 @@ export async function getPhotos(): Promise<PhotoItem[]> {
         // 返回压缩版本的路径（相对于 public）
         const isCompressed = compressedPath.includes('.compressed');
         const src = isCompressed
-          ? `${PHOTO_DIR}/.compressed/${filename}`
-          : `${PHOTO_DIR}/${filename}`;
+          ? `/uploads/images/gallery/.compressed/${filename}`
+          : `/uploads/images/gallery/${filename}`;
 
         return {
           id,

@@ -10,8 +10,8 @@ const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 
 // 配置文件夹路径（使用绝对路径避免问题）
-const INPUT_DIR = path.join(ROOT_DIR, 'public', 'images');
-const OUTPUT_DIR = path.join(ROOT_DIR, 'public', 'images');
+const INPUT_DIR = path.join(ROOT_DIR, 'uploads', 'images');
+const OUTPUT_DIR = path.join(ROOT_DIR, 'uploads', 'images');
 
 /**
  * 安全地转换图片为 WebP

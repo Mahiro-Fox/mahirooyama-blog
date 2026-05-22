@@ -3,10 +3,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { MOMENTS_FILE, UPLOADS_DIR } from '@/constant/dir';
+import { ensureFileInitialized } from '@/utils/file-utils';
 import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
-import { ensureFileInitialized } from '@/utils/file-utils';
 
 export interface MomentImage {
   url: string;
@@ -83,7 +83,7 @@ export async function adminUploadMomentImage(
     }
 
     // 4. 确保上传目录存在
-    const momentsUploadDir = path.join(UPLOADS_DIR, 'moments');
+    const momentsUploadDir = path.join(UPLOADS_DIR, 'images/moments');
     try {
       await fs.access(momentsUploadDir);
     } catch {
@@ -104,7 +104,7 @@ export async function adminUploadMomentImage(
     await sharp(buffer).webp({ quality: 85 }).toFile(filePath);
 
     // 8. 返回图片URL和尺寸信息
-    const imageUrl = `/uploads/moments/${fileName}`;
+    const imageUrl = `/uploads/images/moments/${fileName}`;
     const { width, height } = await sharp(buffer).metadata();
     return {
       success: true,
