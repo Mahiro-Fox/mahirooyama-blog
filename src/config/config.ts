@@ -91,7 +91,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: 'Photos 管理',
     title: '瀑布流图片展示',
     icon: Camera,
-    description: '以瀑布流形式展示 public/images/gallery 目录下的图片。',
+    description: '以瀑布流形式展示 uploads/images/gallery 目录下的图片。',
   },
   {
     name: 'UploadFiles',

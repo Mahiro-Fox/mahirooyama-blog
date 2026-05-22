@@ -117,7 +117,7 @@ export async function getPhotos(): Promise<PhotoItem[]> {
         const height = metadata.height || 0;
         const ratio = width > 0 && height > 0 ? width / height : 1;
 
-        // 返回压缩版本的路径（相对于 public）
+        // 返回压缩版本的路径（相对于 uploads）
         const isCompressed = compressedPath.includes('.compressed');
         const src = isCompressed
           ? `/uploads/images/gallery/.compressed/${filename}`

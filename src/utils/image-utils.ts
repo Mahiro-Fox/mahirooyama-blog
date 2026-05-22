@@ -90,7 +90,7 @@ export function hasThumbnail(
 
 /**
  * 判断图片是否为竖屏图片
- * @param imagePath 相对于 public 目录的图片路径
+ * @param imagePath 相对于 uploads 目录的图片路径
  * @returns 是否是竖屏图片，如果失败返回 false
  */
 export async function isPortraitImage(imagePath: string): Promise<boolean> {

@@ -8,7 +8,7 @@ import {
   deleteFile,
   adminGetUploadFiles,
   renameFile,
-} from '@/actions/admin/file-management';
+} from '@/actions/admin/upload-files-actions';
 import { cacheUploadPath } from '@/actions/admin/upload-files-actions';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
@@ -130,7 +130,9 @@ export default function PublicFilesClient({
       if (result.success && result.data) {
         setData(result.data);
       } else {
-        toast.error(result.error || '获取文件列表失败');
+        if (!result.success) {
+          toast.error(result.error || '获取文件列表失败');
+        }
       }
     } catch (error) {
       toast.error('获取文件列表失败');
@@ -348,7 +350,7 @@ export default function PublicFilesClient({
       if (isImage(item)) {
         if (item.size <= 50 * 1024) {
           return (
-            <img src={item.path} alt={item.name} width={32} height={32} />
+            <Image src={item.path} alt={item.name} width={32} height={32} unoptimized/>
           );
         } else {
           return <p>图片过大，请点击预览按钮进行预览</p>;
@@ -575,6 +577,7 @@ export default function PublicFilesClient({
                 className="max-h-[60vh] rounded-lg object-contain"
                 width={400}
                 height={400}
+                unoptimized
               />
             )}
           </div>

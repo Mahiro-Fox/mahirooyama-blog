@@ -1,7 +1,6 @@
 import path from 'path';
 
 export const DATA_DIR = path.join(process.cwd(), 'data');
-export const PUBLIC_DIR = path.join(process.cwd(), 'public');
 export const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 export const BLOG_DIR = path.join(UPLOADS_DIR, 'content', 'blog');
 export const GALLERY_DIR = path.join(UPLOADS_DIR, 'content', 'gallery');
