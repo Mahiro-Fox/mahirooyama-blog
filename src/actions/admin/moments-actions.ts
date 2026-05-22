@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { MOMENTS_FILE, UPLOADS_DIR } from '@/constant/dir';
 import { ensureFileInitialized } from '@/utils/file-utils';
-import sharp from 'sharp';
+import { processAndSaveImage } from '@/utils/image-utils';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -82,37 +82,25 @@ export async function adminUploadMomentImage(
       return { success: false, error: '图片大小不能超过 5MB' };
     }
 
-    // 4. 确保上传目录存在
-    const momentsUploadDir = path.join(UPLOADS_DIR, 'images/moments');
-    try {
-      await fs.access(momentsUploadDir);
-    } catch {
-      await fs.mkdir(momentsUploadDir, { recursive: true });
-    }
-
-    // 5. 读取文件并处理
+    // 4. 读取文件并处理
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 6. 生成唯一文件名
-    const timestamp = Date.now();
-    const originalName = file.name.replace(/\.[^/.]+$/, '');
-    const fileName = `${originalName}_${timestamp}.webp`;
-    const filePath = path.join(momentsUploadDir, fileName);
+    // 5. 处理并保存图片
+    const result = await processAndSaveImage(buffer, {
+      dir: 'images/moments',
+      fileName: file.name,
+      quality: 85,
+    });
 
-    // 7. 使用 sharp 压缩并转换为 WebP
-    await sharp(buffer).webp({ quality: 85 }).toFile(filePath);
-
-    // 8. 返回图片URL和尺寸信息
-    const imageUrl = `/uploads/images/moments/${fileName}`;
-    const { width, height } = await sharp(buffer).metadata();
+    // 6. 返回图片URL和尺寸信息
     return {
       success: true,
       image: {
-        url: imageUrl,
-        width: width || 0,
-        height: height || 0,
-        ratio: width && height ? width / height : 1,
+        url: result.url,
+        width: result.width,
+        height: result.height,
+        ratio: result.width && result.height ? result.width / result.height : 1,
       },
       message: '图片上传成功',
     };

@@ -3,7 +3,7 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { AVATAR_DIR } from '@/constant/dir';
 import { userStore } from '@/store/user-store';
-import sharp from 'sharp';
+import { processAndSaveImage } from '@/utils/image-utils';
 
 import { verifyAuth } from '@/lib/auth';
 import { ensureDirectory } from '@/utils/file-utils';
@@ -59,21 +59,16 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 8. 生成唯一文件名
-    const timestamp = Date.now();
-    const fileName = `${userId}_${timestamp}.webp`;
-    const filePath = path.join(AVATAR_DIR, fileName);
+    // 8. 处理并保存图片 (头像固定 200x200)
+    const result = await processAndSaveImage(buffer, {
+      dir: 'images/avatar',
+      fileName: `${userId}`,
+      width: 200,
+      height: 200,
+      quality: 80,
+    });
 
-    // 9. 使用 sharp 压缩并转换为 WebP
-    await sharp(buffer)
-      .resize(200, 200, {
-        fit: 'cover',
-        position: 'center',
-      })
-      .webp({ quality: 80 })
-      .toFile(filePath);
-
-    // 10. 删除旧头像（如果不是默认头像）
+    // 9. 删除旧头像（如果不是默认头像）
     if (user.avatar && !user.avatar.includes('default')) {
       try {
         const oldFileName = path.basename(user.avatar);
@@ -84,8 +79,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 11. 更新用户头像路径
-    const avatarPath = `/image/avatar/${fileName}`;
+    // 10. 更新用户头像路径
+    const avatarPath = result.url;
     await userStore.update(userId, { avatar: avatarPath });
 
     return NextResponse.json({

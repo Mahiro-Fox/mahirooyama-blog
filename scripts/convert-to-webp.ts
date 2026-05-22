@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { formatSize } from '@/utils/utils';
-import sharp from 'sharp';
+import { compressImage } from '@/utils/image-utils';
 
 // 获取脚本所在目录，确保路径正确
 const __filename = fileURLToPath(import.meta.url);
@@ -35,18 +35,11 @@ async function convertToWebp(
     // 确保输出目录存在
     await fs.mkdir(path.dirname(targetPath), { recursive: true });
 
-    // 使用 sharp 转换，显式关闭流
-    const sharpInstance = sharp(filePath, {
-      failOnError: false, // 尝试忽略部分损坏的元数据
-      limitInputPixels: 268402689, // 限制最大输入像素（约 16384x16384）
-    });
-
-    await sharpInstance
-      .webp({
-        quality: 80,
-        effort: 4, // 压缩努力程度 (0-6)，4 是平衡点
-      })
-      .toFile(targetPath);
+    // 使用 compressImage 转换
+    const buffer = await fs.readFile(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+    const compressedBuffer = await compressImage(buffer, ext);
+    await fs.writeFile(targetPath, compressedBuffer);
 
     // 验证输出文件
     const outputStats = await fs.stat(targetPath);

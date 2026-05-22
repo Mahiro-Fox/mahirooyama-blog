@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { COMPRESSION_CONFIG } from '@/config';
 import { PHOTO_DIR } from '@/constant';
+import { compressImage } from '@/utils/image-utils';
 import sharp from 'sharp';
 
 const compressedDir = path.join(PHOTO_DIR, '.compressed');
@@ -56,25 +56,10 @@ async function getCompressedImagePath(
 
   // 创建压缩版本
   try {
-    const sharpInstance = sharp(originalPath);
-    const metadata = await sharpInstance.metadata();
-
-    let pipeline = sharpInstance.webp({
-      quality: COMPRESSION_CONFIG.quality,
-      effort: COMPRESSION_CONFIG.effort,
-    });
-
-    // 如果图片过大，进行缩放
-    if (metadata.width && metadata.width > COMPRESSION_CONFIG.maxWidth) {
-      pipeline = pipeline.resize({
-        width: COMPRESSION_CONFIG.maxWidth,
-        height: COMPRESSION_CONFIG.maxHeight,
-        fit: 'inside',
-        withoutEnlargement: true,
-      });
-    }
-
-    await pipeline.toFile(compressedPath);
+    const buffer = await fs.promises.readFile(originalPath);
+    const ext = path.extname(originalPath).toLowerCase();
+    const compressedBuffer = await compressImage(buffer, ext);
+    await fs.promises.writeFile(compressedPath, compressedBuffer);
     return compressedPath;
   } catch (error) {
     console.error(`压缩图片失败 ${filename}:`, error);

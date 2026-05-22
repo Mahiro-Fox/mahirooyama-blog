@@ -8,8 +8,8 @@ import {
   fileExists,
   validateSlug,
 } from '@/utils/file-utils';
+import { processAndSaveImage } from '@/utils/image-utils';
 import matter from 'gray-matter';
-import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -251,32 +251,21 @@ export async function adminUploadBlogThumbnail(
       return { success: false, error: '图片大小不能超过 5MB' };
     }
 
-    // 4. 确保上传目录存在
-    const blogUploadDir = path.join(UPLOADS_DIR, 'images/blog');
-    try {
-      await fs.access(blogUploadDir);
-    } catch {
-      await fs.mkdir(blogUploadDir, { recursive: true });
-    }
-
-    // 5. 读取文件并处理
+    // 4. 读取文件并处理
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 6. 生成唯一文件名
-    const timestamp = Date.now();
-    const originalName = file.name.replace(/\.[^/.]+$/, '');
-    const fileName = `${originalName}_${timestamp}.webp`;
-    const filePath = path.join(blogUploadDir, fileName);
+    // 5. 处理并保存图片
+    const result = await processAndSaveImage(buffer, {
+      dir: 'images/blog',
+      fileName: file.name,
+      quality: 85,
+    });
 
-    // 7. 使用 sharp 压缩并转换为 WebP
-    await sharp(buffer).webp({ quality: 85 }).toFile(filePath);
-
-    // 8. 返回图片URL
-    const imageUrl = `/uploads/images/blog/${fileName}`;
+    // 6. 返回图片URL
     return {
       success: true,
-      url: imageUrl,
+      url: result.url,
       message: '图片上传成功',
     };
   } catch (error) {

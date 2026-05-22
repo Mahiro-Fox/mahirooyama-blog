@@ -10,8 +10,7 @@ import {
   fileExists,
   validateSlug,
 } from '@/utils/file-utils';
-import sharp from 'sharp';
-
+import { processAndSaveImage } from '@/utils/image-utils';
 import { requirePermission } from '@/lib/permissions';
 
 export interface GalleryFile {
@@ -285,32 +284,21 @@ export async function adminUploadGalleryThumbnail(
       return { success: false, error: '图片大小不能超过 5MB' };
     }
 
-    // 4. 确保上传目录存在
-    const galleryUploadDir = path.join(UPLOADS_DIR, 'images/gallery');
-    try {
-      await fs.access(galleryUploadDir);
-    } catch {
-      await fs.mkdir(galleryUploadDir, { recursive: true });
-    }
-
-    // 5. 读取文件并处理
+    // 4. 读取文件并处理
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // 6. 生成唯一文件名
-    const timestamp = Date.now();
-    const originalName = file.name.replace(/\.[^/.]+$/, '');
-    const fileName = `${originalName}_${timestamp}.webp`;
-    const filePath = path.join(galleryUploadDir, fileName);
+    // 5. 处理并保存图片
+    const result = await processAndSaveImage(buffer, {
+      dir: 'images/gallery',
+      fileName: file.name,
+      quality: 85,
+    });
 
-    // 7. 使用 sharp 压缩并转换为 WebP
-    await sharp(buffer).webp({ quality: 85 }).toFile(filePath);
-
-    // 8. 返回图片URL
-    const imageUrl = `/uploads/images/gallery/${fileName}`;
+    // 6. 返回图片URL
     return {
       success: true,
-      url: imageUrl,
+      url: result.url,
       message: '图片上传成功',
     };
   } catch (error) {

@@ -11,7 +11,7 @@ import {
   checkFileConflict,
   ensureDirectory,
 } from '@/utils/file-utils';
-import sharp from 'sharp';
+import { compressImage } from '@/utils/image-utils';
 
 export interface FileItem {
   name: string;
@@ -309,12 +309,9 @@ export async function convertImages() {
               }
 
               // 转换图片为 WebP
-              await sharp(fullPath)
-                .webp({
-                  quality: 80,
-                  effort: 4,
-                })
-                .toFile(webpPath);
+              const buffer = await fs.readFile(fullPath);
+              const compressedBuffer = await compressImage(buffer, ext);
+              await fs.writeFile(webpPath, compressedBuffer);
 
               convertedFiles.push(path.relative(UPLOADS_DIR, webpPath));
             } catch (error) {
