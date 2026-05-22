@@ -1,8 +1,10 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { adminGetGuestbookEntries } from '@/actions/admin/guestbook-actions';
 import type { UserRole } from '@/store/user-store';
 
 import { verifyAuth } from '@/lib/auth';
+import { requirePermission } from '@/lib/permissions';
 import AdminShell from '@/components/admin/admin-shell';
 import { QueryToast } from '@/components/admin/query-toast';
 
@@ -27,6 +29,15 @@ export default async function AdminLayout({
 
   const currentUser = authCheck;
 
+  // 获取未审核的留言条数
+  const permissionCheck = await requirePermission('guestbook:read');
+  let guestbookPendingCount = 0;
+  if (permissionCheck.allowed) {
+    const result = await adminGetGuestbookEntries();
+    const entries = result.success ? result.entries : [];
+    guestbookPendingCount = entries.filter((entry) => !entry.isApproved).length;
+  }
+
   return (
     <>
       <QueryToast />
@@ -39,6 +50,7 @@ export default async function AdminLayout({
           ),
           role: currentUser.role as UserRole,
         }}
+        guestbookPendingCount={guestbookPendingCount}
       >
         {children}
       </AdminShell>

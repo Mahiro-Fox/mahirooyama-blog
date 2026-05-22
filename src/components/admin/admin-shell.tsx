@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 
 import { adminRoutesConfig } from '@/config/config';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
+import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Sheet,
@@ -31,13 +32,23 @@ interface CurrentUser {
   avatar: string;
   role: UserRole;
 }
+const GuestbookBadge = ({ count }: { count: number }) => {
+  if (count === 0) return null;
+  return (
+    <Link href="/admin/guestbook">
+      <Badge variant="destructive">{`留言未审核：${count}`}</Badge>
+    </Link>
+  );
+};
 
 export default function AdminShell({
   children,
   currentUser: initialUser,
+  guestbookPendingCount = 0,
 }: {
   children: React.ReactNode;
   currentUser: CurrentUser;
+  guestbookPendingCount?: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -217,7 +228,7 @@ export default function AdminShell({
       </aside>
 
       {/* 移动端顶部Header */}
-      <div className="bg-background fixed top-0 right-0 left-0 z-30 flex h-14 items-center justify-between border-b px-4 lg:hidden">
+      <header className="bg-background fixed top-0 right-0 left-0 z-30 flex h-14 items-center justify-between border-b px-4 lg:hidden">
         <div className="flex w-full items-center gap-3">
           <Sheet>
             <SheetTrigger asChild>
@@ -318,19 +329,20 @@ export default function AdminShell({
             </SheetContent>
           </Sheet>
           <span className="font-semibold">{getCurrentPageTitle()}</span>
+          <GuestbookBadge count={guestbookPendingCount} />
           <AnimatedThemeToggler
             onThemeChange={toggleTheme}
             className="ml-auto"
           />
         </div>
-      </div>
-
+      </header>
       {/* 主内容区域 */}
       <main className="flex-1 lg:ml-64">
         {/* 桌面端顶部Header */}
         <header className="bg-background sticky top-0 z-20 hidden items-center justify-between border-b p-4 lg:flex">
           <h1 className="text-lg font-semibold">{getCurrentPageTitle()}</h1>
           <div className="flex items-center gap-4">
+            <GuestbookBadge count={guestbookPendingCount} />
             {/* 用户头像下拉菜单 */}
             <div className="relative">
               <button
@@ -398,7 +410,6 @@ export default function AdminShell({
             <AnimatedThemeToggler onThemeChange={toggleTheme} />
           </div>
         </header>
-
         {/* 页面内容 */}
         <div className="px-4 py-20 lg:p-6">{children}</div>
       </main>
