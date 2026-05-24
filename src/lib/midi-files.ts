@@ -267,7 +267,7 @@ async function readMidiFile(filePath: string): Promise<MidiFile> {
 
   return {
     name: fileName.replace(/\.mid$/i, ''),
-    path: `/midisongs/${fileName}`,
+    path: `/uploads/midisongs/${fileName}`,
     duration,
   };
 }
