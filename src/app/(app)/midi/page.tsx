@@ -33,6 +33,18 @@ export default async function MidiPage() {
               MIDI 设置指南
             </a>
           </p>
+          <p className="text-muted-foreground">
+            网页版在播放时若失去焦点（例如切换到其他标签页），
+            播放会有巨大延迟。客户端版本无此问题。
+            <a
+              href="/app.exe"
+              download
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              客户端版本下载链接
+            </a>
+          </p>
         </div>
 
         <MidiPlayerClient initialFiles={midiFiles} />
