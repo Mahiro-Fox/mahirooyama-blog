@@ -178,6 +178,14 @@ export default function MomentsClient({
       toast.error(error instanceof Error ? error.message : '图片上传失败');
     }
   };
+  // 情绪点击处理
+  const handleMoodEmojiClick = (emoji: string) => {
+    if (moodEmoji === emoji) {
+      setMoodEmoji('');
+    } else {
+      setMoodEmoji(emoji);
+    }
+  };
 
   return (
     <>
@@ -326,7 +334,7 @@ export default function MomentsClient({
                 <button
                   key={option.emoji}
                   type="button"
-                  onClick={() => setMoodEmoji(option.emoji)}
+                  onClick={() => handleMoodEmojiClick(option.emoji)}
                   className={`rounded-full border px-3 py-1 text-sm transition-colors ${
                     moodEmoji === option.emoji
                       ? 'bg-primary text-primary-foreground border-primary'

@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { BLOG_DIR, UPLOADS_DIR } from '@/constant/dir';
+import { BLOG_DIR } from '@/constant/dir';
 import {
   checkFileConflict,
   fileExists,

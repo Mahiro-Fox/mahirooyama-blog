@@ -1,8 +1,7 @@
 'use server';
 
 import fs from 'fs/promises';
-import path from 'path';
-import { MOMENTS_FILE, UPLOADS_DIR } from '@/constant/dir';
+import { MOMENTS_FILE } from '@/constant/dir';
 import { ensureFileInitialized } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
 
@@ -202,17 +201,9 @@ export async function adminUpdateMoment(
       moments[index].content = content.trim();
     }
 
-    if (image !== undefined) {
-      moments[index].image = image || undefined;
-    }
-
-    if (moodEmoji !== undefined) {
-      moments[index].moodEmoji = moodEmoji.trim() || undefined;
-    }
-
-    if (location !== undefined) {
-      moments[index].location = location.trim() || undefined;
-    }
+    moments[index].image = image || undefined;
+    moments[index].moodEmoji = moodEmoji?.trim() || undefined;
+    moments[index].location = location?.trim() || undefined;
 
     // 写入文件
     await fs.writeFile(MOMENTS_FILE, JSON.stringify(moments, null, 2), 'utf-8');

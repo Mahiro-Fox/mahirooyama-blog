@@ -119,7 +119,7 @@ export async function adminCreateGalleryFile(input: {
     let parsed;
     try {
       parsed = JSON.parse(content);
-    } catch (e) {
+    } catch {
       return {
         success: false,
         error: 'JSON 格式无效',
@@ -174,7 +174,7 @@ export async function adminUpdateGalleryFile(
     let parsed;
     try {
       parsed = JSON.parse(content);
-    } catch (e) {
+    } catch {
       return { success: false, error: 'JSON 格式无效' };
     }
 

@@ -7,7 +7,6 @@ import fs from 'fs';
 import path from 'path';
 import { UPLOADS_DIR } from '@/constant/dir';
 import sharp from 'sharp';
-import { COMPRESSED_MAX_IMAGE_FILE_SIZE } from '@/config';
 
 /**
  * 生成低质量图片占位符 (LQIP)
@@ -152,17 +151,17 @@ export async function processAndSaveImage(
   const finalFileName = `${cleanBaseName}.webp`;
   const filePath = path.join(fullDir, finalFileName);
   
-  // 保存原始图片
+  // 保存原始图片（用于下载）
   const originalFilePath = path.join(fullDir, fileName);
   await fs.promises.writeFile(originalFilePath, buffer);
 
-  // 3. 处理图片
+  // 3. 处理图片（生成 WebP 用于展示）
   let pipeline = sharp(buffer);
 
   if (width || height) {
     pipeline = pipeline.resize(width, height, { fit, position });
   }
-   // 转换为 WebP 并保存
+  // 转换为 WebP 并保存
   const info = await pipeline
     .webp({ quality })
     .toFile(filePath);
