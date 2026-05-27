@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title:
     "欢迎来到 mahirooyama 的留言墙喵~ - Welcome to mahiooyama's guestbook wall",
   description: `有什么想对mahiro说的话，都可以在这里留下喵~ - Feel free to leave any messages for Mahiro here~`,
+  keywords: ['留言墙', 'guestbook', 'mahirooyama', 'mahiooyama', 'leave messages', 'contact mahiro'],
 };
 
 export default async function GuestbookPage() {

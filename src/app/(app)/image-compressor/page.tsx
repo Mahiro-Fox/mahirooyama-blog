@@ -14,7 +14,12 @@ import ProcessStatus, {
 } from './_components/ProcessStatus';
 import { trackEvent } from '@/utils/tracker';
 import { toast } from 'sonner';
-
+import { Metadata } from 'next';
+export const metadata: Metadata = {
+  title: '图片压缩工具 - compress image tool',
+  description: '压缩图片，减少文件大小，保持图片质量 - compress image,reduce image size, keep image quality, compress image online',
+  keywords: ['图片压缩', '图片优化', '图片处理', 'compress image', 'reduce image size', 'keep image quality', 'compress image online'],
+};
 /**
  * 主页面组件
  * 管理全局状态和组件集成

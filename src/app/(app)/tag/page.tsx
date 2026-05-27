@@ -10,6 +10,7 @@ import { BrandIcons } from '@/components/shared/brand-icons';
 export const metadata: Metadata = {
   title: '标签列表 - mahirooyama',
   description: '浏览所有 blog 和 gallery 的标签',
+  keywords: ['标签','tags', 'mahirooyama', 'mahiooyama', 'contact mahiro'],
 };
 
 function TagCard({ tag, type }: { tag: TagType; type: 'blog' | 'gallery' }) {

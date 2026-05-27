@@ -33,7 +33,7 @@ export const metadata: Metadata = {
       ],
     },
   },
-  keywords: ['blog', 'photo', 'post', 'gallery', 'midi'],
+  keywords: ['博客','blog', 'photo', 'post', 'gallery', 'midi'],
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
