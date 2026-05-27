@@ -18,6 +18,7 @@ import type { MidiFile } from '@/lib/midi-files';
 import { useMidiPlayer } from '@/hooks/use-midi-player';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
+import { trackEvent } from '@/utils/tracker';
 
 interface MidiPlayerClientProps {
   initialFiles: MidiFile[];
@@ -219,15 +220,18 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
                         size="icon-sm"
                         title="Download"
                         className="h-8 w-8"
-                      >
-                        <a href={file.path} download>
+                        >
+                        <a href={file.path} download onClick={() => trackEvent('download_midi_file', { fileName: file.name })}>
                           <Download className="h-4 w-4" />
                         </a>
                       </Button>
                       <Button
                         variant={isCurrentlyPlaying ? 'secondary' : 'default'}
                         size="sm"
-                        onClick={() => togglePlay(file)}
+                        onClick={() => {
+                          togglePlay(file);
+                          trackEvent('play_midi_file', { fileName: file.name });
+                        }}
                         disabled={isLoading && !isCurrentFile}
                         className="w-20"
                       >

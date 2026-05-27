@@ -13,6 +13,7 @@ import ImageUploader, { UploadedFile } from './_components/ImageUploader';
 import ProcessStatus, {
   ProcessedImageResult,
 } from './_components/ProcessStatus';
+import { trackEvent } from '@/utils/tracker';
 
 /**
  * 主页面组件
@@ -75,6 +76,10 @@ export default function Home() {
    * 开始处理
    */
   const handleStartProcess = async () => {
+    trackEvent('start_image_process', {
+      numFiles: uploadedFiles.length,
+      config,
+    });
     if (uploadedFiles.length === 0 || isProcessing) return;
 
     setIsProcessing(true);
@@ -149,6 +154,9 @@ export default function Home() {
    * 下载单个文件
    */
   const handleDownload = (result: ProcessedImageResult) => {
+    trackEvent('download_image_file', {
+      fileName: result.originalName,
+    });
     if (!result.base64) return;
 
     const link = document.createElement('a');
@@ -206,6 +214,9 @@ export default function Home() {
       // 生成 ZIP 文件
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
+      trackEvent('download_all_images', {
+        numFiles: successResults.length,
+      });
       // 创建下载链接
       const link = document.createElement('a');
       link.href = URL.createObjectURL(zipBlob);
