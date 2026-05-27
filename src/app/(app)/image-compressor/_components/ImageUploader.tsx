@@ -2,7 +2,9 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Copy, Image as ImageIcon, Upload, X } from 'lucide-react';
+import { Copy, Image as ImageIcon, Trash, Upload } from 'lucide-react';
+import { formatSize } from '@/utils/utils';
+import { toast } from 'sonner';
 
 /**
  * 上传的文件信息
@@ -60,10 +62,13 @@ export default function ImageUploader({
    * 处理文件选择
    */
   const handleFiles = useCallback(
-    (fileList: FileList | null) => {
+    (fileList: FileList | File[] | null) => {
+      const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
       if (!fileList || disabled) return;
 
       const newFiles: UploadedFile[] = [];
+      const filesArray = Array.from(fileList);
+
       const validTypes = [
         'image/jpeg',
         'image/png',
@@ -72,16 +77,16 @@ export default function ImageUploader({
         'image/avif',
       ];
 
-      Array.from(fileList).forEach((file) => {
+      filesArray.forEach((file) => {
         // 验证文件类型
         if (!validTypes.includes(file.type)) {
-          console.warn(`不支持的文件类型: ${file.type}`);
+          toast.error(`不支持的文件类型: ${file.type}`);
           return;
         }
 
         // 验证文件大小（20MB）
-        if (file.size > 20 * 1024 * 1024) {
-          console.warn(`文件过大: ${file.name}`);
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`${file.name} 图片大小超过了 20MB`);
           return;
         }
 
@@ -189,11 +194,7 @@ export default function ImageUploader({
       }
 
       if (imageFiles.length > 0) {
-        const fileList = {
-          length: imageFiles.length,
-          item: (index: number) => imageFiles[index],
-        } as unknown as FileList;
-        handleFiles(fileList);
+        handleFiles(imageFiles);
       }
     },
     [disabled, handleFiles]
@@ -259,7 +260,7 @@ export default function ImageUploader({
                     {isDragging ? '松开鼠标上传图片' : '点击或拖拽图片到此处'}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    支持 JPG、PNG、WebP、GIF、AVIF 格式，单张最大 20MB
+                    支持 JPG、PNG、WebP、GIF、AVIF 格式，单张最大 20MB，总大小不超过 100MB
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
                     <Copy className="h-4 w-4" />
@@ -282,7 +283,7 @@ export default function ImageUploader({
               <div className="flex items-center gap-2">
                 <ImageIcon className="h-5 w-5 text-blue-500" />
                 <span className="font-semibold text-gray-700 dark:text-gray-300">
-                  已选择 {files.length} 张图片
+                  已选择 {files.length} 张图片（{formatSize(files.reduce((sum, f) => sum + f.size, 0))}）（总大小不超过 100MB）
                 </span>
               </div>
               <button
@@ -327,7 +328,7 @@ export default function ImageUploader({
                             disabled={disabled}
                             className={`cursor-pointer rounded-full bg-red-500 p-2 text-white transition-colors duration-200 hover:bg-red-600 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                           >
-                            <X className="h-5 w-5" />
+                            <Trash className="h-5 w-5" />
                           </button>
                         </div>
                       </div>

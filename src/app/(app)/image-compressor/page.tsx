@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import Head from 'next/head';
 import JSZip from 'jszip';
 import { Zap } from 'lucide-react';
 
@@ -14,6 +13,7 @@ import ProcessStatus, {
   ProcessedImageResult,
 } from './_components/ProcessStatus';
 import { trackEvent } from '@/utils/tracker';
+import { toast } from 'sonner';
 
 /**
  * 主页面组件
@@ -64,9 +64,33 @@ export default function Home() {
    * 添加文件
    */
   const handleFilesAdd = (newFiles: UploadedFile[]) => {
-    setUploadedFiles([...uploadedFiles, ...newFiles]);
-    // 清空之前的处理结果
-    setResults([]);
+    const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB
+    const currentTotalSize = uploadedFiles.reduce((sum, f) => sum + f.size, 0);
+
+    let totalSize = currentTotalSize;
+    const addedFiles: UploadedFile[] = [];
+    let isOverLimit = false;
+
+    for (const file of newFiles) {
+      if (totalSize + file.size <= MAX_TOTAL_SIZE) {
+        addedFiles.push(file);
+        totalSize += file.size;
+      } else {
+        isOverLimit = true;
+      }
+    }
+
+    if (isOverLimit) {
+      setTimeout(() => {
+        toast.error('图片总大小超过了 100MB，已移除末尾部分图片');
+      }, 2000);
+    }
+
+    if (addedFiles.length > 0) {
+      setUploadedFiles([...uploadedFiles, ...addedFiles]);
+      // 清空之前的处理结果
+      setResults([]);
+    }
   };
 
   /**
@@ -281,13 +305,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
-      <Head>
-        {/* 浏览器内容安全策略 (CSP) 限制了图片加载：当前仅允许 self（当前域名）资源，blob: 格式图片被拦截，且未单独配置 img-src，所以沿用 default-src 规则 */}
-        <meta
-          http-equiv="Content-Security-Policy"
-          content="default-src 'self'; img-src 'self' blob: data:;"
-        />
-      </Head>
       {/* 头部 */}
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/80">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
