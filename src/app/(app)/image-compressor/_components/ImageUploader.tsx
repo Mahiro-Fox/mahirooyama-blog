@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useCallback, useState, useRef } from "react";
-import { Upload, X, Image as ImageIcon, Copy } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useCallback, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Copy, Image as ImageIcon, Upload, X } from 'lucide-react';
 
 /**
  * 上传的文件信息
@@ -35,11 +35,11 @@ export interface ImageUploaderProps {
  * 格式化文件大小
  */
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
+  const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 /**
@@ -65,11 +65,11 @@ export default function ImageUploader({
 
       const newFiles: UploadedFile[] = [];
       const validTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-        "image/gif",
-        "image/avif",
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+        'image/avif',
       ];
 
       Array.from(fileList).forEach((file) => {
@@ -101,7 +101,7 @@ export default function ImageUploader({
         onFilesAdd(newFiles);
       }
     },
-    [disabled, onFilesAdd],
+    [disabled, onFilesAdd]
   );
 
   /**
@@ -115,7 +115,7 @@ export default function ImageUploader({
         setIsDragging(true);
       }
     },
-    [disabled],
+    [disabled]
   );
 
   /**
@@ -140,7 +140,7 @@ export default function ImageUploader({
         handleFiles(e.dataTransfer.files);
       }
     },
-    [disabled, handleFiles],
+    [disabled, handleFiles]
   );
 
   /**
@@ -160,10 +160,10 @@ export default function ImageUploader({
       handleFiles(e.target.files);
       // 重置 input 以允许重复选择相同文件
       if (inputRef.current) {
-        inputRef.current.value = "";
+        inputRef.current.value = '';
       }
     },
-    [handleFiles],
+    [handleFiles]
   );
 
   /**
@@ -180,7 +180,7 @@ export default function ImageUploader({
 
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        if (item.type.startsWith("image/")) {
+        if (item.type.startsWith('image/')) {
           const file = item.getAsFile();
           if (file) {
             imageFiles.push(file);
@@ -196,14 +196,14 @@ export default function ImageUploader({
         handleFiles(fileList);
       }
     },
-    [disabled, handleFiles],
+    [disabled, handleFiles]
   );
 
   // 组件挂载时添加粘贴事件监听
   React.useEffect(() => {
-    document.addEventListener("paste", handlePaste);
+    document.addEventListener('paste', handlePaste);
     return () => {
-      document.removeEventListener("paste", handlePaste);
+      document.removeEventListener('paste', handlePaste);
     };
   }, [handlePaste]);
 
@@ -224,16 +224,11 @@ export default function ImageUploader({
               onDragOver={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`
-                relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer
-                transition-all duration-300 ease-out
-                ${
-                  isDragging
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20 scale-[1.02]"
-                    : "border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 bg-gray-50 dark:bg-gray-900/50"
-                }
-                ${disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}
-              `}
+              className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-300 ease-out ${
+                isDragging
+                  ? 'scale-[1.02] border-blue-500 bg-blue-50 dark:bg-blue-950/20'
+                  : 'border-gray-300 bg-gray-50 hover:border-gray-400 dark:border-gray-700 dark:bg-gray-900/50 dark:hover:border-gray-600'
+              } ${disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : ''} `}
             >
               <input
                 ref={inputRef}
@@ -252,29 +247,22 @@ export default function ImageUploader({
                 className="flex flex-col items-center gap-4"
               >
                 <div
-                  className={`
-                  w-20 h-20 rounded-full flex items-center justify-center
-                  ${isDragging ? "bg-blue-500" : "bg-gray-200 dark:bg-gray-800"}
-                  transition-colors duration-300
-                `}
+                  className={`flex h-20 w-20 items-center justify-center rounded-full ${isDragging ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-800'} transition-colors duration-300`}
                 >
                   <Upload
-                    className={`
-                    w-10 h-10
-                    ${isDragging ? "text-white" : "text-gray-500 dark:text-gray-400"}
-                  `}
+                    className={`h-10 w-10 ${isDragging ? 'text-white' : 'text-gray-500 dark:text-gray-400'} `}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    {isDragging ? "松开鼠标上传图片" : "点击或拖拽图片到此处"}
+                    {isDragging ? '松开鼠标上传图片' : '点击或拖拽图片到此处'}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     支持 JPG、PNG、WebP、GIF、AVIF 格式，单张最大 20MB
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-                    <Copy className="w-4 h-4" />
+                    <Copy className="h-4 w-4" />
                     <span>支持 Ctrl+V 粘贴图片</span>
                   </div>
                 </div>
@@ -292,7 +280,7 @@ export default function ImageUploader({
             {/* 文件列表头部 */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-blue-500" />
+                <ImageIcon className="h-5 w-5 text-blue-500" />
                 <span className="font-semibold text-gray-700 dark:text-gray-300">
                   已选择 {files.length} 张图片
                 </span>
@@ -300,21 +288,18 @@ export default function ImageUploader({
               <button
                 onClick={onClearAll}
                 disabled={disabled}
-                className={`
-                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                  ${
-                    disabled
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50"
-                  }
-                `}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  disabled
+                    ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                    : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50'
+                } `}
               >
                 清空全部
               </button>
             </div>
 
             {/* 图片网格 */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               <AnimatePresence>
                 {files.map((file, index) => (
                   <motion.div
@@ -323,30 +308,26 @@ export default function ImageUploader({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
-                    className="relative group"
+                    className="group relative"
                   >
-                    <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                      <div className="relative w-full h-full">
+                    <div className="aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
+                      <div className="relative h-full w-full">
                         <img
                           src={file.preview}
                           alt={file.name}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                         {/* 悬停遮罩 */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onFileRemove(file.id);
                             }}
                             disabled={disabled}
-                            className={`
-                            cursor-pointer p-2 rounded-full bg-red-500 text-white hover:bg-red-600
-                            transition-colors duration-200
-                            ${disabled ? "opacity-50 cursor-not-allowed" : ""}
-                          `}
+                            className={`cursor-pointer rounded-full bg-red-500 p-2 text-white transition-colors duration-200 hover:bg-red-600 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                           >
-                            <X className="w-5 h-5" />
+                            <X className="h-5 w-5" />
                           </button>
                         </div>
                       </div>
@@ -354,7 +335,7 @@ export default function ImageUploader({
 
                     {/* 文件信息 */}
                     <div className="mt-2">
-                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                      <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300">
                         {file.name}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -370,18 +351,14 @@ export default function ImageUploader({
             <button
               onClick={handleClick}
               disabled={disabled}
-              className={`
-                w-full py-4 rounded-xl border-2 border-dashed
-                transition-all duration-300
-                ${
-                  disabled
-                    ? "border-gray-300 text-gray-400 cursor-not-allowed"
-                    : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                }
-              `}
+              className={`w-full rounded-xl border-2 border-dashed py-4 transition-all duration-300 ${
+                disabled
+                  ? 'cursor-not-allowed border-gray-300 text-gray-400'
+                  : 'border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:bg-gray-900/50'
+              } `}
             >
               <div className="flex items-center justify-center gap-2">
-                <Upload className="w-5 h-5" />
+                <Upload className="h-5 w-5" />
                 <span>添加更多图片</span>
               </div>
             </button>

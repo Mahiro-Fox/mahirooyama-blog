@@ -11,7 +11,10 @@ const ANALYTICS_API_URL = '/api/analytics';
  * @param eventName - 事件名称（如：page_view, click_moment_image, submit_comment）
  * @param properties - 事件附加属性（如：{ moment_id: "123" }）
  */
-export function trackEvent(eventName: string, properties: Record<string, any> = {}) {
+export function trackEvent(
+  eventName: string,
+  properties: Record<string, any> = {}
+) {
   // 确保只在客户端执行
   if (typeof window === 'undefined') {
     return;

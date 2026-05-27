@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { trackPageView, trackEvent } from '@/utils/tracker';
+import { trackEvent, trackPageView } from '@/utils/tracker';
 
 /**
  * 全局页面访问埋点组件

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { trackEvent } from '@/utils/tracker';
 import {
   FileText,
   Image,
@@ -11,7 +12,6 @@ import {
 } from 'lucide-react';
 
 import { SearchResult, useSearch } from '@/hooks/use-search';
-import { trackEvent } from '@/utils/tracker';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Dialog,

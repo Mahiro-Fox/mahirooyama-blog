@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { PHOTO_DIR } from '@/constant';
-import { processAndSaveImage } from '@/utils/image-utils';
 import sharp from 'sharp';
 
 export interface PhotoItem {
@@ -44,7 +43,7 @@ export async function getPhotos(): Promise<PhotoItem[]> {
         const height = metadata.height || 0;
         const ratio = width > 0 && height > 0 ? width / height : 1;
 
-        const src = `/uploads/images/gallery/${filename}`
+        const src = `/uploads/images/gallery/${filename}`;
 
         return {
           id,

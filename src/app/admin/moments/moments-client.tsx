@@ -308,12 +308,16 @@ export default function MomentsClient({
               <Input
                 value={image?.url || ''}
                 onChange={(e) =>
-                  setImage(e.target.value ? {
-                    url: e.target.value,
-                    width: 0,
-                    height: 0,
-                    ratio: 0,
-                  } : null)
+                  setImage(
+                    e.target.value
+                      ? {
+                          url: e.target.value,
+                          width: 0,
+                          height: 0,
+                          ratio: 0,
+                        }
+                      : null
+                  )
                 }
                 placeholder="图片URL"
               />

@@ -1,10 +1,9 @@
-import fs from 'fs';
-import { promises as fsPromises } from 'fs';
+import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { AnalyticsLog } from '@/actions/admin/analytics-actions';
 import { ANALYTICS_LOGS_FILE } from '@/constant';
 import { UAParser } from 'ua-parser-js';
-import { AnalyticsLog } from '@/actions/admin/analytics-actions';
 
 /**
  * 严格判断是否为公网 IP（排除本地回环和私有局域网 IP）
@@ -69,10 +68,13 @@ async function processQueue() {
 
     let logs: AnalyticsLog[] = [];
     try {
-      const fileContent = await fsPromises.readFile(ANALYTICS_LOGS_FILE, 'utf-8');
+      const fileContent = await fsPromises.readFile(
+        ANALYTICS_LOGS_FILE,
+        'utf-8'
+      );
       logs = JSON.parse(fileContent);
       if (!Array.isArray(logs)) logs = [];
-    } catch (err: unknown) {
+    } catch {
       // 文件不存在或解析失败，直接走空数组
       logs = [];
     }
@@ -81,13 +83,16 @@ async function processQueue() {
     logs.push(...currentBatch);
 
     // 重新写回文件
-    await fsPromises.writeFile(ANALYTICS_LOGS_FILE, JSON.stringify(logs, null, 2), 'utf-8');
-    
+    await fsPromises.writeFile(
+      ANALYTICS_LOGS_FILE,
+      JSON.stringify(logs, null, 2),
+      'utf-8'
+    );
   } catch (error) {
     console.error('[Analytics] 批量写入日志失败:', error);
   } finally {
     isWriting = false; // 释放锁
-    
+
     // 关键：写入结束后，检查在写入期间有没有新进来的埋点，如果有，继续消费
     if (logQueue.length > 0) {
       processQueue();

@@ -9,7 +9,6 @@ import {
 } from '@/constant';
 import { ensureDirectory } from '@/utils/file-utils';
 
-
 async function readTags(): Promise<TagsData> {
   await ensureDirectory(DATA_DIR);
   try {

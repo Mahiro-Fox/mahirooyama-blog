@@ -119,7 +119,7 @@ export async function POST(
           ...DEFAULT_OPTIONS,
           ...parsedOptions,
         };
-      } catch (error) {
+      } catch {
         return NextResponse.json(
           {
             success: false,

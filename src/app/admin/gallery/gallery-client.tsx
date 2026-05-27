@@ -165,7 +165,7 @@ export default function GalleryClient({
         setEditDescription(parsed.description || '');
         setEditThumbnail(parsed.thumbnail || '');
         setEditTags(parsed.tags || []);
-      } catch (e) {
+      } catch {
         toast.error('JSON 解析失败');
         return;
       }

@@ -21,7 +21,10 @@ let cachedRolePermissions: Record<UserRole, Permission[]> | null = null;
  */
 async function ensureDataFile(): Promise<void> {
   await ensureDirectory(DATA_DIR);
-  await ensureFileInitialized(ROLE_PERMISSIONS_FILE, JSON.stringify(DEFAULT_ROLE_PERMISSIONS, null, 2));
+  await ensureFileInitialized(
+    ROLE_PERMISSIONS_FILE,
+    JSON.stringify(DEFAULT_ROLE_PERMISSIONS, null, 2)
+  );
 }
 
 /**

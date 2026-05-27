@@ -2,8 +2,8 @@
 
 import { ReactNode, useRef } from 'react';
 import { cn } from '@/utils/utils';
-import { Loader2, Pencil, Trash2 } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { Loader2, Pencil, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -104,13 +104,9 @@ export function DataTable<T>({
 
     return (
       <div className="bg-card overflow-hidden rounded-lg border">
-        <div
-          ref={parentRef}
-          className="overflow-auto"
-          style={{ maxHeight }}
-        >
+        <div ref={parentRef} className="overflow-auto" style={{ maxHeight }}>
           <Table>
-            <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+            <TableHeader className="bg-background sticky top-0 z-10 shadow-sm">
               <TableRow>
                 {columns.map((col) => (
                   <TableHead
@@ -121,7 +117,9 @@ export function DataTable<T>({
                     {col.header}
                   </TableHead>
                 ))}
-                {showActions && <TableHead className="w-[100px]">操作</TableHead>}
+                {showActions && (
+                  <TableHead className="w-[100px]">操作</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>

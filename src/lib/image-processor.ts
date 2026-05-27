@@ -71,7 +71,10 @@ export interface ProcessedImageMetadata {
  * 图片处理错误
  */
 export class ImageProcessError extends Error {
-  constructor(message: string, public readonly code: string) {
+  constructor(
+    message: string,
+    public readonly code: string
+  ) {
     super(message);
     this.name = 'ImageProcessError';
   }
@@ -79,7 +82,7 @@ export class ImageProcessError extends Error {
 
 /**
  * 核心图片处理函数
- * 
+ *
  * @param imageBuffer - 输入的图片 Buffer
  * @param options - 图片处理配置选项
  * @returns Promise<ImageProcessResult> - 处理结果，包含 Buffer 和元数据
@@ -101,7 +104,10 @@ export async function processImageBuffer(
 
     // 验证质量参数范围
     if (options.quality < 1 || options.quality > 100) {
-      throw new ImageProcessError('质量参数必须在 1-100 之间', 'INVALID_QUALITY');
+      throw new ImageProcessError(
+        '质量参数必须在 1-100 之间',
+        'INVALID_QUALITY'
+      );
     }
 
     // 创建 Sharp 实例，根据是否需要动画处理设置 animated 选项
@@ -207,7 +213,8 @@ export async function processImageBuffer(
       height: processedMetadata.height || 0,
       format: processedMetadata.format || options.targetFormat,
       size: processedBuffer.length,
-      isAnimated: processedMetadata.pages !== undefined && processedMetadata.pages > 1,
+      isAnimated:
+        processedMetadata.pages !== undefined && processedMetadata.pages > 1,
     };
 
     return {
@@ -223,7 +230,10 @@ export async function processImageBuffer(
     // 处理 Sharp 库抛出的错误
     if (error instanceof Error) {
       // 检查是否是格式不支持错误
-      if (error.message.includes('Unsupported') || error.message.includes('format')) {
+      if (
+        error.message.includes('Unsupported') ||
+        error.message.includes('format')
+      ) {
         throw new ImageProcessError(
           `不支持的图片格式: ${error.message}`,
           'UNSUPPORTED_FORMAT'
@@ -231,11 +241,11 @@ export async function processImageBuffer(
       }
 
       // 检查是否是图片损坏错误
-      if (error.message.includes('corrupt') || error.message.includes('invalid')) {
-        throw new ImageProcessError(
-          '图片文件已损坏或无效',
-          'CORRUPTED_IMAGE'
-        );
+      if (
+        error.message.includes('corrupt') ||
+        error.message.includes('invalid')
+      ) {
+        throw new ImageProcessError('图片文件已损坏或无效', 'CORRUPTED_IMAGE');
       }
 
       // 其他未知错误
@@ -246,16 +256,13 @@ export async function processImageBuffer(
     }
 
     // 未知错误类型
-    throw new ImageProcessError(
-      '图片处理时发生未知错误',
-      'UNKNOWN_ERROR'
-    );
+    throw new ImageProcessError('图片处理时发生未知错误', 'UNKNOWN_ERROR');
   }
 }
 
 /**
  * 批量处理多张图片
- * 
+ *
  * @param imageBuffers - 图片 Buffer 数组
  * @param options - 图片处理配置选项（所有图片使用相同配置）
  * @returns Promise<ImageProcessResult[]> - 处理结果数组
@@ -270,7 +277,7 @@ export async function processMultipleImages(
     try {
       const result = await processImageBuffer(imageBuffers[i], options);
       results.push(result);
-    } catch (error) {
+    } catch {
       // 单张图片处理失败不影响其他图片
       // 将错误信息作为特殊结果返回
       results.push({
@@ -291,7 +298,7 @@ export async function processMultipleImages(
 
 /**
  * 将 Buffer 转换为 Base64 字符串（用于前端预览）
- * 
+ *
  * @param buffer - 图片 Buffer
  * @param mimeType - MIME 类型（如 'image/webp'）
  * @returns Base64 数据 URI
@@ -303,7 +310,7 @@ export function bufferToBase64(buffer: Buffer, mimeType: string): string {
 
 /**
  * 根据格式获取对应的 MIME 类型
- * 
+ *
  * @param format - 图片格式
  * @returns MIME 类型字符串
  */

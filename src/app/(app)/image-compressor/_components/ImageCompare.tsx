@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useRef, useEffect, useState } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 
 type Props = {
   className?: string;
@@ -64,21 +64,21 @@ const ImageConvert: React.FC<Props> = ({
       }
     };
     if (interactive) {
-      containerRef.current?.addEventListener("mousemove", handleMouseMove);
+      containerRef.current?.addEventListener('mousemove', handleMouseMove);
       return () => {
-        containerRef.current?.removeEventListener("mousemove", handleMouseMove);
+        containerRef.current?.removeEventListener('mousemove', handleMouseMove);
       };
     }
   }, [interactive]);
   return (
     <div
-      className={`relative overflow-hidden ${className ? className : ""}`}
+      className={`relative overflow-hidden ${className ? className : ''}`}
       style={style}
       ref={containerRef}
     >
       <div className="flex gap-4">
         <Image
-          className="before absolute select-none user-drag-none"
+          className="before user-drag-none absolute select-none"
           src={before}
           width={width}
           height={height}
@@ -86,7 +86,7 @@ const ImageConvert: React.FC<Props> = ({
         />
         <Image
           style={{ clipPath: `inset(0 0 0 ${leftValue}%)` }}
-          className="after select-none user-drag-none"
+          className="after user-drag-none select-none"
           width={width}
           height={height}
           src={after}
@@ -94,12 +94,12 @@ const ImageConvert: React.FC<Props> = ({
         />
       </div>
       <p
-        className="follow-line h-full w-[2px] bg-white absolute top-0 bottom-0"
+        className="follow-line absolute top-0 bottom-0 h-full w-[2px] bg-white"
         style={{ left: `${leftValue}%` }}
       >
         {withIcon && (
           <svg
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
             width="38"
             height="38"
             viewBox="0 0 38 38"

@@ -66,15 +66,15 @@ export default function GuestbookClient({
   };
 
   // 新增留言
-  const handleCreate = () => {
-    setEditMode('create');
-    setSelectedEntry(null);
-    setNickname('');
-    setBgColor(COLOR_OPTIONS[0].value);
-    setContact('');
-    setContent('');
-    setIsFormDialogOpen(true);
-  };
+  // const handleCreate = () => {
+  //   setEditMode('create');
+  //   setSelectedEntry(null);
+  //   setNickname('');
+  //   setBgColor(COLOR_OPTIONS[0].value);
+  //   setContact('');
+  //   setContent('');
+  //   setIsFormDialogOpen(true);
+  // };
 
   // 编辑留言
   const handleEdit = (entry: GuestbookEntry) => {

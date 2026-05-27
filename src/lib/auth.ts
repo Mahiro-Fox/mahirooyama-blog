@@ -47,7 +47,7 @@ export async function verifyAuth() {
       expiresAt: payload.exp,
       sessionId: payload.sessionId,
     };
-  } catch (error) {
+  } catch {
     return { success: false, error: '登录已过期，请重新登录' };
   }
 }

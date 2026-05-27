@@ -16,7 +16,7 @@ interface AdminNavCardProps {
   icon: LucideIcon;
   label: string;
   title: string;
-  description: string;
+  description?: string;
 }
 
 export function AdminNavCard({

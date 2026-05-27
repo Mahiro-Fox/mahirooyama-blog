@@ -7,10 +7,9 @@ import {
   ensureDirectory,
   isPathSafe,
 } from '@/utils/file-utils';
-import { processAndSaveImage } from '@/utils/image-utils';
+import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
-import sharp from 'sharp';
 
 // 上传文件到指定目录（需要 files:upload 权限）
 export async function POST(request: NextRequest) {
@@ -70,9 +69,10 @@ export async function POST(request: NextRequest) {
             const webpPath = path.join(targetDir, webpName);
 
             // 转换图片为 WebP
-            await sharp(buffer).webp({quality:50}).toFile(webpPath);
+            await sharp(buffer).webp({ quality: 50 }).toFile(webpPath);
             const webpRelativePath = path.join(relativePath, webpName);
-            const webpWebPath = '/uploads/' + webpRelativePath.replace(/\\/g, '/');
+            const webpWebPath =
+              '/uploads/' + webpRelativePath.replace(/\\/g, '/');
 
             return {
               name: safeName,

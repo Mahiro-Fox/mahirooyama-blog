@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { NextResponse } from 'next/server';
 import { MIDI_DIR } from '@/constant/dir';
 import { ensureDirectory } from '@/utils/file-utils';
 
@@ -8,7 +8,7 @@ export async function GET() {
   try {
     // 确保目录存在
     await ensureDirectory(MIDI_DIR);
-    
+
     const files = await fs.readdir(MIDI_DIR);
     const midiFiles = files.filter((file) =>
       file.toLowerCase().endsWith('.mid')

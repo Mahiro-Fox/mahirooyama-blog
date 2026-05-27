@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { submitGuestbookEntry } from '@/actions/admin/guestbook-actions';
+import { COLOR_OPTIONS } from '@/config';
 import { trackEvent } from '@/utils/tracker';
 // 莫兰迪色系颜色选项
 import { Send, Sticker, X } from 'lucide-react';
@@ -16,7 +17,6 @@ import {
   DialogTitle,
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
-import { COLOR_OPTIONS } from '@/config';
 
 export function GuestbookWallDialog() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -56,7 +56,7 @@ export function GuestbookWallDialog() {
       } else {
         toast.error(result.error);
       }
-    } catch (error) {
+    } catch {
       toast.error('提交失败，请稍后重试');
     } finally {
       setIsSubmitting(false);

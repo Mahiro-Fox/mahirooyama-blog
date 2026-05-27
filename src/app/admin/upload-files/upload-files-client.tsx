@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
+  adminGetUploadFiles,
+  cacheUploadPath,
+  convertImages,
   createFolder,
   deleteFile,
-  adminGetUploadFiles,
   renameFile,
-  convertImages,
 } from '@/actions/admin/upload-files-actions';
-import { cacheUploadPath } from '@/actions/admin/upload-files-actions';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
   ArrowLeft,
@@ -134,7 +134,7 @@ export default function PublicFilesClient({
           toast.error(result.error || '获取文件列表失败');
         }
       }
-    } catch (error) {
+    } catch {
       toast.error('获取文件列表失败');
     } finally {
       setLoading(false);
@@ -283,7 +283,7 @@ export default function PublicFilesClient({
       } else {
         toast.error(result.error || '删除失败');
       }
-    } catch (error) {
+    } catch {
       toast.error('删除失败');
     }
   };
@@ -350,7 +350,13 @@ export default function PublicFilesClient({
       if (isImage(item)) {
         if (item.size <= 50 * 1024) {
           return (
-            <Image src={item.path} alt={item.name} width={32} height={32} unoptimized/>
+            <Image
+              src={item.path}
+              alt={item.name}
+              width={32}
+              height={32}
+              unoptimized
+            />
           );
         } else {
           return <p>图片过大，请点击预览按钮进行预览</p>;

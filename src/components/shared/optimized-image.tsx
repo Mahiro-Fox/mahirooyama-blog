@@ -76,7 +76,7 @@ export function OptimizedImage({
     if (previewable && src) {
       openPreview({ src, alt, width, height });
     }
-  }, [previewable, alt, width, height, openPreview]);
+  }, [src, previewable, alt, width, height, openPreview]);
 
   const imageProps = fill ? { fill, sizes } : { width, height, sizes };
 

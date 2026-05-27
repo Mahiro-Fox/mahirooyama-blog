@@ -75,7 +75,7 @@ function LoginForm() {
         const redirect = searchParams.get('redirect') || '/admin';
         router.push(redirect);
       }
-    } catch (error) {
+    } catch {
       toast.error('登录失败，请稍后重试');
     } finally {
       setLoading(false);

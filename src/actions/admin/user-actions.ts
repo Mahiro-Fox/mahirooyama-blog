@@ -8,7 +8,6 @@ import {
   type UserResponse,
   type UserRole,
 } from '@/store/user-store';
-import { ensureDirectory } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
 
 import { verifyAuth } from '@/lib/auth';

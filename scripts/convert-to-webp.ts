@@ -1,8 +1,8 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { formatSize } from '@/utils/utils';
 import { processAndSaveImage } from '@/utils/image-utils';
+import { formatSize } from '@/utils/utils';
 
 // 获取脚本所在目录，确保路径正确
 const __filename = fileURLToPath(import.meta.url);

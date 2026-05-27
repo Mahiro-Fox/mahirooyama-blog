@@ -147,10 +147,12 @@ export async function processAndSaveImage(
   }
 
   // 2. 生成文件名
-  const cleanBaseName = fileName.replace(/\.[^/.]+$/, '').replace(/[^\w\u4e00-\u9fa5.-]/g, '-');
+  const cleanBaseName = fileName
+    .replace(/\.[^/.]+$/, '')
+    .replace(/[^\w\u4e00-\u9fa5.-]/g, '-');
   const finalFileName = `${cleanBaseName}.webp`;
   const filePath = path.join(fullDir, finalFileName);
-  
+
   // 保存原始图片（用于下载）
   const originalFilePath = path.join(fullDir, fileName);
   await fs.promises.writeFile(originalFilePath, buffer);
@@ -162,9 +164,7 @@ export async function processAndSaveImage(
     pipeline = pipeline.resize(width, height, { fit, position });
   }
   // 转换为 WebP 并保存
-  const info = await pipeline
-    .webp({ quality })
-    .toFile(filePath);
+  const info = await pipeline.webp({ quality }).toFile(filePath);
 
   // 4. 返回结果
   const relativeUrl = `/uploads/${dir}/${finalFileName}`.replace(/\/+/g, '/');

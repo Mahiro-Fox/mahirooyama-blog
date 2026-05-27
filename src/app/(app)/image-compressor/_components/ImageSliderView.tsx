@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { X, ArrowLeft, ArrowRight, ZoomIn, ZoomOut } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, X } from 'lucide-react';
+
 import ImageCompare from './ImageCompare';
 
 /**
@@ -102,7 +103,10 @@ export default function ImageSliderView({
     return null;
   }
 
-  const savings = calculateSavings(result.originalSize, result.metadata?.size || 0);
+  const savings = calculateSavings(
+    result.originalSize,
+    result.metadata?.size || 0
+  );
 
   return (
     <AnimatePresence>
@@ -120,20 +124,20 @@ export default function ImageSliderView({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full h-full max-w-7xl max-h-[90vh] flex flex-col"
+            className="relative flex h-full max-h-[90vh] w-full max-w-7xl flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 头部 */}
-            <div className="flex items-center justify-between p-4 bg-gray-900/50 backdrop-blur-sm border-b border-gray-800">
+            <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900/50 p-4 backdrop-blur-sm">
               <div className="flex items-center gap-4">
                 <h3 className="text-lg font-semibold text-white">
                   {result.originalName}
                 </h3>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <span className="px-2 py-1 bg-gray-800 rounded">
+                  <span className="rounded bg-gray-800 px-2 py-1">
                     {result.metadata?.width} × {result.metadata?.height}
                   </span>
-                  <span className="px-2 py-1 bg-gray-800 rounded">
+                  <span className="rounded bg-gray-800 px-2 py-1">
                     {result.metadata?.format.toUpperCase()}
                   </span>
                 </div>
@@ -145,33 +149,33 @@ export default function ImageSliderView({
                   <button
                     onClick={onPrevious}
                     disabled={!hasPrevious}
-                    className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-lg bg-gray-800 p-2 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <ArrowLeft className="w-5 h-5" />
+                    <ArrowLeft className="h-5 w-5" />
                   </button>
                 )}
                 {onNext && (
                   <button
                     onClick={onNext}
                     disabled={!hasNext}
-                    className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-lg bg-gray-800 p-2 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="h-5 w-5" />
                   </button>
                 )}
 
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white transition-colors"
+                  className="rounded-lg bg-gray-800 p-2 text-white transition-colors hover:bg-gray-700"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
             {/* 图片对比区域 */}
-            <div className="flex-1 relative overflow-hidden bg-gray-950">
-              <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative flex-1 overflow-hidden bg-gray-950">
+              <div className="relative flex h-full w-full items-center justify-center">
                 <ImageCompare
                   width={result.metadata?.width || 0}
                   height={result.metadata?.height || 0}
@@ -182,23 +186,23 @@ export default function ImageSliderView({
             </div>
 
             {/* 底部信息 */}
-            <div className="flex items-center justify-between p-4 bg-gray-900/50 backdrop-blur-sm border-t border-gray-800">
+            <div className="flex items-center justify-between border-t border-gray-800 bg-gray-900/50 p-4 backdrop-blur-sm">
               <div className="flex items-center gap-6">
                 <div className="text-sm text-gray-400">
                   <span className="text-gray-600">原图:</span>{' '}
-                  <span className="text-white font-medium">
+                  <span className="font-medium text-white">
                     {formatFileSize(result.originalSize)}
                   </span>
                 </div>
                 <div className="text-sm text-gray-400">
                   <span className="text-gray-600">处理后:</span>{' '}
-                  <span className="text-white font-medium">
+                  <span className="font-medium text-white">
                     {formatFileSize(result.metadata?.size || 0)}
                   </span>
                 </div>
                 {savings > 0 && (
                   <div className="text-sm">
-                    <span className="text-green-400 font-semibold">
+                    <span className="font-semibold text-green-400">
                       节省 {savings}%
                     </span>
                   </div>

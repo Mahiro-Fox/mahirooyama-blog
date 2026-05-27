@@ -18,7 +18,16 @@ import {
 } from 'recharts';
 
 // 图表颜色配置
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00c49f', '#ff8042', '#8dd1e1', '#d084d0'];
+const COLORS = [
+  '#8884d8',
+  '#82ca9d',
+  '#ffc658',
+  '#ff7300',
+  '#00c49f',
+  '#ff8042',
+  '#8dd1e1',
+  '#d084d0',
+];
 
 // 按日期分组数据并统计每天的访问量
 const groupLogsByDate = (logs: AnalyticsLog[]) => {
@@ -52,7 +61,10 @@ const groupByDeviceType = (logs: AnalyticsLog[]) => {
     const type = log.device.isMobile ? '移动端' : '桌面端';
     deviceMap.set(type, (deviceMap.get(type) || 0) + 1);
   });
-  return Array.from(deviceMap.entries()).map(([name, value]) => ({ name, value }));
+  return Array.from(deviceMap.entries()).map(([name, value]) => ({
+    name,
+    value,
+  }));
 };
 
 // 按操作系统分组
@@ -107,7 +119,8 @@ const groupByUrl = (logs: AnalyticsLog[]) => {
 const groupByCountry = (logs: AnalyticsLog[]) => {
   const countryMap = new Map<string, number>();
   logs.forEach((log) => {
-    const country = log.location.country !== 'unknown' ? log.location.country : '未知';
+    const country =
+      log.location.country !== 'unknown' ? log.location.country : '未知';
     countryMap.set(country, (countryMap.get(country) || 0) + 1);
   });
   return Array.from(countryMap.entries())
@@ -274,7 +287,12 @@ export default function AnalyticsCharts({ logs }: AnalyticsChartsProps) {
           <BarChart data={urlData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="name" type="category" width={300} tick={{ fontSize: 12 }} />
+            <YAxis
+              dataKey="name"
+              type="category"
+              width={300}
+              tick={{ fontSize: 12 }}
+            />
             <Tooltip />
             <Bar dataKey="value" fill="#8884d8" />
           </BarChart>

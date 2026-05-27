@@ -40,7 +40,11 @@ export async function fileExists(filePath: string): Promise<boolean> {
  * 确保文件已初始化，如果不存在则创建
  *  * @param filePath 完整文件路径
  */
-export async function ensureFileInitialized(filePath: string, defaultContent: string = '[]',defaultOptions?: { encoding?: 'utf-8', flag?: 'wx' }) {
+export async function ensureFileInitialized(
+  filePath: string,
+  defaultContent: string = '[]',
+  defaultOptions?: { encoding?: 'utf-8'; flag?: 'wx' }
+) {
   try {
     // 尝试直接读取（生产环境通常总会先读取或追加）
     await fs.readFile(filePath, defaultOptions?.encoding || 'utf-8');
@@ -50,7 +54,7 @@ export async function ensureFileInitialized(filePath: string, defaultContent: st
       try {
         const dir = path.dirname(filePath);
         await fs.mkdir(dir, { recursive: true });
-        
+
         // 使用 wx 模式：如果文件在这一瞬间被其他请求创建了，这里会报错而不会覆盖老数据
         await fs.writeFile(filePath, defaultContent, defaultOptions);
       } catch (writeError: any) {

@@ -131,7 +131,7 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
       }
 
       await refreshFiles();
-    } catch (error) {
+    } catch {
       toast.error('上传失败');
     } finally {
       setIsUploading(false);

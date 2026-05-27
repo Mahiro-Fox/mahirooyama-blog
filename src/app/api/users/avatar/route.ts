@@ -3,10 +3,10 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { AVATAR_DIR } from '@/constant/dir';
 import { userStore } from '@/store/user-store';
+import { ensureDirectory } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
 
 import { verifyAuth } from '@/lib/auth';
-import { ensureDirectory } from '@/utils/file-utils';
 
 // POST /api/users/avatar - 上传用户头像
 export async function POST(request: NextRequest) {

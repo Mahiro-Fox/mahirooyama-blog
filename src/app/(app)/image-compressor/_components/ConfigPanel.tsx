@@ -1,8 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Settings, ChevronDown, ChevronUp, Image as ImageIcon, Shield, Maximize2, Film } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ChevronDown,
+  ChevronUp,
+  Film,
+  Maximize2,
+  Settings,
+  Shield,
+} from 'lucide-react';
 
 /**
  * 目标格式类型
@@ -54,7 +61,11 @@ export interface ConfigPanelProps {
 /**
  * 格式选项配置
  */
-const FORMAT_OPTIONS: { value: TargetFormat; label: string; description: string }[] = [
+const FORMAT_OPTIONS: {
+  value: TargetFormat;
+  label: string;
+  description: string;
+}[] = [
   { value: 'webp', label: 'WebP', description: '现代格式，最佳压缩率' },
   { value: 'png', label: 'PNG', description: '无损格式，适合透明背景' },
   { value: 'jpeg', label: 'JPEG', description: '兼容性好，适合照片' },
@@ -74,7 +85,11 @@ const FIT_OPTIONS: { value: ResizeFit; label: string }[] = [
  * 配置面板组件
  * 提供格式选择、质量控制、高级选项等配置
  */
-export default function ConfigPanel({ config, onConfigChange, disabled = false }: ConfigPanelProps) {
+export default function ConfigPanel({
+  config,
+  onConfigChange,
+  disabled = false,
+}: ConfigPanelProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
   /**
@@ -97,11 +112,11 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+    <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
       {/* 标题 */}
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-          <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
+          <Settings className="h-5 w-5 text-blue-600 dark:text-blue-400" />
         </div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           转换配置
@@ -113,42 +128,41 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           目标格式
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {FORMAT_OPTIONS.map((option) => (
             <button
               key={option.value}
-              onClick={() => !disabled && updateConfig({ targetFormat: option.value })}
+              onClick={() =>
+                !disabled && updateConfig({ targetFormat: option.value })
+              }
               disabled={disabled}
-              className={`
-                relative p-4 rounded-xl border-2 transition-all duration-200
-                ${config.targetFormat === option.value
+              className={`relative rounded-xl border-2 p-4 transition-all duration-200 ${
+                config.targetFormat === option.value
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                }
-                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-              `}
+                  : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+              } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} `}
             >
-              <div className="text-center space-y-1">
-                <div className={`
-                  font-semibold text-sm
-                  ${config.targetFormat === option.value
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-700 dark:text-gray-300'
-                  }
-                `}>
+              <div className="space-y-1 text-center">
+                <div
+                  className={`text-sm font-semibold ${
+                    config.targetFormat === option.value
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-700 dark:text-gray-300'
+                  } `}
+                >
                   {option.label}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
                   {option.description}
                 </div>
               </div>
-              
+
               {config.targetFormat === option.value && (
                 <motion.div
                   layoutId="activeFormat"
-                  className="absolute inset-0 border-2 border-blue-500 rounded-xl pointer-events-none"
+                  className="pointer-events-none absolute inset-0 rounded-xl border-2 border-blue-500"
                   initial={false}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
             </button>
@@ -171,12 +185,11 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
           min="1"
           max="95"
           value={config.quality}
-          onChange={(e) => !disabled && updateConfig({ quality: parseInt(e.target.value) })}
+          onChange={(e) =>
+            !disabled && updateConfig({ quality: parseInt(e.target.value) })
+          }
           disabled={disabled}
-          className={`
-            w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-          `}
+          className={`h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
           style={{
             background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(config.quality / 95) * 100}%, #e5e7eb ${(config.quality / 95) * 100}%, #e5e7eb 100%)`,
           }}
@@ -188,23 +201,19 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
       </div>
 
       {/* 高级选项 */}
-      <div className="border-t border-gray-200 dark:border-gray-800 pt-4">
+      <div className="border-t border-gray-200 pt-4 dark:border-gray-800">
         <button
           onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
           disabled={disabled}
-          className={`
-            w-full flex items-center justify-between p-3 rounded-lg
-            transition-colors duration-200
-            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}
-          `}
+          className={`flex w-full items-center justify-between rounded-lg p-3 transition-colors duration-200 ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'} `}
         >
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             高级选项
           </span>
           {isAdvancedOpen ? (
-            <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           )}
         </button>
 
@@ -217,12 +226,12 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="pt-4 space-y-4">
+              <div className="space-y-4 pt-4">
                 {/* 元数据处理 */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                      <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
+                      <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -234,33 +243,34 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
                     </div>
                   </div>
                   <button
-                    onClick={() => !disabled && updateConfig({ keepMetadata: !config.keepMetadata })}
+                    onClick={() =>
+                      !disabled &&
+                      updateConfig({ keepMetadata: !config.keepMetadata })
+                    }
                     disabled={disabled}
-                    className={`
-                      relative w-14 h-7 rounded-full transition-colors duration-200
-                      ${!config.keepMetadata
+                    className={`relative h-7 w-14 rounded-full transition-colors duration-200 ${
+                      !config.keepMetadata
                         ? 'bg-blue-500'
                         : 'bg-gray-300 dark:bg-gray-600'
-                      }
-                      ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
+                    } ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                   >
                     <motion.div
-                      className={`
-                        absolute top-1 w-5 h-5 bg-white rounded-full shadow-md
-                        ${!config.keepMetadata ? 'left-8' : 'left-1'}
-                      `}
+                      className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-md ${!config.keepMetadata ? 'left-8' : 'left-1'} `}
                       layout
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                     />
                   </button>
                 </div>
 
                 {/* 动图转换 */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                      <Film className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
+                      <Film className="h-5 w-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -272,33 +282,36 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
                     </div>
                   </div>
                   <button
-                    onClick={() => !disabled && updateConfig({ convertAnimation: !config.convertAnimation })}
+                    onClick={() =>
+                      !disabled &&
+                      updateConfig({
+                        convertAnimation: !config.convertAnimation,
+                      })
+                    }
                     disabled={disabled}
-                    className={`
-                      relative w-14 h-7 rounded-full transition-colors duration-200
-                      ${config.convertAnimation
+                    className={`relative h-7 w-14 rounded-full transition-colors duration-200 ${
+                      config.convertAnimation
                         ? 'bg-blue-500'
                         : 'bg-gray-300 dark:bg-gray-600'
-                      }
-                      ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
+                    } ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                   >
                     <motion.div
-                      className={`
-                        absolute top-1 w-5 h-5 bg-white rounded-full shadow-md
-                        ${config.convertAnimation ? 'left-8' : 'left-1'}
-                      `}
+                      className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-md ${config.convertAnimation ? 'left-8' : 'left-1'} `}
                       layout
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                     />
                   </button>
                 </div>
 
                 {/* 调整尺寸 */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl space-y-4">
+                <div className="space-y-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                      <Maximize2 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/30">
+                      <Maximize2 className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -321,17 +334,14 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
                         max="10000"
                         value={config.resize?.width || ''}
                         onChange={(e) => {
-                          const value = e.target.value ? parseInt(e.target.value) : undefined;
+                          const value = e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined;
                           updateResize({ width: value });
                         }}
                         disabled={disabled}
                         placeholder="自动"
-                        className={`
-                          w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                          bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
-                          text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
-                          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                        `}
+                        className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                       />
                     </div>
                     <div className="space-y-2">
@@ -344,17 +354,14 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
                         max="10000"
                         value={config.resize?.height || ''}
                         onChange={(e) => {
-                          const value = e.target.value ? parseInt(e.target.value) : undefined;
+                          const value = e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined;
                           updateResize({ height: value });
                         }}
                         disabled={disabled}
                         placeholder="自动"
-                        className={`
-                          w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                          bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
-                          text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
-                          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                        `}
+                        className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                       />
                     </div>
                   </div>
@@ -367,16 +374,15 @@ export default function ConfigPanel({ config, onConfigChange, disabled = false }
                       {FIT_OPTIONS.map((option) => (
                         <button
                           key={option.value}
-                          onClick={() => !disabled && updateResize({ fit: option.value })}
+                          onClick={() =>
+                            !disabled && updateResize({ fit: option.value })
+                          }
                           disabled={disabled}
-                          className={`
-                            flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                            ${config.resize?.fit === option.value
+                          className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                            config.resize?.fit === option.value
                               ? 'bg-blue-500 text-white'
-                              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-                            }
-                            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                          `}
+                              : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-500'
+                          } ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                         >
                           {option.label}
                         </button>

@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { DEFAULT_GALLERY_LIST_LIMIT } from '@/config';
+import { GALLERY_DIR } from '@/constant';
 import { isPortraitImage } from '@/utils/image-utils';
 
 import { paginateItems, PaginationResult } from '@/lib/pagination';
-import { GALLERY_DIR } from '@/constant';
 
 export type GalleryImage<T = {}> = {
   title: string;

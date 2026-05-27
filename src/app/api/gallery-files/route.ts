@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       let parsed;
       try {
         parsed = JSON.parse(jsonContent);
-      } catch (e) {
+      } catch {
         return NextResponse.json({ error: 'JSON 格式无效' }, { status: 400 });
       }
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       let parsed;
       try {
         parsed = JSON.parse(content);
-      } catch (e) {
+      } catch {
         return NextResponse.json(
           { error: 'JSON 文件格式无效' },
           { status: 400 }
