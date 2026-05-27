@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Head from 'next/head';
 import JSZip from 'jszip';
 import { Zap } from 'lucide-react';
 
@@ -254,6 +255,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+      <Head>
+        {/* 浏览器内容安全策略 (CSP) 限制了图片加载：当前仅允许 self（当前域名）资源，blob: 格式图片被拦截，且未单独配置 img-src，所以沿用 default-src 规则 */}
+        <meta
+          http-equiv="Content-Security-Policy"
+          content="default-src 'self'; img-src 'self' blob: data:;"
+        />
+      </Head>
       {/* 头部 */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/80">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
