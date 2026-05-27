@@ -32,6 +32,19 @@ export default function Home() {
     convertAnimation: false,
   });
 
+  /**
+   * 重置配置
+   */
+  const resetConfig = () => {
+    setConfig({
+      targetFormat: 'webp',
+      quality: 80,
+      keepMetadata: false,
+      convertAnimation: false,
+    });
+    trackEvent('reset_image_config');
+  };
+
   // 处理结果列表
   const [results, setResults] = useState<ProcessedImageResult[]>([]);
 
@@ -276,7 +289,7 @@ export default function Home() {
         />
       </Head>
       {/* 头部 */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/80">
+      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/80">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -327,6 +340,7 @@ export default function Home() {
             <ConfigPanel
               config={config}
               onConfigChange={setConfig}
+              resetConfig={resetConfig}
               disabled={isProcessing}
             />
           </div>

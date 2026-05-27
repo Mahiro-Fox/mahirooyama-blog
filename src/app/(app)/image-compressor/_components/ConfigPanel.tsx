@@ -10,6 +10,7 @@ import {
   Settings,
   Shield,
 } from 'lucide-react';
+import { Button } from '@/components/shadcn-ui/button';
 
 /**
  * 目标格式类型
@@ -54,6 +55,8 @@ export interface ConfigPanelProps {
   config: ImageProcessConfig;
   /** 配置变更回调 */
   onConfigChange: (config: ImageProcessConfig) => void;
+  /** 重置配置回调 */
+  resetConfig: () => void;
   /** 是否禁用（处理中） */
   disabled?: boolean;
 }
@@ -88,6 +91,7 @@ const FIT_OPTIONS: { value: ResizeFit; label: string }[] = [
 export default function ConfigPanel({
   config,
   onConfigChange,
+  resetConfig,
   disabled = false,
 }: ConfigPanelProps) {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -121,6 +125,14 @@ export default function ConfigPanel({
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           转换配置
         </h2>
+        <Button
+          onClick={resetConfig}
+          size="sm"
+          variant="outline"
+          className="ml-auto"
+        >
+          重置所有配置
+        </Button>
       </div>
 
       {/* 格式选择 */}
