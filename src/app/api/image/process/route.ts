@@ -5,7 +5,7 @@ import {
   getMimeType,
   ImageProcessOptions,
   ProcessedImageMetadata,
-  processMultipleImages,
+  processImagesGenerator,
 } from '@/lib/image-processor';
 
 /**
@@ -194,46 +194,82 @@ export async function POST(
       fileNames.push(file.name);
     }
 
-    // 批量处理图片
-    const processResults = await processMultipleImages(imageBuffers, options);
+    // 创建流式响应
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // 发送开始信号
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({ type: 'start', total: files.length }) + '\n'
+            )
+          );
 
-    // 构建响应结果
-    const results: SingleImageResult[] = processResults.map((result, index) => {
-      const originalName = fileNames[index] || `image_${index + 1}`;
+          // 批量处理图片（生成器模式）
+          for await (const { index, result } of processImagesGenerator(
+            imageBuffers,
+            options
+          )) {
+            const originalName = fileNames[index] || `image_${index + 1}`;
+            let finalResult: SingleImageResult;
 
-      // 检查是否处理失败（buffer 为空且 format 为 'error'）
-      if (result.metadata.format === 'error' || result.buffer.length === 0) {
-        return {
-          success: false,
-          error: '图片处理失败',
-          errorCode: 'PROCESSING_FAILED',
-          originalName,
-        };
-      }
+            if (
+              result.metadata.format === 'error' ||
+              result.buffer.length === 0
+            ) {
+              finalResult = {
+                success: false,
+                error: '图片处理失败',
+                errorCode: 'PROCESSING_FAILED',
+                originalName,
+              };
+            } else {
+              const mimeType = getMimeType(options.targetFormat);
+              const base64 = bufferToBase64(result.buffer, mimeType);
+              finalResult = {
+                success: true,
+                metadata: result.metadata,
+                base64,
+                originalName,
+              };
+            }
 
-      // 转换为 Base64
-      const mimeType = getMimeType(options.targetFormat);
-      const base64 = bufferToBase64(result.buffer, mimeType);
+            // 发送单条结果
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({ type: 'result', index, result: finalResult }) +
+                  '\n'
+              )
+            );
+          }
 
-      return {
-        success: true,
-        metadata: result.metadata,
-        base64,
-        originalName,
-      };
+          // 发送完成信号
+          controller.enqueue(
+            encoder.encode(JSON.stringify({ type: 'done' }) + '\n')
+          );
+          controller.close();
+        } catch (error) {
+          console.error('流式处理错误:', error);
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({
+                type: 'error',
+                error: error instanceof Error ? error.message : '处理过程中出错',
+              }) + '\n'
+            )
+          );
+          controller.close();
+        }
+      },
     });
 
-    // 统计成功和失败数量
-    const successCount = results.filter((r) => r.success).length;
-    const failureCount = results.filter((r) => !r.success).length;
-
-    // 返回响应
-    return NextResponse.json({
-      success: true,
-      results,
-      total: results.length,
-      successCount,
-      failureCount,
+    return new NextResponse(stream, {
+      headers: {
+        'Content-Type': 'application/x-ndjson',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
     });
   } catch (error) {
     // 处理未知错误

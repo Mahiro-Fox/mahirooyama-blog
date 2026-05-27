@@ -297,6 +297,39 @@ export async function processMultipleImages(
 }
 
 /**
+ * 批量处理多张图片（生成器模式，支持实时返回结果）
+ *
+ * @param imageBuffers - 图片 Buffer 数组
+ * @param options - 图片处理配置选项
+ * @returns AsyncGenerator<{ index: number; result: ImageProcessResult }>
+ */
+export async function* processImagesGenerator(
+  imageBuffers: Buffer[],
+  options: ImageProcessOptions
+): AsyncGenerator<{ index: number; result: ImageProcessResult }> {
+  for (let i = 0; i < imageBuffers.length; i++) {
+    try {
+      const result = await processImageBuffer(imageBuffers[i], options);
+      yield { index: i, result };
+    } catch {
+      yield {
+        index: i,
+        result: {
+          buffer: Buffer.alloc(0),
+          metadata: {
+            width: 0,
+            height: 0,
+            format: 'error',
+            size: 0,
+            isAnimated: false,
+          },
+        },
+      };
+    }
+  }
+}
+
+/**
  * 将 Buffer 转换为 Base64 字符串（用于前端预览）
  *
  * @param buffer - 图片 Buffer

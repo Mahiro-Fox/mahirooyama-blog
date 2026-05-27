@@ -43,7 +43,7 @@ export interface ProcessedImageResult {
  */
 export interface ProcessStatusProps {
   /** 处理结果列表 */
-  results: ProcessedImageResult[];
+  results: (ProcessedImageResult | null)[];
   /** 是否正在处理 */
   isProcessing: boolean;
   /** 处理进度 0-100 */
@@ -87,9 +87,10 @@ export default function ProcessStatus({
   onDownloadAll,
   onViewComparison,
 }: ProcessStatusProps) {
-  const successCount = results.filter((r) => r.success).length;
-  const failureCount = results.filter((r) => !r.success).length;
-  const totalSavings = results.reduce((acc, r) => {
+  const validResults = results.filter((r): r is ProcessedImageResult => r !== null);
+  const successCount = validResults.filter((r) => r.success).length;
+  const failureCount = validResults.filter((r) => !r.success).length;
+  const totalSavings = validResults.reduce((acc, r) => {
     if (r.success && r.metadata) {
       return acc + (r.originalSize - r.metadata.size);
     }
@@ -206,7 +207,7 @@ export default function ProcessStatus({
             </div>
 
             <div className="max-h-96 space-y-3 overflow-y-auto pr-2">
-              {results.map((result, index) => (
+              {validResults.map((result, index) => (
                 <motion.div
                   key={result.id}
                   initial={{ opacity: 0, x: -20 }}

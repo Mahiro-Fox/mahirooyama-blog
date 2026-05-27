@@ -46,7 +46,7 @@ export default function Home() {
   };
 
   // 处理结果列表
-  const [results, setResults] = useState<ProcessedImageResult[]>([]);
+  const [results, setResults] = useState<(ProcessedImageResult | null)[]>([]);
 
   // 是否正在处理
   const [isProcessing, setIsProcessing] = useState(false);
@@ -135,46 +135,77 @@ export default function Home() {
       // 添加配置
       formData.append('options', JSON.stringify(config));
 
-      // 模拟进度更新
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
-
       // 发送请求
       const response = await fetch('/api/image/process', {
         method: 'POST',
         body: formData,
       });
 
-      clearInterval(progressInterval);
-      setProgress(100);
-
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || '处理失败');
       }
 
-      const data = await response.json();
+      // 读取流式响应
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('无法读取响应流');
 
-      // 构建结果列表
-      const processedResults: ProcessedImageResult[] = data.results.map(
-        (result: any, index: number) => ({
-          id: uploadedFiles[index].id,
-          originalName: uploadedFiles[index].name,
-          originalSize: uploadedFiles[index].size,
-          originalPreview: uploadedFiles[index].preview,
-          success: result.success,
-          error: result.error,
-          errorCode: result.errorCode,
-          metadata: result.metadata,
-          base64: result.base64,
-        })
-      );
+      const decoder = new TextDecoder();
+      let buffer = '';
+      const processedResults: ProcessedImageResult[] = [];
 
-      setResults(processedResults);
-      setTimeout(() => {
-        scollToResults();
-      }, 100);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const data = JSON.parse(line);
+
+          if (data.type === 'start') {
+            // 开始处理，初始化结果列表
+            setResults(new Array(data.total).fill(null));
+          } else if (data.type === 'result') {
+            const { index, result } = data;
+            const item: ProcessedImageResult = {
+              id: uploadedFiles[index].id,
+              originalName: uploadedFiles[index].name,
+              originalSize: uploadedFiles[index].size,
+              originalPreview: uploadedFiles[index].preview,
+              success: result.success,
+              error: result.error,
+              errorCode: result.errorCode,
+              metadata: result.metadata,
+              base64: result.base64,
+            };
+
+            processedResults[index] = item;
+            // 实时更新结果列表
+            setResults((prev) => {
+              const newResults = [...prev];
+              newResults[index] = item;
+              return newResults;
+            });
+
+            // 实时更新进度（基于已完成数量）
+            const completedCount = processedResults.filter(Boolean).length;
+            const newProgress = Math.round(
+              (completedCount / uploadedFiles.length) * 100
+            );
+            setProgress(newProgress);
+          } else if (data.type === 'done') {
+            // 全部完成
+            setProgress(100);
+          } else if (data.type === 'error') {
+            throw new Error(data.error);
+          }
+        }
+      }
+      scollToResults();
     } catch (error) {
       console.error('处理失败:', error);
       alert(error instanceof Error ? error.message : '处理失败，请重试');
@@ -217,7 +248,9 @@ export default function Home() {
    * 下载全部文件
    */
   const handleDownloadAll = async () => {
-    const successResults = results.filter((r) => r.success && r.base64);
+    const successResults = results.filter(
+      (r): r is ProcessedImageResult => r !== null && r.success && !!r.base64
+    );
 
     if (successResults.length === 0) return;
 
@@ -275,7 +308,7 @@ export default function Home() {
    * 查看对比
    */
   const handleViewComparison = (result: ProcessedImageResult) => {
-    const index = results.findIndex((r) => r.id === result.id);
+    const index = results.findIndex((r) => r && r.id === result.id);
     setComparisonIndex(index);
     setComparisonResult(result);
     setComparisonOpen(true);
@@ -308,7 +341,7 @@ export default function Home() {
       {/* 头部 */}
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/80">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-blue-500 p-2">
                 <Zap className="h-6 w-6 text-white" />
@@ -326,12 +359,20 @@ export default function Home() {
             {uploadedFiles.length > 0 && (
               <button
                 onClick={handleStartProcess}
-                className="flex items-center gap-2 rounded-xl bg-blue-500 px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:bg-blue-600 hover:shadow-blue-500/40"
+                disabled={isProcessing}
+                className="flex items-center gap-2 rounded-xl bg-blue-500 px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:bg-blue-600 hover:shadow-blue-500/40 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isProcessing ? <Spinner /> : <Zap className="h-5 w-5" />}
-                {results.length > 0
-                  ? `重新转换 (${uploadedFiles.length})`
-                  : `开始转换 (${uploadedFiles.length})`}
+                {isProcessing ? (
+                  <span>
+                    正在转换...{' '}
+                    {progress}%
+                  </span>
+                ) : results.length > 0 ? (
+                  `重新转换 (${uploadedFiles.length})`
+                ) : (
+                  `开始转换 (${uploadedFiles.length})`
+                )}
               </button>
             )}
           </div>
@@ -365,7 +406,7 @@ export default function Home() {
 
         {/* 处理状态 */}
         {results.length > 0 && (
-          <div className="mt-8" ref={resultsSectionRef}>
+          <div className="mt-8 scroll-mt-12 sm:scroll-mt-16" ref={resultsSectionRef}>
             <ProcessStatus
               results={results}
               isProcessing={isProcessing}
