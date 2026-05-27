@@ -3,9 +3,14 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { MIDI_DIR } from '@/constant/dir';
-import { checkFileConflict, ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
+import {
+  checkFileConflict,
+  ensureDirectory,
+  ensureFileInitialized,
+} from '@/utils/file-utils';
 
 import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 export interface MidiAdminFile {
   slug: string;
@@ -62,10 +67,26 @@ export async function adminGetMidiFiles(): Promise<
 // POST - 上传 MIDI 文件
 export async function adminUploadMidiFile(
   formData: FormData
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('midi:create');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `midi:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -108,10 +129,26 @@ export async function adminUploadMidiFile(
 // DELETE - 删除 MIDI 文件
 export async function adminDeleteMidiFile(
   slug: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('midi:delete');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `midi:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -135,10 +172,26 @@ export async function adminDeleteMidiFile(
 export async function adminRenameMidiFile(
   oldSlug: string,
   newName: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('midi:update');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `midi:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {

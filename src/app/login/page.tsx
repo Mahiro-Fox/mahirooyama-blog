@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { login } from '@/actions/admin/auth';
+import { checkLogin, login } from '@/actions/admin/auth';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/shadcn-ui/button';
@@ -45,14 +45,11 @@ function LoginForm() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/verify');
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success !== false) {
-            // 已登录，跳转到管理后台
-            const redirect = searchParams.get('redirect') || '/admin';
-            router.replace(redirect);
-          }
+        const result = await checkLogin();
+        if (result.success) {
+          // 已登录，跳转到管理后台
+          const redirect = searchParams.get('redirect') || '/admin';
+          router.replace(redirect);
         }
       } catch {
         // 未登录，留在登录页

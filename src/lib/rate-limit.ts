@@ -78,3 +78,9 @@ export const apiRateLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1分钟
   max: 60,
 });
+
+// Server Action 通用限制：1分钟内最多60次
+export const serverActionRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1分钟
+  max: 60,
+});

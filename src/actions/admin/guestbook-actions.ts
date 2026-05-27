@@ -2,9 +2,10 @@
 
 import fs from 'fs/promises';
 import { GUESTBOOK_FILE } from '@/constant/dir';
+import { ensureFileInitialized } from '@/utils/file-utils';
 
 import { requirePermission } from '@/lib/permissions';
-import { ensureFileInitialized } from '@/utils/file-utils';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 export interface GuestbookEntry {
   id: string;
@@ -31,7 +32,7 @@ export async function adminGetGuestbookEntries(): Promise<
   try {
     // 如果不存在文件，创建文件
     await ensureFileInitialized(GUESTBOOK_FILE);
-    
+
     const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
     const entries: GuestbookEntry[] = JSON.parse(content);
 
@@ -119,9 +120,24 @@ export async function submitGuestbookEntry(input: {
   bgColor: string;
   contact?: string;
   content: string;
-}): Promise<{ success: true; id: string } | { success: false; error: string }> {
+}): Promise<
+  | { success: true; id: string }
+  | { success: false; error: string; resetTime?: number }
+> {
   try {
     const { nickname, bgColor, contact, content } = input;
+
+    // 速率限制检查（使用昵称作为标识符）
+    const rateLimit = await serverActionRateLimiter.check(
+      `guestbook:${nickname.trim()}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '留言提交过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
 
     if (!nickname || nickname.trim().length === 0) {
       return { success: false, error: '昵称不能为空' };

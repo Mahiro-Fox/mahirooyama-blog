@@ -4,14 +4,15 @@ import fs from 'fs/promises';
 import path from 'path';
 import { UPLOADS_DIR } from '@/constant/dir';
 import { pathCacheStore } from '@/store/path-cache-store';
-import { isPathSafe } from '@/utils/file-utils';
-
-import { requirePermission } from '@/lib/permissions';
 import {
   checkFileConflict,
   ensureDirectory,
+  isPathSafe,
 } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
+
+import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 export interface FileItem {
   name: string;
@@ -121,12 +122,32 @@ export async function adminGetUploadFiles(
   }
 }
 
-export async function createFolder(relativePath: string, folderName: string) {
+export async function createFolder(
+  relativePath: string,
+  folderName: string
+): Promise<
+  | { success: true; message: string; folderName: string }
+  | { success: false; error: string; resetTime?: number }
+> {
   try {
     // 检查权限
     const permissionCheck = await requirePermission('files:manageFolder');
     if (!permissionCheck.allowed) {
       return { success: false, error: '权限不足' };
+    }
+
+    // 速率限制检查
+    if (permissionCheck.user?.id) {
+      const rateLimit = await serverActionRateLimiter.check(
+        `file-op:${permissionCheck.user.id}`
+      );
+      if (!rateLimit.success) {
+        return {
+          success: false,
+          error: '文件操作过于频繁，请稍后再试',
+          resetTime: rateLimit.resetTime,
+        };
+      }
     }
 
     if (!folderName || folderName.trim() === '') {
@@ -166,12 +187,31 @@ export async function createFolder(relativePath: string, folderName: string) {
   }
 }
 
-export async function deleteFile(filePath: string) {
+export async function deleteFile(
+  filePath: string
+): Promise<
+  | { success: true; message: string }
+  | { success: false; error: string; resetTime?: number }
+> {
   try {
     // 检查权限
     const permissionCheck = await requirePermission('files:delete');
     if (!permissionCheck.allowed) {
       return { success: false, error: '权限不足' };
+    }
+
+    // 速率限制检查
+    if (permissionCheck.user?.id) {
+      const rateLimit = await serverActionRateLimiter.check(
+        `file-op:${permissionCheck.user.id}`
+      );
+      if (!rateLimit.success) {
+        return {
+          success: false,
+          error: '文件操作过于频繁，请稍后再试',
+          resetTime: rateLimit.resetTime,
+        };
+      }
     }
 
     // 处理路径，确保它是相对于项目根目录或绝对路径
@@ -215,12 +255,32 @@ export async function deleteFile(filePath: string) {
   }
 }
 
-export async function renameFile(oldPath: string, newName: string) {
+export async function renameFile(
+  oldPath: string,
+  newName: string
+): Promise<
+  | { success: true; message: string; newName: string }
+  | { success: false; error: string; resetTime?: number }
+> {
   try {
     // 检查权限
     const permissionCheck = await requirePermission('files:update');
     if (!permissionCheck.allowed) {
       return { success: false, error: '权限不足' };
+    }
+
+    // 速率限制检查
+    if (permissionCheck.user?.id) {
+      const rateLimit = await serverActionRateLimiter.check(
+        `file-op:${permissionCheck.user.id}`
+      );
+      if (!rateLimit.success) {
+        return {
+          success: false,
+          error: '文件操作过于频繁，请稍后再试',
+          resetTime: rateLimit.resetTime,
+        };
+      }
     }
 
     if (!newName || newName.trim() === '') {
@@ -250,7 +310,10 @@ export async function renameFile(oldPath: string, newName: string) {
     }
 
     // 检查新名称是否已存在
-    const exists = await fs.access(fullNewPath).then(() => true).catch(() => false);
+    const exists = await fs
+      .access(fullNewPath)
+      .then(() => true)
+      .catch(() => false);
     if (exists) {
       return { success: false, error: `名称 ${newName} 已存在` };
     }

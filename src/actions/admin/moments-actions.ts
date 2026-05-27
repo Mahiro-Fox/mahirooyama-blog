@@ -6,6 +6,7 @@ import { ensureFileInitialized } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
 
 import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 export interface MomentImage {
   url: string;
@@ -56,11 +57,25 @@ export async function adminUploadMomentImage(
   formData: FormData
 ): Promise<
   | { success: true; image: MomentImage; message: string }
-  | { success: false; error: string }
+  | { success: false; error: string; resetTime?: number }
 > {
   const permissionCheck = await requirePermission('moments:create');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `moments:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -117,10 +132,27 @@ export async function adminCreateMoment(input: {
   image?: MomentImage;
   moodEmoji?: string;
   location?: string;
-}): Promise<{ success: true; id: string } | { success: false; error: string }> {
+}): Promise<
+  | { success: true; id: string }
+  | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('moments:create');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `moments:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -172,10 +204,26 @@ export async function adminUpdateMoment(
     moodEmoji?: string;
     location?: string;
   }
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('moments:update');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `moments:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -218,10 +266,26 @@ export async function adminUpdateMoment(
 // DELETE - 删除碎碎念
 export async function adminDeleteMoment(
   id: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('moments:delete');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `moments:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {

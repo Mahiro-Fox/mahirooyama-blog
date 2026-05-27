@@ -6,10 +6,40 @@ import { sessionStore } from '@/store/session-store';
 import { userStore } from '@/store/user-store';
 import { SignJWT } from 'jose';
 
-export async function login(username: string, password: string) {
+import { verifyAuth } from '@/lib/auth';
+import { loginRateLimiter } from '@/lib/rate-limit';
+
+export async function login(
+  username: string,
+  password: string
+): Promise<
+  | {
+      success: true;
+      message: string;
+      expiresIn: number;
+      sessionId: string;
+      user: {
+        id: string;
+        username: string;
+        avatar: string;
+        role: string;
+      };
+    }
+  | { success: false; error: string; resetTime?: number }
+> {
   try {
     if (!username || !password) {
       return { success: false, error: '请提供用户名和密码' };
+    }
+
+    // 速率限制检查
+    const rateLimit = await loginRateLimiter.check(`login:${username}`);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '登录尝试过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
     }
 
     // 初始化用户存储
@@ -88,4 +118,12 @@ export async function login(username: string, password: string) {
     console.error('登录失败:', error);
     return { success: false, error: '登录失败，请稍后重试' };
   }
+}
+
+export async function checkLogin() {
+  const authCheck = await verifyAuth();
+  if (!authCheck.success) {
+    return { success: false, error: '未登录' };
+  }
+  return { success: true, user: authCheck };
 }

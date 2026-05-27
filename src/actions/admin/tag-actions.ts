@@ -4,6 +4,7 @@ import { TagsData, TagType } from '@/constant';
 import { tagStore } from '@/store/tag-store';
 
 import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 export async function adminGetTags(): Promise<
   { success: true; tags: TagsData } | { success: false; error: string }
@@ -23,10 +24,26 @@ export async function adminCreateTag(input: {
   icon?: string;
   type: TagType;
   description?: string;
-}): Promise<{ success: true } | { success: false; error: string }> {
+}): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('tag:create');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `tag:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   if (!input.id || !input.name || !input.type) {
@@ -59,10 +76,26 @@ export async function adminUpdateTag(input: {
   name: string;
   icon: string;
   description?: string;
-}): Promise<{ success: true } | { success: false; error: string }> {
+}): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('tag:update');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `tag:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   const updated = await tagStore.update(input.id, input.type, {
@@ -81,10 +114,26 @@ export async function adminUpdateTag(input: {
 export async function adminDeleteTag(input: {
   id: string;
   type: TagType;
-}): Promise<{ success: true } | { success: false; error: string }> {
+}): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('tag:delete');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `tag:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   const ok = await tagStore.delete(input.id, input.type);
@@ -96,11 +145,26 @@ export async function adminDeleteTag(input: {
 }
 
 export async function adminResetTags(): Promise<
-  { success: true; tags: TagsData } | { success: false; error: string }
+  | { success: true; tags: TagsData }
+  | { success: false; error: string; resetTime?: number }
 > {
   const permissionCheck = await requirePermission('tag:reset');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `tag:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   const tags = await tagStore.resetToDefault();

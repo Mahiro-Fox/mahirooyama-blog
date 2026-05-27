@@ -12,6 +12,7 @@ import { processAndSaveImage } from '@/utils/image-utils';
 import matter from 'gray-matter';
 
 import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 export interface MdxFile {
   slug: string;
@@ -93,10 +94,26 @@ export async function adminGetBlogFile(
 export async function adminUpdateBlogFile(
   slug: string,
   content: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('blog:update');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `blog:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -116,10 +133,26 @@ export async function adminCreateBlogFile({
 }: {
   slug: string;
   content: string;
-}): Promise<{ success: true } | { success: false; error: string }> {
+}): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('blog:create');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `blog:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -162,10 +195,26 @@ export async function adminCreateBlogFile({
 export async function adminRenameBlogFile(
   slug: string,
   newSlug: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('blog:update');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `blog:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -205,10 +254,26 @@ export async function adminRenameBlogFile(
 // DELETE - 删除文件
 export async function adminDeleteBlogFile(
   slug: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('blog:delete');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `blog:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -226,11 +291,25 @@ export async function adminUploadBlogThumbnail(
   formData: FormData
 ): Promise<
   | { success: true; url: string; message: string }
-  | { success: false; error: string }
+  | { success: false; error: string; resetTime?: number }
 > {
   const permissionCheck = await requirePermission('blog:create');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `blog:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {

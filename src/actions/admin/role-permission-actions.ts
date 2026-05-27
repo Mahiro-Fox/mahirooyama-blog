@@ -5,6 +5,7 @@ import { rolePermissionStore } from '@/store/role-permission-store';
 import type { UserRole } from '@/store/user-store';
 
 import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 export async function adminGetRolePermissions() {
   const permissionCheck = await requirePermission('users:read');
@@ -27,6 +28,20 @@ export async function adminUpdateRolePermissions(input: {
     return { success: false as const, error: 'unauthorized' };
   }
 
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `role:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false as const,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
+  }
+
   if (!input.role || !Array.isArray(input.permissions)) {
     return {
       success: false as const,
@@ -47,6 +62,20 @@ export async function adminResetRolePermissions() {
   const permissionCheck = await requirePermission('users:updateRole');
   if (!permissionCheck.allowed) {
     return { success: false as const, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `role:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false as const,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   await rolePermissionStore.resetToDefault();

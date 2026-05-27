@@ -48,7 +48,8 @@ export interface PageRouteConfig {
   adminHref?: string;
   label: string;
   title: string;
-  description: string;
+  navDescription?: string;
+  description?: string;
   icon: LucideIcon;
   category?: Category;
 }
@@ -60,6 +61,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: '后台页面',
     title: '去往后台页面',
     icon: ChevronRight,
+    navDescription: '去往后台页面',
     description: '去往后台页面',
     category: 'Admin',
   },
@@ -78,8 +80,8 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: 'Blog 管理',
     title: '管理博客文章和 MDX 文件',
     icon: FileText,
-    description:
-      '上传、编辑、删除博客文章，支持 Markdown 格式和 JSON Frontmatter。',
+    navDescription: '浏览 mahirooyam 的博客文章',
+    description: '上传、编辑、删除博客文章，支持 mdx、md 格式',
     category: 'Content',
   },
   {
@@ -89,6 +91,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: 'Gallery 管理',
     title: '管理图库图片和元数据',
     icon: ImageIcon,
+    navDescription: '浏览 mahirooyam 的图库作品',
     description: '上传、编辑、删除图库图片，支持元数据管理。',
     category: 'Content',
   },
@@ -98,6 +101,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: 'Photos 管理',
     title: '瀑布流图片展示',
     icon: Camera,
+    navDescription: '浏览 mahirooyam 的照片集',
     description: '以瀑布流形式展示 uploads/images/gallery 目录下的图片。',
     category: 'Content',
   },
@@ -108,6 +112,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: '碎碎念管理',
     title: '管理碎碎念',
     icon: Smile,
+    navDescription: '查看 mahirooyam 的日常碎碎念',
     description: '发布和管理日常碎碎念，支持文字、图片、心情和位置。',
     category: 'Content',
   },
@@ -118,6 +123,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: '留言墙管理',
     title: '管理留言墙',
     icon: MessageSquare,
+    navDescription: '查看与留言 mahirooyam 的留言墙',
     description: '审核和管理访客留言，支持回复和审核功能。',
     category: 'Content',
   },
@@ -144,6 +150,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: 'MIDI 播放',
     title: 'MIDI 播放',
     icon: Music,
+    navDescription: 'VRChat 中文吧自动钢琴工具',
     description: 'MIDI 播放',
     category: 'Tools',
   },
@@ -153,7 +160,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: '图片转换压缩工具',
     title: '图片转换压缩工具',
     icon: Image,
-    description: '发布和管理日常碎碎念，支持文字、图片、心情和位置。',
+    navDescription: '图片压缩与格式转换工具',
     category: 'Tools',
   },
   {
@@ -163,6 +170,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     label: '标签管理',
     icon: Tag,
     title: '管理博客和图库标签',
+    navDescription: '查看全站内容标签分类',
     description: '创建、编辑、删除标签分类，用于文章和图库的分类管理。',
     category: 'Other',
   },

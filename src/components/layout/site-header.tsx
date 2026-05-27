@@ -6,12 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-import {
-  groupedNavRoutes,
-  navRoutesConfig,
-  pageRoutesConfig,
-  siteConfig,
-} from '@/config/config';
+import { groupedNavRoutes, siteConfig } from '@/config/config';
 import { verifyAuth } from '@/lib/auth';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
@@ -87,7 +82,7 @@ export function SiteHeader() {
                         <NavigationMenuTrigger>
                           {categoryName}
                         </NavigationMenuTrigger>
-                        <NavigationMenuContent>
+                        <NavigationMenuContent className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                           {items.map((item) => (
                             <NavigationMenuLink key={item.navHref} asChild>
                               <Link
@@ -99,6 +94,13 @@ export function SiteHeader() {
                                 }
                               >
                                 {item.name}
+                                <p
+                                  className="text-muted-foreground text-xs"
+                                  key={item.name}
+                                  title={item.name}
+                                >
+                                  {item.navDescription}
+                                </p>
                               </Link>
                             </NavigationMenuLink>
                           ))}

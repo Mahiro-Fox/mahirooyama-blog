@@ -10,7 +10,9 @@ import {
   validateSlug,
 } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
+
 import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 export interface GalleryFile {
   slug: string;
@@ -95,10 +97,26 @@ export async function adminGetGalleryFile(
 export async function adminCreateGalleryFile(input: {
   slug: string;
   content: string;
-}): Promise<{ success: true } | { success: false; error: string }> {
+}): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('gallery:create');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `gallery:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -160,10 +178,26 @@ export async function adminCreateGalleryFile(input: {
 export async function adminUpdateGalleryFile(
   slug: string,
   content: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('gallery:update');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `gallery:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -191,10 +225,26 @@ export async function adminUpdateGalleryFile(
 export async function adminRenameGalleryFile(
   slug: string,
   newSlug: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('gallery:update');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `gallery:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -235,10 +285,26 @@ export async function adminRenameGalleryFile(
 // DELETE - 删除文件
 export async function adminDeleteGalleryFile(
   slug: string
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<
+  { success: true } | { success: false; error: string; resetTime?: number }
+> {
   const permissionCheck = await requirePermission('gallery:delete');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `gallery:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
@@ -258,11 +324,25 @@ export async function adminUploadGalleryThumbnail(
   formData: FormData
 ): Promise<
   | { success: true; url: string; message: string }
-  | { success: false; error: string }
+  | { success: false; error: string; resetTime?: number }
 > {
   const permissionCheck = await requirePermission('gallery:create');
   if (!permissionCheck.allowed) {
     return { success: false, error: 'unauthorized' };
+  }
+
+  // 速率限制检查
+  if (permissionCheck.user?.id) {
+    const rateLimit = await serverActionRateLimiter.check(
+      `gallery:${permissionCheck.user.id}`
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: '操作过于频繁，请稍后再试',
+        resetTime: rateLimit.resetTime,
+      };
+    }
   }
 
   try {
