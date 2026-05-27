@@ -124,7 +124,7 @@ export default function ImageSliderView({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="relative flex h-full max-h-[90vh] w-full max-w-7xl flex-col"
+            className="relative flex h-full w-full max-w-7xl flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 头部 */}
