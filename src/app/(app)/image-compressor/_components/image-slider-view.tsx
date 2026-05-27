@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 
-import ImageCompare from './ImageCompare';
+import ImageCompare from './image-compare';
 
 /**
  * ProcessedImageResult 类型（从 ProcessStatus 导入）
