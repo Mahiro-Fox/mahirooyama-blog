@@ -5,6 +5,8 @@ import Head from 'next/head';
 import JSZip from 'jszip';
 import { Zap } from 'lucide-react';
 
+import { Spinner } from '@/components/shadcn-ui/spinner';
+
 import ConfigPanel, { ImageProcessConfig } from './_components/ConfigPanel';
 import ImageSliderView from './_components/ImageSliderView';
 import ImageUploader, { UploadedFile } from './_components/ImageUploader';
@@ -73,7 +75,7 @@ export default function Home() {
    * 开始处理
    */
   const handleStartProcess = async () => {
-    if (uploadedFiles.length === 0) return;
+    if (uploadedFiles.length === 0 || isProcessing) return;
 
     setIsProcessing(true);
     setProgress(0);
@@ -280,12 +282,12 @@ export default function Home() {
               </div>
             </div>
 
-            {uploadedFiles.length > 0 && !isProcessing && (
+            {uploadedFiles.length > 0 && (
               <button
                 onClick={handleStartProcess}
                 className="flex items-center gap-2 rounded-xl bg-blue-500 px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:bg-blue-600 hover:shadow-blue-500/40"
               >
-                <Zap className="h-5 w-5" />
+                {isProcessing ? <Spinner /> : <Zap className="h-5 w-5" />}
                 {results.length > 0
                   ? `重新转换 (${uploadedFiles.length})`
                   : `开始转换 (${uploadedFiles.length})`}
