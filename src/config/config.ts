@@ -5,6 +5,7 @@ import {
   ChevronRight,
   FileText,
   FolderOpen,
+  Image,
   ImageIcon,
   LucideIcon,
   MessageSquare,
@@ -39,6 +40,8 @@ export const siteConfig = {
   email: 'why510902@163.com',
 };
 
+type Category = 'Content' | 'Tools' | 'Admin' | 'Other';
+
 export interface PageRouteConfig {
   name: string;
   navHref?: string;
@@ -47,6 +50,7 @@ export interface PageRouteConfig {
   title: string;
   description: string;
   icon: LucideIcon;
+  category?: Category;
 }
 
 export const pageRoutesConfig: PageRouteConfig[] = [
@@ -57,6 +61,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '去往后台页面',
     icon: ChevronRight,
     description: '去往后台页面',
+    category: 'Admin',
   },
   {
     name: '前台',
@@ -75,6 +80,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     icon: FileText,
     description:
       '上传、编辑、删除博客文章，支持 Markdown 格式和 JSON Frontmatter。',
+    category: 'Content',
   },
   {
     name: 'Gallery',
@@ -84,6 +90,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '管理图库图片和元数据',
     icon: ImageIcon,
     description: '上传、编辑、删除图库图片，支持元数据管理。',
+    category: 'Content',
   },
   {
     name: 'Photos',
@@ -92,6 +99,27 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '瀑布流图片展示',
     icon: Camera,
     description: '以瀑布流形式展示 uploads/images/gallery 目录下的图片。',
+    category: 'Content',
+  },
+  {
+    name: 'Moments',
+    navHref: '/moments',
+    adminHref: '/admin/moments',
+    label: '碎碎念管理',
+    title: '管理碎碎念',
+    icon: Smile,
+    description: '发布和管理日常碎碎念，支持文字、图片、心情和位置。',
+    category: 'Content',
+  },
+  {
+    name: 'Guestbook',
+    navHref: '/guestbook',
+    adminHref: '/admin/guestbook',
+    label: '留言墙管理',
+    title: '管理留言墙',
+    icon: MessageSquare,
+    description: '审核和管理访客留言，支持回复和审核功能。',
+    category: 'Content',
   },
   {
     name: 'UploadFiles',
@@ -110,15 +138,6 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     description: '创建、编辑、删除用户账号，管理用户权限（仅超级管理员）.',
   },
   {
-    name: 'Tag',
-    navHref: '/tag',
-    adminHref: '/admin/tags',
-    label: '标签管理',
-    icon: Tag,
-    title: '管理博客和图库标签',
-    description: '创建、编辑、删除标签分类，用于文章和图库的分类管理。',
-  },
-  {
     name: 'MIDI',
     navHref: '/midi',
     adminHref: '/admin/midi',
@@ -126,24 +145,26 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: 'MIDI 播放',
     icon: Music,
     description: 'MIDI 播放',
+    category: 'Tools',
   },
   {
-    name: 'Moments',
-    navHref: '/moments',
-    adminHref: '/admin/moments',
-    label: '碎碎念管理',
-    title: '管理碎碎念',
-    icon: Smile,
+    name: 'Image Compressor',
+    navHref: '/image-compressor',
+    label: '图片转换压缩工具',
+    title: '图片转换压缩工具',
+    icon: Image,
     description: '发布和管理日常碎碎念，支持文字、图片、心情和位置。',
+    category: 'Tools',
   },
   {
-    name: 'Guestbook',
-    navHref: '/guestbook',
-    adminHref: '/admin/guestbook',
-    label: '留言墙管理',
-    title: '管理留言墙',
-    icon: MessageSquare,
-    description: '审核和管理访客留言，支持回复和审核功能。',
+    name: 'Tag',
+    navHref: '/tag',
+    adminHref: '/admin/tags',
+    label: '标签管理',
+    icon: Tag,
+    title: '管理博客和图库标签',
+    description: '创建、编辑、删除标签分类，用于文章和图库的分类管理。',
+    category: 'Other',
   },
   {
     name: 'Analytics',
@@ -159,6 +180,17 @@ export const pageRoutesConfig: PageRouteConfig[] = [
 export const navRoutesConfig = pageRoutesConfig.filter(
   (route) => route.navHref
 );
+// 根据分类分组导航路由
+export const groupedNavRoutes = navRoutesConfig.reduce<
+  Record<string, typeof navRoutesConfig>
+>((acc, route) => {
+  const category = route.category || 'Other';
+  if (!acc[category]) {
+    acc[category] = [];
+  }
+  acc[category].push(route);
+  return acc;
+}, {});
 // 管理员端路由（包含 adminHref）
 export const adminRoutesConfig = pageRoutesConfig.filter(
   (route) => route.adminHref
