@@ -1,23 +1,9 @@
-'use client';
+import { adminGetAnalyticsLogs } from '@/actions/admin/analytics-actions';
 
-import { adminRoutesConfig } from '@/config/config';
-import { AdminNavCard } from '@/components/admin/admin-nav-card';
+import AnalyticsCharts from '@/app/admin/analytics/analytics-charts';
 
-export default function AdminPage() {
-  return (
-    <div className="grid gap-6 md:grid-cols-2">
-      {adminRoutesConfig.map((config) =>
-        config.adminHref ? (
-          <AdminNavCard
-            key={config.name}
-            href={config.adminHref}
-            icon={config.icon}
-            label={config.label}
-            title={config.title}
-            description={config.description}
-          />
-        ) : null
-      )}
-    </div>
-  );
+export default async function AdminPage() {
+  const result = await adminGetAnalyticsLogs();
+  const logs = result.success ? result.logs : [];
+  return logs.length > 0 ? <AnalyticsCharts logs={logs} /> : null;
 }

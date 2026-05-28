@@ -16,7 +16,7 @@ import {
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 
-import AnalyticsCharts from './analytics-charts';
+// import AnalyticsCharts from './analytics-charts';
 
 const columns: Column<AnalyticsLog>[] = [
   {
@@ -147,7 +147,7 @@ export default function AnalyticsClient({
         }}
       />
       <p className="h-6" />
-      {logs.length > 0 && <AnalyticsCharts logs={logs} />}
+      {/* {logs.length > 0 && <AnalyticsCharts logs={logs} />} */}
     </AdminPageLayout>
   );
 }
