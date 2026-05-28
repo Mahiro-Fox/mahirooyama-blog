@@ -1,3 +1,4 @@
+import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { tagStore } from '@/store/tag-store';
@@ -5,7 +6,14 @@ import { formatDate } from '@/utils/utils';
 
 import { getAllGalleryImages, getGalleryImageBySlug } from '@/lib/gallery';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/shadcn-ui/breadcrumb';
 import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';
 import { LinkBadge } from '@/components/shared/link-badge';
 
@@ -74,7 +82,30 @@ export default async function GalleryImagePage({
       <div className="container-wrapper">
         <div className="container">
           <div className="py-4 lg:block">
-            <Breadcrumb items={breadcrumbItems} />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                {breadcrumbItems.map((item, index) => (
+                  <React.Fragment key={`breadcrumb_items_${index}`}>
+                    <BreadcrumbItem className={item.link && 'hover:underline'}>
+                      {item.link ? (
+                        <BreadcrumbLink href={item.link}>
+                          {item.label}
+                        </BreadcrumbLink>
+                      ) : (
+                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                      )}
+                    </BreadcrumbItem>
+                    {breadcrumbItems.length - 1 > index && (
+                      <BreadcrumbSeparator />
+                    )}
+                  </React.Fragment>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
         </div>
         <div className="pt-4">

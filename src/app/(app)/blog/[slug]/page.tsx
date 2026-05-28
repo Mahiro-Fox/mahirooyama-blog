@@ -1,3 +1,4 @@
+import React from 'react';
 import { notFound } from 'next/navigation';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
@@ -5,9 +6,16 @@ import { absoluteUrl, formatDate } from '@/utils/utils';
 import { siteConfig } from '@/config/config';
 import { author } from '@/lib/author';
 import { getAllBlogPosts, getBlogPostBySlug } from '@/lib/mdx';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/shadcn-ui/breadcrumb';
 import { Author } from '@/components/content/author';
 import { CustomMDX } from '@/components/content/custom-mdx';
-import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';
 import { LinkBadge } from '@/components/shared/link-badge';
 
@@ -91,7 +99,30 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <div className="container-wrapper">
         <div className="container">
           <div className="py-4 lg:block">
-            <Breadcrumb items={breadcrumbItems} />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                {breadcrumbItems.map((item, index) => (
+                  <React.Fragment key={`breadcrumb_items_${index}`}>
+                    <BreadcrumbItem className={item.link && 'hover:underline'}>
+                      {item.link ? (
+                        <BreadcrumbLink href={item.link}>
+                          {item.label}
+                        </BreadcrumbLink>
+                      ) : (
+                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                      )}
+                    </BreadcrumbItem>
+                    {breadcrumbItems.length - 1 > index && (
+                      <BreadcrumbSeparator />
+                    )}
+                  </React.Fragment>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
         </div>
         <div className="pt-4">
