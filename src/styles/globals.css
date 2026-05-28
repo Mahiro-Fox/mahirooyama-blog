@@ -76,25 +76,25 @@
 }
 
 /* 滚动条整体 */
-html::-webkit-scrollbar {
+*::-webkit-scrollbar {
   width: 5px; /* 纵向滚动条宽度 */
   height: 5px; /* 横向滚动条高度 */
 }
 
 /* 滚动条轨道 */
-html::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: var(--background);
   border-radius: 5px;
 }
 
 /* 滚动条滑块 */
-html::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background: var(--foreground);
   border-radius: 5px;
 }
 
 /* 悬停时滑块颜色 */
-html::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
   background: var(--foreground);
 }
 
