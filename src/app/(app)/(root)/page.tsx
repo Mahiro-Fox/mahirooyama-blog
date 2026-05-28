@@ -15,14 +15,13 @@ import { HomeBanner } from '@/components/shared/home-banner';
 import { LinkCard } from '@/components/shared/link-card';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
 
-
 export const metadata: Metadata = {
   title: "欢迎来到 mahirooyama 的网站喵~ - Welcome to mahiooyama's blog",
   description: `本网站主要内容是一些照片，例如和朋友在VRChat里拍的照片。如果想上传照片，可以在 VRChat 联系我哦~ 次要内容是一些编程笔记和其他技术分享，后续也可能加入一些新的内容与功能~ 源代码在 GitHub ，欢迎查看哦~ - 
   The main content of this website consists of some photos, such as those taken in VRChat with friends. If you'd like to upload photos, feel free to contact me in VRChat~
   The secondary content includes some programming notes and other technical shares, with potential additions of new content and features in the future
   The source code is on GitHub. Feel free to check it out~`,
-  keywords: ['博客','blog', 'photo', 'post', 'gallery', 'midi'],
+  keywords: ['博客', 'blog', 'photo', 'post', 'gallery', 'midi'],
 };
 
 export default async function IndexPage() {

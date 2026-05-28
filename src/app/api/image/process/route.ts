@@ -255,7 +255,8 @@ export async function POST(
             encoder.encode(
               JSON.stringify({
                 type: 'error',
-                error: error instanceof Error ? error.message : '处理过程中出错',
+                error:
+                  error instanceof Error ? error.message : '处理过程中出错',
               }) + '\n'
             )
           );

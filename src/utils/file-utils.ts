@@ -15,6 +15,7 @@ export function isPathSafe(
   const resolvedBase = path.resolve(allowedBasePath);
   return resolvedPath.startsWith(resolvedBase);
 }
+
 export async function ensureDirectory(dirPath: string): Promise<void> {
   try {
     await fs.access(dirPath);

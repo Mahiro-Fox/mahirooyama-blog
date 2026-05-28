@@ -6,7 +6,7 @@ import { userStore } from '@/store/user-store';
 import { ensureDirectory } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
 
-import { verifyAuth } from '@/lib/auth';
+import { verifyAuth } from '@/lib/admin-auth';
 
 // POST /api/users/avatar - 上传用户头像
 export async function POST(request: NextRequest) {

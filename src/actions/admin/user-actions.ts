@@ -10,7 +10,7 @@ import {
 } from '@/store/user-store';
 import { processAndSaveImage } from '@/utils/image-utils';
 
-import { verifyAuth } from '@/lib/auth';
+import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 

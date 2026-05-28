@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { adminGetGuestbookEntries } from '@/actions/admin/guestbook-actions';
 import type { UserRole } from '@/store/user-store';
 
-import { verifyAuth } from '@/lib/auth';
+import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
 import AdminShell from '@/components/admin/admin-shell';
 import { QueryToast } from '@/components/admin/query-toast';

@@ -7,7 +7,7 @@ import { Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { groupedNavRoutes, siteConfig } from '@/config/config';
-import { verifyAuth } from '@/lib/auth';
+import { verifyAuth } from '@/lib/admin-auth';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import {

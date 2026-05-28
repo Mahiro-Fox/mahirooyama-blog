@@ -8,40 +8,45 @@ import { getAllBlogPosts } from '@/lib/mdx';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
 
-  const [blogPosts, galleryImages, tags] = await Promise.all([
+  const [blogPosts, galleryImages, allTags] = await Promise.all([
     getAllBlogPosts(),
     getAllGalleryImages(),
     tagStore.getAll(),
   ]);
 
+  // 博客页
   const blogPages = blogPosts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
   }));
 
+  // 图库页
   const galleryPages = galleryImages.map((gallery) => ({
     url: `${baseUrl}/gallery/${gallery.slug}`,
   }));
 
-  const blogTagPages = Object.keys(tags.blog).map((slug) => ({
-    url: `${baseUrl}/tag/blog/${slug}`,
-  }));
+  // 标签页
+  const tagPages: MetadataRoute.Sitemap = [];
+  Object.entries(allTags).forEach(([type, tags]) => {
+    Object.keys(tags).forEach((key) => {
+      tagPages.push({
+        url: `${baseUrl}/tag/${type}/${key}`,
+      });
+    });
+  });
 
-  const galleryTagPages = Object.keys(tags.gallery).map((slug) => ({
-    url: `${baseUrl}/tag/gallery/${slug}`,
-  }));
-
-  const staticPages = [
-    {
-      url: baseUrl,
-    },
+  // 静态页
+  const staticRoutes = [
+    '/',
+    '/guestbook',
+    '/midi',
+    '/photos',
+    '/moments',
+    '/image-compressor',
   ];
 
-  return [
-    ...staticPages,
-    ...blogPages,
-    ...galleryPages,
+  const staticPages = staticRoutes.map((route) => ({
+    url: `${baseUrl}${route}`,
+  }));
 
-    ...blogTagPages,
-    ...galleryTagPages,
-  ];
+  return [...staticPages, ...blogPages, ...galleryPages, ...tagPages];
 }

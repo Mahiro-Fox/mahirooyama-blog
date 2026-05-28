@@ -6,7 +6,14 @@ import { MomentsTimeline } from './moments-timeline';
 export const metadata: Metadata = {
   title: "欢迎来到 mahirooyama 的随记喵~ - Welcome to mahiooyama's moments",
   description: `这里是一些mahiro日常的一些吐槽、随记... - Here are some daily roast and notes of Mahiro ..`,
-  keywords: ['随记','moments', 'mahirooyama', 'mahiooyama', 'leave messages', 'contact mahiro'],
+  keywords: [
+    '随记',
+    'moments',
+    'mahirooyama',
+    'mahiooyama',
+    'leave messages',
+    'contact mahiro',
+  ],
 };
 export default async function MomentsPage() {
   const result = await getPublicMoments();

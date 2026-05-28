@@ -6,7 +6,14 @@ export const metadata: Metadata = {
   title:
     "欢迎来到 mahirooyama 的照片墙喵~ - Welcome to mahiooyama's photo wall",
   description: `这里是一些mahiro日常的一些照片... - Here are some photos of Mahiro's daily life...`,
-  keywords: ['照片墙','photos', 'mahirooyama', 'mahiooyama', 'daily life', 'contact mahiro'],
+  keywords: [
+    '照片墙',
+    'photos',
+    'mahirooyama',
+    'mahiooyama',
+    'daily life',
+    'contact mahiro',
+  ],
 };
 export default function PhotosPage() {
   return (

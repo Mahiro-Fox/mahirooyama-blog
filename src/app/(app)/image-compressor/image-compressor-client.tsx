@@ -216,6 +216,9 @@ export default function ImageCompressorClient() {
     }
   };
 
+  /**
+   * 滚动到结果区域
+   */
   const scollToResults = () => {
     resultsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };

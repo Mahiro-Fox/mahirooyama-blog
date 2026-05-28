@@ -33,7 +33,7 @@ export const metadata: Metadata = {
       ],
     },
   },
-  keywords: ['博客','blog', 'photo', 'post', 'gallery', 'midi'],
+  keywords: ['博客', 'blog', 'photo', 'post', 'gallery', 'midi'],
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
@@ -61,7 +61,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <head />
+      <head>
+        {/* 浏览器内容安全策略 (CSP) 限制了图片加载：当前仅允许 self（当前域名）资源，blob: 格式图片被拦截，且未单独配置 img-src，所以沿用 default-src 规则 */}
+        {/* 此设置目前只针对于image-compressor路由 */}
+        <meta
+          http-equiv="Content-Security-Policy"
+          content="default-src 'self'; img-src 'self' blob: data:;"
+        />
+      </head>
       <body
         className={cn(
           'text-foreground overscroll-none font-sans antialiased',

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userStore } from '@/store/user-store';
 
-import { verifyAuth } from '@/lib/auth';
+import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
 
 // PATCH /api/users/[id] - 更新用户

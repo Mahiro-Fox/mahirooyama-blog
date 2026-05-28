@@ -87,7 +87,9 @@ export default function ProcessStatus({
   onDownloadAll,
   onViewComparison,
 }: ProcessStatusProps) {
-  const validResults = results.filter((r): r is ProcessedImageResult => r !== null);
+  const validResults = results.filter(
+    (r): r is ProcessedImageResult => r !== null
+  );
   const successCount = validResults.filter((r) => r.success).length;
   const failureCount = validResults.filter((r) => !r.success).length;
   const totalSavings = validResults.reduce((acc, r) => {
