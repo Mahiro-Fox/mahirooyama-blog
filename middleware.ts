@@ -28,7 +28,14 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net;"
+    [
+      "default-src 'self';",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;",
+      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;",
+      "connect-src 'self' https://cdn.jsdelivr.net;",
+      // 关键点：明确允许 img-src 使用 self、blob: 和 base64(data:)
+      "img-src 'self' blob: data:;",
+    ].join(' ')
   );
   return response;
 }
