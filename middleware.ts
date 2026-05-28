@@ -33,8 +33,10 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;",
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;",
       "connect-src 'self' https://cdn.jsdelivr.net;",
-      // 关键点：明确允许 img-src 使用 self、blob: 和 base64(data:)
-      "img-src 'self' blob: data:;",
+      // 允许 img-src 使用任何源的图片资源、blob: 和 base64(data:)
+      'img-src * blob: data:;',
+      // 允许 media-src 使用 self 和 bilivideo.com 域名、blob: 和 base64(data:)
+      "media-src 'self' *.bilivideo.com blob: data:;",
     ].join(' ')
   );
   return response;
