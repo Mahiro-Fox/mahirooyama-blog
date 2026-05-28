@@ -13,6 +13,7 @@ import {
   Shield,
   Smile,
   Tag,
+  Video,
 } from 'lucide-react';
 
 // 配置选项常量
@@ -152,6 +153,16 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     icon: Music,
     navDescription: 'VRChat 中文吧自动钢琴工具',
     description: 'MIDI 播放',
+    category: 'Tools',
+  },
+  {
+    name: 'BilibiliParse',
+    navHref: '/bilibili-parse',
+    label: 'Bilibili 视频解析',
+    title: 'Bilibili 视频解析',
+    icon: Video,
+    navDescription: 'Bilibili 视频解析工具',
+    description: 'Bilibili 视频解析工具',
     category: 'Tools',
   },
   {

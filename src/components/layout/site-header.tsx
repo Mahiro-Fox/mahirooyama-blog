@@ -93,7 +93,12 @@ export function SiteHeader() {
                                     : 'hover:bg-transparent'
                                 }
                               >
-                                {item.name}
+                                <p className="flex items-center gap-2">
+                                  {item.icon && (
+                                    <item.icon className="h-4 w-4" />
+                                  )}
+                                  <span>{item.name}</span>
+                                </p>
                                 <p
                                   className="text-muted-foreground text-xs"
                                   key={item.name}
@@ -134,7 +139,7 @@ export function SiteHeader() {
                   <SheetTitle>{siteConfig.name}</SheetTitle>
                   <SheetDescription>{siteConfig.description}</SheetDescription>
                 </SheetHeader>
-                <nav className="flex flex-col gap-2">
+                <nav className="flex flex-col gap-2 overflow-auto">
                   {Object.entries(groupedNavRoutes).map(
                     ([categoryName, items]) => {
                       if (categoryName === 'Admin' && !isAdminAuth) {
@@ -149,12 +154,13 @@ export function SiteHeader() {
                             <SheetClose asChild key={item.navHref}>
                               <Link
                                 href={item.navHref!}
-                                className={`flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                                className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                                   isActive(item.navHref!)
                                     ? 'bg-accent text-accent-foreground'
                                     : 'hover:bg-muted'
                                 }`}
                               >
+                                {item.icon && <item.icon className="h-4 w-4" />}
                                 {item.name}
                               </Link>
                             </SheetClose>
