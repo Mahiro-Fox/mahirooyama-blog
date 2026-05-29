@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { submitBugReport } from '@/actions/admin/bug-actions';
+import { trackEvent } from '@/utils/tracker';
 import { Bug, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,6 +26,7 @@ export function BugReportTrigger() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    trackEvent('bug_report_submit');
     if (!content.trim()) {
       toast.error('请输入 BUG 描述');
       return;
@@ -40,7 +42,7 @@ export function BugReportTrigger() {
       });
 
       if (res.success) {
-        toast.success('感谢您的反馈，我们会尽快处理！');
+        toast.success('感谢反馈！mahiro会尽快处理的喵！');
         setOpen(false);
         setContent('');
         setContact('');
@@ -54,6 +56,11 @@ export function BugReportTrigger() {
     }
   };
 
+  const handleClick = () => {
+    trackEvent('bug_report_click');
+    setOpen(true);
+  };
+
   return (
     <>
       <Button
@@ -61,7 +68,7 @@ export function BugReportTrigger() {
         size="icon"
         className="fixed right-10 bottom-20 z-50 h-10 w-10 rounded-full shadow-lg transition-transform hover:scale-110 md:bottom-24"
         title="提交 BUG"
-        onClick={() => setOpen(true)}
+        onClick={handleClick}
       >
         <Bug className="h-8 w-8" />
         <span className="sr-only">提交 BUG</span>
@@ -76,7 +83,7 @@ export function BugReportTrigger() {
                 提交 BUG 报告
               </DialogTitle>
               <DialogDescription>
-                发现网站 BUG？请在下方描述问题，我们会尽快修复。
+                发现网站 BUG？请在下方描述问题，mahiro会尽快修复的喵！
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
