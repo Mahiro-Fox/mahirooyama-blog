@@ -9,6 +9,7 @@ export const PHOTO_DIR = path.join(UPLOADS_DIR, 'images', 'gallery');
 export const MIDI_DIR = path.join(UPLOADS_DIR, 'midisongs');
 export const MOMENTS_FILE = path.join(DATA_DIR, 'moments.json');
 export const GUESTBOOK_FILE = path.join(DATA_DIR, 'guestbook.json');
+export const BUGS_FILE = path.join(DATA_DIR, 'bugs.json');
 export const ROLE_PERMISSIONS_FILE = path.join(
   DATA_DIR,
   'role-permissions.json'

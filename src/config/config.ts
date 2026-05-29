@@ -1,5 +1,6 @@
 import {
   Activity,
+  Bug,
   Camera,
   ChevronLeft,
   ChevronRight,
@@ -202,6 +203,14 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '查看网站访问日志',
     icon: Activity,
     description: '查看网站访问日志，包括访问时间、页面、设备等信息。',
+  },
+  {
+    name: 'BugReport',
+    adminHref: '/admin/bugs',
+    label: 'BUG 报告',
+    title: '查看用户提交的 BUG',
+    icon: Bug,
+    description: '查看和处理用户反馈的网站 BUG。',
   },
 ];
 

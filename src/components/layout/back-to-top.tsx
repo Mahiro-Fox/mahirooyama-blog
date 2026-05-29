@@ -19,6 +19,7 @@ export function BackToTop() {
   }, []);
   return (
     <div
+      title="返回顶部"
       className={cn(
         'bg-foreground fixed right-10 bottom-10 z-50 cursor-pointer rounded-full p-2 shadow-lg backdrop-blur-sm transition-opacity duration-300',
         show

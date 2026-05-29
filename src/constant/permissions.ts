@@ -52,6 +52,10 @@ export type Permission =
   | 'guestbook:update'
   | 'guestbook:delete'
   | 'guestbook:approve'
+  // BUG 管理权限
+  | 'bugs:read'
+  | 'bugs:update'
+  | 'bugs:delete'
   // 分析权限
   | 'analytics:read'
   | 'analytics:delete'
@@ -116,6 +120,11 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'guestbook:update',
     'guestbook:delete',
     'guestbook:approve',
+
+    // BUG 提交
+    'bugs:read',
+    'bugs:update',
+    'bugs:delete',
 
     // 分析权限：只能查看访问日志
     'analytics:read',
@@ -311,6 +320,22 @@ export const ALL_PERMISSIONS: {
         label: '审核留言',
         description: '审核或取消审核留言',
       },
+    ],
+  },
+  {
+    group: 'BUG 管理',
+    permissions: [
+      {
+        value: 'bugs:read',
+        label: '查看 BUG',
+        description: '查看 BUG 报告列表',
+      },
+      {
+        value: 'bugs:update',
+        label: '修改 BUG',
+        description: '修改 BUG 处理状态',
+      },
+      { value: 'bugs:delete', label: '删除 BUG', description: '删除 BUG 报告' },
     ],
   },
   {
