@@ -13,6 +13,7 @@ import {
   Shield,
   Smile,
   Tag,
+  User,
   Video,
 } from 'lucide-react';
 
@@ -173,6 +174,15 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     icon: Image,
     navDescription: '图片压缩与格式转换工具',
     category: 'Tools',
+  },
+  {
+    name: 'About',
+    navHref: '/about',
+    label: '关于我',
+    title: '关于我',
+    icon: User,
+    navDescription: '关于我的个人介绍',
+    category: 'Other',
   },
   {
     name: 'Tag',

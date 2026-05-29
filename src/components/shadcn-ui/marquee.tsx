@@ -17,6 +17,11 @@ interface MarqueeProps extends ComponentPropsWithoutRef<'div'> {
    */
   pauseOnHover?: boolean;
   /**
+   * Duration of the animation in seconds
+   * @default 40
+   */
+  duration?: number;
+  /**
    * Content to be displayed in the marquee
    */
   children: React.ReactNode;
@@ -36,6 +41,7 @@ export function Marquee({
   className,
   reverse = false,
   pauseOnHover = false,
+  duration = 40,
   children,
   vertical = false,
   repeat = 4,
@@ -45,13 +51,18 @@ export function Marquee({
     <div
       {...props}
       className={cn(
-        'group flex gap-(--gap) overflow-hidden p-2 [--duration:40s] [--gap:1rem]',
+        'group flex gap-(--gap) overflow-hidden p-2 [--gap:1rem]',
         {
           'flex-row': !vertical,
           'flex-col': vertical,
         },
         className
       )}
+      style={
+        {
+          '--duration': `${duration}s`,
+        } as React.CSSProperties
+      }
     >
       {Array(repeat)
         .fill(0)

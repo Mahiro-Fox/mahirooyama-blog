@@ -121,7 +121,7 @@ export default function BilibiliParsePage() {
         return newHistory;
       });
       toast.success('解析成功');
-    } catch (err) {
+    } catch {
       setError('网络错误，请稍后重试');
       toast.error('解析失败');
     } finally {
