@@ -13,6 +13,8 @@ import {
   type PursuitContent,
   type SkillsContent,
 } from '@/config/about';
+import { TextAnimate } from '@/components/shadcn-ui/text-animate';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 import { BadgeCard } from './_components/badge-card';
 import { MapCard } from './_components/map-card';
@@ -79,17 +81,37 @@ export function BentoGridClient() {
   };
 
   return (
-    <motion.div
-      className="grid auto-rows-[180px] grid-cols-1 gap-4 md:grid-cols-4"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {aboutConfig.cards.map((card) => (
-        <motion.div key={card.id} className={card.size} variants={itemVariants}>
-          {renderCard(card)}
-        </motion.div>
-      ))}
-    </motion.div>
+    <div className="flex flex-col items-center space-y-6">
+      <div className="overflow-hidden rounded-full">
+        <OptimizedImage
+          src={aboutConfig.avatar}
+          alt="头像"
+          width={128}
+          height={128}
+        />
+      </div>
+      <TextAnimate className="text-3xl font-bold" animation="blurInUp">
+        {aboutConfig.name}
+      </TextAnimate>
+      <TextAnimate className="text-lg" by="character" animation="blurInUp">
+        {aboutConfig.bio}
+      </TextAnimate>
+      <motion.div
+        className="grid auto-rows-[180px] grid-cols-1 gap-4 md:grid-cols-4"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {aboutConfig.cards.map((card) => (
+          <motion.div
+            key={card.id}
+            className={card.size}
+            variants={itemVariants}
+          >
+            {renderCard(card)}
+          </motion.div>
+        ))}
+      </motion.div>
+    </div>
   );
 }

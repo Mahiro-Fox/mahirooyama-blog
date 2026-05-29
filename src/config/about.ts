@@ -1,6 +1,5 @@
 import {
   Camera,
-  ChartBar,
   Cloud,
   Code,
   Cpu,
@@ -17,6 +16,8 @@ import {
   Utensils,
   Video,
 } from 'lucide-react';
+
+import { author } from '@/lib/author';
 
 // 卡片内容类型定义
 export interface ProfileContent {
@@ -113,9 +114,9 @@ export interface AboutConfig {
 
 // 导出配置
 export const aboutConfig: AboutConfig = {
-  name: 'Mahirooyama',
-  avatar: '/uploads/images/avatar/mahirooyama.webp',
-  bio: '世界虽顺应，我塞于手心。',
+  name: author.name,
+  avatar: author.image,
+  bio: '暂时不会翘首期盼夏季的到来了吧，心好痛，眼泪不止。但是停留在手尖的温柔触感，连带着夏天的记忆，都将和我一起一直下去',
   cards: [
     {
       id: 'profile',
