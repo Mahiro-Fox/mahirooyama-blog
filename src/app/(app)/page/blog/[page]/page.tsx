@@ -3,9 +3,9 @@ import { formatDate } from '@/utils/utils';
 
 import { siteConfig } from '@/config/config';
 import { getBlogPosts } from '@/lib/mdx';
-import { AboutCta } from '@/components/shared/about-cta';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
+import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
 
 interface BlogListPageProps {
   params: Promise<{ page: string }>;

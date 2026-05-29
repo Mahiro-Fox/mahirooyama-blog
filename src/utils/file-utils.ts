@@ -49,24 +49,38 @@ export async function ensureFileInitialized(
   try {
     // 尝试直接读取（生产环境通常总会先读取或追加）
     await fs.readFile(filePath, defaultOptions?.encoding || 'utf-8');
-  } catch (error: any) {
+  } catch (error) {
     // 只有当错误码是 ENOENT（文件或目录不存在）时，才去创建它
-    if (error.code === 'ENOENT') {
+    if (isFileNotFoundError(error)) {
       try {
         const dir = path.dirname(filePath);
         await fs.mkdir(dir, { recursive: true });
 
         // 使用 wx 模式：如果文件在这一瞬间被其他请求创建了，这里会报错而不会覆盖老数据
         await fs.writeFile(filePath, defaultContent, defaultOptions);
-      } catch (writeError: any) {
+      } catch (writeError) {
         // 如果报 EEXIST 说明别的请求已经抢先创建好了，直接忽略即可
-        if (writeError.code !== 'EEXIST') throw writeError;
+        if (!isFileExistsError(writeError)) throw writeError;
       }
     } else {
       // 如果是权限等其他错误，原样抛出，不要盲目初始化
       throw error;
     }
   }
+}
+
+/**
+ * 检查错误是否为文件不存在错误
+ */
+function isFileNotFoundError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error && error.code === 'ENOENT';
+}
+
+/**
+ * 检查错误是否为文件已存在错误
+ */
+function isFileExistsError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error && error.code === 'EEXIST';
 }
 
 /**

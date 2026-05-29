@@ -10,10 +10,10 @@ import { GalleryImageData, getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
-import { AboutCta } from '@/components/shared/about-cta';
-import { HomeBanner } from '@/components/shared/home-banner';
 import { LinkCard } from '@/components/shared/link-card';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
+import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
+import { HomeBanner } from '@/app/(app)/(root)/_components/home-banner';
 
 export const metadata: Metadata = {
   title: "欢迎来到 mahirooyama 的网站喵~ - Welcome to mahiooyama's blog",

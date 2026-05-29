@@ -26,10 +26,10 @@ export async function getCurrentAdminUser(): Promise<CurrentAdminUser | null> {
     const tokenCookie = cookieStore.get('admin-session');
     if (!tokenCookie?.value) return null;
 
-    const { payload } = await jwtVerify(tokenCookie.value, JWT_SECRET);
+    const payload = await verifyJwtToken(tokenCookie.value);
+    if (!payload) return null;
 
-    const p = payload as AdminSessionPayload;
-    if (!p.userId || !p.username) return null;
+    if (!payload.userId || !payload.username) return null;
 
     // Note: We don't check sessionStore.exists() here because
     // in dev mode (pnpm dev), Server Components may run in different
@@ -38,10 +38,12 @@ export async function getCurrentAdminUser(): Promise<CurrentAdminUser | null> {
     // Session validation (single-device login) is enforced in API Routes.
 
     return {
-      id: String(p.userId),
-      username: String(p.username),
-      avatar: String(p.avatar || '/uploads/images/avatar/default-avatar.webp'),
-      role: String(p.role || 'user'),
+      id: String(payload.userId),
+      username: String(payload.username),
+      avatar: String(
+        payload.avatar || '/uploads/images/avatar/default-avatar.webp'
+      ),
+      role: String(payload.role || 'user'),
     };
   } catch {
     return null;
@@ -58,7 +60,10 @@ export async function verifyAuth() {
     }
 
     // 验证 token
-    const { payload } = await jwtVerify(token.value, JWT_SECRET);
+    const payload = await verifyJwtToken(token.value);
+    if (!payload) {
+      return { success: false, error: '登录已过期，请重新登录' };
+    }
 
     // 检查会话是否存在
     if (!sessionStore.exists(token.value)) {
@@ -92,5 +97,16 @@ export async function verifyAuth() {
     };
   } catch {
     return { success: false, error: '登录已过期，请重新登录' };
+  }
+}
+
+async function verifyJwtToken(
+  token: string
+): Promise<AdminSessionPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload as AdminSessionPayload;
+  } catch {
+    return null;
   }
 }

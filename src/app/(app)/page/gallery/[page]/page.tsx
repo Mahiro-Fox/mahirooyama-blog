@@ -2,9 +2,9 @@ import { notFound } from 'next/navigation';
 import { formatDate } from '@/utils/utils';
 
 import { getGalleryImages } from '@/lib/gallery';
-import { AboutCta } from '@/components/shared/about-cta';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
+import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
 
 interface GalleryListPageProps {
   params: Promise<{ page: string }>;

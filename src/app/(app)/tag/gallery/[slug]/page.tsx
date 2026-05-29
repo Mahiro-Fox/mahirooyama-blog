@@ -15,9 +15,9 @@ import {
   BreadcrumbSeparator,
 } from '@/components/shadcn-ui/breadcrumb';
 import { TextAnimate } from '@/components/shadcn-ui/text-animate';
-import { AboutCta } from '@/components/shared/about-cta';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
+import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
 
 interface GalleryTagPageProps {
   params: Promise<{ slug: string }>;
