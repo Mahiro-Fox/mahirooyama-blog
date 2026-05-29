@@ -8,8 +8,8 @@
 @theme inline {
   --breakpoint-3xl: 1600px;
   --breakpoint-4xl: 2000px;
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --font-sans: var(--font-sans), var(--font-chinese), system-ui, sans-serif;
+  --font-mono: var(--font-mono), var(--font-chinese), monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

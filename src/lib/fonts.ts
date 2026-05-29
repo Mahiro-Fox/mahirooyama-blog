@@ -1,4 +1,5 @@
 import {
+  Noto_Sans_SC as FontChinese,
   Geist_Mono as FontMono,
   Geist as FontSans,
   Inter,
@@ -21,8 +22,15 @@ const fontInter = Inter({
   variable: '--font-inter',
 });
 
+const fontChinese = FontChinese({
+  subsets: ['latin'],
+  variable: '--font-chinese',
+  weight: ['400', '500', '700'],
+});
+
 export const fontVariables = cn(
   fontSans.variable,
   fontMono.variable,
-  fontInter.variable
+  fontInter.variable,
+  fontChinese.variable
 );
