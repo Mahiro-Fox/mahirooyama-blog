@@ -115,7 +115,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       if (!result.success) {
         throw new Error('获取标签失败');
       }
-      setTags(result.tags);
+      setTags(result.data);
     } catch {
       toast.error('获取标签失败');
     } finally {
@@ -244,7 +244,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
         throw new Error(result.error || '重置失败');
       }
       toast.success('已重置为默认标签');
-      setTags(result.tags);
+      setTags(result.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '重置标签失败');
     } finally {

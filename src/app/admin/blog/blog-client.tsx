@@ -111,7 +111,7 @@ export default function BlogClient({
       if (!result.success) {
         throw new Error(result.error);
       }
-      setFiles(result.files);
+      setFiles(result.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '获取文件列表失败');
     } finally {
@@ -147,8 +147,8 @@ export default function BlogClient({
         throw new Error(result.error || '上传失败');
       }
 
-      setEditThumbnail(result.url);
-      toast.success(result.message);
+      setEditThumbnail(result.data.url);
+      toast.success(result.data.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '图片上传失败');
     }
@@ -250,7 +250,7 @@ ${editBody}`;
       setEditFileName(file.slug);
 
       // Parse MDX frontmatter
-      const frontmatterMatch = result.content.match(/^---\n([\s\S]*?)\n---/);
+      const frontmatterMatch = result.data.match(/^---\n([\s\S]*?)\n---/);
       if (frontmatterMatch) {
         const frontmatter = frontmatterMatch[1];
         const titleMatch = frontmatter.match(/title:\s*(.*)/);
@@ -289,7 +289,7 @@ ${editBody}`;
       }
 
       // Extract body content (after frontmatter)
-      const bodyMatch = result.content.match(/^---[\s\S]*?---\n([\s\S]*)$/);
+      const bodyMatch = result.data.match(/^---[\s\S]*?---\n([\s\S]*)$/);
       setEditBody(bodyMatch ? bodyMatch[1] : '');
 
       setIsEditDialogOpen(true);

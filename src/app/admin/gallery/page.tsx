@@ -13,7 +13,7 @@ export default async function GalleryAdminPage() {
   }
 
   const result = await adminGetGalleryFiles();
-  const files = result.success ? result.files : [];
+  const files = result.success ? result.data : [];
 
   return <GalleryClient initialFiles={files} />;
 }

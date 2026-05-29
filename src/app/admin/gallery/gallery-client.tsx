@@ -127,7 +127,7 @@ export default function GalleryClient({
       if (!result.success) {
         throw new Error(result.error);
       }
-      setFiles(result.files);
+      setFiles(result.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '获取文件列表失败');
     } finally {
@@ -160,7 +160,7 @@ export default function GalleryClient({
 
       // Parse JSON content
       try {
-        const parsed = JSON.parse(result.content);
+        const parsed = JSON.parse(result.data);
         setEditTitle(parsed.title || '');
         setEditDescription(parsed.description || '');
         setEditThumbnail(parsed.thumbnail || '');
@@ -191,8 +191,8 @@ export default function GalleryClient({
         throw new Error(result.error || '上传失败');
       }
 
-      setEditThumbnail(result.url);
-      toast.success(result.message);
+      setEditThumbnail(result.data.url);
+      toast.success(result.data.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '图片上传失败');
     }

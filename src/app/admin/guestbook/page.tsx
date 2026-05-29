@@ -12,7 +12,7 @@ export default async function GuestbookAdminPage() {
   }
 
   const result = await adminGetGuestbookEntries();
-  const entries = result.success ? result.entries : [];
+  const entries = result.success ? result.data : [];
 
   return <GuestbookClient initialEntries={entries} />;
 }

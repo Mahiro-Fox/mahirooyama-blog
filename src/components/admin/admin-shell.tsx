@@ -119,8 +119,8 @@ export default function AdminShell({
         throw new Error(result.error || '上传失败');
       }
 
-      setCurrentUser((prev) => ({ ...prev, avatar: result.avatar }));
-      toast.success(result.message);
+      setCurrentUser((prev) => ({ ...prev, avatar: result.data.avatar }));
+      toast.success(result.data.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '头像上传失败');
     } finally {

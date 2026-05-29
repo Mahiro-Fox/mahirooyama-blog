@@ -76,7 +76,7 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
   const refreshFiles = useCallback(async () => {
     const result = await adminGetMidiFiles();
     if (result.success) {
-      setFiles(result.files);
+      setFiles(result.data);
     } else {
       toast.error(result.error);
     }

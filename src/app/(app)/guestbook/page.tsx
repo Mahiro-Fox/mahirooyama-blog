@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 export default async function GuestbookPage() {
   const result = await getPublicGuestbookEntries();
-  const entries = result.success ? result.entries : [];
+  const entries = result.success ? result.data : [];
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">

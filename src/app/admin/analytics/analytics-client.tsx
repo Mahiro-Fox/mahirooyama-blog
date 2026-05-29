@@ -126,8 +126,8 @@ export default function AnalyticsClient({
       if (!result.success) {
         throw new Error(result.error);
       }
-      setLogs(result.logs);
-      setStats(result.stats);
+      setLogs(result.data.logs);
+      setStats(result.data.stats);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '获取日志失败');
     } finally {

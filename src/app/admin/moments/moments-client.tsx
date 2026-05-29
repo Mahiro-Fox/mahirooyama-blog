@@ -64,7 +64,7 @@ export default function MomentsClient({
       if (!result.success) {
         throw new Error(result.error);
       }
-      setMoments(result.moments);
+      setMoments(result.data);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : '获取碎碎念列表失败'
@@ -172,8 +172,8 @@ export default function MomentsClient({
         throw new Error(result.error || '上传失败');
       }
 
-      setImage(result.image);
-      toast.success(result.message);
+      setImage(result.data.image);
+      toast.success(result.data.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '图片上传失败');
     }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import {
   adminApproveGuestbookEntry,
+  adminCreateGuestbookEntry,
   adminDeleteGuestbookEntry,
   adminGetGuestbookEntries,
   adminReplyGuestbookEntry,
@@ -57,7 +58,7 @@ export default function GuestbookClient({
       if (!result.success) {
         throw new Error(result.error);
       }
-      setEntries(result.entries);
+      setEntries(result.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '获取留言列表失败');
     } finally {
@@ -413,17 +414,4 @@ export default function GuestbookClient({
       />
     </>
   );
-}
-
-// 导入 adminCreateGuestbookEntry 用于管理员创建
-async function adminCreateGuestbookEntry(input: {
-  nickname: string;
-  bgColor: string;
-  contact?: string;
-  content: string;
-}): Promise<{ success: true; id: string } | { success: false; error: string }> {
-  const { adminCreateGuestbookEntry: createEntry } = await import(
-    '@/actions/admin/guestbook-actions'
-  );
-  return createEntry(input);
 }

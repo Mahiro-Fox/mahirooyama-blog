@@ -2,10 +2,16 @@
 
 import fs from 'fs/promises';
 import { GUESTBOOK_FILE } from '@/constant/dir';
+import {
+  withActionPermission,
+  type ActionResponse,
+} from '@/utils/action-response';
 import { ensureFileInitialized } from '@/utils/file-utils';
+import { createLogger } from '@/utils/logger';
 
-import { requirePermission } from '@/lib/permissions';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+
+const logger = createLogger('GuestbookActions');
 
 export interface GuestbookEntry {
   id: string;
@@ -21,32 +27,28 @@ export interface GuestbookEntry {
 
 // GET - 获取所有留言（管理员视图）
 export async function adminGetGuestbookEntries(): Promise<
-  | { success: true; entries: GuestbookEntry[] }
-  | { success: false; error: string }
+  ActionResponse<GuestbookEntry[]>
 > {
-  const permissionCheck = await requirePermission('guestbook:read');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
+  return withActionPermission('guestbook:read', async () => {
+    try {
+      // 如果不存在文件，创建文件
+      await ensureFileInitialized(GUESTBOOK_FILE);
 
-  try {
-    // 如果不存在文件，创建文件
-    await ensureFileInitialized(GUESTBOOK_FILE);
+      const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
+      const entries: GuestbookEntry[] = JSON.parse(content);
 
-    const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-    const entries: GuestbookEntry[] = JSON.parse(content);
+      // 按创建时间倒序排列
+      entries.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
 
-    // 按创建时间倒序排列
-    entries.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-    return { success: true, entries };
-  } catch (error) {
-    console.error('获取留言列表失败:', error);
-    return { success: false, error: '获取留言列表失败' };
-  }
+      return { success: true, data: entries };
+    } catch (error) {
+      logger.error('获取留言列表失败', error);
+      return { success: false, error: '获取留言列表失败' };
+    }
+  });
 }
 
 // POST - 创建留言（管理员创建）
@@ -55,63 +57,61 @@ export async function adminCreateGuestbookEntry(input: {
   bgColor: string;
   contact?: string;
   content: string;
-}): Promise<{ success: true; id: string } | { success: false; error: string }> {
-  const permissionCheck = await requirePermission('guestbook:create');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
+}): Promise<ActionResponse<{ id: string }>> {
+  return withActionPermission('guestbook:create', async (user) => {
+    try {
+      const { nickname, bgColor, contact, content } = input;
 
-  try {
-    const { nickname, bgColor, contact, content } = input;
+      if (!nickname || nickname.trim().length === 0) {
+        return { success: false, error: '昵称不能为空' };
+      }
 
-    if (!nickname || nickname.trim().length === 0) {
-      return { success: false, error: '昵称不能为空' };
+      if (!bgColor || bgColor.trim().length === 0) {
+        return { success: false, error: '背景颜色不能为空' };
+      }
+
+      if (!content || content.trim().length === 0) {
+        return { success: false, error: '留言内容不能为空' };
+      }
+
+      if (content.length > 300) {
+        return { success: false, error: '留言内容不能超过300字' };
+      }
+
+      // 读取现有数据
+      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
+      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+
+      // 生成唯一ID（使用时间戳）
+      const id = Date.now().toString();
+      const createdAt = new Date().toISOString();
+
+      const newEntry: GuestbookEntry = {
+        id,
+        createdAt,
+        nickname: nickname.trim(),
+        bgColor: bgColor.trim(),
+        contact: contact?.trim() || undefined,
+        content: content.trim(),
+        isApproved: true, // 管理员创建的默认通过审核
+      };
+
+      entries.push(newEntry);
+
+      // 写入文件
+      await fs.writeFile(
+        GUESTBOOK_FILE,
+        JSON.stringify(entries, null, 2),
+        'utf-8'
+      );
+
+      logger.info('管理员创建留言成功', { entryId: id, adminId: user.id });
+      return { success: true, data: { id } };
+    } catch (error) {
+      logger.error('创建留言失败', error);
+      return { success: false, error: '创建失败，请稍后重试' };
     }
-
-    if (!bgColor || bgColor.trim().length === 0) {
-      return { success: false, error: '背景颜色不能为空' };
-    }
-
-    if (!content || content.trim().length === 0) {
-      return { success: false, error: '留言内容不能为空' };
-    }
-
-    if (content.length > 300) {
-      return { success: false, error: '留言内容不能超过300字' };
-    }
-
-    // 读取现有数据
-    const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-    const entries: GuestbookEntry[] = JSON.parse(fileContent);
-
-    // 生成唯一ID（使用时间戳）
-    const id = Date.now().toString();
-    const createdAt = new Date().toISOString();
-
-    const newEntry: GuestbookEntry = {
-      id,
-      createdAt,
-      nickname: nickname.trim(),
-      bgColor: bgColor.trim(),
-      contact: contact?.trim() || undefined,
-      content: content.trim(),
-      isApproved: true, // 管理员创建的默认通过审核
-    };
-
-    entries.push(newEntry);
-
-    // 写入文件
-    await fs.writeFile(
-      GUESTBOOK_FILE,
-      JSON.stringify(entries, null, 2),
-      'utf-8'
-    );
-
-    return { success: true, id };
-  } catch (error) {
-    console.error('创建留言失败:', error);
-    return { success: false, error: '创建失败，请稍后重试' };
-  }
+  });
 }
 
 // POST - 访客提交留言（无需登录）
@@ -120,10 +120,7 @@ export async function submitGuestbookEntry(input: {
   bgColor: string;
   contact?: string;
   content: string;
-}): Promise<
-  | { success: true; id: string }
-  | { success: false; error: string; resetTime?: number }
-> {
+}): Promise<ActionResponse<{ id: string }>> {
   try {
     const { nickname, bgColor, contact, content } = input;
 
@@ -182,9 +179,10 @@ export async function submitGuestbookEntry(input: {
       'utf-8'
     );
 
-    return { success: true, id };
+    logger.info('访客提交留言成功', { entryId: id, nickname: nickname.trim() });
+    return { success: true, data: { id } };
   } catch (error) {
-    console.error('提交留言失败:', error);
+    logger.error('提交留言失败', error);
     return { success: false, error: '提交失败，请稍后重试' };
   }
 }
@@ -198,183 +196,178 @@ export async function adminUpdateGuestbookEntry(
     contact?: string;
     content?: string;
   }
-): Promise<{ success: true } | { success: false; error: string }> {
-  const permissionCheck = await requirePermission('guestbook:update');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
+): Promise<ActionResponse<void>> {
+  return withActionPermission('guestbook:update', async (user) => {
+    try {
+      const { nickname, bgColor, contact, content } = input;
 
-  try {
-    const { nickname, bgColor, contact, content } = input;
+      // 读取现有数据
+      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
+      const entries: GuestbookEntry[] = JSON.parse(fileContent);
 
-    // 读取现有数据
-    const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-    const entries: GuestbookEntry[] = JSON.parse(fileContent);
-
-    // 查找并更新
-    const index = entries.findIndex((e) => e.id === id);
-    if (index === -1) {
-      return { success: false, error: '留言不存在' };
-    }
-
-    if (nickname !== undefined) {
-      if (nickname.trim().length === 0) {
-        return { success: false, error: '昵称不能为空' };
+      // 查找并更新
+      const index = entries.findIndex((e) => e.id === id);
+      if (index === -1) {
+        return { success: false, error: '留言不存在' };
       }
-      entries[index].nickname = nickname.trim();
-    }
 
-    if (bgColor !== undefined) {
-      if (bgColor.trim().length === 0) {
-        return { success: false, error: '背景颜色不能为空' };
+      if (nickname !== undefined) {
+        if (nickname.trim().length === 0) {
+          return { success: false, error: '昵称不能为空' };
+        }
+        entries[index].nickname = nickname.trim();
       }
-      entries[index].bgColor = bgColor.trim();
-    }
 
-    entries[index].contact = contact?.trim() || undefined;
-
-    if (content !== undefined) {
-      if (content.trim().length === 0) {
-        return { success: false, error: '留言内容不能为空' };
+      if (bgColor !== undefined) {
+        if (bgColor.trim().length === 0) {
+          return { success: false, error: '背景颜色不能为空' };
+        }
+        entries[index].bgColor = bgColor.trim();
       }
-      if (content.length > 300) {
-        return { success: false, error: '留言内容不能超过300字' };
+
+      entries[index].contact = contact?.trim() || undefined;
+
+      if (content !== undefined) {
+        if (content.trim().length === 0) {
+          return { success: false, error: '留言内容不能为空' };
+        }
+        if (content.length > 300) {
+          return { success: false, error: '留言内容不能超过300字' };
+        }
+        entries[index].content = content.trim();
       }
-      entries[index].content = content.trim();
+
+      // 写入文件
+      await fs.writeFile(
+        GUESTBOOK_FILE,
+        JSON.stringify(entries, null, 2),
+        'utf-8'
+      );
+
+      logger.info('管理员更新留言成功', { entryId: id, adminId: user.id });
+      return { success: true, data: undefined };
+    } catch (error) {
+      logger.error('更新留言失败', error, { entryId: id });
+      return { success: false, error: '更新失败' };
     }
-
-    // 写入文件
-    await fs.writeFile(
-      GUESTBOOK_FILE,
-      JSON.stringify(entries, null, 2),
-      'utf-8'
-    );
-
-    return { success: true };
-  } catch (error) {
-    console.error('更新留言失败:', error);
-    return { success: false, error: '更新失败' };
-  }
+  });
 }
 
 // PUT - 回复留言
 export async function adminReplyGuestbookEntry(
   id: string,
   replyContent: string
-): Promise<{ success: true } | { success: false; error: string }> {
-  const permissionCheck = await requirePermission('guestbook:update');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
+): Promise<ActionResponse<void>> {
+  return withActionPermission('guestbook:update', async (user) => {
+    try {
+      if (!replyContent || replyContent.trim().length === 0) {
+        return { success: false, error: '回复内容不能为空' };
+      }
 
-  try {
-    if (!replyContent || replyContent.trim().length === 0) {
-      return { success: false, error: '回复内容不能为空' };
+      // 读取现有数据
+      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
+      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+
+      // 查找并更新
+      const index = entries.findIndex((e) => e.id === id);
+      if (index === -1) {
+        return { success: false, error: '留言不存在' };
+      }
+
+      entries[index].replyContent = replyContent.trim();
+      entries[index].replyAt = new Date().toISOString();
+
+      // 写入文件
+      await fs.writeFile(
+        GUESTBOOK_FILE,
+        JSON.stringify(entries, null, 2),
+        'utf-8'
+      );
+
+      logger.info('管理员回复留言成功', { entryId: id, adminId: user.id });
+      return { success: true, data: undefined };
+    } catch (error) {
+      logger.error('回复留言失败', error, { entryId: id });
+      return { success: false, error: '回复失败' };
     }
-
-    // 读取现有数据
-    const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-    const entries: GuestbookEntry[] = JSON.parse(fileContent);
-
-    // 查找并更新
-    const index = entries.findIndex((e) => e.id === id);
-    if (index === -1) {
-      return { success: false, error: '留言不存在' };
-    }
-
-    entries[index].replyContent = replyContent.trim();
-    entries[index].replyAt = new Date().toISOString();
-
-    // 写入文件
-    await fs.writeFile(
-      GUESTBOOK_FILE,
-      JSON.stringify(entries, null, 2),
-      'utf-8'
-    );
-
-    return { success: true };
-  } catch (error) {
-    console.error('回复留言失败:', error);
-    return { success: false, error: '回复失败' };
-  }
+  });
 }
 
 // PUT - 审核留言
 export async function adminApproveGuestbookEntry(
   id: string,
   isApproved: boolean
-): Promise<{ success: true } | { success: false; error: string }> {
-  const permissionCheck = await requirePermission('guestbook:approve');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
+): Promise<ActionResponse<void>> {
+  return withActionPermission('guestbook:approve', async (user) => {
+    try {
+      // 读取现有数据
+      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
+      const entries: GuestbookEntry[] = JSON.parse(fileContent);
 
-  try {
-    // 读取现有数据
-    const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-    const entries: GuestbookEntry[] = JSON.parse(fileContent);
+      // 查找并更新
+      const index = entries.findIndex((e) => e.id === id);
+      if (index === -1) {
+        return { success: false, error: '留言不存在' };
+      }
 
-    // 查找并更新
-    const index = entries.findIndex((e) => e.id === id);
-    if (index === -1) {
-      return { success: false, error: '留言不存在' };
+      entries[index].isApproved = isApproved;
+
+      // 写入文件
+      await fs.writeFile(
+        GUESTBOOK_FILE,
+        JSON.stringify(entries, null, 2),
+        'utf-8'
+      );
+
+      logger.info('管理员审核留言成功', {
+        entryId: id,
+        isApproved,
+        adminId: user.id,
+      });
+      return { success: true, data: undefined };
+    } catch (error) {
+      logger.error('审核留言失败', error, { entryId: id });
+      return { success: false, error: '审核失败' };
     }
-
-    entries[index].isApproved = isApproved;
-
-    // 写入文件
-    await fs.writeFile(
-      GUESTBOOK_FILE,
-      JSON.stringify(entries, null, 2),
-      'utf-8'
-    );
-
-    return { success: true };
-  } catch (error) {
-    console.error('审核留言失败:', error);
-    return { success: false, error: '审核失败' };
-  }
+  });
 }
 
 // DELETE - 删除留言
 export async function adminDeleteGuestbookEntry(
   id: string
-): Promise<{ success: true } | { success: false; error: string }> {
-  const permissionCheck = await requirePermission('guestbook:delete');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
+): Promise<ActionResponse<void>> {
+  return withActionPermission('guestbook:delete', async (user) => {
+    try {
+      // 读取现有数据
+      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
+      const entries: GuestbookEntry[] = JSON.parse(fileContent);
 
-  try {
-    // 读取现有数据
-    const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-    const entries: GuestbookEntry[] = JSON.parse(fileContent);
+      // 过滤掉要删除的项
+      const filtered = entries.filter((e) => e.id !== id);
 
-    // 过滤掉要删除的项
-    const filtered = entries.filter((e) => e.id !== id);
+      if (filtered.length === entries.length) {
+        return { success: false, error: '留言不存在' };
+      }
 
-    if (filtered.length === entries.length) {
-      return { success: false, error: '留言不存在' };
+      // 写入文件
+      await fs.writeFile(
+        GUESTBOOK_FILE,
+        JSON.stringify(filtered, null, 2),
+        'utf-8'
+      );
+
+      logger.info('管理员删除留言成功', { entryId: id, adminId: user.id });
+      return { success: true, data: undefined };
+    } catch (error) {
+      logger.error('删除留言失败', error, { entryId: id });
+      return { success: false, error: '删除失败' };
     }
-
-    // 写入文件
-    await fs.writeFile(
-      GUESTBOOK_FILE,
-      JSON.stringify(filtered, null, 2),
-      'utf-8'
-    );
-
-    return { success: true };
-  } catch (error) {
-    console.error('删除留言失败:', error);
-    return { success: false, error: '删除失败' };
-  }
+  });
 }
 
 // GET - 获取公开的留言列表（用于前端展示，只显示已审核的）
 export async function getPublicGuestbookEntries(): Promise<
-  | { success: true; entries: GuestbookEntry[] }
-  | { success: false; error: string }
+  ActionResponse<GuestbookEntry[]>
 > {
   try {
     const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
@@ -389,9 +382,9 @@ export async function getPublicGuestbookEntries(): Promise<
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    return { success: true, entries: approvedEntries };
+    return { success: true, data: approvedEntries };
   } catch (error) {
-    console.error('获取留言列表失败:', error);
+    logger.error('获取公开留言列表失败', error);
     return { success: false, error: '获取留言列表失败' };
   }
 }

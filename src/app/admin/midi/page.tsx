@@ -13,7 +13,7 @@ export default async function MidiAdminPage() {
   }
 
   const result = await adminGetMidiFiles();
-  const files = result.success ? result.files : [];
+  const files = result.success ? result.data : [];
 
   return <MidiClient initialFiles={files} />;
 }

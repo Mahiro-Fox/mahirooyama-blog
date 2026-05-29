@@ -21,7 +21,7 @@ export function TagPicker({ value, onChange, type }: TagPickerProps) {
       try {
         const result = await adminGetTags();
         if (result.success) {
-          setTags(result.tags);
+          setTags(result.data);
         }
       } catch (error) {
         console.error('Failed to fetch tags:', error);

@@ -4,77 +4,66 @@ import fs from 'fs/promises';
 import path from 'path';
 import { AVATAR_DIR } from '@/constant/dir';
 import {
-  userStore,
-  type UserResponse,
-  type UserRole,
-} from '@/store/user-store';
+  withActionPermission,
+  type ActionResponse,
+} from '@/utils/action-response';
 import { processAndSaveImage } from '@/utils/image-utils';
+import { createLogger } from '@/utils/logger';
 
 import { verifyAuth } from '@/lib/admin-auth';
-import { requirePermission } from '@/lib/permissions';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { UserResponse, UserRole, userStore } from '@/store/user-store';
+import { requirePermission } from '@/lib/permissions';
 
-export async function adminGetUsers(): Promise<
-  { success: true; users: UserResponse[] } | { success: false; error: string }
-> {
-  const permissionCheck = await requirePermission('users:read');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
+const logger = createLogger('UserActions');
 
-  const users = await userStore.getAll();
-  return { success: true, users };
+export async function adminGetUsers(): Promise<ActionResponse<UserResponse[]>> {
+  return withActionPermission('users:read', async () => {
+    const users = await userStore.getAll();
+    return { success: true, data: users };
+  });
 }
 
 export async function adminCreateUser(input: {
   username: string;
   password: string;
   role: UserRole;
-}): Promise<
-  { success: true } | { success: false; error: string; resetTime?: number }
-> {
-  const permissionCheck = await requirePermission('users:create');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
-
-  // 速率限制检查
-  if (permissionCheck.user?.id) {
-    const rateLimit = await serverActionRateLimiter.check(
-      `user:${permissionCheck.user.id}`
-    );
-    if (!rateLimit.success) {
-      return {
-        success: false,
-        error: '操作过于频繁，请稍后再试',
-        resetTime: rateLimit.resetTime,
-      };
+}): Promise<ActionResponse<void>> {
+  return withActionPermission('users:create', async (user) => {
+    // 速率限制检查
+    if (user.id) {
+      const rateLimit = await serverActionRateLimiter.check(`user:${user.id}`);
+      if (!rateLimit.success) {
+        return {
+          success: false,
+          error: '操作过于频繁，请稍后再试',
+          resetTime: rateLimit.resetTime,
+        };
+      }
     }
-  }
 
-  if (!input.username || !input.password || !input.role) {
-    return { success: false, error: '缺少必要字段' };
-  }
+    if (!input.username || !input.password || !input.role) {
+      return { success: false, error: '缺少必要字段' };
+    }
 
-  if (!['super_admin', 'user'].includes(input.role)) {
-    return { success: false, error: '无效的角色类型' };
-  }
+    if (!['super_admin', 'user'].includes(input.role)) {
+      return { success: false, error: '无效的角色类型' };
+    }
 
-  await userStore.create({
-    username: input.username,
-    password: input.password,
-    role: input.role,
+    await userStore.create({
+      username: input.username,
+      password: input.password,
+      role: input.role,
+    });
+
+    logger.info('创建用户成功', { username: input.username, adminId: user.id });
+    return { success: true, data: undefined };
   });
-
-  return { success: true };
 }
 
 export async function adminUploadAvatar(
   formData: FormData
-): Promise<
-  | { success: true; avatar: string; message: string }
-  | { success: false; error: string; resetTime?: number }
-> {
+): Promise<ActionResponse<{ avatar: string; message: string }>> {
   try {
     // 1. 验证登录状态
     const authCheck = await verifyAuth();
@@ -145,13 +134,16 @@ export async function adminUploadAvatar(
     const avatarPath = result.url;
     await userStore.update(userId, { avatar: avatarPath });
 
+    logger.info('更新头像成功', { userId });
     return {
       success: true,
-      avatar: avatarPath,
-      message: '头像更新成功',
+      data: {
+        avatar: avatarPath,
+        message: '头像更新成功',
+      },
     };
   } catch (error) {
-    console.error('头像上传失败:', error);
+    logger.error('头像上传失败', error);
     const errorMessage =
       error instanceof Error ? error.message : '头像上传失败';
     return { success: false, error: errorMessage };
@@ -160,18 +152,53 @@ export async function adminUploadAvatar(
 
 export async function adminDeleteUser(input: {
   id: string;
-}): Promise<
-  { success: true } | { success: false; error: string; resetTime?: number }
-> {
-  const permissionCheck = await requirePermission('users:delete');
-  if (!permissionCheck.allowed) {
-    return { success: false, error: 'unauthorized' };
-  }
+}): Promise<ActionResponse<void>> {
+  return withActionPermission('users:delete', async (user) => {
+    // 速率限制检查
+    if (user.id) {
+      const rateLimit = await serverActionRateLimiter.check(`user:${user.id}`);
+      if (!rateLimit.success) {
+        return {
+          success: false,
+          error: '操作过于频繁，请稍后再试',
+          resetTime: rateLimit.resetTime,
+        };
+      }
+    }
 
-  // 速率限制检查
-  if (permissionCheck.user?.id) {
+    const currentUser = user;
+
+    if (currentUser.id === input.id) {
+      return { success: false, error: '不能删除自己' };
+    }
+
+    const deleted = await userStore.delete(input.id);
+    if (!deleted) {
+      return { success: false, error: '用户不存在' };
+    }
+
+    logger.info('删除用户成功', { targetUserId: input.id, adminId: user.id });
+    return { success: true, data: undefined };
+  });
+}
+
+export async function adminUpdateUserPassword(input: {
+  id: string;
+  password: string;
+}): Promise<ActionResponse<void>> {
+  try {
+    const authCheck = await verifyAuth();
+    if (!authCheck.success) {
+      return { success: false, error: 'unauthorized' };
+    }
+
+    const currentUser = authCheck;
+    const isSelf = currentUser.userId === input.id;
+    const isSuperAdmin = currentUser.role === 'super_admin';
+
+    // 速率限制检查
     const rateLimit = await serverActionRateLimiter.check(
-      `user:${permissionCheck.user.id}`
+      `user:${currentUser.userId}`
     );
     if (!rateLimit.success) {
       return {
@@ -180,79 +207,45 @@ export async function adminDeleteUser(input: {
         resetTime: rateLimit.resetTime,
       };
     }
-  }
 
-  const currentUser = permissionCheck.user!;
+    if (!input.password) {
+      return { success: false, error: '请提供新密码' };
+    }
 
-  if (currentUser.id === input.id) {
-    return { success: false, error: '不能删除自己' };
-  }
+    if (isSuperAdmin) {
+      // super_admin 修改其他用户密码需要 users:update 权限
+      if (!isSelf) {
+        const permCheck = await requirePermission('users:update');
+        if (!permCheck.allowed) {
+          return { success: false, error: 'unauthorized' };
+        }
+      }
+    } else {
+      // 普通用户只能修改自己密码
+      if (!isSelf) {
+        return { success: false, error: '只能修改自己的信息' };
+      }
 
-  const deleted = await userStore.delete(input.id);
-  if (!deleted) {
-    return { success: false, error: '用户不存在' };
-  }
-
-  return { success: true };
-}
-
-export async function adminUpdateUserPassword(input: {
-  id: string;
-  password: string;
-}): Promise<
-  { success: true } | { success: false; error: string; resetTime?: number }
-> {
-  const authCheck = await verifyAuth();
-  if (!authCheck.success) {
-    return { success: false, error: 'unauthorized' };
-  }
-
-  const currentUser = authCheck;
-  const isSelf = currentUser.userId === input.id;
-  const isSuperAdmin = currentUser.role === 'super_admin';
-
-  // 速率限制检查
-  const rateLimit = await serverActionRateLimiter.check(
-    `user:${currentUser.userId}`
-  );
-  if (!rateLimit.success) {
-    return {
-      success: false,
-      error: '操作过于频繁，请稍后再试',
-      resetTime: rateLimit.resetTime,
-    };
-  }
-
-  if (!input.password) {
-    return { success: false, error: '请提供新密码' };
-  }
-
-  if (isSuperAdmin) {
-    // super_admin 修改其他用户密码需要 users:update 权限
-    if (!isSelf) {
-      const permCheck = await requirePermission('users:update');
+      const permCheck = await requirePermission('users:updatePassword');
       if (!permCheck.allowed) {
         return { success: false, error: 'unauthorized' };
       }
     }
-  } else {
-    // 普通用户只能修改自己密码
-    if (!isSelf) {
-      return { success: false, error: '只能修改自己的信息' };
+
+    const updated = await userStore.update(input.id, {
+      password: input.password,
+    });
+    if (!updated) {
+      return { success: false, error: '目标用户不存在' };
     }
 
-    const permCheck = await requirePermission('users:updatePassword');
-    if (!permCheck.allowed) {
-      return { success: false, error: 'unauthorized' };
-    }
+    logger.info('修改用户密码成功', {
+      targetUserId: input.id,
+      adminId: currentUser.userId,
+    });
+    return { success: true, data: undefined };
+  } catch (error) {
+    logger.error('修改用户密码失败', error, { targetUserId: input.id });
+    return { success: false, error: '修改密码失败' };
   }
-
-  const updated = await userStore.update(input.id, {
-    password: input.password,
-  });
-  if (!updated) {
-    return { success: false, error: '目标用户不存在' };
-  }
-
-  return { success: true };
 }

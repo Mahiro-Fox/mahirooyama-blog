@@ -12,7 +12,7 @@ export default async function MomentsAdminPage() {
   }
 
   const result = await adminGetMoments();
-  const moments = result.success ? result.moments : [];
+  const moments = result.success ? result.data : [];
 
   return <MomentsClient initialMoments={moments} />;
 }

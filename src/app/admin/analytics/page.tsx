@@ -12,7 +12,7 @@ export default async function AnalyticsAdminPage() {
   }
 
   const result = await adminGetAnalyticsLogs();
-  const logs = result.success ? result.logs : [];
+  const logs = result.success ? result.data.logs : [];
 
   return <AnalyticsClient initialLogs={logs} />;
 }

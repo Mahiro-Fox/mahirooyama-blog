@@ -34,7 +34,7 @@ export default async function AdminLayout({
   let guestbookPendingCount = 0;
   if (permissionCheck.allowed) {
     const result = await adminGetGuestbookEntries();
-    const entries = result.success ? result.entries : [];
+    const entries = result.success ? result.data : [];
     guestbookPendingCount = entries.filter((entry) => !entry.isApproved).length;
   }
 

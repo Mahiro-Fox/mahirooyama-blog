@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 export default async function MomentsPage() {
   const result = await getPublicMoments();
-  const moments = result.success ? result.moments : [];
+  const moments = result.success ? result.data : [];
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">

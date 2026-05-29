@@ -12,7 +12,7 @@ export default async function BlogAdminPage() {
   }
 
   const result = await adminGetBlogFiles();
-  const files = result.success ? result.files : [];
+  const files = result.success ? result.data : [];
 
   return <BlogClient initialFiles={files} />;
 }

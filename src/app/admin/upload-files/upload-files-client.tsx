@@ -331,7 +331,7 @@ export default function PublicFilesClient({
       const result = await convertImages();
 
       if (result.success) {
-        toast.success(result.message || '转换完成');
+        toast.success(result.data.message || '转换完成');
         fetchFiles(currentPath);
       } else {
         toast.error(result.error || '转换失败');

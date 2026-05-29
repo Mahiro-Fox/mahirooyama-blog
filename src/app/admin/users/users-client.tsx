@@ -108,7 +108,7 @@ export default function UsersClient({
       if (!result.success) {
         throw new Error('获取用户列表失败');
       }
-      setUsers(result.users);
+      setUsers(result.data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '获取用户列表失败');
     } finally {
@@ -206,12 +206,12 @@ export default function UsersClient({
   // 获取角色权限配置
   const fetchRolePermissions = async () => {
     try {
-      const data = await adminGetRolePermissions();
-      if (!data.success) {
+      const result = await adminGetRolePermissions();
+      if (!result.success) {
         throw new Error('获取权限配置失败');
       }
-      setPermissionDefinitions(data.definitions);
-      return data;
+      setPermissionDefinitions(result.data.definitions);
+      return result;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '获取权限配置失败');
       return null;
@@ -220,10 +220,11 @@ export default function UsersClient({
 
   // 打开权限编辑对话框
   const openPermissionDialog = async (role: 'user' | 'super_admin') => {
-    const data = await fetchRolePermissions();
+    const result = await fetchRolePermissions();
+    if (!result) return;
     setEditingRole(role);
-    if (data && role === 'user' && data.permissions[role]) {
-      setSelectedPermissions(data.permissions[role]);
+    if (result.data && role === 'user' && result.data.permissions[role]) {
+      setSelectedPermissions(result.data.permissions[role]);
     } else {
       setSelectedPermissions([]);
     }
@@ -276,8 +277,8 @@ export default function UsersClient({
         throw new Error(result.error || '重置权限配置失败');
       }
       toast.success('权限配置已重置为默认值');
-      if (editingRole && result.permissions[editingRole]) {
-        setSelectedPermissions(result.permissions[editingRole]);
+      if (editingRole && result.data.super_admin) {
+        setSelectedPermissions(result.data.super_admin);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '重置权限配置失败');
