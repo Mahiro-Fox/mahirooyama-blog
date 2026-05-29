@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { unstable_cache } from 'next/cache';
 import { DEFAULT_GALLERY_LIST_LIMIT } from '@/config';
 import { GALLERY_DIR } from '@/constant';
 import { isPortraitImage } from '@/utils/image-utils';
@@ -20,26 +21,28 @@ export type GalleryImageData<T = {}> = {
   isPortrait: boolean;
 };
 
-export async function getAllGalleryImages<T = {}>(): Promise<
-  GalleryImageData<T>[]
-> {
-  try {
-    await fs.promises.access(GALLERY_DIR);
-  } catch {
-    return [];
-  }
+export const getAllGalleryImages = unstable_cache(
+  async <T = {}>(): Promise<GalleryImageData<T>[]> => {
+    try {
+      await fs.promises.access(GALLERY_DIR);
+    } catch {
+      return [];
+    }
 
-  const files = await getGalleryFiles();
-  const images = await Promise.all(
-    files.map((file) => readGalleryFile<T>(path.join(GALLERY_DIR, file)))
-  );
+    const files = await getGalleryFiles();
+    const images = await Promise.all(
+      files.map((file) => readGalleryFile<T>(path.join(GALLERY_DIR, file)))
+    );
 
-  return images.sort(
-    (a, b) =>
-      new Date(b.metadata.lastUpdated).getTime() -
-      new Date(a.metadata.lastUpdated).getTime()
-  );
-}
+    return images.sort(
+      (a, b) =>
+        new Date(b.metadata.lastUpdated).getTime() -
+        new Date(a.metadata.lastUpdated).getTime()
+    );
+  },
+  ['gallery-images'],
+  { revalidate: 60, tags: ['gallery'] }
+);
 
 export async function getGalleryPostsByTagSlug(
   tagSlug: string

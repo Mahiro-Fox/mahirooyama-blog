@@ -7,7 +7,6 @@ import { Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { groupedNavRoutes, siteConfig } from '@/config/config';
-import { verifyAuth } from '@/lib/admin-auth';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -32,26 +31,25 @@ import { Search } from '@/components/content/search';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { SiteLogo } from '@/components/shared/site-logo';
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  initialIsAuth?: boolean;
+}
+
+export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
   const { setTheme, resolvedTheme } = useTheme();
-  const [isAdminAuth, setIsAdminAuth] = useState(false);
+  const [isAdminAuth, setIsAdminAuth] = useState(initialIsAuth);
 
   const toggleTheme = useCallback(() => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   }, [resolvedTheme, setTheme]);
-  const auth = async () => {
-    const authCheck = await verifyAuth();
-    if (!authCheck.success) {
-      setIsAdminAuth(false);
-    } else {
-      setIsAdminAuth(true);
-    }
-  };
+
   useEffect(() => {
-    auth();
-  }, []);
+    if (!initialIsAuth) {
+      setIsAdminAuth(false);
+    }
+  }, [initialIsAuth]);
 
   return (
     <header className="bg-background sticky top-0 z-50 w-full">

@@ -11,10 +11,60 @@ import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
 
+// 安全配置
+const ALLOWED_MIME_TYPES = [
+  // 图片
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  'image/avif',
+  // 视频
+  'video/mp4',
+  'video/webm',
+  // 音频
+  'audio/mpeg',
+  'audio/wav',
+  'audio/ogg',
+  // 文档
+  'application/pdf',
+  // 压缩包
+  'application/zip',
+  'application/x-rar-compressed',
+];
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILES_COUNT = 20;
+
+/**
+ * 验证文件是否符合上传要求
+ */
+function validateFile(file: File): string | null {
+  if (!file.name || file.name.trim() === '') {
+    return '文件名不能为空';
+  }
+
+  if (file.size === 0) {
+    return `文件 ${file.name} 是空文件`;
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    return `文件 ${file.name} (${sizeMB}MB) 超过单文件限制 (${MAX_FILE_SIZE / (1024 * 1024)}MB)`;
+  }
+
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    return `不支持的文件类型: ${file.type || '未知'} (${file.name})`;
+  }
+
+  return null;
+}
+
 // 上传文件到指定目录（需要 files:upload 权限）
 export async function POST(request: NextRequest) {
   try {
-    // 检查权限
     const permissionCheck = await requirePermission('files:upload');
     if (!permissionCheck.allowed) {
       return permissionCheck.response;
@@ -36,7 +86,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '没有提供文件' }, { status: 400 });
     }
 
-    // 确保目录存在
+    if (files.length > MAX_FILES_COUNT) {
+      return NextResponse.json(
+        {
+          error: `文件数量超过限制，最多允许 ${MAX_FILES_COUNT} 个文件`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 验证所有文件
+    const validationErrors: string[] = [];
+    let totalSize = 0;
+
+    for (const file of files) {
+      const error = validateFile(file);
+      if (error) {
+        validationErrors.push(error);
+      }
+      totalSize += file.size;
+    }
+
+    if (validationErrors.length > 0) {
+      return NextResponse.json(
+        {
+          error: '文件验证失败',
+          details: validationErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
+      const maxMB = MAX_TOTAL_SIZE / (1024 * 1024);
+      return NextResponse.json(
+        {
+          error: `总文件大小 (${totalMB}MB) 超过限制 (${maxMB}MB)`,
+        },
+        { status: 400 }
+      );
+    }
+
     await ensureDirectory(targetDir);
 
     const results = await Promise.all(

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { unstable_cache } from 'next/cache';
 import { DEFAULT_BLOG_LIST_LIMIT } from '@/config';
 import { BLOG_DIR } from '@/constant';
 import { isPortraitImage } from '@/utils/image-utils';
@@ -39,17 +40,21 @@ export type BlogPost = MDXData<{
 }>;
 
 /**
- * 获取所有博客文章
+ * 获取所有博客文章（带缓存）
  * @returns 博客文章数组
  */
-export async function getAllBlogPosts(): Promise<BlogPost[]> {
-  const posts = await getMDXData(BLOG_DIR);
-  return posts.sort(
-    (a, b) =>
-      new Date(b.metadata.lastUpdated).getTime() -
-      new Date(a.metadata.lastUpdated).getTime()
-  );
-}
+export const getAllBlogPosts = unstable_cache(
+  async (): Promise<BlogPost[]> => {
+    const posts = await getMDXData(BLOG_DIR);
+    return posts.sort(
+      (a, b) =>
+        new Date(b.metadata.lastUpdated).getTime() -
+        new Date(a.metadata.lastUpdated).getTime()
+    );
+  },
+  ['blog-posts'],
+  { revalidate: 60, tags: ['blog'] }
+);
 /**
  * 获取博客文章列表
  * @param page 页码

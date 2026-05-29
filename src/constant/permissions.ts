@@ -54,6 +54,7 @@ export type Permission =
   | 'guestbook:approve'
   // 分析权限
   | 'analytics:read'
+  | 'analytics:delete'
   // 系统权限
   | 'system:revalidate'
   | 'system:convertImages'

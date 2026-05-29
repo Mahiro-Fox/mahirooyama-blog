@@ -16,3 +16,5 @@ export const ROLE_PERMISSIONS_FILE = path.join(
 export const USERS_FILE = path.join(DATA_DIR, 'users.json');
 export const TAGS_FILE = path.join(DATA_DIR, 'tags.json');
 export const ANALYTICS_LOGS_FILE = path.join(DATA_DIR, 'analytics_logs.json');
+export const ANALYTICS_DIR = path.join(DATA_DIR, 'analytics');
+export const ANALYTICS_RETENTION_DAYS = 30;

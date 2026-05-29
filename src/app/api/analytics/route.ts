@@ -2,7 +2,7 @@ import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { AnalyticsLog } from '@/actions/admin/analytics-actions';
-import { ANALYTICS_LOGS_FILE } from '@/constant';
+import { ANALYTICS_DIR, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
 import { UAParser } from 'ua-parser-js';
 
 /**
@@ -37,9 +37,20 @@ function maskIpAddress(ip: string): string {
   }
   return ip;
 }
-// 内存中的临时队列
+
+/**
+ * 根据日期获取日志文件路径
+ */
+function getLogFilePath(date: Date = new Date()): string {
+  const dateStr = date.toISOString().split('T')[0];
+  return path.join(ANALYTICS_DIR, `analytics-${dateStr}.json`);
+}
+
+/**
+ * 内存中的临时队列
+ */
 const logQueue: AnalyticsLog[] = [];
-let isWriting = false; // 写入锁状态
+let isWriting = false;
 
 async function appendLogToFile(analyticsLog: AnalyticsLog) {
   // 1. 收到埋点，立刻塞入内存队列（速度极快，不占用请求时间）
@@ -50,7 +61,7 @@ async function appendLogToFile(analyticsLog: AnalyticsLog) {
 }
 
 /**
- * 队列消费者（互斥锁机制，保证同一时间只有一个文件读写在进行）
+ * 队列消费者（互斥锁机制）
  */
 async function processQueue() {
   // 如果当前正有写入任务在执行，直接返回，静静等待上一个任务完成
@@ -59,41 +70,35 @@ async function processQueue() {
   isWriting = true; // 上锁
 
   try {
-    const dir = path.dirname(ANALYTICS_LOGS_FILE);
-    await fsPromises.mkdir(dir, { recursive: true });
+    await fsPromises.mkdir(ANALYTICS_DIR, { recursive: true });
 
-    // 一次性取出当前队列里的所有数据，清空队列
-    // 这样哪怕并发再高，也是批量写入，极大地减少了磁盘 I/O 次数
     const currentBatch = logQueue.splice(0, logQueue.length);
 
-    let logs: AnalyticsLog[] = [];
-    try {
-      const fileContent = await fsPromises.readFile(
-        ANALYTICS_LOGS_FILE,
+    for (const log of currentBatch) {
+      const filePath = getLogFilePath(new Date(log.timestamp));
+      let logs: AnalyticsLog[] = [];
+
+      try {
+        const fileContent = await fsPromises.readFile(filePath, 'utf-8');
+        logs = JSON.parse(fileContent);
+        if (!Array.isArray(logs)) logs = [];
+      } catch {
+        logs = [];
+      }
+
+      logs.push(log);
+
+      await fsPromises.writeFile(
+        filePath,
+        JSON.stringify(logs, null, 2),
         'utf-8'
       );
-      logs = JSON.parse(fileContent);
-      if (!Array.isArray(logs)) logs = [];
-    } catch {
-      // 文件不存在或解析失败，直接走空数组
-      logs = [];
     }
-
-    // 将这一批数据合并进去
-    logs.push(...currentBatch);
-
-    // 重新写回文件
-    await fsPromises.writeFile(
-      ANALYTICS_LOGS_FILE,
-      JSON.stringify(logs, null, 2),
-      'utf-8'
-    );
   } catch (error) {
     console.error('[Analytics] 批量写入日志失败:', error);
   } finally {
-    isWriting = false; // 释放锁
+    isWriting = false;
 
-    // 关键：写入结束后，检查在写入期间有没有新进来的埋点，如果有，继续消费
     if (logQueue.length > 0) {
       processQueue();
     }
@@ -185,29 +190,138 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET 接口读取日志
+ * GET 接口：读取日志并返回统计信息
  */
 export async function GET() {
   try {
-    if (!fs.existsSync(ANALYTICS_LOGS_FILE)) {
-      return NextResponse.json({ logs: [] });
+    if (!fs.existsSync(ANALYTICS_DIR)) {
+      return NextResponse.json({
+        logs: [],
+        stats: {
+          totalLogs: 0,
+          totalFiles: 0,
+          expiredFiles: 0,
+          expiredLogsCount: 0,
+          retentionDays: ANALYTICS_RETENTION_DAYS,
+        },
+      });
     }
 
-    const fileContent = await fs.promises.readFile(
-      ANALYTICS_LOGS_FILE,
-      'utf-8'
+    const files = await fsPromises.readdir(ANALYTICS_DIR);
+    const logFiles = files
+      .filter((f) => f.startsWith('analytics-') && f.endsWith('.json'))
+      .sort()
+      .reverse();
+
+    let allLogs: AnalyticsLog[] = [];
+    let expiredLogsCount = 0;
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - ANALYTICS_RETENTION_DAYS);
+
+    for (const file of logFiles) {
+      const filePath = path.join(ANALYTICS_DIR, file);
+      const fileDateStr = file.replace('analytics-', '').replace('.json', '');
+      const fileDate = new Date(fileDateStr);
+      const isExpired = fileDate < cutoffDate;
+
+      try {
+        const content = await fsPromises.readFile(filePath, 'utf-8');
+        const logs: AnalyticsLog[] = JSON.parse(content);
+
+        if (isExpired) {
+          expiredLogsCount += logs.length;
+        } else {
+          allLogs = [...allLogs, ...logs];
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    allLogs.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
-    const logs: AnalyticsLog[] = JSON.parse(fileContent);
-    if (!Array.isArray(logs)) {
-      return NextResponse.json({ logs: [] });
-    }
+    const expiredFiles = logFiles.filter((f) => {
+      const dateStr = f.replace('analytics-', '').replace('.json', '');
+      return new Date(dateStr) < cutoffDate;
+    });
 
-    return NextResponse.json({ logs });
+    return NextResponse.json({
+      logs: allLogs,
+      stats: {
+        totalLogs: allLogs.length,
+        totalFiles: logFiles.length,
+        expiredFiles: expiredFiles.length,
+        expiredLogsCount,
+        retentionDays: ANALYTICS_RETENTION_DAYS,
+      },
+    });
   } catch (error) {
     console.error('读取日志文件失败:', error);
     return NextResponse.json(
       { success: false, message: '读取日志文件失败' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE 接口：删除过期的日志文件
+ */
+export async function DELETE() {
+  try {
+    if (!fs.existsSync(ANALYTICS_DIR)) {
+      return NextResponse.json({
+        success: true,
+        message: '没有找到日志目录',
+        deletedFiles: 0,
+        deletedLogs: 0,
+      });
+    }
+
+    const files = await fsPromises.readdir(ANALYTICS_DIR);
+    const logFiles = files.filter(
+      (f) => f.startsWith('analytics-') && f.endsWith('.json')
+    );
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - ANALYTICS_RETENTION_DAYS);
+
+    let deletedFiles = 0;
+    let deletedLogs = 0;
+
+    for (const file of logFiles) {
+      const dateStr = file.replace('analytics-', '').replace('.json', '');
+      const fileDate = new Date(dateStr);
+
+      if (fileDate < cutoffDate) {
+        const filePath = path.join(ANALYTICS_DIR, file);
+
+        try {
+          const content = await fsPromises.readFile(filePath, 'utf-8');
+          const logs: AnalyticsLog[] = JSON.parse(content);
+          deletedLogs += logs.length;
+
+          await fsPromises.unlink(filePath);
+          deletedFiles++;
+        } catch {
+          continue;
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `成功删除 ${deletedFiles} 个过期日志文件，共 ${deletedLogs} 条记录`,
+      deletedFiles,
+      deletedLogs,
+    });
+  } catch (error) {
+    console.error('删除过期日志失败:', error);
+    return NextResponse.json(
+      { success: false, message: '删除过期日志失败' },
       { status: 500 }
     );
   }

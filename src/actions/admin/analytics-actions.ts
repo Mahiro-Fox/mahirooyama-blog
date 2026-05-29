@@ -1,8 +1,8 @@
 'use server';
 
 import fs from 'fs/promises';
-import { ANALYTICS_LOGS_FILE } from '@/constant/dir';
-import { ensureFileInitialized } from '@/utils/file-utils';
+import path from 'path';
+import { ANALYTICS_DIR, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -26,10 +26,19 @@ export interface AnalyticsLog {
   ip_masked: string;
 }
 
+export interface AnalyticsStats {
+  totalLogs: number;
+  totalFiles: number;
+  expiredFiles: number;
+  expiredLogsCount: number;
+  retentionDays: number;
+}
+
 export async function adminGetAnalyticsLogs(): Promise<
   | {
       success: true;
       logs: AnalyticsLog[];
+      stats: AnalyticsStats;
     }
   | {
       success: false;
@@ -42,30 +51,152 @@ export async function adminGetAnalyticsLogs(): Promise<
   }
 
   try {
-    await ensureFileInitialized(ANALYTICS_LOGS_FILE);
-    const content = await fs.readFile(ANALYTICS_LOGS_FILE, 'utf-8');
-    let logs: AnalyticsLog[] = [];
+    try {
+      await fs.access(ANALYTICS_DIR);
+    } catch {
+      return {
+        success: true,
+        logs: [],
+        stats: {
+          totalLogs: 0,
+          totalFiles: 0,
+          expiredFiles: 0,
+          expiredLogsCount: 0,
+          retentionDays: ANALYTICS_RETENTION_DAYS,
+        },
+      };
+    }
 
-    if (content.trim()) {
+    const files = await fs.readdir(ANALYTICS_DIR);
+    const logFiles = files
+      .filter((f) => f.startsWith('analytics-') && f.endsWith('.json'))
+      .sort()
+      .reverse();
+
+    let allLogs: AnalyticsLog[] = [];
+    let expiredLogsCount = 0;
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - ANALYTICS_RETENTION_DAYS);
+
+    for (const file of logFiles) {
+      const filePath = path.join(ANALYTICS_DIR, file);
+      const fileDateStr = file.replace('analytics-', '').replace('.json', '');
+      const fileDate = new Date(fileDateStr);
+      const isExpired = fileDate < cutoffDate;
+
       try {
-        const parsed = JSON.parse(content);
-        logs = Array.isArray(parsed) ? parsed : [parsed];
+        const content = await fs.readFile(filePath, 'utf-8');
+        const logs: AnalyticsLog[] = JSON.parse(content);
+
+        if (isExpired) {
+          expiredLogsCount += logs.length;
+        } else {
+          allLogs = [...allLogs, ...logs];
+        }
       } catch {
-        logs = [];
+        continue;
       }
     }
 
-    logs.sort(
+    allLogs.sort(
       (a, b) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
 
-    return { success: true, logs };
+    const expiredFiles = logFiles.filter((f) => {
+      const dateStr = f.replace('analytics-', '').replace('.json', '');
+      return new Date(dateStr) < cutoffDate;
+    });
+
+    return {
+      success: true,
+      logs: allLogs,
+      stats: {
+        totalLogs: allLogs.length,
+        totalFiles: logFiles.length,
+        expiredFiles: expiredFiles.length,
+        expiredLogsCount,
+        retentionDays: ANALYTICS_RETENTION_DAYS,
+      },
+    };
   } catch (error) {
     console.error('获取访问日志失败:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : '读取日志失败',
+    };
+  }
+}
+
+/**
+ * 删除过期的分析日志
+ */
+export async function deleteExpiredAnalyticsLogs(): Promise<{
+  success: boolean;
+  message?: string;
+  deletedFiles?: number;
+  deletedLogs?: number;
+  error?: string;
+}> {
+  const permissionCheck = await requirePermission('analytics:delete');
+  if (!permissionCheck.allowed) {
+    return { success: false, error: '权限不足' };
+  }
+
+  try {
+    try {
+      await fs.access(ANALYTICS_DIR);
+    } catch {
+      return {
+        success: true,
+        message: '没有找到日志目录',
+        deletedFiles: 0,
+        deletedLogs: 0,
+      };
+    }
+
+    const files = await fs.readdir(ANALYTICS_DIR);
+    const logFiles = files.filter(
+      (f) => f.startsWith('analytics-') && f.endsWith('.json')
+    );
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - ANALYTICS_RETENTION_DAYS);
+
+    let deletedFiles = 0;
+    let deletedLogs = 0;
+
+    for (const file of logFiles) {
+      const dateStr = file.replace('analytics-', '').replace('.json', '');
+      const fileDate = new Date(dateStr);
+
+      if (fileDate < cutoffDate) {
+        const filePath = path.join(ANALYTICS_DIR, file);
+
+        try {
+          const content = await fs.readFile(filePath, 'utf-8');
+          const logs: AnalyticsLog[] = JSON.parse(content);
+          deletedLogs += logs.length;
+
+          await fs.unlink(filePath);
+          deletedFiles++;
+        } catch {
+          continue;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      message: `成功删除 ${deletedFiles} 个过期日志文件，共 ${deletedLogs} 条记录`,
+      deletedFiles,
+      deletedLogs,
+    };
+  } catch (error) {
+    console.error('删除过期日志失败:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '删除失败',
     };
   }
 }
