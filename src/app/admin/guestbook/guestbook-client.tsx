@@ -218,7 +218,7 @@ export default function GuestbookClient({
                 className="hover:bg-accent/50 space-y-3 rounded-lg border p-4 transition-colors"
                 style={{ backgroundColor: `${entry.bgColor}20` }}
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{entry.nickname}</span>

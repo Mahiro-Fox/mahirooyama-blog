@@ -213,7 +213,7 @@ export default function MomentsClient({
                 key={moment.id}
                 className="hover:bg-accent/50 space-y-3 rounded-lg border p-4 transition-colors"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
                   <div className="flex-1 space-y-2">
                     <div className="text-muted-foreground flex items-center gap-2 text-sm">
                       <span>{formatDate(moment.createdAt)}</span>

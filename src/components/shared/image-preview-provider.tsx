@@ -47,6 +47,8 @@ export function ImagePreviewProvider({ children }: ImagePreviewProviderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [touchStartDist, setTouchStartDist] = useState<number | null>(null);
+  const [touchStartScale, setTouchStartScale] = useState<number>(initScale);
 
   const openPreview = useCallback((image: PreviewImage) => {
     setCurrentImage(image);
@@ -78,7 +80,7 @@ export function ImagePreviewProvider({ children }: ImagePreviewProviderProps) {
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (scale > 1) {
+      if (scale > 0.5) {
         setIsDragging(true);
         setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
       }
@@ -88,18 +90,69 @@ export function ImagePreviewProvider({ children }: ImagePreviewProviderProps) {
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (isDragging && scale > 1) {
+      if (isDragging) {
         setPosition({
           x: e.clientX - dragStart.x,
           y: e.clientY - dragStart.y,
         });
       }
     },
-    [isDragging, dragStart, scale]
+    [isDragging, dragStart]
   );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+  }, []);
+
+  const getDistance = (t1: React.Touch, t2: React.Touch) => {
+    return Math.sqrt(
+      Math.pow(t2.clientX - t1.clientX, 2) +
+        Math.pow(t2.clientY - t1.clientY, 2)
+    );
+  };
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 1) {
+        // 单指拖拽
+        setIsDragging(true);
+        setDragStart({
+          x: e.touches[0].clientX - position.x,
+          y: e.touches[0].clientY - position.y,
+        });
+        setTouchStartDist(null);
+      } else if (e.touches.length === 2) {
+        // 双指缩放
+        setIsDragging(false);
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        setTouchStartDist(dist);
+        setTouchStartScale(scale);
+      }
+    },
+    [position, scale]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 1 && isDragging) {
+        // 移动
+        setPosition({
+          x: e.touches[0].clientX - dragStart.x,
+          y: e.touches[0].clientY - dragStart.y,
+        });
+      } else if (e.touches.length === 2 && touchStartDist !== null) {
+        // 缩放
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        const newScale = (dist / touchStartDist) * touchStartScale;
+        setScale(Math.min(Math.max(newScale, 0.5), 4));
+      }
+    },
+    [isDragging, dragStart, touchStartDist, touchStartScale]
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+    setTouchStartDist(null);
   }, []);
 
   // 使用原生事件监听阻止页面滚轮
@@ -217,15 +270,19 @@ export function ImagePreviewProvider({ children }: ImagePreviewProviderProps) {
           {/* 图片容器 */}
           <div
             className={cn(
-              'relative z-0 max-h-[90vh] max-w-[95vw] overflow-hidden',
-              scale > 1 && 'cursor-grab',
+              'relative z-0 max-h-[80vh] max-w-[95vw] overflow-hidden',
+              scale > 0.5 && 'cursor-grab',
               isDragging && 'cursor-grabbing'
             )}
+            style={{ touchAction: 'none' }}
             onClick={(e) => e.stopPropagation()}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -242,7 +299,7 @@ export function ImagePreviewProvider({ children }: ImagePreviewProviderProps) {
 
           {/* 底部提示 */}
           <div className="animate-in fade-in absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-white/40 duration-200">
-            滚轮缩放 · 点击背景关闭
+            滚轮/双指缩放 · 拖拽移动 · 点击背景关闭
           </div>
         </div>
       )}

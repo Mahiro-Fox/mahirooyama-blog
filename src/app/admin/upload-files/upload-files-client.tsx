@@ -22,7 +22,6 @@ import {
   Loader2,
   Trash2,
   Upload,
-  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -67,6 +66,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/shadcn-ui/table';
+import { useImagePreview } from '@/components/shared/image-preview-provider';
 
 interface FileItem {
   name: string;
@@ -119,7 +119,8 @@ export default function PublicFilesClient({
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
-  const [previewItem, setPreviewItem] = useState<FileItem | null>(null);
+  // const [previewItem, setPreviewItem] = useState<FileItem | null>(null);
+  const { openPreview } = useImagePreview();
   const [isConverting, setIsConverting] = useState(false);
 
   // 获取文件列表
@@ -528,7 +529,8 @@ export default function PublicFilesClient({
                             size="icon"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setPreviewItem(item);
+                              const { path, name } = item;
+                              openPreview({ src: path, alt: name });
                             }}
                           >
                             <ImageIcon className="h-4 w-4" />
@@ -567,7 +569,7 @@ export default function PublicFilesClient({
       </Card>
 
       {/* 图片预览对话框 */}
-      <Dialog open={!!previewItem} onOpenChange={() => setPreviewItem(null)}>
+      {/* <Dialog open={!!previewItem} onOpenChange={() => setPreviewItem(null)}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{previewItem?.name}</DialogTitle>
@@ -597,7 +599,7 @@ export default function PublicFilesClient({
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* 新建文件夹对话框 */}
       <Dialog
