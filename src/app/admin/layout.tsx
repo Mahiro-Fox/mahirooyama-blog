@@ -13,8 +13,8 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Auth is handled by middleware first, but we double-check here for safety
-  // This also gets user info for the AdminShell UI
+  // 虽然已经在 proxy 中处理了认证，但是这里还是再次检查一下，确保安全
+  // 这样可以确保在代理中间件处理完成后，用户信息会被正确设置
   const authCheck = await verifyAuth();
 
   if (!authCheck.success) {

@@ -8,6 +8,7 @@ import {
   FolderOpen,
   Image,
   ImageIcon,
+  Lock,
   LucideIcon,
   MessageSquare,
   Music,
@@ -55,11 +56,13 @@ export interface PageRouteConfig {
   description?: string;
   icon: LucideIcon;
   category?: Category;
+  needAuth?: boolean;
 }
 
 export const pageRoutesConfig: PageRouteConfig[] = [
   {
     name: '后台',
+    needAuth: true,
     navHref: '/admin',
     label: '后台页面',
     title: '去往后台页面',
@@ -183,6 +186,16 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     title: '关于我',
     icon: User,
     navDescription: '关于我的个人介绍',
+    category: 'Other',
+  },
+  {
+    name: 'Secret',
+    needAuth: true,
+    navHref: '/secret',
+    label: 'Secret',
+    title: 'Secret',
+    icon: Lock,
+    navDescription: 'Secret',
     category: 'Other',
   },
   {

@@ -2,6 +2,8 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
 
+import { pageRoutesConfig } from '@/config/config';
+
 // JWT 密钥检查（最少32字符）
 const rawSecret =
   process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -17,8 +19,25 @@ const JWT_SECRET = new TextEncoder().encode(rawSecret);
 const SESSION_REFRESH_THRESHOLD = 4 * 60 * 60; // 4小时（秒）
 const SESSION_EXPIRY = 24 * 60 * 60; // 24小时（秒）
 
-// 需要保护的路由 - /login 已独立，不在 /admin 下
-const protectedRoutes = ['/admin'];
+// 动态获取需要保护的路由
+const getProtectedRoutes = () => {
+  const routes = new Set<string>();
+
+  // 默认保护所有 /admin 开头的路由
+  routes.add('/admin');
+
+  // 从配置中提取需要 auth 的路由
+  pageRoutesConfig.forEach((route) => {
+    if (route.needAuth) {
+      if (route.navHref) routes.add(route.navHref);
+      if (route.adminHref) routes.add(route.adminHref);
+    }
+  });
+
+  return Array.from(routes);
+};
+
+const protectedRoutes = getProtectedRoutes();
 
 // 添加安全响应头
 function addSecurityHeaders(response: NextResponse): NextResponse {
@@ -42,15 +61,19 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 添加 x-pathname header 供 Server Components 使用
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
 
-  // 检查 /admin 路径（所有 /admin 都需要认证）
-  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
+  // 检查路径是否在受保护名单中
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  if (isProtectedRoute) {
     const token = request.cookies.get('admin-session')?.value;
 
     if (!token) {
@@ -66,15 +89,15 @@ export async function middleware(request: NextRequest) {
       const now = Math.floor(Date.now() / 1000);
       const exp = payload.exp || 0;
 
-      // 会话刷新（Sliding Session）：剩余时间少于4小时时续期
+      // 创建基础响应
       const response = NextResponse.next({
         request: {
           headers: requestHeaders,
         },
       });
 
+      // 会话刷新（Sliding Session）：剩余时间少于4小时时续期
       if (exp - now < SESSION_REFRESH_THRESHOLD) {
-        // 重新签发 token，保留原有信息
         const newToken = await new SignJWT({
           userId: payload.userId,
           username: payload.username,
@@ -87,13 +110,11 @@ export async function middleware(request: NextRequest) {
           .setExpirationTime(`${SESSION_EXPIRY}s`)
           .sign(JWT_SECRET);
 
-        // 通过 COOKIE_SECURE 环境变量可强制控制 secure 属性
         const isSecure =
           process.env.COOKIE_SECURE === 'true' ||
           (process.env.COOKIE_SECURE !== 'false' &&
             process.env.NODE_ENV === 'production');
 
-        // 设置新 cookie
         response.cookies.set('admin-session', newToken, {
           httpOnly: true,
           secure: isSecure,
@@ -120,3 +141,18 @@ export async function middleware(request: NextRequest) {
     },
   });
 }
+
+// 限制中间件运行的路径，排除静态文件和 API
+export const config = {
+  matcher: [
+    /*
+     * 匹配所有请求路径，除了:
+     * 1. /api (API 路由由内部处理)
+     * 2. /_next/static (静态文件)
+     * 3. /_next/image (图片优化)
+     * 4. /favicon.ico, sitemap.xml, robots.txt (元数据文件)
+     * 5. 所有包含 . 的文件 (如 .png, .jpg, .svg 等)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\..*).*)',
+  ],
+};

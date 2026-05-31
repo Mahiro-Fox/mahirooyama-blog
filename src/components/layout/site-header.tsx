@@ -81,32 +81,36 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
                           {categoryName}
                         </NavigationMenuTrigger>
                         <NavigationMenuContent className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                          {items.map((item) => (
-                            <NavigationMenuLink key={item.navHref} asChild>
-                              <Link
-                                href={item.navHref!}
-                                className={
-                                  isActive(item.navHref!)
-                                    ? 'bg-accent'
-                                    : 'hover:bg-transparent'
-                                }
-                              >
-                                <p className="flex items-center gap-2">
-                                  {item.icon && (
-                                    <item.icon className="h-4 w-4" />
-                                  )}
-                                  <span>{item.name}</span>
-                                </p>
-                                <p
-                                  className="text-muted-foreground text-xs"
-                                  key={item.name}
-                                  title={item.name}
-                                >
-                                  {item.navDescription}
-                                </p>
-                              </Link>
-                            </NavigationMenuLink>
-                          ))}
+                          {items.map(
+                            (item) =>
+                              // 如果需要认证且用户未认证，则不显示
+                              (!item.needAuth || isAdminAuth) && (
+                                <NavigationMenuLink key={item.navHref} asChild>
+                                  <Link
+                                    href={item.navHref!}
+                                    className={
+                                      isActive(item.navHref!)
+                                        ? 'bg-accent'
+                                        : 'hover:bg-transparent'
+                                    }
+                                  >
+                                    <p className="flex items-center gap-2">
+                                      {item.icon && (
+                                        <item.icon className="h-4 w-4" />
+                                      )}
+                                      <span>{item.name}</span>
+                                    </p>
+                                    <p
+                                      className="text-muted-foreground text-xs"
+                                      key={item.name}
+                                      title={item.name}
+                                    >
+                                      {item.navDescription}
+                                    </p>
+                                  </Link>
+                                </NavigationMenuLink>
+                              )
+                          )}
                         </NavigationMenuContent>
                       </NavigationMenuItem>
                     );

@@ -3,9 +3,9 @@ import { Metadata } from 'next';
 import { BentoGridClient } from './bento-grid-client';
 
 export const metadata: Metadata = {
-  title: '关于我 - About Me',
-  description: '了解更多关于 ShiZhongyan 的信息',
-  keywords: ['about', '关于我', 'ShiZhongyan', '个人简介'],
+  title: '关于mahiro - About Me',
+  description: '了解更多关于 mahiro 的信息',
+  keywords: ['about', '关于', 'mahiro', '个人简介'],
 };
 
 export default function AboutPage() {
