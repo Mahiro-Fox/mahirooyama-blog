@@ -34,8 +34,8 @@ const ALLOWED_MIME_TYPES = [
   'application/x-rar-compressed',
 ];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_FILES_COUNT = 20;
 
 /**
