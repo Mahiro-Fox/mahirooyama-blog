@@ -149,7 +149,7 @@ export const aboutConfig: AboutConfig = {
     {
       id: 'skills',
       type: 'skills',
-      size: 'md:col-span-2 md:row-span-2',
+      size: 'row-span-2  md:col-span-2 md:row-span-2',
       title: '开启创造力',
       content: {
         skills: [

@@ -29,7 +29,7 @@ export function MediaCard({ content }: MediaCardProps) {
 
       {/* Content overlay */}
       <div className="absolute right-0 bottom-0 left-0 p-4">
-        <div className="rounded-lg p-3 backdrop-blur-sm">
+        <div className="rounded-lg p-3">
           <div className="mb-1 text-xs font-semibold tracking-wider text-white/80 uppercase">
             {content.category}
           </div>
