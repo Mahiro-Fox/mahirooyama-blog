@@ -239,7 +239,14 @@ export default function PublicFilesClient({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '上传失败');
+        if (result.details) {
+          toast(result.error, {
+            description: result.details?.join('\n') || '',
+          });
+        } else {
+          toast.error(result.error || '上传失败');
+        }
+        return;
       }
 
       const successCount = result.results.filter(
