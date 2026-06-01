@@ -132,6 +132,7 @@ async function writeUsers(users: User[]): Promise<void> {
 
 // 转换为响应格式（移除密码）
 function toUserResponse(user: User): UserResponse {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...response } = user;
   return response;
 }

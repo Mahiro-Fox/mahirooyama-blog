@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { SESSION_EXPIRY, SESSION_REFRESH_THRESHOLD } from '@/constant';
 import { jwtVerify, SignJWT } from 'jose';
 
 import { pageRoutesConfig } from '@/config/config';
@@ -14,10 +15,6 @@ if (rawSecret.length < 32) {
   );
 }
 const JWT_SECRET = new TextEncoder().encode(rawSecret);
-
-// 会话刷新阈值：剩余4小时时自动续期
-const SESSION_REFRESH_THRESHOLD = 4 * 60 * 60; // 4小时（秒）
-const SESSION_EXPIRY = 24 * 60 * 60; // 24小时（秒）
 
 // 动态获取需要保护的路由
 const getProtectedRoutes = () => {
