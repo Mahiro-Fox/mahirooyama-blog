@@ -45,7 +45,7 @@ export function CrudFormDialog({
         </DialogHeader>
         <form
           onSubmit={onSubmit}
-          className="mt-2 flex max-h-[75vh] flex-col space-y-4 overflow-auto pr-4"
+          className="mt-2 flex max-h-[75vh] flex-col space-y-4 overflow-auto p-4"
         >
           {children}
           <DialogFooter>

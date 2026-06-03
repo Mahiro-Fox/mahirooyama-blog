@@ -178,6 +178,7 @@ export default function MomentsClient({
       toast.error(error instanceof Error ? error.message : '图片上传失败');
     }
   };
+
   // 情绪点击处理
   const handleMoodEmojiClick = (emoji: string) => {
     if (moodEmoji === emoji) {
@@ -234,6 +235,8 @@ export default function MomentsClient({
                     {moment.image && (
                       <div className="relative inline-block w-full">
                         <OptimizedImage
+                          // 开发环境获取不到图片会报错，生产环境不会，加一个判断避免报错
+                          fill={!!(moment.image.width && moment.image.height)}
                           previewable
                           src={moment.image.url}
                           alt="配图"
@@ -333,10 +336,10 @@ export default function MomentsClient({
 
           <div>
             <label className="mb-2 block text-sm font-medium">心情</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
               {MOOD_OPTIONS.map((option) => (
                 <button
-                  key={option.emoji}
+                  key={option.label}
                   type="button"
                   onClick={() => handleMoodEmojiClick(option.emoji)}
                   className={`rounded-full border px-3 py-1 text-sm transition-colors ${
