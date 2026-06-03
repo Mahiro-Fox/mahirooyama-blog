@@ -103,7 +103,28 @@ const isImage = (item: FileItem) => {
   return imageExts.includes(item.extension || '');
 };
 
-export default function PublicFilesClient({
+// 限制常量（与 API 保持一致）
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILES_COUNT = 20;
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  'image/avif',
+  'video/mp4',
+  'video/webm',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/ogg',
+  'application/pdf',
+  'application/zip',
+  'application/x-rar-compressed',
+];
+
+export default function UploadFilesClient({
   initialData,
 }: PublicFilesClientProps) {
   const [currentPath, setCurrentPath] = useState(initialData.currentPath);
@@ -219,6 +240,45 @@ export default function PublicFilesClient({
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
     if (!selectedFiles || selectedFiles.length === 0) return;
+
+    // 前端验证
+    if (selectedFiles.length > MAX_FILES_COUNT) {
+      toast.error(`文件数量超过限制，最多允许 ${MAX_FILES_COUNT} 个文件`);
+      e.target.value = '';
+      return;
+    }
+
+    let totalSize = 0;
+    const validationErrors: string[] = [];
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      totalSize += file.size;
+
+      if (file.size > MAX_FILE_SIZE) {
+        validationErrors.push(
+          `文件 ${file.name} 超过单文件限制 (${MAX_FILE_SIZE / (1024 * 1024)}MB)`
+        );
+      }
+
+      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        validationErrors.push(`不支持的文件类型: ${file.name}`);
+      }
+    }
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      toast.error(
+        `文件总大小超过限制，最多允许 ${MAX_TOTAL_SIZE / (1024 * 1024)}MB`
+      );
+      e.target.value = '';
+      return;
+    }
+
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((err) => toast.error(err));
+      e.target.value = '';
+      return;
+    }
 
     setIsUploading(true);
 
