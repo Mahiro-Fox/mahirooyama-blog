@@ -299,7 +299,7 @@ export default function MomentsClient({
                     </div>
                     <p className="text-sm">{moment.content}</p>
                     {moment.image && (
-                      <div className="relative inline-block w-full">
+                      <div className="relative inline-block">
                         <OptimizedImage
                           fill={
                             process.env.NODE_ENV === 'development'
@@ -318,7 +318,7 @@ export default function MomentsClient({
                               ? true
                               : false
                           }
-                          className="max-h-48 w-full max-w-xs rounded-lg object-cover"
+                          className="max-h-48 max-w-xs rounded-lg object-cover"
                         />
                       </div>
                     )}

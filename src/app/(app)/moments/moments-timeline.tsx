@@ -66,7 +66,7 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
 
                 {/* 配图 */}
                 {moment.image && (
-                  <div className="relative inline-block w-full">
+                  <div className="relative inline-block">
                     <OptimizedImage
                       previewable
                       src={moment.image.url}
@@ -80,7 +80,7 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                           ? true
                           : false
                       }
-                      className="max-h-48 w-full max-w-xs rounded-lg object-cover"
+                      className="max-h-48 max-w-xs rounded-lg object-cover"
                     />
                   </div>
                 )}
