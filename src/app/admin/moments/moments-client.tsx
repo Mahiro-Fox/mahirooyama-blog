@@ -188,6 +188,44 @@ export default function MomentsClient({
     }
   };
 
+  // 获取用户位置
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('您的浏览器不支持地理位置功能');
+      return;
+    }
+
+    toast.loading('正在获取位置...', { id: 'location-loading' });
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        toast.success('位置获取成功', { id: 'location-loading' });
+      },
+      (error) => {
+        let errorMessage = '位置获取失败';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = '用户拒绝了位置权限请求';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = '位置信息不可用';
+            break;
+          case error.TIMEOUT:
+            errorMessage = '获取位置超时';
+            break;
+        }
+        toast.error(errorMessage, { id: 'location-loading' });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
   return (
     <>
       <AdminPageLayout
@@ -235,8 +273,11 @@ export default function MomentsClient({
                     {moment.image && (
                       <div className="relative inline-block w-full">
                         <OptimizedImage
-                          // 开发环境获取不到图片会报错，生产环境不会，加一个判断避免报错
-                          fill={!!(moment.image.width && moment.image.height)}
+                          fill={
+                            process.env.NODE_ENV === 'development'
+                              ? true
+                              : false
+                          }
                           previewable
                           src={moment.image.url}
                           alt="配图"
@@ -339,7 +380,7 @@ export default function MomentsClient({
             <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
               {MOOD_OPTIONS.map((option) => (
                 <button
-                  key={option.label}
+                  key={option.emoji}
                   type="button"
                   onClick={() => handleMoodEmojiClick(option.emoji)}
                   className={`rounded-full border px-3 py-1 text-sm transition-colors ${
@@ -356,11 +397,23 @@ export default function MomentsClient({
 
           <div>
             <label className="mb-2 block text-sm font-medium">位置</label>
-            <Input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="📍 在哪里..."
-            />
+            <div className="flex gap-2">
+              <Input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="📍 在哪里..."
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleGetLocation}
+                className="h-9 w-9"
+                title="获取当前位置"
+              >
+                <MapPin className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </CrudFormDialog>
