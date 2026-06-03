@@ -189,7 +189,7 @@ export default function MomentsClient({
   };
 
   // 获取用户位置
-  const handleGetLocation = () => {
+  const handleGetLocation = async () => {
     if (!navigator.geolocation) {
       toast.error('您的浏览器不支持地理位置功能');
       return;
@@ -197,14 +197,47 @@ export default function MomentsClient({
 
     toast.loading('正在获取位置...', { id: 'location-loading' });
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
+    try {
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        }
+      );
+
+      const { latitude, longitude } = position.coords;
+
+      // 使用 OpenStreetMap Nominatim 进行逆地理编码（免费，无需 API Key）
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=zh-CN`,
+        {
+          headers: {
+            'User-Agent': 'mahirooyama-blog',
+          },
+        }
+      );
+
+      if (res.ok) {
+        const geo = await res.json();
+        if (geo.display_name) {
+          setLocation(geo.display_name);
+          toast.success('位置获取成功', { id: 'location-loading' });
+        } else {
+          // 如果无法获取地址，回退到坐标
+          setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          toast.success('位置获取成功（仅坐标）', { id: 'location-loading' });
+        }
+      } else {
+        // API 请求失败，回退到坐标
         setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
-        toast.success('位置获取成功', { id: 'location-loading' });
-      },
-      (error) => {
-        let errorMessage = '位置获取失败';
+        toast.success('位置获取成功（仅坐标）', { id: 'location-loading' });
+      }
+    } catch (error) {
+      let errorMessage = '位置获取失败';
+      if (error instanceof GeolocationPositionError) {
         switch (error.code) {
           case error.PERMISSION_DENIED:
             errorMessage = '用户拒绝了位置权限请求';
@@ -216,14 +249,9 @@ export default function MomentsClient({
             errorMessage = '获取位置超时';
             break;
         }
-        toast.error(errorMessage, { id: 'location-loading' });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
       }
-    );
+      toast.error(errorMessage, { id: 'location-loading' });
+    }
   };
 
   return (
