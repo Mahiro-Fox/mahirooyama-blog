@@ -7,7 +7,6 @@ import { Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { groupedNavRoutes, siteConfig } from '@/config/common';
-import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   NavigationMenu,
@@ -28,6 +27,7 @@ import {
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
 import { Search } from '@/components/content/search';
+import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { SiteLogo } from '@/components/shared/site-logo';
 

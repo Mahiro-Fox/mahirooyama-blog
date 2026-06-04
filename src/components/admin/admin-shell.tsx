@@ -12,7 +12,6 @@ import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 
 import { adminRoutesConfig } from '@/config/common';
-import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -24,6 +23,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
+import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface CurrentUser {
