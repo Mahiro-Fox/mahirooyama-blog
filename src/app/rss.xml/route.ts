@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 

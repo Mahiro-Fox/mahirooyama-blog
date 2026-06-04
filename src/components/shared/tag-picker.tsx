@@ -9,9 +9,13 @@ interface TagPickerProps {
   value: string[];
   onChange: (value: string[]) => void;
   type: TagType;
-  placeholder?: string;
 }
-
+/**
+ * 标签选择器组件，用于在表单中选择标签
+ * @param value 当前选中的标签ID数组
+ * @param onChange 选中标签变化时的回调函数
+ * @param type 标签类型
+ */
 export function TagPicker({ value, onChange, type }: TagPickerProps) {
   const [tags, setTags] = useState<TagsData | null>(null);
   const [loading, setLoading] = useState(true);

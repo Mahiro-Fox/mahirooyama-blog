@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { PhotoItem } from '@/lib/photos';
 import { TextAnimate } from '@/components/shadcn-ui/text-animate';
 import { FadeCarousel } from '@/components/shared/fade-carousel';

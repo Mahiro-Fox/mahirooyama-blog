@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { author } from '@/lib/author';
 import { getAllBlogPosts, getBlogPostBySlug } from '@/lib/mdx';
 import {

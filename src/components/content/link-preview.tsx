@@ -4,7 +4,7 @@ import { getOGData } from '@/actions/fetch-og-metadata';
 import { cn } from '@/utils/utils';
 import { ExternalLinkIcon } from 'lucide-react';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { getBlogPostBySlug } from '@/lib/mdx';
 import { ImageWithFallback } from '@/components/shared/image-with-fallback';
 import { OptimizedImage } from '@/components/shared/optimized-image';

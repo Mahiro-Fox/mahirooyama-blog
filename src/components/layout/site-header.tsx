@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-import { groupedNavRoutes, siteConfig } from '@/config/config';
+import { groupedNavRoutes, siteConfig } from '@/config/common';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Button } from '@/components/shadcn-ui/button';
 import {

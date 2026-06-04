@@ -11,7 +11,7 @@ import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 
-import { adminRoutesConfig } from '@/config/config';
+import { adminRoutesConfig } from '@/config/common';
 import { AnimatedThemeToggler } from '@/components/shadcn-ui/animated-theme-toggler';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';

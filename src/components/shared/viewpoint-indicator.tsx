@@ -4,6 +4,9 @@ import { MOBILE_BREAKPOINT } from '@/config';
 
 import { useMediaQuery } from '@/hooks/use-media-query';
 
+/**
+ * 视口指示器组件，用于显示当前视口类型（桌面或移动）
+ */
 export function ViewpointIndicator() {
   const isDesktop = useMediaQuery(`(min-width: ${MOBILE_BREAKPOINT}px)`);
 

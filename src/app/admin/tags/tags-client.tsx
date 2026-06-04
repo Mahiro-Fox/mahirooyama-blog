@@ -20,7 +20,7 @@ import { formatDate } from '@/utils/utils';
 import { Tag as LucideTag, RefreshCwIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { getTagTypeConfig } from '@/config/tag-config';
+import { getTagTypeConfig } from '@/config/tag';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
 import {

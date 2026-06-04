@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { SESSION_EXPIRY, SESSION_REFRESH_THRESHOLD } from '@/constant';
 import { jwtVerify, SignJWT } from 'jose';
 
-import { pageRoutesConfig } from '@/config/config';
+import { pageRoutesConfig } from '@/config/common';
 
 // JWT 密钥检查（最少32字符）
 const rawSecret =

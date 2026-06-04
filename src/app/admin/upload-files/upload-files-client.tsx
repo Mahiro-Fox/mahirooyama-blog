@@ -10,6 +10,7 @@ import {
   deleteFile,
   renameFile,
 } from '@/actions/admin/upload-files-actions';
+import { useImagePreview } from '@/context/image-preview-provider';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
   ArrowLeft,
@@ -66,7 +67,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/shadcn-ui/table';
-import { useImagePreview } from '@/components/shared/image-preview-provider';
 
 interface FileItem {
   name: string;
