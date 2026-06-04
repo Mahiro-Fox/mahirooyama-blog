@@ -133,11 +133,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
+  return addSecurityHeaders(response);
 }
 
 // 限制中间件运行的路径，排除静态文件和 API
