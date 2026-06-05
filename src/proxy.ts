@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { SESSION_EXPIRY, SESSION_REFRESH_THRESHOLD } from '@/constant';
+import { SESSION_EXPIRY, SESSION_REFRESH_THRESHOLD } from '@/constant/auth';
 import { jwtVerify, SignJWT } from 'jose';
 
 import { pageRoutesConfig } from '@/config/common';

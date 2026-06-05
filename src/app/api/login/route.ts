@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { JWT_SECRET, SESSION_EXPIRY } from '@/constant';
+import { JWT_SECRET, SESSION_EXPIRY } from '@/constant/auth';
 import { sessionStore } from '@/store/session-store';
 import { userStore } from '@/store/user-store';
 import { SignJWT } from 'jose';

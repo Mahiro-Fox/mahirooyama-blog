@@ -1,7 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { JWT_SECRET, SESSION_EXPIRY } from '@/constant';
+import { JWT_SECRET, SESSION_EXPIRY } from '@/constant/auth';
 import { sessionStore } from '@/store/session-store';
 import { userStore } from '@/store/user-store';
 import { createLogger } from '@/utils/logger';
