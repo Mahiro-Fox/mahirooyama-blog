@@ -10,6 +10,12 @@ import {
   deleteFile,
   renameFile,
 } from '@/actions/admin/upload-files-actions';
+import {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  MAX_FILES_COUNT,
+  MAX_TOTAL_SIZE,
+} from '@/constant/file-upload';
 import { useImagePreview } from '@/context/image-preview-provider';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
@@ -102,27 +108,6 @@ const isImage = (item: FileItem) => {
   ];
   return imageExts.includes(item.extension || '');
 };
-
-// 限制常量（与 API 保持一致）
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB
-const MAX_FILES_COUNT = 20;
-const ALLOWED_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
-  'image/avif',
-  'video/mp4',
-  'video/webm',
-  'audio/mpeg',
-  'audio/wav',
-  'audio/ogg',
-  'application/pdf',
-  'application/zip',
-  'application/x-rar-compressed',
-];
 
 export default function UploadFilesClient({
   initialData,
@@ -256,9 +241,8 @@ export default function UploadFilesClient({
       totalSize += file.size;
 
       if (file.size > MAX_FILE_SIZE) {
-        validationErrors.push(
-          `文件 ${file.name} 超过单文件限制 (${MAX_FILE_SIZE / (1024 * 1024)}MB)`
-        );
+        const size = formatSize(file.size);
+        validationErrors.push(`文件 ${file.name} 超过单文件限制 (${size})`);
       }
 
       if (!ALLOWED_MIME_TYPES.includes(file.type)) {
@@ -267,9 +251,8 @@ export default function UploadFilesClient({
     }
 
     if (totalSize > MAX_TOTAL_SIZE) {
-      toast.error(
-        `文件总大小超过限制，最多允许 ${MAX_TOTAL_SIZE / (1024 * 1024)}MB`
-      );
+      const total = formatSize(totalSize);
+      toast.error(`文件总大小超过限制，最多允许 ${total}`);
       e.target.value = '';
       return;
     }

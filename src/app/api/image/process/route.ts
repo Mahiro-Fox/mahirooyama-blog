@@ -44,10 +44,7 @@ interface ProcessImageResponse {
   error?: string;
 }
 
-/**
- * 最大文件大小限制：20MB
- */
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
+import { MAX_FILE_SIZE } from '@/constant/file-upload';
 
 /**
  * 默认图片处理配置
