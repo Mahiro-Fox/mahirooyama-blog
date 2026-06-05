@@ -35,12 +35,67 @@ const nextConfig = {
           },
         ],
       },
-      // 生产环境：静态资源长期缓存（public 下的图片/字体/媒体等）
+      // 生产环境：HTML 页面 - 短期缓存，支持重新验证
       ...(process.env.NODE_ENV === 'production'
         ? [
             {
-              source:
-                '/:path*\\.(avif|webp|png|jpg|jpeg|gif|svg|ico|woff2|woff|ttf|otf|mp4|webm|mp3|wav)',
+              source: '/:path((?!\\.\\w+$).)*',
+              headers: [
+                {
+                  key: 'Cache-Control',
+                  value: 'public, max-age=0, must-revalidate',
+                },
+              ],
+            },
+          ]
+        : []),
+      // 生产环境：CSS/JS 文件 - 中期缓存，支持重新验证
+      ...(process.env.NODE_ENV === 'production'
+        ? [
+            {
+              source: '/:path*\\.(css|js)$',
+              headers: [
+                {
+                  key: 'Cache-Control',
+                  value: 'public, max-age=31536000, immutable',
+                },
+              ],
+            },
+          ]
+        : []),
+      // 生产环境：字体文件 - 长期缓存，不可变
+      ...(process.env.NODE_ENV === 'production'
+        ? [
+            {
+              source: '/:path*\\.(woff2|woff|ttf|otf|eot)',
+              headers: [
+                {
+                  key: 'Cache-Control',
+                  value: 'public, max-age=31536000, immutable',
+                },
+              ],
+            },
+          ]
+        : []),
+      // 生产环境：图片文件 - 长期缓存，不可变
+      ...(process.env.NODE_ENV === 'production'
+        ? [
+            {
+              source: '/:path*\\.(avif|webp|png|jpg|jpeg|gif|svg|ico)',
+              headers: [
+                {
+                  key: 'Cache-Control',
+                  value: 'public, max-age=31536000, immutable',
+                },
+              ],
+            },
+          ]
+        : []),
+      // 生产环境：媒体文件 - 长期缓存，不可变
+      ...(process.env.NODE_ENV === 'production'
+        ? [
+            {
+              source: '/:path*\\.(mp4|webm|mp3|wav|ogg)',
               headers: [
                 {
                   key: 'Cache-Control',
@@ -67,11 +122,12 @@ const nextConfig = {
           },
         ],
       },
-      // 开发环境：静态图片禁用缓存
+      // 开发环境：静态资源禁用缓存
       ...(process.env.NODE_ENV !== 'production'
         ? [
             {
-              source: '/images/:path*',
+              source:
+                '/:path*\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2|woff|ttf|otf)',
               headers: [
                 {
                   key: 'Cache-Control',
