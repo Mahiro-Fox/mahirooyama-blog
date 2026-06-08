@@ -28,6 +28,7 @@ import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 import { TagPicker } from '@/components/shared/tag-picker';
 
 // 截断文本
@@ -438,6 +439,16 @@ export default function GalleryClient({
                 <ImageIcon className="h-4 w-4" />
               </FileUploadTrigger>
             </div>
+            {editThumbnail && (
+              <OptimizedImage
+                fill={process.env.NODE_ENV === 'development' ? true : false}
+                previewable
+                src={editThumbnail}
+                alt="配图"
+                containerClassName="self-start"
+                className="max-h-48 max-w-xs rounded-lg object-cover"
+              />
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="tags">标签</Label>
