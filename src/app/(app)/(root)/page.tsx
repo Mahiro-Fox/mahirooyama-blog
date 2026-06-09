@@ -143,6 +143,18 @@ export default async function IndexPage() {
           </div>
         </section>
       </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Blog',
+            '@id': 'https://mahirooyama.cn',
+            name: 'mahirooyama-blog',
+            url: 'https://mahirooyama.cn',
+          }),
+        }}
+      />
     </div>
   );
 }
