@@ -25,6 +25,7 @@ export const HomeBanner: React.FC<HomeBannerImage> = ({
       <div className="relative h-full w-full">
         <FadeCarousel
           className="h-full w-full max-w-none rounded-none"
+          random
           initialIndex={initialIndex}
           arrow={false}
           indicator={false}
