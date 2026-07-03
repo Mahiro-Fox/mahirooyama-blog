@@ -35,9 +35,17 @@ export function FadeCarousel<T extends CarouselItem>({
   random = false,
   itemRender,
 }: CarouselProps<T>) {
-  // 【LCP 优化 1】将随机逻辑直接收敛在 useState 初始化函数中
-  // 避免在 useEffect 中二次修改 index 导致浏览器重复请求首屏无关图片
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  // 核心修复：如果只有 0 或 1 张图，直接不执行后续逻辑，防范边界条件
+  const hasItems = items && items.length > 0;
+
+  // 随机初始索引
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (!hasItems) return 0;
+    if (random && items.length > 1) {
+      return Math.floor(Math.random() * items.length);
+    }
+    return initialIndex;
+  });
 
   // 下一张
   const nextSlide = useCallback(() => {
@@ -49,7 +57,7 @@ export function FadeCarousel<T extends CarouselItem>({
     setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
   };
 
-  // 自动播放逻辑保持不变
+  // 自动播放逻辑
   useEffect(() => {
     if (items.length <= 1) return;
 
@@ -70,8 +78,7 @@ export function FadeCarousel<T extends CarouselItem>({
     return () => clearInterval(timer);
   }, [random, nextSlide, autoPlayInterval, items.length]);
 
-  // 如果没有数据，直接返回 null 避免报错
-  if (!items || items.length === 0) return null;
+  if (!hasItems) return null;
 
   return (
     <div
@@ -84,22 +91,22 @@ export function FadeCarousel<T extends CarouselItem>({
       {items.map((item, index) => {
         const isCurrent = index === currentIndex;
 
-        // 【LCP 优化 2】虚拟化/条件渲染 DOM
-        // 计算当前节点是否需要存在于 DOM 中。
-        // 为了照顾 2000ms 的淡入淡出过渡动画，我们需要同时保留【当前张】、【上一张】和【下一张】
-        const isNext = index === (currentIndex + 1) % items.length;
-        const isPrev =
-          index === (currentIndex - 1 + items.length) % items.length;
+        // 【修复 LCP 冲突】
+        // 如果是随机模式，我们必须让所有 DOM 节点都在线，靠 Next.js Image 自带的 lazy load 协同。
+        // 如果是顺序模式，则继续保留原有的前后 1 张虚拟化裁剪，最大化压榨 LCP 性能。
+        if (!random) {
+          const isNext = index === (currentIndex + 1) % items.length;
+          const isPrev =
+            index === (currentIndex - 1 + items.length) % items.length;
 
-        // 如果既不是当前显示的，也不是即将过渡的，直接不渲染 DOM
-        // 从而从根本上阻止浏览器发送非必要图片请求，腾出带宽给 LCP 元素
-        if (!isCurrent && !isNext && !isPrev) {
-          return null;
+          if (!isCurrent && !isNext && !isPrev) {
+            return null;
+          }
         }
 
         return (
           <div
-            key={item.id || index} // 推荐优先使用独一无二的 item.id 提升 React DOM Diff 效率
+            key={item.id || index}
             className={`absolute inset-0 transition-opacity duration-2000 ease-in-out ${
               isCurrent ? 'z-10 opacity-100' : 'z-0 opacity-0'
             }`}
@@ -111,8 +118,8 @@ export function FadeCarousel<T extends CarouselItem>({
                 src={item.image}
                 alt={`Slide ${index}`}
                 className="h-full w-full object-cover"
-                // 【LCP 优化 3】精准赋予初始显示的图片最高下载优先级
-                priority={isCurrent}
+                // 仅对真正意义上的首屏第一张图开启最高优先级（避免频繁变更 priority 导致逻辑混乱）
+                priority={index === initialIndex}
               />
             )}
             {/* 渐变遮罩 */}
@@ -121,7 +128,7 @@ export function FadeCarousel<T extends CarouselItem>({
         );
       })}
 
-      {/* 左右箭头 - 仅在悬停时显示 */}
+      {/* 左右箭头 */}
       {arrow && items.length > 1 && (
         <>
           <button
@@ -139,7 +146,7 @@ export function FadeCarousel<T extends CarouselItem>({
         </>
       )}
 
-      {/* 指示器 (Dots) */}
+      {/* 指示器 */}
       {indicator && items.length > 1 && (
         <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 space-x-2">
           {items.map((_, index) => (
