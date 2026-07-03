@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/utils/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -39,17 +39,14 @@ export function FadeCarousel<T extends CarouselItem>({
 
   // 1. 状态管理
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  // 专门用于存放提前预测、需要预加载的下一张索引
   const [nextIndex, setNextIndex] = useState<number | null>(null);
-  
-  // 记录上一张索引，保证淡出动画有 DOM 节点可用
   const [prevIndex, setPrevIndex] = useState<number | null>(null);
 
-  // 用 ref 总是获取最新的 items 长度和随机状态，避免频繁重置定时器
-  const stateRef = useRef({ items, random, currentIndex });
+  // 使用 Ref 存放核心状态，防止定时器闭包过时
+  const stateRef = useRef({ items, random, currentIndex, nextIndex });
   useEffect(() => {
-    stateRef.current = { items, random, currentIndex };
-  }, [items, random, currentIndex]);
+    stateRef.current = { items, random, currentIndex, nextIndex };
+  }, [items, random, currentIndex, nextIndex]);
 
   // 2. 辅助函数：生成不重复的随机数
   const getRandomIndex = useCallback((current: number, total: number) => {
@@ -61,11 +58,11 @@ export function FadeCarousel<T extends CarouselItem>({
     return index;
   }, []);
 
-  // 3. 切换核心逻辑（统一管理索引变更）
+  // 3. 切换核心逻辑
   const changeSlide = useCallback((targetIndex: number) => {
     setPrevIndex(stateRef.current.currentIndex);
     setCurrentIndex(targetIndex);
-    setNextIndex(null); // 切换后清空预加载指针
+    setNextIndex(null); // 切换后重置预加载
   }, []);
 
   const nextSlide = useCallback(() => {
@@ -80,40 +77,63 @@ export function FadeCarousel<T extends CarouselItem>({
     changeSlide(target);
   };
 
-  // 4. 自动播放与预加载调度器（核心机制）
+  // 4. 单一定时器时间轮询机制（核心修复）
   useEffect(() => {
     if (items.length <= 1) return;
 
-    // 计算预加载的时机：在图片即将切换前的 2000ms（刚好对应动画时长）开始拉取网络请求
-    const prefetchDelay = Math.max(autoPlayInterval - 2000, 500);
+    // 每一帧步进的时间基准（100ms 轮询一次，性能损耗极低，且足够精准）
+    const TICK = 100;
+    let timeElapsed = 0;
+    const prefetchTime = Math.max(autoPlayInterval - 2000, 500); // 提前 2 秒预加载
 
-    // 定时器 1：负责在前半段提前计算并向 DOM 塞入下一张图
-    const prefetchTimer = setTimeout(() => {
-      const { random: isRandom, items: currentItems, currentIndex: cur } = stateRef.current;
-      if (isRandom) {
-        setNextIndex(getRandomIndex(cur, currentItems.length));
-      } else {
-        setNextIndex((cur + 1) % currentItems.length);
+    const intervalId = setInterval(() => {
+      timeElapsed += TICK;
+
+      const {
+        random: isRandom,
+        items: currentItems,
+        currentIndex: cur,
+        nextIndex: currentNext,
+      } = stateRef.current;
+
+      // 阶段一：到了预加载点，且目前还没有生成 nextIndex，则静默塞入 DOM 开始下载
+      if (
+        timeElapsed >= prefetchTime &&
+        timeElapsed < autoPlayInterval &&
+        currentNext === null
+      ) {
+        if (isRandom) {
+          setNextIndex(getRandomIndex(cur, currentItems.length));
+        } else {
+          setNextIndex((cur + 1) % currentItems.length);
+        }
       }
-    }, prefetchDelay);
 
-    // 定时器 2：负责到达间隔时间后，正式执行渐变切换
-    const flipTimer = setTimeout(() => {
-      const { random: isRandom, items: currentItems, currentIndex: cur } = stateRef.current;
-      if (isRandom) {
-        // 如果因为某些原因 nextIndex 没生成，则临时兜底计算
-        changeSlide(nextIndex !== null ? nextIndex : getRandomIndex(cur, currentItems.length));
-      } else {
-        nextSlide();
+      // 阶段二：满打满算到了切换时间，正式翻页，并重置时间累加器
+      if (timeElapsed >= autoPlayInterval) {
+        timeElapsed = 0; // 重置计数器
+        if (isRandom) {
+          // 如果有预加载好的图，直接用；没有则兜底算一个
+          const target =
+            stateRef.current.nextIndex !== null
+              ? stateRef.current.nextIndex
+              : getRandomIndex(cur, currentItems.length);
+          changeSlide(target);
+        } else {
+          nextSlide();
+        }
       }
-    }, autoPlayInterval);
+    }, TICK);
 
-    return () => {
-      clearTimeout(prefetchTimer);
-      clearTimeout(flipTimer);
-    };
-  }, [currentIndex, random, autoPlayInterval, items.length, nextIndex, getRandomIndex, nextSlide, changeSlide]);
-
+    return () => clearInterval(intervalId);
+  }, [
+    items.length,
+    autoPlayInterval,
+    getRandomIndex,
+    nextSlide,
+    changeSlide,
+    random,
+  ]); // 依赖项非常干净，进页面后定时器只创建一次
 
   if (!hasItems) return null;
 
@@ -130,13 +150,20 @@ export function FadeCarousel<T extends CarouselItem>({
         const isPrev = index === prevIndex;
         const isNextPrefetch = index === nextIndex;
 
-        // 如果是顺序播放，依然保留“当前、前一张、常规下一张”做防误伤兜底
-        const isSequentialNext = !random && index === (currentIndex + 1) % items.length;
-        const isSequentialPrev = !random && index === (currentIndex - 1 + items.length) % items.length;
+        // 顺序模式下的常规前后判定，防止手动点击时出现断层
+        const isSequentialNext =
+          !random && index === (currentIndex + 1) % items.length;
+        const isSequentialPrev =
+          !random && index === (currentIndex - 1 + items.length) % items.length;
 
-        // 【方案二精细化裁剪】
-        // 只有当前显示的、刚刚退场的、以及被我们“精准预测并提前预加载”的图片，才允许进入 DOM
-        if (!isCurrent && !isPrev && !isNextPrefetch && !isSequentialNext && !isSequentialPrev) {
+        // 【精细化裁剪】只允许当前张、上一张（淡出中）、下一张（预加载中）占用 DOM
+        if (
+          !isCurrent &&
+          !isPrev &&
+          !isNextPrefetch &&
+          !isSequentialNext &&
+          !isSequentialPrev
+        ) {
           return null;
         }
 
@@ -154,7 +181,6 @@ export function FadeCarousel<T extends CarouselItem>({
                 src={item.image}
                 alt={`Slide ${index}`}
                 className="h-full w-full object-cover"
-                // 仅对首屏第一张图保持最高优先级
                 priority={index === initialIndex}
               />
             )}
