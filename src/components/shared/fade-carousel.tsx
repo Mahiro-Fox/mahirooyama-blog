@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { cn } from '@/utils/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -35,48 +35,85 @@ export function FadeCarousel<T extends CarouselItem>({
   random = false,
   itemRender,
 }: CarouselProps<T>) {
-  // 核心修复：如果只有 0 或 1 张图，直接不执行后续逻辑，防范边界条件
   const hasItems = items && items.length > 0;
 
-  // 随机初始索引
-  const [currentIndex, setCurrentIndex] = useState(() => {
-    if (!hasItems) return 0;
-    if (random && items.length > 1) {
-      return Math.floor(Math.random() * items.length);
+  // 1. 状态管理
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  // 专门用于存放提前预测、需要预加载的下一张索引
+  const [nextIndex, setNextIndex] = useState<number | null>(null);
+  
+  // 记录上一张索引，保证淡出动画有 DOM 节点可用
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+
+  // 用 ref 总是获取最新的 items 长度和随机状态，避免频繁重置定时器
+  const stateRef = useRef({ items, random, currentIndex });
+  useEffect(() => {
+    stateRef.current = { items, random, currentIndex };
+  }, [items, random, currentIndex]);
+
+  // 2. 辅助函数：生成不重复的随机数
+  const getRandomIndex = useCallback((current: number, total: number) => {
+    if (total <= 1) return 0;
+    let index = Math.floor(Math.random() * total);
+    while (index === current) {
+      index = Math.floor(Math.random() * total);
     }
-    return initialIndex;
-  });
+    return index;
+  }, []);
 
-  // 下一张
+  // 3. 切换核心逻辑（统一管理索引变更）
+  const changeSlide = useCallback((targetIndex: number) => {
+    setPrevIndex(stateRef.current.currentIndex);
+    setCurrentIndex(targetIndex);
+    setNextIndex(null); // 切换后清空预加载指针
+  }, []);
+
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
-  }, [items.length]);
+    const { items: currentItems, currentIndex: cur } = stateRef.current;
+    const target = cur === currentItems.length - 1 ? 0 : cur + 1;
+    changeSlide(target);
+  }, [changeSlide]);
 
-  // 上一张
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
+    const { items: currentItems, currentIndex: cur } = stateRef.current;
+    const target = cur === 0 ? currentItems.length - 1 : cur - 1;
+    changeSlide(target);
   };
 
-  // 自动播放逻辑
+  // 4. 自动播放与预加载调度器（核心机制）
   useEffect(() => {
     if (items.length <= 1) return;
 
-    const randomSlide = () => {
-      setCurrentIndex((pre) => {
-        let randomIndex = Math.floor(Math.random() * items.length);
-        while (pre === randomIndex) {
-          randomIndex = Math.floor(Math.random() * items.length);
-        }
-        return randomIndex;
-      });
-    };
+    // 计算预加载的时机：在图片即将切换前的 2000ms（刚好对应动画时长）开始拉取网络请求
+    const prefetchDelay = Math.max(autoPlayInterval - 2000, 500);
 
-    const timer = setInterval(
-      random ? randomSlide : nextSlide,
-      autoPlayInterval
-    );
-    return () => clearInterval(timer);
-  }, [random, nextSlide, autoPlayInterval, items.length]);
+    // 定时器 1：负责在前半段提前计算并向 DOM 塞入下一张图
+    const prefetchTimer = setTimeout(() => {
+      const { random: isRandom, items: currentItems, currentIndex: cur } = stateRef.current;
+      if (isRandom) {
+        setNextIndex(getRandomIndex(cur, currentItems.length));
+      } else {
+        setNextIndex((cur + 1) % currentItems.length);
+      }
+    }, prefetchDelay);
+
+    // 定时器 2：负责到达间隔时间后，正式执行渐变切换
+    const flipTimer = setTimeout(() => {
+      const { random: isRandom, items: currentItems, currentIndex: cur } = stateRef.current;
+      if (isRandom) {
+        // 如果因为某些原因 nextIndex 没生成，则临时兜底计算
+        changeSlide(nextIndex !== null ? nextIndex : getRandomIndex(cur, currentItems.length));
+      } else {
+        nextSlide();
+      }
+    }, autoPlayInterval);
+
+    return () => {
+      clearTimeout(prefetchTimer);
+      clearTimeout(flipTimer);
+    };
+  }, [currentIndex, random, autoPlayInterval, items.length, nextIndex, getRandomIndex, nextSlide, changeSlide]);
+
 
   if (!hasItems) return null;
 
@@ -90,18 +127,17 @@ export function FadeCarousel<T extends CarouselItem>({
       {/* 图片容器 */}
       {items.map((item, index) => {
         const isCurrent = index === currentIndex;
+        const isPrev = index === prevIndex;
+        const isNextPrefetch = index === nextIndex;
 
-        // 【修复 LCP 冲突】
-        // 如果是随机模式，我们必须让所有 DOM 节点都在线，靠 Next.js Image 自带的 lazy load 协同。
-        // 如果是顺序模式，则继续保留原有的前后 1 张虚拟化裁剪，最大化压榨 LCP 性能。
-        if (!random) {
-          const isNext = index === (currentIndex + 1) % items.length;
-          const isPrev =
-            index === (currentIndex - 1 + items.length) % items.length;
+        // 如果是顺序播放，依然保留“当前、前一张、常规下一张”做防误伤兜底
+        const isSequentialNext = !random && index === (currentIndex + 1) % items.length;
+        const isSequentialPrev = !random && index === (currentIndex - 1 + items.length) % items.length;
 
-          if (!isCurrent && !isNext && !isPrev) {
-            return null;
-          }
+        // 【方案二精细化裁剪】
+        // 只有当前显示的、刚刚退场的、以及被我们“精准预测并提前预加载”的图片，才允许进入 DOM
+        if (!isCurrent && !isPrev && !isNextPrefetch && !isSequentialNext && !isSequentialPrev) {
+          return null;
         }
 
         return (
@@ -118,11 +154,10 @@ export function FadeCarousel<T extends CarouselItem>({
                 src={item.image}
                 alt={`Slide ${index}`}
                 className="h-full w-full object-cover"
-                // 仅对真正意义上的首屏第一张图开启最高优先级（避免频繁变更 priority 导致逻辑混乱）
+                // 仅对首屏第一张图保持最高优先级
                 priority={index === initialIndex}
               />
             )}
-            {/* 渐变遮罩 */}
             <div className="absolute inset-0 bg-black/20" />
           </div>
         );
@@ -152,7 +187,7 @@ export function FadeCarousel<T extends CarouselItem>({
           {items.map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => changeSlide(index)}
               className={`h-3 w-3 rounded-full transition-all ${
                 index === currentIndex ? 'w-8 bg-white' : 'bg-white/50'
               }`}
