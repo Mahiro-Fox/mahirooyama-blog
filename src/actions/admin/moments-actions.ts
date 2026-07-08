@@ -1,6 +1,7 @@
 'use server';
 
 import fs from 'fs/promises';
+import { revalidatePath } from 'next/cache';
 import { MOMENTS_FILE } from '@/constant/dir';
 import {
   withActionPermission,
@@ -188,6 +189,7 @@ export async function adminCreateMoment(input: {
       );
 
       logger.info('创建碎碎念成功', { momentId: id, userId: user.id });
+      revalidatePath('/', 'layout');
       return { success: true, data: { id } };
     } catch (error) {
       logger.error('创建碎碎念失败', error);
@@ -256,6 +258,7 @@ export async function adminUpdateMoment(
       );
 
       logger.info('更新碎碎念成功', { momentId: id, userId: user.id });
+      revalidatePath('/', 'layout');
       return { success: true, data: undefined };
     } catch (error) {
       logger.error('更新碎碎念失败', error, { momentId: id });
@@ -303,6 +306,7 @@ export async function adminDeleteMoment(
       );
 
       logger.info('删除碎碎念成功', { momentId: id, userId: user.id });
+      revalidatePath('/', 'layout');
       return { success: true, data: undefined };
     } catch (error) {
       logger.error('删除碎碎念失败', error, { momentId: id });

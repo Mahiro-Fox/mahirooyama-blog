@@ -1,5 +1,8 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
+import { TagsData, TagType } from '@/constant';
+import { tagStore } from '@/store/tag-store';
 import {
   withActionPermission,
   type ActionResponse,
@@ -7,8 +10,6 @@ import {
 import { createLogger } from '@/utils/logger';
 
 import { serverActionRateLimiter } from '@/lib/rate-limit';
-import { tagStore } from '@/store/tag-store';
-import { TagsData, TagType } from '@/constant';
 
 const logger = createLogger('TagActions');
 
@@ -60,7 +61,12 @@ export async function adminCreateTag(input: {
       description: input.description,
     });
 
-    logger.info('创建标签成功', { tagId: input.id, type: input.type, userId: user.id });
+    logger.info('创建标签成功', {
+      tagId: input.id,
+      type: input.type,
+      userId: user.id,
+    });
+    revalidatePath('/', 'layout');
     return { success: true, data: undefined };
   });
 }
@@ -95,7 +101,12 @@ export async function adminUpdateTag(input: {
       return { success: false, error: '标签不存在' };
     }
 
-    logger.info('更新标签成功', { tagId: input.id, type: input.type, userId: user.id });
+    logger.info('更新标签成功', {
+      tagId: input.id,
+      type: input.type,
+      userId: user.id,
+    });
+    revalidatePath('/', 'layout');
     return { success: true, data: undefined };
   });
 }
@@ -122,7 +133,12 @@ export async function adminDeleteTag(input: {
       return { success: false, error: '标签不存在' };
     }
 
-    logger.info('删除标签成功', { tagId: input.id, type: input.type, userId: user.id });
+    logger.info('删除标签成功', {
+      tagId: input.id,
+      type: input.type,
+      userId: user.id,
+    });
+    revalidatePath('/', 'layout');
     return { success: true, data: undefined };
   });
 }
@@ -143,6 +159,7 @@ export async function adminResetTags(): Promise<ActionResponse<TagsData>> {
 
     const tags = await tagStore.resetToDefault();
     logger.warn('重置标签为默认值', { userId: user.id });
+    revalidatePath('/', 'layout');
     return { success: true, data: tags };
   });
 }
