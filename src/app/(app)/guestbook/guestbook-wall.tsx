@@ -34,14 +34,14 @@ export function GuestbookWall({ entries }: GuestbookWallProps) {
               type: 'spring',
               bounce: 0.5,
             }}
-            className="relative"
+            className="relative rounded-xl"
             style={{
               backgroundColor: entry.bgColor,
               boxShadow: '2px 2px 8px rgba(0,0,0,0.1)',
             }}
           >
             {/* 便利贴 */}
-            <div className="flex min-h-[200px] flex-col p-6">
+            <div className="flex min-h-[200px] flex-col p-6 text-gray-800">
               {/* 昵称和时间 */}
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-bold">{entry.nickname}</span>
