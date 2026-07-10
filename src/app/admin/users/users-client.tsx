@@ -42,6 +42,7 @@ import {
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface CurrentUser {
   id: string;
@@ -323,15 +324,33 @@ export default function UsersClient({
   // 表格列定义
   const columns: Column<UserResponse>[] = [
     {
+      key: 'avatar',
+      header: '头像',
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          {user.role === 'super_admin' ? (
+            <Shield className="h-10 w-10 text-blue-500" />
+          ) : user.avatar ? (
+            <OptimizedImage
+              previewable
+              src={user.avatar}
+              alt={user.username}
+              width={40}
+              height={40}
+              unoptimized
+              className="rounded-full"
+            />
+          ) : (
+            <User className="h-4 w-4 text-gray-500" />
+          )}
+        </div>
+      ),
+    },
+    {
       key: 'username',
       header: '用户名',
       render: (user) => (
         <div className="flex items-center gap-2">
-          {user.role === 'super_admin' ? (
-            <Shield className="h-4 w-4 text-blue-500" />
-          ) : (
-            <User className="h-4 w-4 text-gray-500" />
-          )}
           <span className="font-medium">{user.username}</span>
           {user.id === currentUser.id && (
             <span className="bg-primary text-primary-foreground rounded px-2 py-0.5 text-xs">
