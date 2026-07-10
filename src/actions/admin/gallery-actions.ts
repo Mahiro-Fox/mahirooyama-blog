@@ -3,6 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { GALLERY_DIR } from '@/constant/dir';
+import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import {
   withActionPermission,
   type ActionResponse,
@@ -340,9 +341,12 @@ export async function adminUploadGalleryThumbnail(
         return { success: false, error: '只允许上传图片文件' };
       }
 
-      // 3. 验证文件大小 (最大 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        return { success: false, error: '图片大小不能超过 5MB' };
+      // 3. 验证文件大小 (最大 MAX_FILE_SIZE)
+      if (file.size > MAX_FILE_SIZE) {
+        return {
+          success: false,
+          error: `图片大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+        };
       }
 
       // 4. 读取文件并处理

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { adminLogout } from '@/actions/admin/logout';
 import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
 import { adminUploadAvatar } from '@/actions/admin/user-actions';
+import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import type { UserRole } from '@/store/user-store';
 import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -102,9 +103,9 @@ export default function AdminShell({
       return;
     }
 
-    // 验证文件大小 (最大 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('图片大小不能超过 2MB');
+    // 验证文件大小 (最大 MAX_FILE_SIZE)
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`图片大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB`);
       return;
     }
 
