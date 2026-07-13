@@ -9,6 +9,8 @@ import {
 import { ensureFileInitialized } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
+import { siteConfig } from '@/config/common';
+import { notifyReply } from '@/lib/email-send/notify-reply';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('GuestbookActions');
@@ -23,6 +25,7 @@ export interface GuestbookEntry {
   replyContent?: string;
   replyAt?: string;
   isApproved: boolean;
+  isRepliedEmail?: boolean;
 }
 
 // GET - 获取所有留言（管理员视图）
@@ -290,6 +293,63 @@ export async function adminReplyGuestbookEntry(
       logger.error('回复留言失败', error, { entryId: id });
       return { success: false, error: '回复失败' };
     }
+  });
+}
+
+// POST - 发送回复通知邮件
+export async function adminSendReplyNotification(
+  input: { id: string; replyContent: string },
+  comment: { email: string; content: string }
+): Promise<ActionResponse<void>> {
+  return withActionPermission('guestbook:update', async (user) => {
+    const { id, replyContent } = input;
+
+    if (!id || !replyContent) {
+      return { success: false, error: '参数缺失' };
+    }
+
+    if (!comment.email) {
+      return { success: true, data: undefined };
+    }
+
+    const result = await notifyReply({
+      toEmail: comment.email,
+      originalMessage: comment.content,
+      replyContent,
+      messageUrl: `${siteConfig.url}guestbook#${id}`,
+    });
+
+    if (!result.success) {
+      logger.error('回复通知邮件发送失败', {
+        id,
+        email: comment.email,
+        error: result.error,
+        adminId: user.id,
+      });
+    } else {
+      // 回复成功后更新isRepliedEmail字段
+      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
+      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+
+      const index = entries.findIndex((e) => e.id === id);
+      if (index === -1) {
+        return { success: false, error: '留言不存在' };
+      }
+      entries[index].isRepliedEmail = true;
+      await fs.writeFile(
+        GUESTBOOK_FILE,
+        JSON.stringify(entries, null, 2),
+        'utf-8'
+      );
+
+      logger.info('回复通知邮件发送成功', {
+        id,
+        email: comment.email,
+        adminId: user.id,
+      });
+    }
+
+    return { success: true, data: undefined };
   });
 }
 
