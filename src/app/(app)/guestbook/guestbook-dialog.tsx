@@ -125,7 +125,6 @@ export function GuestbookWallDialog() {
               <div className="flex flex-col gap-2">
                 <Input
                   value={contact}
-                  type="email"
                   onChange={(e) => setContact(e.target.value)}
                   placeholder="网址或联系方式（若是邮箱，可选择是否接收邮箱通知）"
                 />
