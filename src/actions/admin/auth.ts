@@ -1,13 +1,16 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { JWT_SECRET, SESSION_EXPIRY } from '@/constant';
+import { JWT_SECRET, SESSION_EXPIRY } from '@/constant/auth';
 import { sessionStore } from '@/store/session-store';
 import { userStore } from '@/store/user-store';
+import { createLogger } from '@/utils/logger';
 import { SignJWT } from 'jose';
 
 import { verifyAuth } from '@/lib/admin-auth';
 import { loginRateLimiter } from '@/lib/rate-limit';
+
+const logger = createLogger('AuthAction');
 
 export async function login(
   username: string,
@@ -115,7 +118,11 @@ export async function login(
       },
     };
   } catch (error) {
-    console.error('登录失败:', error);
+    logger.error('登录失败', error, {
+      username,
+      action: 'login',
+      timestamp: new Date().toISOString(),
+    });
     return { success: false, error: '登录失败，请稍后重试' };
   }
 }

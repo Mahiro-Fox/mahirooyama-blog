@@ -1,7 +1,9 @@
 'use server';
 
 import fs from 'fs/promises';
+import { revalidatePath } from 'next/cache';
 import { MOMENTS_FILE } from '@/constant/dir';
+import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import {
   withActionPermission,
   type ActionResponse,
@@ -85,9 +87,12 @@ export async function adminUploadMomentImage(
         return { success: false, error: '只允许上传图片文件' };
       }
 
-      // 3. 验证文件大小 (最大 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        return { success: false, error: '图片大小不能超过 5MB' };
+      // 3. 验证文件大小 (最大 MAX_FILE_SIZE)
+      if (file.size > MAX_FILE_SIZE) {
+        return {
+          success: false,
+          error: `图片大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+        };
       }
 
       // 4. 读取文件并处理
@@ -188,6 +193,7 @@ export async function adminCreateMoment(input: {
       );
 
       logger.info('创建碎碎念成功', { momentId: id, userId: user.id });
+      revalidatePath('/', 'layout');
       return { success: true, data: { id } };
     } catch (error) {
       logger.error('创建碎碎念失败', error);
@@ -256,6 +262,7 @@ export async function adminUpdateMoment(
       );
 
       logger.info('更新碎碎念成功', { momentId: id, userId: user.id });
+      revalidatePath('/', 'layout');
       return { success: true, data: undefined };
     } catch (error) {
       logger.error('更新碎碎念失败', error, { momentId: id });
@@ -303,6 +310,7 @@ export async function adminDeleteMoment(
       );
 
       logger.info('删除碎碎念成功', { momentId: id, userId: user.id });
+      revalidatePath('/', 'layout');
       return { success: true, data: undefined };
     } catch (error) {
       logger.error('删除碎碎念失败', error, { momentId: id });

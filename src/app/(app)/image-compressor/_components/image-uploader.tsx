@@ -62,8 +62,8 @@ export default function ImageUploader({
    * 处理文件选择
    */
   const handleFiles = useCallback(
-    (fileList: FileList | File[] | null) => {
-      const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+    async (fileList: FileList | File[] | null) => {
+      const { MAX_FILE_SIZE } = await import('@/constant/file-upload');
       if (!fileList || disabled) return;
 
       const newFiles: UploadedFile[] = [];
@@ -84,9 +84,10 @@ export default function ImageUploader({
           return;
         }
 
-        // 验证文件大小（20MB）
+        // 验证文件大小
         if (file.size > MAX_FILE_SIZE) {
-          toast.error(`${file.name} 图片大小超过了 20MB`);
+          const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+          toast.error(`${file.name} 图片大小超过了 ${sizeMB}MB`);
           return;
         }
 

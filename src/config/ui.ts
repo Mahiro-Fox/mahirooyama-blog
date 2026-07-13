@@ -32,4 +32,7 @@ export const AVAILABLE_ICONS = [
   { value: 'js', label: 'JavaScript' },
   { value: 'react', label: 'React' },
   { value: 'vercel', label: 'Vercel' },
+  { value: 'bluearchive', label: 'BlueArchive' },
+  { value: 'nginx', label: 'Nginx' },
+  { value: 'midi', label: 'MIDI' },
 ];

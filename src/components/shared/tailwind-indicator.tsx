@@ -1,7 +1,9 @@
-// Note: This project is a demo so it is enabled for production use,
-// but if you are running a production blog, please disable it as follows:
+/**
+ * Tailwind Indicator 组件，用于在开发环境中显示当前的 Tailwind 断点
+ * 在生产环境中不显示
+ */
 export function TailwindIndicator() {
-  // if (process.env.NODE_ENV === 'production') return null;
+  if (process.env.NODE_ENV === 'production') return null;
 
   return (
     <div className="fixed bottom-1 left-1 z-50 flex size-6 items-center justify-center rounded-full bg-gray-800 p-3 font-mono text-xs text-white">

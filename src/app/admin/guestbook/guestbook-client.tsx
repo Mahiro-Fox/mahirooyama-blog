@@ -7,11 +7,12 @@ import {
   adminDeleteGuestbookEntry,
   adminGetGuestbookEntries,
   adminReplyGuestbookEntry,
+  adminSendReplyNotification,
   adminUpdateGuestbookEntry,
   type GuestbookEntry,
 } from '@/actions/admin/guestbook-actions';
 import { COLOR_OPTIONS } from '@/config';
-import { formatDate } from '@/utils/utils';
+import { formatDate, isEmail } from '@/utils/utils';
 import { Check, Edit, MessageSquare, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -161,11 +162,17 @@ export default function GuestbookClient({
     e.preventDefault();
     if (!selectedEntry) return;
     setIsSubmitting(true);
+
+    const {
+      id: entryId,
+      contact,
+      content: originalContent,
+      isRepliedEmail,
+      isEmailNotificationEnabled = false,
+    } = selectedEntry;
+
     try {
-      const result = await adminReplyGuestbookEntry(
-        selectedEntry.id,
-        replyContent
-      );
+      const result = await adminReplyGuestbookEntry(entryId, replyContent);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -173,6 +180,24 @@ export default function GuestbookClient({
       setIsReplyDialogOpen(false);
       setSelectedEntry(null);
       await fetchItems();
+
+      // 如果是邮箱,且未发送回复邮件,且开启了邮箱通知
+      if (
+        contact &&
+        isEmail(contact) &&
+        !isRepliedEmail &&
+        isEmailNotificationEnabled
+      ) {
+        const emailResult = await adminSendReplyNotification(
+          { id: entryId, replyContent },
+          { email: contact, content: originalContent }
+        );
+        if (emailResult.success) {
+          console.log(`[邮件通知] 回复邮件发送成功: ${contact}`);
+        } else {
+          toast.error('邮件通知发送失败');
+        }
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '回复失败');
     } finally {

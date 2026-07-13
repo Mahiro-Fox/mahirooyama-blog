@@ -2,6 +2,9 @@
 
 import { useReportWebVitals } from 'next/web-vitals';
 
+/**
+ * Web Vitals 组件，用于在控制台输出性能指标
+ */
 export function WebVitals() {
   useReportWebVitals((metric) => {
     // metric 包含 id, name (指标名称), label, value, delta 等属性

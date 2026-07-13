@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { cn } from '@/utils/utils';
 import { RefreshCw } from 'lucide-react';
 
-import { useImagePreview } from './image-preview-provider';
+import { useImagePreview } from '../../context/image-preview-provider';
 
 interface OptimizedImageProps {
   src: string;

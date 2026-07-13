@@ -64,8 +64,8 @@ export default function ImageCompressorClient() {
   /**
    * 添加文件
    */
-  const handleFilesAdd = (newFiles: UploadedFile[]) => {
-    const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB
+  const handleFilesAdd = async (newFiles: UploadedFile[]) => {
+    const { MAX_TOTAL_SIZE } = await import('@/constant/file-upload');
     const currentTotalSize = uploadedFiles.reduce((sum, f) => sum + f.size, 0);
 
     let totalSize = currentTotalSize;

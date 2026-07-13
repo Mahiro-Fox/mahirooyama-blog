@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
+import { ImagePreviewProvider } from '@/context/image-preview-provider';
 import { ThemeProvider } from '@/context/theme-provider';
 import { cn } from '@/utils/utils';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { fontVariables } from '@/lib/fonts';
 import { Toaster } from '@/components/shadcn-ui/sonner';
-import { ImagePreviewProvider } from '@/components/shared/image-preview-provider';
 import { TailwindIndicator } from '@/components/shared/tailwind-indicator';
 
 import '@/styles/globals.css';
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
           'text-foreground overscroll-none font-sans antialiased',

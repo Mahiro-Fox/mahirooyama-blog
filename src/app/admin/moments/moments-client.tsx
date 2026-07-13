@@ -178,12 +178,79 @@ export default function MomentsClient({
       toast.error(error instanceof Error ? error.message : '图片上传失败');
     }
   };
+
   // 情绪点击处理
   const handleMoodEmojiClick = (emoji: string) => {
     if (moodEmoji === emoji) {
       setMoodEmoji('');
     } else {
       setMoodEmoji(emoji);
+    }
+  };
+
+  // 获取用户位置
+  const handleGetLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('您的浏览器不支持地理位置功能');
+      return;
+    }
+
+    toast.loading('正在获取位置...', { id: 'location-loading' });
+
+    try {
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        }
+      );
+
+      const { latitude, longitude } = position.coords;
+
+      // 使用 OpenStreetMap Nominatim 进行逆地理编码（免费，无需 API Key）
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=zh-CN`,
+        {
+          headers: {
+            'User-Agent': 'mahirooyama-blog',
+          },
+        }
+      );
+
+      if (res.ok) {
+        const geo = await res.json();
+        if (geo.display_name) {
+          setLocation(geo.display_name);
+          toast.success('位置获取成功', { id: 'location-loading' });
+        } else {
+          // 如果无法获取地址，回退到坐标
+          setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          toast.success('位置获取成功（仅坐标）', { id: 'location-loading' });
+        }
+      } else {
+        // API 请求失败，回退到坐标
+        setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        toast.success('位置获取成功（仅坐标）', { id: 'location-loading' });
+      }
+    } catch (error) {
+      let errorMessage = '位置获取失败';
+      if (error instanceof GeolocationPositionError) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = '用户拒绝了位置权限请求';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = '位置信息不可用';
+            break;
+          case error.TIMEOUT:
+            errorMessage = '获取位置超时';
+            break;
+        }
+      }
+      toast.error(errorMessage, { id: 'location-loading' });
     }
   };
 
@@ -232,8 +299,13 @@ export default function MomentsClient({
                     </div>
                     <p className="text-sm">{moment.content}</p>
                     {moment.image && (
-                      <div className="relative inline-block w-full">
+                      <div className="relative inline-block">
                         <OptimizedImage
+                          fill={
+                            process.env.NODE_ENV === 'development'
+                              ? true
+                              : false
+                          }
                           previewable
                           src={moment.image.url}
                           alt="配图"
@@ -246,7 +318,7 @@ export default function MomentsClient({
                               ? true
                               : false
                           }
-                          className="max-h-48 w-full max-w-xs rounded-lg object-cover"
+                          className="max-h-48 max-w-xs rounded-lg object-cover"
                         />
                       </div>
                     )}
@@ -333,7 +405,7 @@ export default function MomentsClient({
 
           <div>
             <label className="mb-2 block text-sm font-medium">心情</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
               {MOOD_OPTIONS.map((option) => (
                 <button
                   key={option.emoji}
@@ -353,11 +425,23 @@ export default function MomentsClient({
 
           <div>
             <label className="mb-2 block text-sm font-medium">位置</label>
-            <Input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="📍 在哪里..."
-            />
+            <div className="flex gap-2">
+              <Input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="📍 在哪里..."
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleGetLocation}
+                className="h-9 w-9"
+                title="获取当前位置"
+              >
+                <MapPin className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </CrudFormDialog>

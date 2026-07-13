@@ -5,7 +5,7 @@ import { tagStore } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { GalleryImageData, getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
@@ -143,6 +143,18 @@ export default async function IndexPage() {
           </div>
         </section>
       </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Blog',
+            '@id': 'https://mahirooyama.cn',
+            name: 'mahirooyama-blog',
+            url: 'https://mahirooyama.cn',
+          }),
+        }}
+      />
     </div>
   );
 }

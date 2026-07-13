@@ -38,3 +38,8 @@ next-env.d.ts
 /data/
 /uploads/
 
+# ai editor
+
+/.claude/
+/.codegraph/
+/.kiro/

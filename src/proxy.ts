@@ -1,9 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { SESSION_EXPIRY, SESSION_REFRESH_THRESHOLD } from '@/constant';
+import { SESSION_EXPIRY, SESSION_REFRESH_THRESHOLD } from '@/constant/auth';
 import { jwtVerify, SignJWT } from 'jose';
 
-import { pageRoutesConfig } from '@/config/config';
+import { pageRoutesConfig } from '@/config/common';
 
 // JWT 密钥检查（最少32字符）
 const rawSecret =
@@ -48,7 +48,8 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
       "default-src 'self';",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;",
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;",
-      "connect-src 'self' https://cdn.jsdelivr.net;",
+      // ip解析
+      "connect-src 'self' https://nominatim.openstreetmap.org;",
       // 允许 img-src 使用任何源的图片资源、blob: 和 base64(data:)
       'img-src * blob: data:;',
       // 允许 media-src 使用 self 和 bilivideo.com 域名、blob: 和 base64(data:)
@@ -132,11 +133,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: requestHeaders,
     },
   });
+  return addSecurityHeaders(response);
 }
 
 // 限制中间件运行的路径，排除静态文件和 API

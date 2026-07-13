@@ -74,6 +74,22 @@ const config = [
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
+
+  // Next.js config file - enable Node.js globals
+  {
+    name: 'next-config',
+    files: ['next.config.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        require: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+      },
+    },
+  },
 ];
 
 export default config;

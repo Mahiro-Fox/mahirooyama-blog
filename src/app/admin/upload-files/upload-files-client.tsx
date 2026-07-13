@@ -10,6 +10,13 @@ import {
   deleteFile,
   renameFile,
 } from '@/actions/admin/upload-files-actions';
+import {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  MAX_FILES_COUNT,
+  MAX_TOTAL_SIZE,
+} from '@/constant/file-upload';
+import { useImagePreview } from '@/context/image-preview-provider';
 import { formatDate, formatSize } from '@/utils/utils';
 import {
   ArrowLeft,
@@ -66,7 +73,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/shadcn-ui/table';
-import { useImagePreview } from '@/components/shared/image-preview-provider';
 
 interface FileItem {
   name: string;
@@ -102,27 +108,6 @@ const isImage = (item: FileItem) => {
   ];
   return imageExts.includes(item.extension || '');
 };
-
-// 限制常量（与 API 保持一致）
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB
-const MAX_FILES_COUNT = 20;
-const ALLOWED_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
-  'image/avif',
-  'video/mp4',
-  'video/webm',
-  'audio/mpeg',
-  'audio/wav',
-  'audio/ogg',
-  'application/pdf',
-  'application/zip',
-  'application/x-rar-compressed',
-];
 
 export default function UploadFilesClient({
   initialData,

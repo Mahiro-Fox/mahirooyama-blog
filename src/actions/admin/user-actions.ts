@@ -3,6 +3,8 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { AVATAR_DIR } from '@/constant/dir';
+import { MAX_FILE_SIZE } from '@/constant/file-upload';
+import { UserResponse, UserRole, userStore } from '@/store/user-store';
 import {
   withActionPermission,
   type ActionResponse,
@@ -11,9 +13,8 @@ import { processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
 
 import { verifyAuth } from '@/lib/admin-auth';
-import { serverActionRateLimiter } from '@/lib/rate-limit';
-import { UserResponse, UserRole, userStore } from '@/store/user-store';
 import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('UserActions');
 
@@ -101,9 +102,12 @@ export async function adminUploadAvatar(
       return { success: false, error: '只允许上传图片文件' };
     }
 
-    // 6. 验证文件大小 (最大 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      return { success: false, error: '图片大小不能超过 2MB' };
+    // 6. 验证文件大小 (最大 MAX_FILE_SIZE)
+    if (file.size > MAX_FILE_SIZE) {
+      return {
+        success: false,
+        error: `图片大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+      };
     }
 
     // 7. 读取文件并处理

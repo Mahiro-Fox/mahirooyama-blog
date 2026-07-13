@@ -3,6 +3,13 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { UPLOADS_DIR } from '@/constant/dir';
 import {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  MAX_FILES_COUNT,
+  MAX_TOTAL_SIZE,
+  WEBP_QUALITY,
+} from '@/constant/file-upload';
+import {
   checkFileConflict,
   ensureDirectory,
   isPathSafe,
@@ -10,33 +17,6 @@ import {
 import sharp from 'sharp';
 
 import { requirePermission } from '@/lib/permissions';
-
-// 安全配置
-const ALLOWED_MIME_TYPES = [
-  // 图片
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
-  'image/avif',
-  // 视频
-  'video/mp4',
-  'video/webm',
-  // 音频
-  'audio/mpeg',
-  'audio/wav',
-  'audio/ogg',
-  // 文档
-  'application/pdf',
-  // 压缩包
-  'application/zip',
-  'application/x-rar-compressed',
-];
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB
-const MAX_FILES_COUNT = 20;
 
 /**
  * 验证文件是否符合上传要求
@@ -160,7 +140,9 @@ export async function POST(request: NextRequest) {
             const webpPath = path.join(targetDir, webpName);
 
             // 转换图片为 WebP
-            await sharp(buffer).webp({ quality: 50 }).toFile(webpPath);
+            await sharp(buffer)
+              .webp({ quality: WEBP_QUALITY })
+              .toFile(webpPath);
             const webpRelativePath = path.join(relativePath, webpName);
             const webpWebPath =
               '/uploads/' + webpRelativePath.replace(/\\/g, '/');

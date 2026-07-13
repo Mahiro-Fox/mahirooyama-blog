@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/utils/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -35,43 +35,107 @@ export function FadeCarousel<T extends CarouselItem>({
   random = false,
   itemRender,
 }: CarouselProps<T>) {
-  // 【LCP 优化 1】将随机逻辑直接收敛在 useState 初始化函数中
-  // 避免在 useEffect 中二次修改 index 导致浏览器重复请求首屏无关图片
+  const hasItems = items && items.length > 0;
+
+  // 1. 状态管理
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [nextIndex, setNextIndex] = useState<number | null>(null);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
 
-  // 下一张
+  // 使用 Ref 存放核心状态，防止定时器闭包过时
+  const stateRef = useRef({ items, random, currentIndex, nextIndex });
+  useEffect(() => {
+    stateRef.current = { items, random, currentIndex, nextIndex };
+  }, [items, random, currentIndex, nextIndex]);
+
+  // 2. 辅助函数：生成不重复的随机数
+  const getRandomIndex = useCallback((current: number, total: number) => {
+    if (total <= 1) return 0;
+    let index = Math.floor(Math.random() * total);
+    while (index === current) {
+      index = Math.floor(Math.random() * total);
+    }
+    return index;
+  }, []);
+
+  // 3. 切换核心逻辑
+  const changeSlide = useCallback((targetIndex: number) => {
+    setPrevIndex(stateRef.current.currentIndex);
+    setCurrentIndex(targetIndex);
+    setNextIndex(null); // 切换后重置预加载
+  }, []);
+
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
-  }, [items.length]);
+    const { items: currentItems, currentIndex: cur } = stateRef.current;
+    const target = cur === currentItems.length - 1 ? 0 : cur + 1;
+    changeSlide(target);
+  }, [changeSlide]);
 
-  // 上一张
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
+    const { items: currentItems, currentIndex: cur } = stateRef.current;
+    const target = cur === 0 ? currentItems.length - 1 : cur - 1;
+    changeSlide(target);
   };
 
-  // 自动播放逻辑保持不变
+  // 4. 单一定时器时间轮询机制（核心修复）
   useEffect(() => {
     if (items.length <= 1) return;
 
-    const randomSlide = () => {
-      setCurrentIndex((pre) => {
-        let randomIndex = Math.floor(Math.random() * items.length);
-        while (pre === randomIndex) {
-          randomIndex = Math.floor(Math.random() * items.length);
+    // 每一帧步进的时间基准（100ms 轮询一次，性能损耗极低，且足够精准）
+    const TICK = 100;
+    let timeElapsed = 0;
+    const prefetchTime = Math.max(autoPlayInterval - 2000, 500); // 提前 2 秒预加载
+
+    const intervalId = setInterval(() => {
+      timeElapsed += TICK;
+
+      const {
+        random: isRandom,
+        items: currentItems,
+        currentIndex: cur,
+        nextIndex: currentNext,
+      } = stateRef.current;
+
+      // 阶段一：到了预加载点，且目前还没有生成 nextIndex，则静默塞入 DOM 开始下载
+      if (
+        timeElapsed >= prefetchTime &&
+        timeElapsed < autoPlayInterval &&
+        currentNext === null
+      ) {
+        if (isRandom) {
+          setNextIndex(getRandomIndex(cur, currentItems.length));
+        } else {
+          setNextIndex((cur + 1) % currentItems.length);
         }
-        return randomIndex;
-      });
-    };
+      }
 
-    const timer = setInterval(
-      random ? randomSlide : nextSlide,
-      autoPlayInterval
-    );
-    return () => clearInterval(timer);
-  }, [random, nextSlide, autoPlayInterval, items.length]);
+      // 阶段二：满打满算到了切换时间，正式翻页，并重置时间累加器
+      if (timeElapsed >= autoPlayInterval) {
+        timeElapsed = 0; // 重置计数器
+        if (isRandom) {
+          // 如果有预加载好的图，直接用；没有则兜底算一个
+          const target =
+            stateRef.current.nextIndex !== null
+              ? stateRef.current.nextIndex
+              : getRandomIndex(cur, currentItems.length);
+          changeSlide(target);
+        } else {
+          nextSlide();
+        }
+      }
+    }, TICK);
 
-  // 如果没有数据，直接返回 null 避免报错
-  if (!items || items.length === 0) return null;
+    return () => clearInterval(intervalId);
+  }, [
+    items.length,
+    autoPlayInterval,
+    getRandomIndex,
+    nextSlide,
+    changeSlide,
+    random,
+  ]); // 依赖项非常干净，进页面后定时器只创建一次
+
+  if (!hasItems) return null;
 
   return (
     <div
@@ -83,23 +147,29 @@ export function FadeCarousel<T extends CarouselItem>({
       {/* 图片容器 */}
       {items.map((item, index) => {
         const isCurrent = index === currentIndex;
+        const isPrev = index === prevIndex;
+        const isNextPrefetch = index === nextIndex;
 
-        // 【LCP 优化 2】虚拟化/条件渲染 DOM
-        // 计算当前节点是否需要存在于 DOM 中。
-        // 为了照顾 2000ms 的淡入淡出过渡动画，我们需要同时保留【当前张】、【上一张】和【下一张】
-        const isNext = index === (currentIndex + 1) % items.length;
-        const isPrev =
-          index === (currentIndex - 1 + items.length) % items.length;
+        // 顺序模式下的常规前后判定，防止手动点击时出现断层
+        const isSequentialNext =
+          !random && index === (currentIndex + 1) % items.length;
+        const isSequentialPrev =
+          !random && index === (currentIndex - 1 + items.length) % items.length;
 
-        // 如果既不是当前显示的，也不是即将过渡的，直接不渲染 DOM
-        // 从而从根本上阻止浏览器发送非必要图片请求，腾出带宽给 LCP 元素
-        if (!isCurrent && !isNext && !isPrev) {
+        // 【精细化裁剪】只允许当前张、上一张（淡出中）、下一张（预加载中）占用 DOM
+        if (
+          !isCurrent &&
+          !isPrev &&
+          !isNextPrefetch &&
+          !isSequentialNext &&
+          !isSequentialPrev
+        ) {
           return null;
         }
 
         return (
           <div
-            key={item.id || index} // 推荐优先使用独一无二的 item.id 提升 React DOM Diff 效率
+            key={item.id || index}
             className={`absolute inset-0 transition-opacity duration-2000 ease-in-out ${
               isCurrent ? 'z-10 opacity-100' : 'z-0 opacity-0'
             }`}
@@ -111,17 +181,15 @@ export function FadeCarousel<T extends CarouselItem>({
                 src={item.image}
                 alt={`Slide ${index}`}
                 className="h-full w-full object-cover"
-                // 【LCP 优化 3】精准赋予初始显示的图片最高下载优先级
-                priority={isCurrent}
+                priority={index === initialIndex}
               />
             )}
-            {/* 渐变遮罩 */}
             <div className="absolute inset-0 bg-black/20" />
           </div>
         );
       })}
 
-      {/* 左右箭头 - 仅在悬停时显示 */}
+      {/* 左右箭头 */}
       {arrow && items.length > 1 && (
         <>
           <button
@@ -139,13 +207,13 @@ export function FadeCarousel<T extends CarouselItem>({
         </>
       )}
 
-      {/* 指示器 (Dots) */}
+      {/* 指示器 */}
       {indicator && items.length > 1 && (
         <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 space-x-2">
           {items.map((_, index) => (
             <button
               key={index}
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => changeSlide(index)}
               className={`h-3 w-3 rounded-full transition-all ${
                 index === currentIndex ? 'w-8 bg-white' : 'bg-white/50'
               }`}

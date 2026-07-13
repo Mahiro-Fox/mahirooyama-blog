@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { formatDate } from '@/utils/utils';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { getBlogPosts } from '@/lib/mdx';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';

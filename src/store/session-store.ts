@@ -1,5 +1,5 @@
 // 简单的内存会话存储（生产环境建议使用 Redis）
-import { SESSION_MAX_AGE } from '@/constant';
+import { SESSION_MAX_AGE } from '@/constant/auth';
 
 interface SessionInfo {
   userId: string;

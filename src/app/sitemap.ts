@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { tagStore } from '@/store/tag-store';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 
@@ -15,13 +15,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   // 博客页
-  const blogPages = blogPosts.map((post) => ({
+  const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(),
+    priority: 0.9,
+    changeFrequency: 'weekly',
   }));
 
   // 图库页
-  const galleryPages = galleryImages.map((gallery) => ({
+  const galleryPages: MetadataRoute.Sitemap = galleryImages.map((gallery) => ({
     url: `${baseUrl}/gallery/${gallery.slug}`,
+    lastModified: new Date(),
+    priority: 0.9,
+    changeFrequency: 'weekly',
   }));
 
   // 标签页
@@ -30,6 +36,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     Object.keys(tags).forEach((key) => {
       tagPages.push({
         url: `${baseUrl}/tag/${type}/${key}`,
+        lastModified: new Date(),
+        priority: 0.8,
+        changeFrequency: 'weekly',
       });
     });
   });
@@ -44,8 +53,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/image-compressor',
   ];
 
-  const staticPages = staticRoutes.map((route) => ({
+  const staticPages: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
     url: `${baseUrl}${route}`,
+    lastModified: new Date(),
+    priority: 1,
+    changeFrequency: 'weekly',
   }));
 
   return [...staticPages, ...blogPages, ...galleryPages, ...tagPages];

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
-import { siteConfig } from '@/config/config';
+import { siteConfig } from '@/config/common';
 import { getGalleryPostsByTagSlug } from '@/lib/gallery';
 import { Badge } from '@/components/shadcn-ui/badge';
 import {

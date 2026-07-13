@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { AVATAR_DIR } from '@/constant/dir';
+import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import { userStore } from '@/store/user-store';
 import { ensureDirectory } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
@@ -44,10 +45,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. 验证文件大小 (最大 2MB)
-    if (file.size > 2 * 1024 * 1024) {
+    // 5. 验证文件大小 (最大 MAX_FILE_SIZE)
+    if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: '图片大小不能超过 2MB' },
+        { error: `图片大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB` },
         { status: 400 }
       );
     }
