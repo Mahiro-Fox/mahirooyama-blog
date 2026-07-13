@@ -26,6 +26,7 @@ export interface GuestbookEntry {
   replyAt?: string;
   isApproved: boolean;
   isRepliedEmail?: boolean;
+  isEmailNotificationEnabled?: boolean;
 }
 
 // GET - 获取所有留言（管理员视图）
@@ -123,9 +124,17 @@ export async function submitGuestbookEntry(input: {
   bgColor: string;
   contact?: string;
   content: string;
+  isEmailNotificationEnabled?: boolean;
 }): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { nickname, bgColor, contact, content } = input;
+    const {
+      nickname,
+      bgColor,
+      contact,
+      content,
+      // 是否开启邮箱通知, 默认关闭
+      isEmailNotificationEnabled = false,
+    } = input;
 
     // 速率限制检查（使用昵称作为标识符）
     const rateLimit = await serverActionRateLimiter.check(
@@ -170,6 +179,7 @@ export async function submitGuestbookEntry(input: {
       bgColor: bgColor.trim(),
       contact: contact?.trim() || undefined,
       content: content.trim(),
+      isEmailNotificationEnabled,
       isApproved: false, // 访客提交的需要审核
     };
 

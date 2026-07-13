@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { submitGuestbookEntry } from '@/actions/admin/guestbook-actions';
 import { COLOR_OPTIONS } from '@/config';
 import { trackEvent } from '@/utils/tracker';
+import { isEmail } from '@/utils/utils';
 // 莫兰迪色系颜色选项
-import { Send, Sticker, X } from 'lucide-react';
+import { CheckIcon, Send, Sticker, X, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/shadcn-ui/button';
@@ -17,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
+import { Toggle } from '@/components/shadcn-ui/toggle';
 
 export function GuestbookWallDialog() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -27,6 +29,8 @@ export function GuestbookWallDialog() {
   const [bgColor, setBgColor] = useState(COLOR_OPTIONS[0].value);
   const [contact, setContact] = useState('');
   const [content, setContent] = useState('');
+  const [isEmailNotificationEnabled, setIsEmailNotificationEnabled] =
+    useState(false);
   // 提交留言
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +46,7 @@ export function GuestbookWallDialog() {
         bgColor,
         contact: contact.trim() || undefined,
         content: content.trim(),
+        isEmailNotificationEnabled,
       });
 
       if (result.success) {
@@ -94,9 +99,7 @@ export function GuestbookWallDialog() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
-                便利贴颜色
-              </label>
+              <label className="mb-2 block text-sm font-medium">卡片颜色</label>
               <div className="flex flex-wrap gap-2">
                 {COLOR_OPTIONS.map((color) => (
                   <button
@@ -105,7 +108,7 @@ export function GuestbookWallDialog() {
                     onClick={() => setBgColor(color.value)}
                     className={`h-10 w-10 rounded-lg border-2 transition-transform hover:scale-110 ${
                       bgColor === color.value
-                        ? 'border-primary scale-110 shadow-md'
+                        ? 'scale-110 border-cyan-400 shadow-md'
                         : 'border-gray-300'
                     }`}
                     style={{ backgroundColor: color.value }}
@@ -117,13 +120,42 @@ export function GuestbookWallDialog() {
 
             <div>
               <label className="mb-2 block text-sm font-medium">
-                联系方式（可选）
+                联系方式（可选，不会展示在公开页面，仅用于联系你喵~）
               </label>
-              <Input
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder="网址或联系方式（不会展示在公开页面喵~）"
-              />
+              <div className="flex flex-col gap-2">
+                <Input
+                  value={contact}
+                  type="email"
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="网址或联系方式（若是邮箱，可选择是否接收邮箱通知）"
+                />
+                {isEmail(contact) && (
+                  <Toggle
+                    onClick={() =>
+                      setIsEmailNotificationEnabled(!isEmailNotificationEnabled)
+                    }
+                    className="self-start"
+                    aria-label="email receive notification"
+                    variant="outline"
+                    size="sm"
+                  >
+                    <>
+                      {isEmailNotificationEnabled ? (
+                        <CheckIcon color="green" />
+                      ) : (
+                        <XIcon color="red" />
+                      )}
+                      <span
+                        className={
+                          isEmailNotificationEnabled ? 'text-green-500' : ''
+                        }
+                      >
+                        是否接收邮箱通知
+                      </span>
+                    </>
+                  </Toggle>
+                )}
+              </div>
             </div>
 
             <div>

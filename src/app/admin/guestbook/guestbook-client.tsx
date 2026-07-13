@@ -168,6 +168,7 @@ export default function GuestbookClient({
       contact,
       content: originalContent,
       isRepliedEmail,
+      isEmailNotificationEnabled = false,
     } = selectedEntry;
 
     try {
@@ -180,8 +181,13 @@ export default function GuestbookClient({
       setSelectedEntry(null);
       await fetchItems();
 
-      // 如果是邮箱且且未发送回复邮件
-      if (contact && isEmail(contact) && !isRepliedEmail) {
+      // 如果是邮箱,且未发送回复邮件,且开启了邮箱通知
+      if (
+        contact &&
+        isEmail(contact) &&
+        !isRepliedEmail &&
+        isEmailNotificationEnabled
+      ) {
         const emailResult = await adminSendReplyNotification(
           { id: entryId, replyContent },
           { email: contact, content: originalContent }
