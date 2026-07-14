@@ -5,7 +5,10 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Secret - mahiro',
   description: '一些不为人知的秘密',
-  keywords: ['secret'],
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function SecretPage() {

@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { adminGetGuestbookEntries } from '@/actions/admin/guestbook-actions';
@@ -7,6 +8,13 @@ import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
 import AdminShell from '@/components/admin/admin-shell';
 import { QueryToast } from '@/components/admin/query-toast';
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function AdminLayout({
   children,

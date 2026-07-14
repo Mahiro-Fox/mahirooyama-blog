@@ -1,6 +1,10 @@
 // Login page - independent layout without site header/footer
 export const metadata = {
   title: '管理后台登录',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function LoginLayout({
