@@ -1,15 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getHomeBannerImages } from '@/actions/home-banner';
+import { Tag } from '@/constant';
 import { tagStore } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
-import { ChevronRightIcon } from 'lucide-react';
+import { ChevronRightIcon, TagIcon } from 'lucide-react';
 
 import { siteConfig } from '@/config/common';
 import { GalleryImageData, getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
+import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
 import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
@@ -91,18 +93,22 @@ export default async function IndexPage() {
             <div className="flex flex-col gap-1">
               <h2 className="text-2xl font-medium tracking-tight">Tags</h2>
             </div>
-            {/* @ts-ignore */}
-            {Object.entries<Record<string, Tag>>(tags).map(([key, value]) => (
+            {Object.entries(tags).map(([key, value]) => (
               <div key={key} className="flex flex-wrap gap-2">
-                {Object.values(value).map((tag) => (
-                  <Link
-                    key={tag.id}
-                    href={`/tag/${key}/${tag.id}`}
-                    className="hover:bg-muted flex cursor-pointer items-center justify-center rounded-lg border p-2 transition-colors"
-                  >
-                    {tag.name}
-                  </Link>
-                ))}
+                {Object.values<Tag>(value).map((tag) => {
+                  const IconComponent =
+                    BrandIcons[tag.icon as keyof typeof BrandIcons] || TagIcon;
+                  return (
+                    <Link
+                      key={tag.id}
+                      href={`/tag/${key}/${tag.id}`}
+                      className="hover:bg-muted flex cursor-pointer items-center justify-center gap-2 rounded-lg border p-2 transition-colors"
+                    >
+                      <IconComponent className="size-4" />
+                      {tag.name}
+                    </Link>
+                  );
+                })}
               </div>
             ))}
           </section>

@@ -4,7 +4,7 @@ import React from 'react';
 
 import { siteConfig } from '@/config/common';
 import { PhotoItem } from '@/lib/photos';
-import { TextAnimate } from '@/components/shadcn-ui/text-animate';
+import { AuroraText } from '@/components/shadcn-ui/aurora-text';
 import { FadeCarousel } from '@/components/shared/fade-carousel';
 import {
   imageSizes,
@@ -45,16 +45,9 @@ export const HomeBanner: React.FC<HomeBannerImage> = ({
         {/* <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-5" /> */}
         <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
           <div className="text-center">
-            <TextAnimate
-              once
-              className="text-4xl font-bold text-white md:text-5xl"
-              animation="blurInUp"
-              as="h2"
-              by="character"
-              duration={1}
-            >
-              有朝一日一定要去追一次极光
-            </TextAnimate>
+            <h2 className="text-4xl font-bold text-white md:text-5xl">
+              有朝一日一定要去追一次<AuroraText>极光</AuroraText>
+            </h2>
           </div>
         </div>
       </div>
