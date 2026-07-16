@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/utils/utils';
+import { useInView } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 
 import { useImagePreview } from '../../context/image-preview-provider';
@@ -79,7 +80,8 @@ export function OptimizedImage({
   }, [src, previewable, alt, width, height, openPreview]);
 
   const imageProps = fill ? { fill, sizes } : { width, height, sizes };
-
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true });
   // 错误回退
   if (hasError || !src) {
     return (
@@ -121,6 +123,7 @@ export function OptimizedImage({
 
   return (
     <div
+      ref={containerRef}
       className={cn(
         'relative overflow-hidden',
         fill && 'h-full w-full',
@@ -147,26 +150,28 @@ export function OptimizedImage({
         />
       )}
 
-      <Image
-        key={isRetrying ? `retry-${Date.now()}` : src}
-        src={src}
-        alt={alt}
-        {...imageProps}
-        priority={priority}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding={priority ? 'sync' : 'async'}
-        className={cn(
-          'transition-all duration-300',
-          isPortrait ? 'object-contain' : 'object-cover',
-          hoverScale && 'hover:scale-105',
-          !isLoaded && !blurDataURL && 'opacity-0',
-          isLoaded && 'opacity-100',
-          className
-        )}
-        onLoad={handleLoad}
-        onError={handleError}
-        unoptimized={unoptimized}
-      />
+      {isInView && (
+        <Image
+          key={isRetrying ? `retry-${Date.now()}` : src}
+          src={src}
+          alt={alt}
+          {...imageProps}
+          priority={priority}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding={priority ? 'sync' : 'async'}
+          className={cn(
+            'transition-all duration-300',
+            isPortrait ? 'object-contain' : 'object-cover',
+            hoverScale && 'hover:scale-105',
+            !isLoaded && !blurDataURL && 'opacity-0',
+            isLoaded && 'opacity-100',
+            className
+          )}
+          onLoad={handleLoad}
+          onError={handleError}
+          unoptimized={unoptimized}
+        />
+      )}
     </div>
   );
 }

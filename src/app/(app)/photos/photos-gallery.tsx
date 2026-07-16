@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react';
 
 import { usePhotos } from '@/hooks/use-photos';
+import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import Masonry from '@/components/content/masonry';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 
@@ -49,7 +50,7 @@ export function PhotosGallery() {
         minColumns={1}
         minItemWidth={250}
         itemRender={({ data }) => (
-          <div key={data.src} className="overflow-hidden rounded-md">
+          <BlurFade key={data.src} className="overflow-hidden rounded-md">
             <OptimizedImage
               previewable
               src={data.src}
@@ -59,7 +60,7 @@ export function PhotosGallery() {
               aspectRatio={data.ratio}
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
-          </div>
+          </BlurFade>
         )}
       />
 
