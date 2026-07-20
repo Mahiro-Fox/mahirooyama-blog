@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { throttle } from '@/utils/utils';
 import ArtPlayer from 'artplayer';
 import Hls from 'hls.js';
 import { toast } from 'sonner';
@@ -28,31 +29,27 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
   const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
   const [sourcesStatus, setSourcesStatus] = useState<SourceStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasJumpedToProgress, setHasJumpedToProgress] = useState(false);
 
   const PROGRESS_KEY = `movie_progress_${movieId}`;
 
-  const getProxyUrl = useCallback((url: string) => {
-    return `/api/proxy?url=${encodeURIComponent(url)}`;
-  }, []);
+  // const getProxyUrl = useCallback((url: string) => {
+  //   return `/api/proxy?url=${encodeURIComponent(url)}`;
+  // }, []);
 
-  const checkSourceAvailability = useCallback(
-    async (url: string) => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(getProxyUrl(url), {
-          method: 'HEAD',
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        return response.ok;
-      } catch {
-        return false;
-      }
-    },
-    [getProxyUrl]
-  );
+  const checkSourceAvailability = useCallback(async (url: string) => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const response = await fetch(url, {
+        method: 'HEAD',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     const checkAllSources = async () => {
@@ -72,34 +69,35 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
     if (!containerRef.current || sources.length === 0) return;
 
     const currentSource = sources[currentSourceIndex];
-    const proxyUrl = getProxyUrl(currentSource.url);
+    const proxyUrl = currentSource.url;
 
-    const art = new ArtPlayer({
-      container: containerRef.current,
-      url: proxyUrl,
-      type: 'm3u8',
-      autoplay: false,
-      loop: false,
-      volume: 0.8,
-      muted: false,
-      theme: '#ff6b35',
-      lang: 'zh-CN',
-      screenshot: true,
-      flip: true,
-      aspectRatio: true,
-      fullscreen: true,
-      subtitleOffset: true,
-      miniProgressBar: true,
-      playbackRate: true,
-      controls: [
-        {
-          position: 'right',
-          html: `<div class="artplayer-video-source-btn" style="color: #fff; cursor: pointer; padding: 0 10px; font-size: 12px;">
+    const art = new ArtPlayer(
+      {
+        container: containerRef.current,
+        url: proxyUrl,
+        type: 'm3u8',
+        loop: false,
+        volume: 0.8,
+        muted: false,
+        theme: '#ff6b35',
+        lang: 'zh-CN',
+        flip: true,
+        setting: true,
+        aspectRatio: true,
+        fullscreen: true,
+        subtitleOffset: true,
+        miniProgressBar: true,
+        playsInline: true,
+        playbackRate: true,
+        controls: [
+          {
+            position: 'right',
+            html: `<div class="artplayer-video-source-btn" style="color: #fff; cursor: pointer; padding: 0 10px; font-size: 12px;">
             ${currentSource.name}
           </div>`,
-          click: () => {
-            const menu = document.createElement('div');
-            menu.style.cssText = `
+            click: () => {
+              const menu = document.createElement('div');
+              menu.style.cssText = `
               position: absolute;
               bottom: 100%;
               right: 0;
@@ -111,9 +109,9 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
               min-width: 150px;
             `;
 
-            sourcesStatus.forEach((source, index) => {
-              const item = document.createElement('div');
-              item.style.cssText = `
+              sourcesStatus.forEach((source, index) => {
+                const item = document.createElement('div');
+                item.style.cssText = `
                 padding: 8px 12px;
                 color: ${source.available ? '#fff' : '#666'};
                 font-size: 12px;
@@ -123,46 +121,61 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
                 justify-content: space-between;
                 align-items: center;
               `;
-              item.innerHTML = `
+                item.innerHTML = `
                 <span>${source.name}${index === currentSourceIndex ? ' ✓' : ''}</span>
                 ${!source.available ? '<span>[不可用]</span>' : ''}
               `;
 
-              if (source.available) {
-                item.onmouseenter = () => {
-                  item.style.background = 'rgba(255, 107, 53, 0.3)';
-                };
-                item.onmouseleave = () => {
-                  item.style.background = 'transparent';
-                };
-                item.onclick = () => {
-                  setCurrentSourceIndex(index);
+                if (source.available) {
+                  item.onmouseenter = () => {
+                    item.style.background = 'rgba(255, 107, 53, 0.3)';
+                  };
+                  item.onmouseleave = () => {
+                    item.style.background = 'transparent';
+                  };
+                  item.onclick = () => {
+                    setCurrentSourceIndex(index);
+                    menu.remove();
+                  };
+                }
+
+                menu.appendChild(item);
+              });
+              if (art.controls.$parent) {
+                art.controls.$parent.appendChild(menu);
+              }
+              const closeMenu = (e: MouseEvent) => {
+                if (!menu.contains(e.target as Node)) {
                   menu.remove();
-                };
-              }
+                  document.removeEventListener('click', closeMenu);
+                }
+              };
 
-              menu.appendChild(item);
-            });
-            if (art.controls.$parent) {
-              art.controls.$parent.appendChild(menu);
-            }
-            const closeMenu = (e: MouseEvent) => {
-              if (!menu.contains(e.target as Node)) {
-                menu.remove();
-                document.removeEventListener('click', closeMenu);
-              }
-            };
-
-            setTimeout(() => {
-              document.addEventListener('click', closeMenu);
-            }, 0);
+              setTimeout(() => {
+                document.addEventListener('click', closeMenu);
+              }, 0);
+            },
           },
+        ],
+        icons: {
+          loading: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle class="artplayer-loading-circle" cx="12" cy="12" r="10" stroke-dasharray="62.8318" stroke-dashoffset="62.8318" style="animation: artplayer-loading 1s linear infinite;"/></svg>`,
         },
-      ],
-      icons: {
-        loading: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle class="artplayer-loading-circle" cx="12" cy="12" r="10" stroke-dasharray="62.8318" stroke-dashoffset="62.8318" style="animation: artplayer-loading 1s linear infinite;"/></svg>`,
       },
-    });
+      function onReady(art) {
+        const savedProgress = localStorage.getItem(PROGRESS_KEY);
+        if (savedProgress) {
+          const progress = parseFloat(savedProgress);
+          if (progress > 0 && progress < art.duration) {
+            const minutes = Math.floor(progress / 60);
+            const seconds = Math.floor(progress % 60);
+            art.seek = progress; // ArtPlayer 方法
+            toast.info(
+              `已为你自动跳转至上次看到 ${minutes}:${seconds.toString().padStart(2, '0')}`
+            );
+          }
+        }
+      }
+    );
 
     artRef.current = art;
 
@@ -182,7 +195,7 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
       });
 
       hls.on(Hls.Events.ERROR, (event, data) => {
-        console.error('HLS Error:', data);
+        console.warn('HLS Warn:', data);
 
         if (data.fatal) {
           switch (data.type) {
@@ -205,32 +218,13 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
       });
     }
 
-    art.on('ready', () => {
-      const savedProgress = localStorage.getItem(PROGRESS_KEY);
-      if (savedProgress && !hasJumpedToProgress) {
-        const progress = parseFloat(savedProgress);
-        if (progress > 0 && progress < art.duration) {
-          const minutes = Math.floor(progress / 60);
-          const seconds = Math.floor(progress % 60);
-          toast.info(
-            `已为你自动跳转至上次看到 ${minutes}:${seconds.toString().padStart(2, '0')}`
-          );
-          art.seek = progress;
-          setHasJumpedToProgress(true);
-        }
-      }
-    });
-
-    let lastSaveTime = 0;
-    art.on('timeupdate', () => {
+    // 节流保存进度
+    const saveProgress = throttle(() => {
+      console.log('saveProgress', art.currentTime);
       const currentTime = art.currentTime;
-      const now = Date.now();
-
-      if (now - lastSaveTime > 5000) {
-        localStorage.setItem(PROGRESS_KEY, currentTime.toString());
-        lastSaveTime = now;
-      }
-    });
+      localStorage.setItem(PROGRESS_KEY, currentTime.toString());
+    }, 3000);
+    art.on('video:timeupdate', saveProgress);
 
     return () => {
       if (hls) {
@@ -240,14 +234,7 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    movieId,
-    sources,
-    currentSourceIndex,
-    getProxyUrl,
-    sourcesStatus,
-    hasJumpedToProgress,
-  ]);
+  }, [movieId, sources, currentSourceIndex, sourcesStatus]);
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-2xl">

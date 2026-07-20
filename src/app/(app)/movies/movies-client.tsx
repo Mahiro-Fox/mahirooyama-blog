@@ -1,68 +1,52 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
+import type { Movie } from '@/actions/admin/movie-actions';
 import { cn } from '@/utils/utils';
 import { Play, Search } from 'lucide-react';
 
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Input } from '@/components/shadcn-ui/input';
 
-interface MovieSource {
-  name: string;
-  url: string;
-}
-
-interface Movie {
-  id: string;
-  title: string;
-  poster: string;
-  year: string;
-  tags: string[];
-  summary: string;
-  created_at: string;
-  sources: MovieSource[];
-}
-
 const CACHE_KEY = 'movies_cache';
 const CACHE_EXPIRY = 5 * 60 * 1000; // 5 分钟缓存
 
-export default function MoviesPage() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+interface MoviesClientProps {
+  initialMovies: Movie[];
+}
 
-  useEffect(() => {
-    const fetchMovies = async () => {
-      // 尝试从 sessionStorage 读取缓存
+export function MoviesClient({ initialMovies }: MoviesClientProps) {
+  const [movies] = useState<Movie[]>(() => {
+    // 尝试从 sessionStorage 读取缓存
+    if (typeof window !== 'undefined') {
       const cached = sessionStorage.getItem(CACHE_KEY);
       if (cached) {
         try {
           const { data, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < CACHE_EXPIRY) {
-            setMovies(data);
-            setIsLoading(false);
-            return;
+            return data;
           }
         } catch {
-          // 缓存解析失败，继续请求
+          // 缓存解析失败，使用 initialMovies
         }
       }
+    }
+    return initialMovies;
+  });
 
-      const response = await fetch('/api/movies');
-      const data = await response.json();
-      setMovies(data);
-      // 缓存数据
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  // 当 initialMovies 更新时，也更新状态并缓存
+  useState(() => {
+    if (typeof window !== 'undefined') {
       sessionStorage.setItem(
         CACHE_KEY,
-        JSON.stringify({ data, timestamp: Date.now() })
+        JSON.stringify({ data: initialMovies, timestamp: Date.now() })
       );
-      setIsLoading(false);
-    };
-
-    fetchMovies();
-  }, []);
+    }
+  });
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
@@ -86,7 +70,7 @@ export default function MoviesPage() {
   }, [movies, searchQuery, selectedTag]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="to-slate-90 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800">
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-12 text-center">
           <h1 className="mb-4 text-4xl font-bold text-white">私人影视收藏</h1>
@@ -134,11 +118,7 @@ export default function MoviesPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
-          </div>
-        ) : filteredMovies.length === 0 ? (
+        {filteredMovies.length === 0 ? (
           <div className="py-20 text-center">
             <p className="text-lg text-gray-500">没有找到匹配的电影</p>
           </div>
@@ -211,7 +191,7 @@ export default function MoviesPage() {
           </div>
         )}
 
-        {!isLoading && filteredMovies.length > 0 && (
+        {filteredMovies.length > 0 && (
           <div className="mt-12 text-center">
             <p className="text-gray-500">
               共找到{' '}

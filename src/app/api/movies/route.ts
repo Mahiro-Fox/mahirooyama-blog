@@ -1,79 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-interface MovieSource {
-  name: string;
-  url: string;
-}
-
-interface Movie {
-  id: string;
-  title: string;
-  poster: string;
-  year: string;
-  tags: string[];
-  summary: string;
-  created_at: string;
-  sources: MovieSource[];
-}
-
-const MOVIES_PATH = path.join(process.cwd(), 'data', 'movies.json');
-
-function readMovies(): Movie[] {
-  try {
-    const data = fs.readFileSync(MOVIES_PATH, 'utf8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-function writeMovies(movies: Movie[]): void {
-  fs.writeFileSync(MOVIES_PATH, JSON.stringify(movies, null, 2));
-}
+import {
+  adminCreateMovie,
+  adminDeleteMovie,
+  adminUpdateMovie,
+  getMovies,
+  type Movie,
+} from '@/actions/admin/movie-actions';
 
 export async function GET(request: NextRequest) {
-  const movies = readMovies();
-  const search = request.nextUrl.searchParams.get('search');
-  const tag = request.nextUrl.searchParams.get('tag');
+  const search = request.nextUrl.searchParams.get('search') ?? undefined;
+  const tag = request.nextUrl.searchParams.get('tag') ?? undefined;
 
-  let filtered = movies;
+  const result = await getMovies(search, tag);
 
-  if (search) {
-    const searchLower = search.toLowerCase();
-    filtered = filtered.filter(
-      (m) =>
-        m.title.toLowerCase().includes(searchLower) ||
-        m.summary.toLowerCase().includes(searchLower)
-    );
+  if (result.success) {
+    return NextResponse.json(result.data);
+  } else {
+    return NextResponse.json({ error: result.error }, { status: 400 });
   }
-
-  if (tag) {
-    filtered = filtered.filter((m) => m.tags.includes(tag));
-  }
-
-  return NextResponse.json(filtered);
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as Omit<Movie, 'id' | 'created_at'>;
-    const movies = readMovies();
+    const body = (await request.json()) as Omit<Movie, 'created_at'>;
+    const result = await adminCreateMovie(body);
 
-    const newMovie: Movie = {
-      ...body,
-      id: `${body.title.toLowerCase().replace(/\s+/g, '-')}-${body.year}`,
-      created_at: new Date().toISOString(),
-    };
-
-    movies.push(newMovie);
-    writeMovies(movies);
-
-    return NextResponse.json(newMovie, { status: 201 });
+    if (result.success) {
+      return NextResponse.json(result.data, { status: 201 });
+    } else {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
   } catch (error) {
     return NextResponse.json(
-      { error: '创建电影失败', details: error instanceof Error ? error.message : '未知错误' },
+      {
+        error: '创建电影失败',
+        details: error instanceof Error ? error.message : '未知错误',
+      },
       { status: 400 }
     );
   }
@@ -81,25 +43,24 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = (await request.json()) as Partial<Movie>;
+    const body = (await request.json()) as Partial<Movie> & { id: string };
     if (!body.id) {
       return NextResponse.json({ error: '缺少 id 参数' }, { status: 400 });
     }
 
-    const movies = readMovies();
-    const index = movies.findIndex((m) => m.id === body.id);
+    const result = await adminUpdateMovie(body);
 
-    if (index === -1) {
-      return NextResponse.json({ error: '电影不存在' }, { status: 404 });
+    if (result.success) {
+      return NextResponse.json(result.data);
+    } else {
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
-
-    movies[index] = { ...movies[index], ...body };
-    writeMovies(movies);
-
-    return NextResponse.json(movies[index]);
   } catch (error) {
     return NextResponse.json(
-      { error: '更新电影失败', details: error instanceof Error ? error.message : '未知错误' },
+      {
+        error: '更新电影失败',
+        details: error instanceof Error ? error.message : '未知错误',
+      },
       { status: 400 }
     );
   }
@@ -112,14 +73,11 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: '缺少 id 参数' }, { status: 400 });
   }
 
-  const movies = readMovies();
-  const filtered = movies.filter((m) => m.id !== id);
+  const result = await adminDeleteMovie(id);
 
-  if (filtered.length === movies.length) {
-    return NextResponse.json({ error: '电影不存在' }, { status: 404 });
+  if (result.success) {
+    return NextResponse.json({ message: result.message ?? '删除成功' });
+  } else {
+    return NextResponse.json({ error: result.error }, { status: 404 });
   }
-
-  writeMovies(filtered);
-
-  return NextResponse.json({ message: '删除成功' });
 }

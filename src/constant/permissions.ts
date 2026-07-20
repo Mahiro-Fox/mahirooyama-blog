@@ -59,6 +59,11 @@ export type Permission =
   // 分析权限
   | 'analytics:read'
   | 'analytics:delete'
+  // 电影管理权限
+  | 'movies:read'
+  | 'movies:create'
+  | 'movies:update'
+  | 'movies:delete'
   // 系统权限
   | 'system:revalidate'
   | 'system:convertImages'
@@ -128,6 +133,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
     // 分析权限：只能查看访问日志
     'analytics:read',
+
+    // 电影权限：完整的CRUD
+    'movies:read',
+    'movies:create',
+    'movies:update',
+    'movies:delete',
 
     // 系统权限：可以刷新缓存
     'system:revalidate',
@@ -346,6 +357,27 @@ export const ALL_PERMISSIONS: {
         label: '查看访问日志',
         description: '查看网站访问日志',
       },
+    ],
+  },
+  {
+    group: '电影管理',
+    permissions: [
+      {
+        value: 'movies:read',
+        label: '查看电影',
+        description: '查看电影列表',
+      },
+      {
+        value: 'movies:create',
+        label: '添加电影',
+        description: '添加新电影',
+      },
+      {
+        value: 'movies:update',
+        label: '修改电影',
+        description: '修改电影信息',
+      },
+      { value: 'movies:delete', label: '删除电影', description: '删除电影' },
     ],
   },
   {

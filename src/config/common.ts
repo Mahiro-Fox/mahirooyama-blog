@@ -4,6 +4,7 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
+  Clapperboard,
   FileText,
   FolderOpen,
   Image,
@@ -120,6 +121,18 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     icon: Smile,
     navDescription: '查看 mahirooyam 的日常碎碎念',
     description: '发布和管理日常碎碎念，支持文字、图片、心情和位置。',
+    category: 'Content',
+  },
+  {
+    name: 'Movies',
+    navHref: '/movies',
+    adminHref: '/admin/movies',
+    label: '影视管理',
+    title: '管理私人影视收藏',
+    icon: Clapperboard,
+    navDescription: '浏览私人影视收藏',
+    description:
+      '添加、编辑、删除私人影视收藏，支持海报、标签、简介和播放链接。',
     category: 'Content',
   },
   {
