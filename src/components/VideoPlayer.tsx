@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { throttle } from '@/utils/utils';
 import ArtPlayer from 'artplayer';
 import Hls from 'hls.js';
@@ -36,23 +36,22 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
   //   return `/api/proxy?url=${encodeURIComponent(url)}`;
   // }, []);
 
-  const checkSourceAvailability = useCallback(async (url: string) => {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(url, {
-        method: 'HEAD',
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      return response.ok;
-    } catch {
-      return false;
-    }
-  }, []);
-
   useEffect(() => {
     const checkAllSources = async () => {
+      const checkSourceAvailability = async (url: string) => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const response = await fetch(url, {
+            method: 'HEAD',
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          return response.ok;
+        } catch {
+          return false;
+        }
+      };
       const statuses: SourceStatus[] = await Promise.all(
         sources.map(async (source) => ({
           ...source,
@@ -63,7 +62,7 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
     };
 
     checkAllSources();
-  }, [sources, checkSourceAvailability]);
+  }, [sources]);
 
   useEffect(() => {
     if (!containerRef.current || sources.length === 0) return;
