@@ -14,6 +14,8 @@ export interface MovieSource {
 interface VideoPlayerProps {
   movieId: string;
   sources: MovieSource[];
+  currentSourceIndex: number;
+  changeSource: (index: number) => void;
 }
 
 interface SourceStatus {
@@ -22,11 +24,15 @@ interface SourceStatus {
   available: boolean;
 }
 
-export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
+export function VideoPlayer({
+  movieId,
+  sources,
+  currentSourceIndex,
+  changeSource,
+}: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const artRef = useRef<ArtPlayer | null>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
   const [sourcesStatus, setSourcesStatus] = useState<SourceStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -99,7 +105,7 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
               menu.style.cssText = `
               position: absolute;
               bottom: 100%;
-              right: 0;
+              right: 20%;
               background: rgba(0, 0, 0, 0.9);
               border-radius: 8px;
               padding: 8px;
@@ -133,7 +139,7 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
                     item.style.background = 'transparent';
                   };
                   item.onclick = () => {
-                    setCurrentSourceIndex(index);
+                    changeSource(index);
                     menu.remove();
                   };
                 }
@@ -153,6 +159,16 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
               setTimeout(() => {
                 document.addEventListener('click', closeMenu);
               }, 0);
+            },
+          },
+          {
+            position: 'right',
+            html: `<div class="artplayer-video-source-btn" style="color: #fff; cursor: pointer; padding: 0 10px; font-size: 12px;">
+            复制当前线路m3u8链接
+            </div>`,
+            click: () => {
+              navigator.clipboard.writeText(proxyUrl);
+              toast.success('已复制链接');
             },
           },
         ],
@@ -205,7 +221,7 @@ export function VideoPlayer({ movieId, sources }: VideoPlayerProps) {
                 toast.warning(
                   `当前线路不稳定，已自动为你切换至备用线路：${sources[nextIndex].name}`
                 );
-                setCurrentSourceIndex(nextIndex);
+                changeSource(nextIndex);
               } else {
                 toast.error('所有线路均无法播放，请稍后重试');
               }

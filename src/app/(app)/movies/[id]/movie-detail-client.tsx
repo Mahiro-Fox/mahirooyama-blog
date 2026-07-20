@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import type { Movie } from '@/actions/admin/movie-actions';
-import { ArrowLeft, Calendar, Clock, Tag } from 'lucide-react';
+import { cn } from '@/utils/utils';
+import { Calendar, Check, Clock, Tag } from 'lucide-react';
 
 import { Badge } from '@/components/shadcn-ui/badge';
 import { VideoPlayer } from '@/components/VideoPlayer';
@@ -12,31 +14,24 @@ interface MovieDetailClientProps {
 }
 
 export function MovieDetailClient({ movie }: MovieDetailClientProps) {
+  const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
+
+  const changeSource = (index: number) => {
+    setCurrentSourceIndex(index);
+  };
   return (
     <div className="min-h-screen bg-black">
-      <div className="fixed top-0 right-0 left-0 z-50 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4">
-          <button
-            onClick={() => window.history.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="flex-1 truncate text-xl font-bold text-white">
-            {movie.title}
-          </h1>
-          <div className="flex items-center gap-2">
-            <Badge className="bg-orange-500 text-white">{movie.year}</Badge>
-          </div>
-        </div>
-      </div>
-
       <div className="pt-20">
         <div className="mx-auto max-w-7xl px-4 pb-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <div className="mb-6">
-                <VideoPlayer movieId={movie.id} sources={movie.sources} />
+                <VideoPlayer
+                  movieId={movie.id}
+                  sources={movie.sources}
+                  currentSourceIndex={currentSourceIndex}
+                  changeSource={changeSource}
+                />
               </div>
 
               <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
@@ -94,12 +89,23 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                         {movie.sources.map((source, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between rounded-lg bg-slate-800/50 px-3 py-2"
+                            onClick={() => changeSource(index)}
+                            className={cn(
+                              'flex cursor-pointer items-center justify-between rounded-lg bg-slate-800/50 px-3 py-2',
+                              {
+                                'bg-slate-900/50': index === currentSourceIndex,
+                              }
+                            )}
                           >
                             <span className="text-sm text-gray-300">
                               {source.name}
                             </span>
-                            <span className="text-xs text-green-500">可用</span>
+                            <span className="flex items-center gap-1 text-xs text-green-500">
+                              可用{' '}
+                              {index === currentSourceIndex && (
+                                <Check className="h-4 w-4" />
+                              )}
+                            </span>
                           </div>
                         ))}
                       </div>
