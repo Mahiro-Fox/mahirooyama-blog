@@ -22,7 +22,7 @@ interface PageAction {
 }
 
 interface AdminPageLayoutProps {
-  title: string;
+  title: ReactNode | string;
   description?: string;
   icon?: ReactNode;
   actions?: PageAction[];
@@ -80,7 +80,7 @@ export function AdminPageLayout({
 
       {/* Primary Actions Area */}
 
-      <CardContent>
+      <CardContent className="max-h-[70vh] overflow-auto">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />

@@ -405,7 +405,7 @@ export default function AdminShell({
             />
           </div>
         </header>
-        <main className="px-4 py-20 lg:p-6">{children}</main>
+        <main className="p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );
