@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { GALLERY_DIR } from '@/constant';
 import { ensureDirectory } from '@/utils/file-utils';
-import { isPortraitImage } from '@/utils/image-utils';
 
 export type Gallery = {
   slug: string;
@@ -16,7 +15,6 @@ export type Gallery = {
 
 export type AdminGallery = Gallery & {
   fileName: string;
-  src: string;
   size: number;
 };
 
@@ -36,18 +34,9 @@ export async function getGalleries(
 
       if (isAdmin) {
         const stats = await fs.promises.stat(fullPath);
-        // 目前没这个字段，先判断是否有这个字段，如果没有，则添加该字段
-        const isPortrait = await isPortraitImage(data.thumbnail);
-        data.isPortrait = isPortrait;
-        await fs.promises.writeFile(
-          fullPath,
-          JSON.stringify(data, null, 2),
-          'utf-8'
-        );
         return {
           slug,
           fileName: filePath,
-          src: data.thumbnail || '',
           size: stats.size,
           ...data,
         };

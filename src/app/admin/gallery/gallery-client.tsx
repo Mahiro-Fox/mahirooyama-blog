@@ -71,9 +71,9 @@ const columns: Column<AdminGallery>[] = [
     render: (file) => (
       <span
         className="text-muted-foreground max-w-[200px] truncate"
-        title={file.src}
+        title={file.thumbnail}
       >
-        {truncate(file.src, 30)}
+        {truncate(file.thumbnail, 30)}
       </span>
     ),
   },

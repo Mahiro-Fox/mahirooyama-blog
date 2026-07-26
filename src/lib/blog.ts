@@ -2,7 +2,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { BLOG_DIR } from '@/constant/dir';
 import { ensureDirectory } from '@/utils/file-utils';
-import { isPortraitImage } from '@/utils/image-utils';
 import matter from 'gray-matter';
 
 export type Blog = {
@@ -40,17 +39,16 @@ export async function getBlogs(
       const rawContent = await fs.readFile(fullPath, 'utf-8');
       const { data } = matter(rawContent);
       const slug = path.basename(fullPath, path.extname(fullPath));
-      const isPortrait = await isPortraitImage(data.thumbnail);
 
       const base: Blog = {
         slug,
-        title: data.title || '无标题',
-        description: data.description || '',
-        thumbnail: data.thumbnail || undefined,
-        isPortrait,
-        lastUpdated: data.lastUpdated || '',
-        tags: data.tags || [],
         rawContent,
+        title: data.title,
+        description: data.description,
+        thumbnail: data.thumbnail,
+        isPortrait: data.isPortrait,
+        lastUpdated: data.lastUpdated,
+        tags: data.tags,
       };
 
       if (isAdmin) {
