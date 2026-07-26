@@ -103,7 +103,7 @@ async function searchBlogPosts(keyword: string): Promise<SearchResult[]> {
  * @returns 搜索结果
  */
 async function searchGalleryItems(keyword: string): Promise<SearchResult[]> {
-  const result = await getPublicGalleries();
+  const result = await getPublicGalleries({ all: true });
   const items = result.success ? result.data.items : [];
   const results: SearchResult[] = [];
 

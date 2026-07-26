@@ -8,7 +8,7 @@ export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
   const posts = await getAllBlogPosts();
 
-  const galleryResult = await getPublicGalleries();
+  const galleryResult = await getPublicGalleries({ all: true });
   const galleryImages = galleryResult.success ? galleryResult.data.items : [];
   const rssXml = `
     <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

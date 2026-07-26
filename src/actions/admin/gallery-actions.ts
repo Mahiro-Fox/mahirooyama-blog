@@ -40,21 +40,21 @@ export async function getPublicGalleries(
   try {
     const { page, pageSize = DEFAULT_GALLERY_LIST_LIMIT, tagSlug } = options;
     const all = await getGalleries();
-    if (options.all) {
-      return {
-        success: true,
-        data: {
-          items: all,
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: all.length,
-        },
-      };
-    }
 
     const filtered = tagSlug
       ? all.filter((item) => item.tags?.includes(tagSlug))
       : all;
+
+    if (options.all)
+      return {
+        success: true,
+        data: {
+          items: filtered,
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: filtered.length,
+        },
+      };
 
     return {
       success: true,

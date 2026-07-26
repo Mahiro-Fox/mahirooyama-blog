@@ -74,7 +74,7 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
     return notFound();
   }
 
-  const result = await getPublicGalleries({ tagSlug: slug });
+  const result = await getPublicGalleries({ tagSlug: slug, all: true });
   const data = result.success ? result.data.items : [];
 
   const breadcrumbItems = [

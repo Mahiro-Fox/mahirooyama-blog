@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const [blogPosts, galleryResult, allTags] = await Promise.all([
     getAllBlogPosts(),
-    getPublicGalleries(),
+    getPublicGalleries({ all: true }),
     tagStore.getAll(),
   ]);
   const galleryItems = galleryResult.success ? galleryResult.data.items : [];
