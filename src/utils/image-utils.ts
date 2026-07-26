@@ -15,11 +15,13 @@ import sharp from 'sharp';
  */
 export async function isPortraitImage(imagePath: string): Promise<boolean> {
   try {
-    if (!fs.existsSync(imagePath)) {
+    const fullPath = path.join(process.cwd(), imagePath);
+    if (!fs.existsSync(fullPath)) {
+      console.error(`图片不存在: ${fullPath}`);
       return false;
     }
 
-    const metadata = await sharp(imagePath).metadata();
+    const metadata = await sharp(fullPath).metadata();
     const width = metadata.width || 0;
     const height = metadata.height || 0;
     const isPortrait = height > width;
