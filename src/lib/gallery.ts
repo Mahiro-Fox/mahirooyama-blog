@@ -1,89 +1,66 @@
 import fs from 'fs';
 import path from 'path';
-import { unstable_cache } from 'next/cache';
-import { DEFAULT_GALLERY_LIST_LIMIT } from '@/config';
 import { GALLERY_DIR } from '@/constant';
+import { ensureDirectory } from '@/utils/file-utils';
 import { isPortraitImage } from '@/utils/image-utils';
 
-import { paginateItems, PaginationResult } from '@/lib/pagination';
-
-export type GalleryImage<T = {}> = {
+export type Gallery = {
+  slug: string;
   title: string;
   description: string;
   thumbnail: string;
+  isPortrait: boolean;
   lastUpdated: string;
   tags?: string[];
-} & T;
-
-export type GalleryImageData<T = {}> = {
-  metadata: GalleryImage<T>;
-  slug: string;
-  isPortrait: boolean;
 };
 
-export const getAllGalleryImages = unstable_cache(
-  async <T = {}>(): Promise<GalleryImageData<T>[]> => {
-    try {
-      await fs.promises.access(GALLERY_DIR);
-    } catch {
-      return [];
-    }
+export type AdminGallery = Gallery & {
+  fileName: string;
+  src: string;
+  size: number;
+};
 
-    const files = await getGalleryFiles();
-    const images = await Promise.all(
-      files.map((file) => readGalleryFile<T>(path.join(GALLERY_DIR, file)))
-    );
+export async function getGalleries(
+  isAdmin?: boolean
+): Promise<AdminGallery[] | Gallery[]> {
+  await ensureDirectory(GALLERY_DIR);
+  const files = await fs.promises.readdir(GALLERY_DIR);
+  const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
-    return images.sort(
-      (a, b) =>
-        new Date(b.metadata.lastUpdated).getTime() -
-        new Date(a.metadata.lastUpdated).getTime()
-    );
-  },
-  ['gallery-images'],
-  { revalidate: 60, tags: ['gallery'] }
-);
+  const images = await Promise.all(
+    jsonFiles.map(async (filePath) => {
+      const fullPath = path.join(GALLERY_DIR, filePath);
+      const content = await fs.promises.readFile(fullPath, 'utf-8');
+      const data = JSON.parse(content);
+      const slug = path.basename(fullPath, path.extname(fullPath));
 
-export async function getGalleryPostsByTagSlug(
-  tagSlug: string
-): Promise<GalleryImageData<{}>[] | undefined> {
-  const images = await getAllGalleryImages<{}>();
-  return images.filter((image) => image.metadata.tags?.includes(tagSlug));
-}
-
-export async function getGalleryImages<T = {}>(
-  page = 1,
-  pageSize = DEFAULT_GALLERY_LIST_LIMIT
-): Promise<PaginationResult<GalleryImageData<T>>> {
-  const images = await getAllGalleryImages<T>();
-  return paginateItems(images, page, pageSize);
-}
-
-export async function getGalleryImageBySlug<T = {}>(
-  slug: string
-): Promise<GalleryImageData<T> | undefined> {
-  const images = await getAllGalleryImages<T>();
-  return images.find((image) => image.slug === slug);
-}
-
-async function getGalleryFiles(): Promise<string[]> {
-  return (await fs.promises.readdir(GALLERY_DIR)).filter(
-    (file) => path.extname(file) === '.json'
+      if (isAdmin) {
+        const stats = await fs.promises.stat(fullPath);
+        // 目前没这个字段，先判断是否有这个字段，如果没有，则添加该字段
+        if (!data.isPortrait) {
+          const isPortrait = await isPortraitImage(data.thumbnail);
+          data.isPortrait = isPortrait;
+          await fs.promises.writeFile(
+            fullPath,
+            JSON.stringify(data, null, 2),
+            'utf-8'
+          );
+        }
+        return {
+          slug,
+          fileName: filePath,
+          src: data.thumbnail || '',
+          size: stats.size,
+          ...data,
+        };
+      } else {
+        return {
+          slug,
+          ...data,
+        };
+      }
+    })
   );
-}
 
-async function readGalleryFile<T>(
-  filePath: string
-): Promise<GalleryImageData<T>> {
-  const rawContent = await fs.promises.readFile(filePath, 'utf-8');
-  const data = JSON.parse(rawContent);
-
-  // 判断是否为竖屏图片
-  const isPortrait = await isPortraitImage(data.thumbnail);
-
-  return {
-    metadata: data as GalleryImage<T>,
-    slug: path.basename(filePath, path.extname(filePath)),
-    isPortrait,
-  };
+  return images;
 }

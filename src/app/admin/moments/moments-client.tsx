@@ -7,14 +7,13 @@ import {
   adminGetMoments,
   adminUpdateMoment,
   adminUploadMomentImage,
-  MomentImage,
-  type Moment,
 } from '@/actions/admin/moments-actions';
 import { MOOD_OPTIONS } from '@/config';
 import { formatDate } from '@/utils/utils';
 import { Edit, Image as ImageIcon, MapPin, Smile, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Moment, MomentImage } from '@/lib/moments';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
 import {

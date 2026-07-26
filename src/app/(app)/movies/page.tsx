@@ -1,4 +1,4 @@
-import { getMovies } from '@/actions/admin/movie-actions';
+import { getPublicMovies } from '@/actions/admin/movie-actions';
 
 import { MoviesClient } from './movies-client';
 
@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 export default async function MoviesPage() {
-  const result = await getMovies();
+  const result = await getPublicMovies();
   const movies = result.success ? result.data : [];
 
   return <MoviesClient initialMovies={movies} />;

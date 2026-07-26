@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { PHOTO_DIR } from '@/constant';
+import { ensureDirectory } from '@/utils/file-utils';
 import sharp from 'sharp';
 
 export interface PhotoItem {
@@ -11,6 +12,7 @@ export interface PhotoItem {
   height: number;
   ratio: number;
   alt: string;
+  lastUpdatedAt: string;
 }
 
 /**
@@ -18,12 +20,7 @@ export interface PhotoItem {
  * 解析图片尺寸并计算宽高比，自动返回压缩版本
  */
 export async function getPhotos(): Promise<PhotoItem[]> {
-  try {
-    await fs.promises.access(PHOTO_DIR);
-  } catch {
-    return [];
-  }
-
+  await ensureDirectory(PHOTO_DIR);
   const files = await fs.promises.readdir(PHOTO_DIR);
   const imageFiles = files.filter((file) => {
     const ext = path.extname(file).toLowerCase();
@@ -38,7 +35,10 @@ export async function getPhotos(): Promise<PhotoItem[]> {
       const id = path.basename(filename, path.extname(filename));
 
       try {
-        const metadata = await sharp(filePath).metadata();
+        const [stats, metadata] = await Promise.all([
+          fs.promises.stat(filePath),
+          sharp(filePath).metadata(),
+        ]);
         const width = metadata.width || 0;
         const height = metadata.height || 0;
         const ratio = width > 0 && height > 0 ? width / height : 1;
@@ -53,6 +53,7 @@ export async function getPhotos(): Promise<PhotoItem[]> {
           height,
           ratio,
           alt: id,
+          lastUpdatedAt: stats.mtime.toISOString(),
         };
       } catch (error) {
         console.error(`获取图片元数据失败 ${filename}`, error);

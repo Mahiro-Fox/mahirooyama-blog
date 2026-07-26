@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { getPublicGuestbookEntries } from '@/actions/admin/guestbook-actions';
+import { getPublicGuestbook } from '@/actions/admin/guestbook-actions';
 
 import { GuestbookWallDialog } from './guestbook-dialog';
 import { GuestbookWall } from './guestbook-wall';
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function GuestbookPage() {
-  const result = await getPublicGuestbookEntries();
+  const result = await getPublicGuestbook();
   const entries = result.success ? result.data : [];
 
   return (

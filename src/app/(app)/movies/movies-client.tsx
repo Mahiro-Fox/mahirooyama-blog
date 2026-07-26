@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import type { Movie } from '@/actions/admin/movie-actions';
 import { cn } from '@/utils/utils';
 import { Play, Search } from 'lucide-react';
 
+import { Movie } from '@/lib/movies';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Input } from '@/components/shadcn-ui/input';
 

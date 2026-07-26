@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getHomeBannerImages } from '@/actions/home-banner';
 import { Tag } from '@/constant';
 import { tagStore } from '@/store/tag-store';
@@ -7,7 +8,7 @@ import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon, TagIcon } from 'lucide-react';
 
 import { siteConfig } from '@/config/common';
-import { GalleryImageData, getAllGalleryImages } from '@/lib/gallery';
+import { Gallery } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
@@ -28,7 +29,8 @@ export const metadata: Metadata = {
 
 export default async function IndexPage() {
   const allPosts = await getAllBlogPosts();
-  const galleryImages = await getAllGalleryImages();
+  const galleryResult = await getPublicGalleries();
+  const galleries = galleryResult.success ? galleryResult.data.items : [];
   const bannerData = await getHomeBannerImages();
   const tags = await tagStore.getAll();
 
@@ -43,7 +45,7 @@ export default async function IndexPage() {
       )}
       <section className="py-8">
         <h2 className="sr-only">Hero Carousel Items</h2>
-        <HeroCarousel galleryImages={galleryImages} />
+        <HeroCarousel galleries={galleries} />
       </section>
       {/* About Section */}
       <BlurFade inView duration={0.6}>
@@ -61,15 +63,15 @@ export default async function IndexPage() {
               <h2 className="text-2xl font-medium tracking-tight">Gallery</h2>
             </div>
             <div className="flex flex-col">
-              {galleryImages.slice(0, 3).map((gallery, index) => (
+              {galleries.slice(0, 3).map((gallery, index) => (
                 <BlurFade inView key={gallery.slug}>
                   <LinkCard
                     key={gallery.slug}
-                    title={gallery.metadata.title}
-                    imageUrl={gallery.metadata.thumbnail || siteConfig.ogImage}
+                    title={gallery.title}
+                    imageUrl={gallery.thumbnail || siteConfig.ogImage}
                     link={`/gallery/${gallery.slug}`}
-                    badgeText={formatDate(gallery.metadata.lastUpdated)}
-                    description={gallery.metadata.description}
+                    badgeText={formatDate(gallery.lastUpdated)}
+                    description={gallery.description}
                     priority={index === 0} // 首屏第一张优先加载
                     isPortrait={gallery.isPortrait}
                   />
@@ -164,15 +166,11 @@ export default async function IndexPage() {
     </div>
   );
 }
-async function HeroCarousel({
-  galleryImages,
-}: {
-  galleryImages: GalleryImageData[];
-}) {
-  const carouselItems = galleryImages.slice(0, 5).map((image) => ({
-    title: image.metadata.title,
+async function HeroCarousel({ galleries }: { galleries: Gallery[] }) {
+  const carouselItems = galleries.slice(0, 5).map((image) => ({
+    title: image.title,
     href: `/gallery/${image.slug}`,
-    imageUrl: image.metadata.thumbnail,
+    imageUrl: image.thumbnail,
   }));
 
   return <PartialViewCarousel items={carouselItems} />;

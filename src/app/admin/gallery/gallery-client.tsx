@@ -3,19 +3,19 @@
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import {
-  adminCreateGalleryFile,
+  adminCreateGallery,
   adminDeleteGalleryFile,
-  adminGetGalleryFile,
-  adminGetGalleryFiles,
+  adminGetGalleries,
+  adminGetGallery,
   adminRenameGalleryFile,
-  adminUpdateGalleryFile,
+  adminUpdateGallery,
   adminUploadGalleryThumbnail,
-  type GalleryFile,
 } from '@/actions/admin/gallery-actions';
 import { formatDate, formatSize } from '@/utils/utils';
 import { Image as ImageIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { AdminGallery } from '@/lib/gallery';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
@@ -38,7 +38,7 @@ const truncate = (text: string, maxLen: number) => {
 };
 
 // 表格列定义
-const columns: Column<GalleryFile>[] = [
+const columns: Column<AdminGallery>[] = [
   {
     key: 'title',
     header: '标题',
@@ -102,13 +102,13 @@ const columns: Column<GalleryFile>[] = [
 export default function GalleryClient({
   initialFiles,
 }: {
-  initialFiles: GalleryFile[];
+  initialFiles: AdminGallery[];
 }) {
-  const [files, setFiles] = useState<GalleryFile[]>(initialFiles);
+  const [files, setFiles] = useState<AdminGallery[]>(initialFiles);
   const [loading, setLoading] = useState(false);
 
   // 本地状态
-  const [selectedFile, setSelectedFile] = useState<GalleryFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<AdminGallery | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -124,7 +124,7 @@ export default function GalleryClient({
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const result = await adminGetGalleryFiles();
+      const result = await adminGetGalleries();
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -149,9 +149,9 @@ export default function GalleryClient({
   };
 
   // 编辑文件
-  const handleEdit = async (file: GalleryFile) => {
+  const handleEdit = async (file: AdminGallery) => {
     try {
-      const result = await adminGetGalleryFile(file.slug);
+      const result = await adminGetGallery(file.slug);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -161,11 +161,12 @@ export default function GalleryClient({
 
       // Parse JSON content
       try {
-        const parsed = JSON.parse(result.data);
-        setEditTitle(parsed.title || '');
-        setEditDescription(parsed.description || '');
-        setEditThumbnail(parsed.thumbnail || '');
-        setEditTags(parsed.tags || []);
+        const data = result.data;
+        setEditTitle(data.title || '');
+        setEditTitle(data.title || '');
+        setEditDescription(data.description || '');
+        setEditThumbnail(data.thumbnail || '');
+        setEditTags(data.tags || []);
       } catch {
         toast.error('JSON 解析失败');
         return;
@@ -224,7 +225,7 @@ export default function GalleryClient({
           setIsSaving(false);
           return;
         }
-        const result = await adminCreateGalleryFile({
+        const result = await adminCreateGallery({
           slug: editFileName.trim(),
           content: jsonContent,
         });
@@ -236,7 +237,7 @@ export default function GalleryClient({
         if (!selectedFile) return;
 
         // 更新内容
-        const saveResult = await adminUpdateGalleryFile(
+        const saveResult = await adminUpdateGallery(
           selectedFile.slug,
           jsonContent
         );
@@ -301,7 +302,7 @@ export default function GalleryClient({
   };
 
   // 打开删除对话框
-  const openDelete = (file: GalleryFile) => {
+  const openDelete = (file: AdminGallery) => {
     setSelectedFile(file);
     setIsDeleteDialogOpen(true);
   };

@@ -6,40 +6,22 @@ import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { ensureFileInitialized } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 import { siteConfig } from '@/config/common';
 import { notifyReply } from '@/lib/email-send/notify-reply';
+import { getGuestbook, Guestbook } from '@/lib/guestbook';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('GuestbookActions');
 
-export interface GuestbookEntry {
-  id: string;
-  createdAt: string;
-  nickname: string;
-  bgColor: string;
-  contact?: string;
-  content: string;
-  replyContent?: string;
-  replyAt?: string;
-  isApproved: boolean;
-  isRepliedEmail?: boolean;
-  isEmailNotificationEnabled?: boolean;
-}
-
 // GET - 获取所有留言（管理员视图）
 export async function adminGetGuestbookEntries(): Promise<
-  ActionResponse<GuestbookEntry[]>
+  ActionResponse<Guestbook[]>
 > {
   return withActionPermission('guestbook:read', async () => {
     try {
-      // 如果不存在文件，创建文件
-      await ensureFileInitialized(GUESTBOOK_FILE);
-
-      const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-      const entries: GuestbookEntry[] = JSON.parse(content);
+      const entries = await getGuestbook();
 
       // 按创建时间倒序排列
       entries.sort(
@@ -56,7 +38,7 @@ export async function adminGetGuestbookEntries(): Promise<
 }
 
 // POST - 创建留言（管理员创建）
-export async function adminCreateGuestbookEntry(input: {
+export async function adminCreateGuestbook(input: {
   nickname: string;
   bgColor: string;
   contact?: string;
@@ -83,14 +65,13 @@ export async function adminCreateGuestbookEntry(input: {
       }
 
       // 读取现有数据
-      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+      const entries = await getGuestbook();
 
       // 生成唯一ID（使用时间戳）
       const id = Date.now().toString();
       const createdAt = new Date().toISOString();
 
-      const newEntry: GuestbookEntry = {
+      const newEntry: Guestbook = {
         id,
         createdAt,
         nickname: nickname.trim(),
@@ -119,7 +100,7 @@ export async function adminCreateGuestbookEntry(input: {
 }
 
 // POST - 访客提交留言（无需登录）
-export async function submitGuestbookEntry(input: {
+export async function submitGuestbook(input: {
   nickname: string;
   bgColor: string;
   contact?: string;
@@ -165,14 +146,13 @@ export async function submitGuestbookEntry(input: {
     }
 
     // 读取现有数据
-    const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-    const entries: GuestbookEntry[] = JSON.parse(fileContent);
+    const entries = await getGuestbook();
 
     // 生成唯一ID（使用时间戳）
     const id = Date.now().toString();
     const createdAt = new Date().toISOString();
 
-    const newEntry: GuestbookEntry = {
+    const newEntry: Guestbook = {
       id,
       createdAt,
       nickname: nickname.trim(),
@@ -201,7 +181,7 @@ export async function submitGuestbookEntry(input: {
 }
 
 // PUT - 更新留言
-export async function adminUpdateGuestbookEntry(
+export async function adminUpdateGuestbook(
   id: string,
   input: {
     nickname?: string;
@@ -215,8 +195,7 @@ export async function adminUpdateGuestbookEntry(
       const { nickname, bgColor, contact, content } = input;
 
       // 读取现有数据
-      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+      const entries = await getGuestbook();
 
       // 查找并更新
       const index = entries.findIndex((e) => e.id === id);
@@ -267,7 +246,7 @@ export async function adminUpdateGuestbookEntry(
 }
 
 // PUT - 回复留言
-export async function adminReplyGuestbookEntry(
+export async function adminReplyGuestbook(
   id: string,
   replyContent: string
 ): Promise<ActionResponse<void>> {
@@ -278,8 +257,7 @@ export async function adminReplyGuestbookEntry(
       }
 
       // 读取现有数据
-      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+      const entries = await getGuestbook();
 
       // 查找并更新
       const index = entries.findIndex((e) => e.id === id);
@@ -338,8 +316,7 @@ export async function adminSendReplyNotification(
       });
     } else {
       // 回复成功后更新isRepliedEmail字段
-      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+      const entries = await getGuestbook();
 
       const index = entries.findIndex((e) => e.id === id);
       if (index === -1) {
@@ -364,15 +341,14 @@ export async function adminSendReplyNotification(
 }
 
 // PUT - 审核留言
-export async function adminApproveGuestbookEntry(
+export async function adminApproveGuestbook(
   id: string,
   isApproved: boolean
 ): Promise<ActionResponse<void>> {
   return withActionPermission('guestbook:approve', async (user) => {
     try {
       // 读取现有数据
-      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+      const entries = await getGuestbook();
 
       // 查找并更新
       const index = entries.findIndex((e) => e.id === id);
@@ -403,14 +379,13 @@ export async function adminApproveGuestbookEntry(
 }
 
 // DELETE - 删除留言
-export async function adminDeleteGuestbookEntry(
+export async function adminDeleteGuestbook(
   id: string
 ): Promise<ActionResponse<void>> {
   return withActionPermission('guestbook:delete', async (user) => {
     try {
       // 读取现有数据
-      const fileContent = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-      const entries: GuestbookEntry[] = JSON.parse(fileContent);
+      const entries = await getGuestbook();
 
       // 过滤掉要删除的项
       const filtered = entries.filter((e) => e.id !== id);
@@ -436,12 +411,11 @@ export async function adminDeleteGuestbookEntry(
 }
 
 // GET - 获取公开的留言列表（用于前端展示，只显示已审核的）
-export async function getPublicGuestbookEntries(): Promise<
-  ActionResponse<GuestbookEntry[]>
+export async function getPublicGuestbook(): Promise<
+  ActionResponse<Guestbook[]>
 > {
   try {
-    const content = await fs.readFile(GUESTBOOK_FILE, 'utf-8');
-    const entries: GuestbookEntry[] = JSON.parse(content);
+    const entries = await getGuestbook();
 
     // 只显示已审核的留言
     const approvedEntries = entries.filter((e) => e.isApproved);

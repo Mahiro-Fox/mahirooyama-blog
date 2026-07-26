@@ -14,51 +14,79 @@ import {
   fileExists,
   validateSlug,
 } from '@/utils/file-utils';
-import { processAndSaveImage } from '@/utils/image-utils';
+import { isPortraitImage, processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
 
+import { DEFAULT_GALLERY_LIST_LIMIT } from '@/config/limit';
+import { AdminGallery, Gallery, getGalleries } from '@/lib/gallery';
+import { paginateItems, PaginationResult } from '@/lib/pagination';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('GalleryActions');
 
-export interface GalleryFile {
-  slug: string;
-  fileName: string;
-  title: string;
-  description: string;
-  src: string;
-  tags: string[];
-  size: number;
-  lastUpdated: string;
+export interface GetPublicGalleriesOptions {
+  page?: number;
+  pageSize?: number;
+  tagSlug?: string;
+  all?: boolean;
 }
 
-// GET - 获取图库文件列表
-export async function adminGetGalleryFiles(): Promise<
-  ActionResponse<GalleryFile[]>
+export async function getPublicGalleries(
+  options: GetPublicGalleriesOptions = {
+    page: 1,
+    pageSize: DEFAULT_GALLERY_LIST_LIMIT,
+  }
+): Promise<ActionResponse<PaginationResult<Gallery>>> {
+  try {
+    const { page, pageSize = DEFAULT_GALLERY_LIST_LIMIT, tagSlug } = options;
+    const all = await getGalleries();
+    if (options.all) {
+      return {
+        success: true,
+        data: {
+          items: all,
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: all.length,
+        },
+      };
+    }
+
+    const filtered = tagSlug
+      ? all.filter((item) => item.tags?.includes(tagSlug))
+      : all;
+
+    return {
+      success: true,
+      data: paginateItems<Gallery>(filtered, page, pageSize),
+    };
+  } catch (error) {
+    logger.error('获取公开图库列表失败', error);
+    return { success: false, error: '获取图库列表失败' };
+  }
+}
+
+export async function getPublicGallery(
+  slug: string
+): Promise<ActionResponse<Gallery>> {
+  try {
+    // 使用 .json 扩展名
+    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
+
+    const content = await fs.readFile(filePath, 'utf-8');
+    return { success: true, data: JSON.parse(content) as Gallery };
+  } catch (error) {
+    logger.error('获取图库详情失败', error, { slug });
+    return { success: false, error: '获取图库详情失败' };
+  }
+}
+
+export async function adminGetGalleries(): Promise<
+  ActionResponse<AdminGallery[]>
 > {
   return withActionPermission('gallery:read', async () => {
     try {
-      const files = await fs.readdir(GALLERY_DIR);
-      const jsonFiles = files.filter((file) => file.endsWith('.json'));
-
-      const images = await Promise.all(
-        jsonFiles.map(async (file) => {
-          const filePath = path.join(GALLERY_DIR, file);
-          const content = await fs.readFile(filePath, 'utf-8');
-          const parsed = JSON.parse(content);
-
-          return {
-            slug: path.basename(file, path.extname(file)),
-            fileName: file,
-            title: parsed.title || '无标题',
-            description: parsed.description || '',
-            src: parsed.thumbnail || '',
-            tags: parsed.tags || [],
-            size: (await fs.stat(filePath)).size,
-            lastUpdated: parsed.lastUpdated || '',
-          };
-        })
-      );
+      const images = (await getGalleries(true)) as AdminGallery[];
 
       // 按更新时间排序
       images.sort(
@@ -75,16 +103,16 @@ export async function adminGetGalleryFiles(): Promise<
 }
 
 // GET - 获取单个文件内容
-export async function adminGetGalleryFile(
+export async function adminGetGallery(
   slug: string
-): Promise<ActionResponse<string>> {
+): Promise<ActionResponse<Gallery>> {
   return withActionPermission('gallery:read', async () => {
     try {
       // 使用 .json 扩展名
       const filePath = path.join(GALLERY_DIR, `${slug}.json`);
 
       const content = await fs.readFile(filePath, 'utf-8');
-      return { success: true, data: content };
+      return { success: true, data: JSON.parse(content) as Gallery };
     } catch (error) {
       logger.error('获取图库文件失败', error, { slug });
       return { success: false, error: '文件不存在或读取失败' };
@@ -93,7 +121,7 @@ export async function adminGetGalleryFile(
 }
 
 // POST - 创建文件（JSON 格式）
-export async function adminCreateGalleryFile(input: {
+export async function adminCreateGallery(input: {
   slug: string;
   content: string;
 }): Promise<ActionResponse<void>> {
@@ -127,7 +155,7 @@ export async function adminCreateGalleryFile(input: {
       }
 
       // 验证 JSON 格式
-      let parsed;
+      let parsed: AdminGallery;
       try {
         parsed = JSON.parse(content);
       } catch {
@@ -143,6 +171,10 @@ export async function adminCreateGalleryFile(input: {
           error: 'JSON 内容缺少必需的字段 (title, thumbnail)',
         };
       }
+
+      // 计算图片是否为竖屏
+      const isPortrait = await isPortraitImage(parsed.thumbnail);
+      parsed.isPortrait = isPortrait;
 
       const fileName = `${cleanSlug}.json`;
       const filePath = path.join(GALLERY_DIR, fileName);
@@ -170,7 +202,7 @@ export async function adminCreateGalleryFile(input: {
 }
 
 // PUT - 更新文件内容
-export async function adminUpdateGalleryFile(
+export async function adminUpdateGallery(
   slug: string,
   content: string
 ): Promise<ActionResponse<void>> {
@@ -207,6 +239,9 @@ export async function adminUpdateGalleryFile(
           error: 'JSON 内容缺少必需的字段 (title, thumbnail)',
         };
       }
+      // 计算图片是否为竖屏
+      const isPortrait = await isPortraitImage(parsed.thumbnail);
+      parsed.isPortrait = isPortrait;
 
       const formattedContent = JSON.stringify(parsed, null, 2);
       await fs.writeFile(filePath, formattedContent, 'utf-8');

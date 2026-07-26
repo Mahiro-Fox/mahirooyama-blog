@@ -8,13 +8,12 @@ import {
   adminDeleteMovie,
   adminGetMovies,
   adminUpdateMovie,
-  type Movie,
-  type MovieSource,
 } from '@/actions/admin/movie-actions';
 import { formatDate } from '@/utils/utils';
 import { Edit, Link as LinkIcon, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Movie, MovieSource } from '@/lib/movies';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
 import {

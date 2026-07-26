@@ -2,20 +2,20 @@
 
 import { useState } from 'react';
 import {
-  adminApproveGuestbookEntry,
-  adminCreateGuestbookEntry,
-  adminDeleteGuestbookEntry,
+  adminApproveGuestbook,
+  adminCreateGuestbook,
+  adminDeleteGuestbook,
   adminGetGuestbookEntries,
-  adminReplyGuestbookEntry,
+  adminReplyGuestbook,
   adminSendReplyNotification,
-  adminUpdateGuestbookEntry,
-  type GuestbookEntry,
+  adminUpdateGuestbook,
 } from '@/actions/admin/guestbook-actions';
 import { COLOR_OPTIONS } from '@/config';
 import { formatDate, isEmail } from '@/utils/utils';
 import { Check, Edit, MessageSquare, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Guestbook } from '@/lib/guestbook';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
@@ -29,15 +29,13 @@ import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 export default function GuestbookClient({
   initialEntries,
 }: {
-  initialEntries: GuestbookEntry[];
+  initialEntries: Guestbook[];
 }) {
-  const [entries, setEntries] = useState<GuestbookEntry[]>(initialEntries);
+  const [entries, setEntries] = useState<Guestbook[]>(initialEntries);
   const [loading, setLoading] = useState(false);
 
   // 本地状态
-  const [selectedEntry, setSelectedEntry] = useState<GuestbookEntry | null>(
-    null
-  );
+  const [selectedEntry, setSelectedEntry] = useState<Guestbook | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
@@ -79,7 +77,7 @@ export default function GuestbookClient({
   // };
 
   // 编辑留言
-  const handleEdit = (entry: GuestbookEntry) => {
+  const handleEdit = (entry: Guestbook) => {
     setEditMode('edit');
     setSelectedEntry(entry);
     setNickname(entry.nickname);
@@ -95,7 +93,7 @@ export default function GuestbookClient({
     setIsSubmitting(true);
     try {
       if (editMode === 'create') {
-        const result = await adminCreateGuestbookEntry({
+        const result = await adminCreateGuestbook({
           nickname,
           bgColor,
           contact: contact || undefined,
@@ -107,7 +105,7 @@ export default function GuestbookClient({
         toast.success('留言创建成功');
       } else {
         if (!selectedEntry) return;
-        const result = await adminUpdateGuestbookEntry(selectedEntry.id, {
+        const result = await adminUpdateGuestbook(selectedEntry.id, {
           nickname,
           bgColor,
           contact: contact || undefined,
@@ -128,7 +126,7 @@ export default function GuestbookClient({
   };
 
   // 打开删除对话框
-  const openDelete = (entry: GuestbookEntry) => {
+  const openDelete = (entry: Guestbook) => {
     setSelectedEntry(entry);
     setIsDeleteDialogOpen(true);
   };
@@ -137,7 +135,7 @@ export default function GuestbookClient({
   const handleDelete = async () => {
     if (!selectedEntry) return;
     try {
-      const result = await adminDeleteGuestbookEntry(selectedEntry.id);
+      const result = await adminDeleteGuestbook(selectedEntry.id);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -151,7 +149,7 @@ export default function GuestbookClient({
   };
 
   // 打开回复对话框
-  const openReply = (entry: GuestbookEntry) => {
+  const openReply = (entry: Guestbook) => {
     setSelectedEntry(entry);
     setReplyContent(entry.replyContent || '');
     setIsReplyDialogOpen(true);
@@ -172,7 +170,7 @@ export default function GuestbookClient({
     } = selectedEntry;
 
     try {
-      const result = await adminReplyGuestbookEntry(entryId, replyContent);
+      const result = await adminReplyGuestbook(entryId, replyContent);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -206,9 +204,9 @@ export default function GuestbookClient({
   };
 
   // 审核留言
-  const handleApprove = async (entry: GuestbookEntry, approved: boolean) => {
+  const handleApprove = async (entry: Guestbook, approved: boolean) => {
     try {
-      const result = await adminApproveGuestbookEntry(entry.id, approved);
+      const result = await adminApproveGuestbook(entry.id, approved);
       if (!result.success) {
         throw new Error(result.error);
       }

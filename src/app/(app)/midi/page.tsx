@@ -1,4 +1,4 @@
-import { getAllMidiFiles } from '@/lib/midi-files';
+import { getPublicMidis } from '@/actions/admin/midi-actions';
 
 import { MidiPlayerClient } from './midi-player-client';
 
@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 export default async function MidiPage() {
-  const midiFiles = await getAllMidiFiles();
+  const midiFiles = await getPublicMidis();
 
   return (
     <div className="container-wrapper">

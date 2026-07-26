@@ -1,12 +1,13 @@
 'use client';
 
-import { type GuestbookEntry } from '@/actions/admin/guestbook-actions';
 import { formatDateWithSecond } from '@/utils/utils';
 import { MessageSquare } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
+import { Guestbook } from '@/lib/guestbook';
+
 interface GuestbookWallProps {
-  entries: GuestbookEntry[];
+  entries: Guestbook[];
 }
 
 export function GuestbookWall({ entries }: GuestbookWallProps) {

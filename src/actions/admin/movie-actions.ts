@@ -7,38 +7,20 @@ import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { ensureFileInitialized } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
+import { getMovies, Movie } from '@/lib/movies';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('MovieActions');
 
-export interface MovieSource {
-  name: string;
-  url: string;
-}
-
-export interface Movie {
-  id: string;
-  title: string;
-  poster: string;
-  year: string;
-  tags: string[];
-  summary: string;
-  updated_at: string;
-  sources: MovieSource[];
-}
-
-// GET - 获取公开的电影列表（用于前端展示）
-export async function getMovies(
+// GET - 获取所有电影（公开）
+export async function getPublicMovies(
   search?: string,
   tag?: string
 ): Promise<ActionResponse<Movie[]>> {
   try {
-    await ensureFileInitialized(MOVIES_DIR);
-    const content = await fs.readFile(MOVIES_DIR, 'utf-8');
-    let movies: Movie[] = JSON.parse(content);
+    let movies = await getMovies();
 
     if (search) {
       const searchLower = search.toLowerCase();
@@ -70,9 +52,7 @@ export async function getMovies(
 export async function adminGetMovies(): Promise<ActionResponse<Movie[]>> {
   return withActionPermission('movies:read', async () => {
     try {
-      await ensureFileInitialized(MOVIES_DIR);
-      const content = await fs.readFile(MOVIES_DIR, 'utf-8');
-      const movies: Movie[] = JSON.parse(content);
+      const movies = await getMovies();
 
       // 按创建时间倒序排列
       movies.sort(
@@ -125,9 +105,7 @@ export async function adminCreateMovie(
       }
 
       // 读取现有数据
-      await ensureFileInitialized(MOVIES_DIR);
-      const content = await fs.readFile(MOVIES_DIR, 'utf-8');
-      const movies: Movie[] = JSON.parse(content);
+      const movies = await getMovies();
 
       // 检查ID是否已存在
       if (movies.some((m) => m.id === id.trim())) {
@@ -185,9 +163,7 @@ export async function adminUpdateMovie(
       const { id, title, poster, year, tags, summary, sources } = input;
 
       // 读取现有数据
-      await ensureFileInitialized(MOVIES_DIR);
-      const content = await fs.readFile(MOVIES_DIR, 'utf-8');
-      const movies: Movie[] = JSON.parse(content);
+      const movies = await getMovies();
 
       // 查找并更新
       const index = movies.findIndex((m) => m.id === id);
@@ -252,9 +228,7 @@ export async function adminDeleteMovie(
 
     try {
       // 读取现有数据
-      await ensureFileInitialized(MOVIES_DIR);
-      const content = await fs.readFile(MOVIES_DIR, 'utf-8');
-      const movies: Movie[] = JSON.parse(content);
+      const movies = await getMovies();
 
       // 过滤掉要删除的项
       const filtered = movies.filter((m) => m.id !== id);

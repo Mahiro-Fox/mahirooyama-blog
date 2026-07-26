@@ -10,17 +10,15 @@ import {
 import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
+import {
+  getMidis,
+  MidiAdminFile,
+  MidiFile,
+  readMidiFile,
+} from '@/lib/midi-files';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('MidiActions');
-
-export interface MidiAdminFile {
-  slug: string;
-  fileName: string;
-  name: string;
-  size: number;
-  lastModified: string;
-}
 
 // GET - 获取 MIDI 文件列表
 export async function adminGetMidiFiles(): Promise<
@@ -39,11 +37,7 @@ export async function adminGetMidiFiles(): Promise<
       }
     }
     try {
-      await ensureDirectory(MIDI_DIR);
-      const files = await fs.readdir(MIDI_DIR);
-      const midiFiles = files.filter((file) =>
-        file.toLowerCase().endsWith('.mid')
-      );
+      const midiFiles = await getMidis();
 
       const filesWithStats = await Promise.all(
         midiFiles.map(async (file) => {
@@ -218,4 +212,14 @@ export async function adminRenameMidiFile(
       return { success: false, error: '重命名文件失败' };
     }
   });
+}
+
+export async function getPublicMidis(): Promise<MidiFile[]> {
+  const files = await getMidis();
+  const midiFiles = await Promise.all(
+    files.map((file) => readMidiFile(path.join(MIDI_DIR, file)))
+  );
+
+  // Sort alphabetically by name
+  return midiFiles.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
 }

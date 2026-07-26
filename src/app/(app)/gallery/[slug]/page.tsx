@@ -1,10 +1,11 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { getPublicGallery } from '@/actions/admin/gallery-actions';
 import { tagStore } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 
-import { getAllGalleryImages, getGalleryImageBySlug } from '@/lib/gallery';
+import { getGalleries } from '@/lib/gallery';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import {
   Breadcrumb,
@@ -24,7 +25,7 @@ interface GalleryImagePageProps {
 }
 
 export async function generateStaticParams() {
-  const images = await getAllGalleryImages();
+  const images = await getGalleries();
   return images.map((image) => ({
     slug: image.slug,
   }));
@@ -34,18 +35,16 @@ export async function generateMetadata({
   params,
 }: GalleryImagePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [image] = await Promise.all([
-    getGalleryImageBySlug(slug),
-    tagStore.getByType('gallery'),
-  ]);
+  const result = await getPublicGallery(slug);
+  const image = result.success ? result.data : null;
 
   if (!image) {
     return notFound();
   }
 
   return {
-    title: image.metadata.title,
-    description: image.metadata.description,
+    title: image.title,
+    description: image.description,
   };
 }
 
@@ -53,30 +52,31 @@ export default async function GalleryImagePage({
   params,
 }: GalleryImagePageProps) {
   const { slug } = await params;
-  const [image, tags] = await Promise.all([
-    getGalleryImageBySlug(slug),
+  const [result, tags] = await Promise.all([
+    getPublicGallery(slug),
     tagStore.getByType('gallery'),
   ]);
+  const image = result.success ? result.data : null;
 
   if (!image) {
     return notFound();
   }
 
   const breadcrumbItems = [
-    ...(image.metadata.tags && image.metadata.tags.length > 0
+    ...(image.tags && image.tags.length > 0
       ? [
           {
-            link: `/tag/gallery/${image.metadata.tags[0]}`,
-            label: tags[image.metadata.tags[0]]?.name || image.metadata.tags[0],
+            link: `/tag/gallery/${image.tags[0]}`,
+            label: tags[image.tags[0]]?.name || image.tags[0],
           },
         ]
       : []),
     {
       link: '',
-      label: image.metadata.title,
+      label: image.title,
     },
   ];
-  const thumbnail = image.metadata.thumbnail;
+  const thumbnail = image.thumbnail;
   return (
     <div className="flex flex-1 flex-col">
       <div className="container-wrapper">
@@ -112,7 +112,7 @@ export default async function GalleryImagePage({
           {thumbnail && (
             <BlurredHeroImage
               imageUrl={thumbnail}
-              alt={`${image.metadata.title} thumbnail image`}
+              alt={`${image.title} thumbnail image`}
               isPortrait={image.isPortrait}
             />
           )}
@@ -121,15 +121,15 @@ export default async function GalleryImagePage({
           <div className="container flex flex-col gap-8">
             <section className="flex-1">
               <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-2 text-[11px] md:text-xs">
-                {image.metadata.lastUpdated && (
+                {image.lastUpdated && (
                   <div className="inline-flex items-center gap-1">
-                    <time dateTime={image.metadata.lastUpdated}>
-                      {`${formatDate(image.metadata.lastUpdated)}`}
+                    <time dateTime={image.lastUpdated}>
+                      {`${formatDate(image.lastUpdated)}`}
                     </time>
                   </div>
                 )}
                 <div className="hidden md:flex md:gap-2">
-                  {image.metadata.tags?.map((slug) => (
+                  {image.tags?.map((slug) => (
                     <LinkBadge
                       key={slug}
                       link={`/tag/gallery/${slug}`}
@@ -142,12 +142,10 @@ export default async function GalleryImagePage({
               <BlurFade inView delay={0.15} duration={0.5}>
                 <div className="mt-6 space-y-2">
                   <h1 className="text-2xl font-medium tracking-tight">
-                    {image.metadata.title}
+                    {image.title}
                   </h1>
-                  {image.metadata.description && (
-                    <p className="text-muted-foreground">
-                      {image.metadata.description}
-                    </p>
+                  {image.description && (
+                    <p className="text-muted-foreground">{image.description}</p>
                   )}
                 </div>
               </BlurFade>

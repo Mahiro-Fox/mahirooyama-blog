@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
+import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { formatDate } from '@/utils/utils';
 
-import { getGalleryImages } from '@/lib/gallery';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
 import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
@@ -11,7 +11,8 @@ interface GalleryListPageProps {
 }
 
 export async function generateStaticParams() {
-  const { totalPages } = await getGalleryImages();
+  const result = await getPublicGalleries({ page: 1 });
+  const totalPages = result.success ? result.data.totalPages : 1;
 
   return await Promise.all(
     Array.from({ length: totalPages }, (_, i) => ({
@@ -30,11 +31,13 @@ export default async function GalleryListPage({
     return notFound();
   }
 
-  const {
-    items: paginatedPosts,
-    currentPage,
-    totalPages,
-  } = await getGalleryImages(pageNum);
+  const result = await getPublicGalleries({ page: pageNum });
+
+  if (!result.success) {
+    return notFound();
+  }
+
+  const { items, currentPage, totalPages } = result.data;
 
   if (currentPage > totalPages) {
     return notFound();
@@ -56,20 +59,20 @@ export default async function GalleryListPage({
               </h2>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedPosts.map((post, index) => {
+              {items.map((gallery, index) => {
                 // 首屏前 3 张图片优先加载，其余懒加载
                 const isPriority = index < 3 && currentPage === 1;
 
                 return (
                   <LinkCard
-                    key={post.slug}
-                    title={post.metadata.title}
-                    imageUrl={post.metadata.thumbnail}
-                    link={`/gallery/${post.slug}`}
-                    badgeText={formatDate(post.metadata.lastUpdated)}
-                    description={post.metadata.description}
+                    key={gallery.slug}
+                    title={gallery.title}
+                    imageUrl={gallery.thumbnail}
+                    link={`/gallery/${gallery.slug}`}
+                    badgeText={formatDate(gallery.lastUpdated)}
+                    description={gallery.description}
                     priority={isPriority}
-                    isPortrait={post.isPortrait}
+                    isPortrait={gallery.isPortrait}
                   />
                 );
               })}

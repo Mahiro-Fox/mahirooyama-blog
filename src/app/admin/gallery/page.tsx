@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { adminGetGalleryFiles } from '@/actions/admin/gallery-actions';
+import { adminGetGalleries } from '@/actions/admin/gallery-actions';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -12,7 +12,7 @@ export default async function GalleryAdminPage() {
     redirect('/admin?toast=unauthorized&message=无权限访问图库管理');
   }
 
-  const result = await adminGetGalleryFiles();
+  const result = await adminGetGalleries();
   const files = result.success ? result.data : [];
 
   return <GalleryClient initialFiles={files} />;

@@ -7,12 +7,12 @@ import {
   adminGetMidiFiles,
   adminRenameMidiFile,
   adminUploadMidiFile,
-  type MidiAdminFile,
 } from '@/actions/admin/midi-actions';
 import { formatDate, formatSize } from '@/utils/utils';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { MidiAdminFile } from '@/lib/midi-files';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Dialog,

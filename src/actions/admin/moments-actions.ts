@@ -8,38 +8,19 @@ import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { ensureFileInitialized } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
 
+import { getMoments, Moment, MomentImage } from '@/lib/moments';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('MomentsActions');
-
-export interface MomentImage {
-  url: string;
-  width: number;
-  height: number;
-  ratio: number;
-}
-
-export interface Moment {
-  id: string;
-  createdAt: string;
-  content: string;
-  image?: MomentImage;
-  moodEmoji?: string;
-  location?: string;
-}
 
 // GET - 获取所有碎碎念
 export async function adminGetMoments(): Promise<ActionResponse<Moment[]>> {
   return withActionPermission('moments:read', async () => {
     try {
-      // 如果不存在文件，创建文件
-      await ensureFileInitialized(MOMENTS_FILE);
-      const content = await fs.readFile(MOMENTS_FILE, 'utf-8');
-      const moments: Moment[] = JSON.parse(content);
+      const moments = await getMoments();
 
       // 按创建时间倒序排列
       moments.sort(
@@ -167,8 +148,7 @@ export async function adminCreateMoment(input: {
       }
 
       // 读取现有数据
-      const fileContent = await fs.readFile(MOMENTS_FILE, 'utf-8');
-      const moments: Moment[] = JSON.parse(fileContent);
+      const moments = await getMoments();
 
       // 生成唯一ID（使用时间戳）
       const id = Date.now().toString();
@@ -231,8 +211,7 @@ export async function adminUpdateMoment(
       const { content, image, moodEmoji, location } = input;
 
       // 读取现有数据
-      const fileContent = await fs.readFile(MOMENTS_FILE, 'utf-8');
-      const moments: Moment[] = JSON.parse(fileContent);
+      const moments = await getMoments();
 
       // 查找并更新
       const index = moments.findIndex((m) => m.id === id);
@@ -292,8 +271,7 @@ export async function adminDeleteMoment(
 
     try {
       // 读取现有数据
-      const fileContent = await fs.readFile(MOMENTS_FILE, 'utf-8');
-      const moments: Moment[] = JSON.parse(fileContent);
+      const moments = await getMoments();
 
       // 过滤掉要删除的项
       const filtered = moments.filter((m) => m.id !== id);
@@ -322,8 +300,7 @@ export async function adminDeleteMoment(
 // GET - 获取公开的碎碎念列表（用于前端展示）
 export async function getPublicMoments(): Promise<ActionResponse<Moment[]>> {
   try {
-    const content = await fs.readFile(MOMENTS_FILE, 'utf-8');
-    const moments: Moment[] = JSON.parse(content);
+    const moments = await getMoments();
 
     // 按创建时间倒序排列
     moments.sort(

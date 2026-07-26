@@ -21,11 +21,15 @@ export async function getPhotosAction(
     throw new Error('Invalid pagination parameters');
   }
 
+  // 按时间排序
   const allImages = await getPhotos();
+  const sortedImages = allImages.sort((a, b) =>
+    b.lastUpdatedAt.localeCompare(a.lastUpdatedAt)
+  );
 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
-  const paginatedImages = allImages.slice(startIndex, endIndex);
+  const paginatedImages = sortedImages.slice(startIndex, endIndex);
 
   return {
     images: paginatedImages,

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import type { Movie } from '@/actions/admin/movie-actions';
 import { cn } from '@/utils/utils';
 import { Calendar, Check, Clock, Tag } from 'lucide-react';
 
+import type { Movie } from '@/lib/movies';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { VideoPlayer } from '@/components/VideoPlayer';
 

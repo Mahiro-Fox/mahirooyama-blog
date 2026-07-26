@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
+import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 
 import { siteConfig } from '@/config/common';
-import { getAllGalleryImages } from '@/lib/gallery';
 import { getAllBlogPosts } from '@/lib/mdx';
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
   const posts = await getAllBlogPosts();
 
-  const galleryImages = await getAllGalleryImages();
+  const galleryResult = await getPublicGalleries();
+  const galleryImages = galleryResult.success ? galleryResult.data.items : [];
   const rssXml = `
     <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
       <channel>
@@ -42,18 +43,18 @@ export async function GET() {
           .map((gallery) => {
             return `
               <item>
-                <title><![CDATA[${gallery.metadata.title}]]></title>
+                <title><![CDATA[${gallery.title}]]></title>
                 <link>${baseUrl}/gallery/${gallery.slug}</link>
                 <guid isPermaLink="true">${baseUrl}/gallery/${gallery.slug}</guid>
                 <pubDate>${
-                  gallery.metadata.lastUpdated
-                    ? new Date(gallery.metadata.lastUpdated).toUTCString()
+                  gallery.lastUpdated
+                    ? new Date(gallery.lastUpdated).toUTCString()
                     : ''
                 }</pubDate>
-                <description><![CDATA[${gallery.metadata.description || ''}]]></description>
+                <description><![CDATA[${gallery.description || ''}]]></description>
                 ${
-                  gallery.metadata.tags
-                    ? gallery.metadata.tags
+                  gallery.tags
+                    ? gallery.tags
                         .map((tag) => `<category>${tag}</category>`)
                         .join('')
                     : ''

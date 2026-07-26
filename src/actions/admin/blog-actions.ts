@@ -17,44 +17,16 @@ import { processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
 import matter from 'gray-matter';
 
+import { BlogFile, getBlogs } from '@/lib/blog';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('BlogActions');
 
-export interface MdxFile {
-  slug: string;
-  fileName: string;
-  title: string;
-  description: string;
-  lastUpdated: string;
-  tags: string[];
-  size: number;
-}
-
 // GET - 获取 MDX 文件列表
-export async function adminGetBlogFiles(): Promise<ActionResponse<MdxFile[]>> {
+export async function adminGetBlogFiles(): Promise<ActionResponse<BlogFile[]>> {
   return withActionPermission('blog:read', async () => {
     try {
-      const files = await fs.readdir(BLOG_DIR);
-      const mdxFiles = files.filter((file) => file.endsWith('.mdx'));
-
-      const posts = await Promise.all(
-        mdxFiles.map(async (file) => {
-          const filePath = path.join(BLOG_DIR, file);
-          const content = await fs.readFile(filePath, 'utf-8');
-          const parsed = matter(content);
-
-          return {
-            slug: path.basename(file, '.mdx'),
-            fileName: file,
-            title: parsed.data.title || '无标题',
-            description: parsed.data.description || '',
-            lastUpdated: parsed.data.lastUpdated || '',
-            tags: parsed.data.tags || [],
-            size: (await fs.stat(filePath)).size,
-          };
-        })
-      );
+      const posts = await getBlogs();
 
       // 按日期排序
       posts.sort(

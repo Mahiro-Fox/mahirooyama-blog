@@ -1,10 +1,10 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
+import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
 import { siteConfig } from '@/config/common';
-import { getGalleryPostsByTagSlug } from '@/lib/gallery';
 import { Badge } from '@/components/shadcn-ui/badge';
 import {
   Breadcrumb,
@@ -74,7 +74,8 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
     return notFound();
   }
 
-  const data = await getGalleryPostsByTagSlug(slug);
+  const result = await getPublicGalleries({ tagSlug: slug });
+  const data = result.success ? result.data.items : [];
 
   const breadcrumbItems = [
     {
@@ -138,11 +139,11 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
               {data?.map((item) => (
                 <LinkCard
                   key={item.slug}
-                  title={item.metadata.title}
-                  imageUrl={item.metadata.thumbnail || siteConfig.ogImage}
+                  title={item.title}
+                  imageUrl={item.thumbnail || siteConfig.ogImage}
                   link={`/gallery/${item.slug}`}
-                  badgeText={formatDate(item.metadata.lastUpdated || '')}
-                  description={item.metadata.description}
+                  badgeText={formatDate(item.lastUpdated || '')}
+                  description={item.description}
                   priority={true}
                   isPortrait={item.isPortrait}
                 />

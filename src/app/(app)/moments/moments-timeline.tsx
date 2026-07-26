@@ -1,10 +1,10 @@
 'use client';
 
-import type { Moment } from '@/actions/admin/moments-actions';
 import { formatDateWithSecond } from '@/utils/utils';
 import { MapPin, Smile } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import { Moment } from '@/lib/moments';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 

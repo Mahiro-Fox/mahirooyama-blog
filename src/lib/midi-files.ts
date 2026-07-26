@@ -1,11 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 import { MIDI_DIR } from '@/constant/dir';
+import { ensureDirectory } from '@/utils/file-utils';
 
 export interface MidiFile {
   name: string;
   path: string;
   duration: number; // duration in seconds
+}
+
+export interface MidiAdminFile {
+  slug: string;
+  fileName: string;
+  name: string;
+  size: number;
+  lastModified: string;
 }
 
 /**
@@ -75,6 +84,7 @@ export function parseMidiDuration(buffer: Buffer): number {
     throw new Error('Invalid MIDI header length');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const format = readUInt16(); // 此处误删，保留
   const trackCount = readUInt16();
   const division = readUInt16();
@@ -231,23 +241,8 @@ export function parseMidiDuration(buffer: Buffer): number {
   return Math.round(totalSeconds);
 }
 
-export async function getAllMidiFiles(): Promise<MidiFile[]> {
-  try {
-    await fs.promises.access(MIDI_DIR);
-  } catch {
-    return [];
-  }
-
-  const files = await getMidiFiles();
-  const midiFiles = await Promise.all(
-    files.map((file) => readMidiFile(path.join(MIDI_DIR, file)))
-  );
-
-  // Sort alphabetically by name
-  return midiFiles.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-}
-
-async function getMidiFiles(): Promise<string[]> {
+export async function getMidis(): Promise<string[]> {
+  await ensureDirectory(MIDI_DIR);
   const entries = await fs.promises.readdir(MIDI_DIR, {
     withFileTypes: true,
   });
@@ -258,7 +253,7 @@ async function getMidiFiles(): Promise<string[]> {
     .map((entry) => entry.name);
 }
 
-async function readMidiFile(filePath: string): Promise<MidiFile> {
+export async function readMidiFile(filePath: string): Promise<MidiFile> {
   const fileName = path.basename(filePath);
 
   // Read file and parse duration

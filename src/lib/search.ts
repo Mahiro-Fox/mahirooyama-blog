@@ -1,4 +1,5 @@
-import { getAllGalleryImages } from '@/lib/gallery';
+import { getPublicGalleries } from '@/actions/admin/gallery-actions';
+
 import { getAllBlogPosts } from '@/lib/mdx';
 
 export type SearchResult = {
@@ -102,26 +103,26 @@ async function searchBlogPosts(keyword: string): Promise<SearchResult[]> {
  * @returns 搜索结果
  */
 async function searchGalleryItems(keyword: string): Promise<SearchResult[]> {
-  const items = await getAllGalleryImages();
+  const result = await getPublicGalleries();
+  const items = result.success ? result.data.items : [];
   const results: SearchResult[] = [];
 
   for (const item of items) {
     let maxScore = 0;
 
     // 标题匹配权重最高
-    const titleScore = calculateMatchScore(item.metadata.title, keyword) * 3;
+    const titleScore = calculateMatchScore(item.title, keyword) * 3;
     maxScore = Math.max(maxScore, titleScore);
 
     // 描述匹配
-    const descScore =
-      calculateMatchScore(item.metadata.description, keyword) * 2;
+    const descScore = calculateMatchScore(item.description, keyword) * 2;
     maxScore = Math.max(maxScore, descScore);
 
     // 画廊项目没有 rawContent，跳过内容匹配
 
     // 标签匹配
-    if (item.metadata.tags) {
-      for (const tag of item.metadata.tags) {
+    if (item.tags) {
+      for (const tag of item.tags) {
         const tagScore = calculateMatchScore(tag, keyword) * 2.5;
         maxScore = Math.max(maxScore, tagScore);
       }
@@ -130,12 +131,12 @@ async function searchGalleryItems(keyword: string): Promise<SearchResult[]> {
     if (maxScore > 0) {
       results.push({
         type: 'gallery',
-        title: item.metadata.title,
-        description: item.metadata.description,
+        title: item.title,
+        description: item.description,
         slug: `/gallery/${item.slug}`,
-        thumbnail: item.metadata.thumbnail,
-        tags: item.metadata.tags,
-        lastUpdated: item.metadata.lastUpdated,
+        thumbnail: item.thumbnail,
+        tags: item.tags,
+        lastUpdated: item.lastUpdated,
         matchScore: maxScore,
       });
     }

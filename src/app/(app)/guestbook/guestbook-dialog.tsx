@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { submitGuestbookEntry } from '@/actions/admin/guestbook-actions';
+import { submitGuestbook } from '@/actions/admin/guestbook-actions';
 import { COLOR_OPTIONS } from '@/config';
 import { trackEvent } from '@/utils/tracker';
 import { isEmail } from '@/utils/utils';
@@ -41,7 +41,7 @@ export function GuestbookWallDialog() {
 
     setIsSubmitting(true);
     try {
-      const result = await submitGuestbookEntry({
+      const result = await submitGuestbook({
         nickname: nickname.trim(),
         bgColor,
         contact: contact.trim() || undefined,

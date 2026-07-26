@@ -3,15 +3,16 @@ import {
   adminCreateMovie,
   adminDeleteMovie,
   adminUpdateMovie,
-  getMovies,
-  type Movie,
+  getPublicMovies,
 } from '@/actions/admin/movie-actions';
+
+import { Movie } from '@/lib/movies';
 
 export async function GET(request: NextRequest) {
   const search = request.nextUrl.searchParams.get('search') ?? undefined;
   const tag = request.nextUrl.searchParams.get('tag') ?? undefined;
 
-  const result = await getMovies(search, tag);
+  const result = await getPublicMovies(search, tag);
 
   if (result.success) {
     return NextResponse.json(result.data);

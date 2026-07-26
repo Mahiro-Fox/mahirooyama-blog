@@ -10,12 +10,12 @@ import {
   adminRenameBlogFile,
   adminUpdateBlogFile,
   adminUploadBlogThumbnail,
-  type MdxFile,
 } from '@/actions/admin/blog-actions';
 import { formatDate, formatSize } from '@/utils/utils';
 import { Image as ImageIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { BlogFile } from '@/lib/blog';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
@@ -32,7 +32,7 @@ import { OptimizedImage } from '@/components/shared/optimized-image';
 import { TagPicker } from '@/components/shared/tag-picker';
 
 // 表格列定义
-const columns: Column<MdxFile>[] = [
+const columns: Column<BlogFile>[] = [
   {
     key: 'title',
     header: '标题',
@@ -84,14 +84,14 @@ const columns: Column<MdxFile>[] = [
 export default function BlogClient({
   initialFiles,
 }: {
-  initialFiles: MdxFile[];
+  initialFiles: BlogFile[];
 }) {
-  const [files, setFiles] = useState<MdxFile[]>(initialFiles);
+  const [files, setFiles] = useState<BlogFile[]>(initialFiles);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // 本地状态
-  const [selectedFile, setSelectedFile] = useState<MdxFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<BlogFile | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -240,7 +240,7 @@ ${editBody}`;
   }, [handleSave, selectedFile]);
 
   // 编辑文件
-  const handleEdit = async (file: MdxFile) => {
+  const handleEdit = async (file: BlogFile) => {
     try {
       const result = await adminGetBlogFile(file.slug);
       if (!result.success) {
@@ -326,7 +326,7 @@ ${editBody}`;
   };
 
   // 打开删除对话框
-  const openDelete = (file: MdxFile) => {
+  const openDelete = (file: BlogFile) => {
     setSelectedFile(file);
     setIsDeleteDialogOpen(true);
   };
