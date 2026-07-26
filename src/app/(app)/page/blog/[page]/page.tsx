@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation';
 import { formatDate } from '@/utils/utils';
 
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { siteConfig } from '@/config/common';
-import { getBlogPosts } from '@/lib/mdx';
+import { getBlogs } from '@/lib/blog';
+import { DEFAULT_BLOG_LIST_LIMIT } from '@/config/limit';
+import { paginateItems } from '@/lib/pagination';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
 import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
@@ -12,7 +15,8 @@ interface BlogListPageProps {
 }
 
 export async function generateStaticParams() {
-  const { totalPages } = await getBlogPosts();
+  const all = await getBlogs();
+  const { totalPages } = paginateItems(all, 1, DEFAULT_BLOG_LIST_LIMIT);
 
   return await Promise.all(
     Array.from({ length: totalPages }, (_, i) => ({
@@ -29,11 +33,16 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
     return notFound();
   }
 
+  const result = await getPublicBlogs({ page: pageNum });
+  if (!result.success) {
+    return notFound();
+  }
+
   const {
     items: paginatedPosts,
     currentPage,
     totalPages,
-  } = await getBlogPosts(pageNum);
+  } = result.data;
 
   if (currentPage > totalPages) {
     return notFound();
@@ -58,11 +67,11 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
               {paginatedPosts.map((post) => (
                 <LinkCard
                   key={post.slug}
-                  title={post.metadata.title}
-                  imageUrl={post.metadata.thumbnail || siteConfig.ogImage}
+                  title={post.title}
+                  imageUrl={post.thumbnail || siteConfig.ogImage}
                   link={`/blog/${post.slug}`}
-                  badgeText={formatDate(post.metadata.lastUpdated)}
-                  description={post.metadata.description}
+                  badgeText={formatDate(post.lastUpdated)}
+                  description={post.description}
                   priority={true}
                   isPortrait={post.isPortrait}
                 />

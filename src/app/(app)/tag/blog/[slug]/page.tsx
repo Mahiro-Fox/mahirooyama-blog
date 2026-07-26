@@ -1,10 +1,10 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
 import { siteConfig } from '@/config/common';
-import { getBlogPostsByTagSlug } from '@/lib/mdx';
 import { Badge } from '@/components/shadcn-ui/badge';
 import {
   Breadcrumb,
@@ -74,7 +74,8 @@ export default async function BlogTagPage({ params }: BlogTagPageProps) {
     return notFound();
   }
 
-  const posts = await getBlogPostsByTagSlug(slug);
+  const blogResult = await getPublicBlogs({ tagSlug: slug, all: true });
+  const posts = blogResult.success ? blogResult.data.items : [];
 
   const breadcrumbItems = [
     {
@@ -138,11 +139,11 @@ export default async function BlogTagPage({ params }: BlogTagPageProps) {
               {posts.map((item) => (
                 <LinkCard
                   key={item.slug}
-                  title={item.metadata.title}
-                  imageUrl={item.metadata.thumbnail || siteConfig.ogImage}
+                  title={item.title}
+                  imageUrl={item.thumbnail || siteConfig.ogImage}
                   link={`/blog/${item.slug}`}
-                  badgeText={formatDate(item.metadata.lastUpdated)}
-                  description={item.metadata.description}
+                  badgeText={formatDate(item.lastUpdated)}
+                  description={item.description}
                   priority={true}
                   isPortrait={item.isPortrait}
                 />

@@ -1,11 +1,11 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { getPublicBlog } from '@/actions/admin/blog-actions';
 import { getOGData } from '@/actions/fetch-og-metadata';
 import { cn } from '@/utils/utils';
 import { ExternalLinkIcon } from 'lucide-react';
 
 import { siteConfig } from '@/config/common';
-import { getBlogPostBySlug } from '@/lib/mdx';
 import { ImageWithFallback } from '@/components/shared/image-with-fallback';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 
@@ -156,17 +156,18 @@ async function InternalLinkCard({
   className?: string;
 }) {
   const slug = getSlugFromUrl(url);
-  const post = await getBlogPostBySlug(slug);
+  const result = await getPublicBlog(slug);
 
-  if (!post) {
+  if (!result.success) {
     return <LinkCard url={url} error={true} className={className} />;
   }
+  const post = result.data;
 
   return (
     <LinkCard
       url={url}
-      title={post.metadata.title}
-      description={post.metadata.description}
+      title={post.title}
+      description={post.description}
       image={siteConfig.ogImage}
       className={className}
     />

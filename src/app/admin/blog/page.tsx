@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { adminGetBlogFiles } from '@/actions/admin/blog-actions';
+import { adminGetBlogs } from '@/actions/admin/blog-actions';
 
 import { requirePermission } from '@/lib/permissions';
 
@@ -11,7 +11,7 @@ export default async function BlogAdminPage() {
     redirect('/admin?toast=unauthorized&message=无权限访问博客管理');
   }
 
-  const result = await adminGetBlogFiles();
+  const result = await adminGetBlogs();
   const files = result.success ? result.data : [];
 
   return <BlogClient initialFiles={files} />;

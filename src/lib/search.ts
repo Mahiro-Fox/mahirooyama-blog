@@ -1,6 +1,5 @@
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
-
-import { getAllBlogPosts } from '@/lib/mdx';
 
 export type SearchResult = {
   type: 'blog' | 'gallery';
@@ -53,19 +52,19 @@ function calculateMatchScore(text: string, keyword: string): number {
  * @returns 搜索结果
  */
 async function searchBlogPosts(keyword: string): Promise<SearchResult[]> {
-  const posts = await getAllBlogPosts();
+  const result = await getPublicBlogs({ all: true });
+  const posts = result.success ? result.data.items : [];
   const results: SearchResult[] = [];
 
   for (const post of posts) {
     let maxScore = 0;
 
     // 标题匹配权重最高
-    const titleScore = calculateMatchScore(post.metadata.title, keyword) * 3;
+    const titleScore = calculateMatchScore(post.title, keyword) * 3;
     maxScore = Math.max(maxScore, titleScore);
 
     // 描述匹配
-    const descScore =
-      calculateMatchScore(post.metadata.description, keyword) * 2;
+    const descScore = calculateMatchScore(post.description, keyword) * 2;
     maxScore = Math.max(maxScore, descScore);
 
     // 内容匹配
@@ -73,8 +72,8 @@ async function searchBlogPosts(keyword: string): Promise<SearchResult[]> {
     maxScore = Math.max(maxScore, contentScore);
 
     // 标签匹配
-    if (post.metadata.tags) {
-      for (const tag of post.metadata.tags) {
+    if (post.tags) {
+      for (const tag of post.tags) {
         const tagScore = calculateMatchScore(tag, keyword) * 2.5;
         maxScore = Math.max(maxScore, tagScore);
       }
@@ -83,12 +82,12 @@ async function searchBlogPosts(keyword: string): Promise<SearchResult[]> {
     if (maxScore > 0) {
       results.push({
         type: 'blog',
-        title: post.metadata.title,
-        description: post.metadata.description,
+        title: post.title,
+        description: post.description,
         slug: `/blog/${post.slug}`,
-        thumbnail: post.metadata.thumbnail,
-        tags: post.metadata.tags,
-        lastUpdated: post.metadata.lastUpdated,
+        thumbnail: post.thumbnail,
+        tags: post.tags,
+        lastUpdated: post.lastUpdated,
         matchScore: maxScore,
       });
     }

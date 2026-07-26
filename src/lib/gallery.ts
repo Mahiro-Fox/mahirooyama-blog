@@ -37,15 +37,13 @@ export async function getGalleries(
       if (isAdmin) {
         const stats = await fs.promises.stat(fullPath);
         // 目前没这个字段，先判断是否有这个字段，如果没有，则添加该字段
-        if (!data.isPortrait) {
-          const isPortrait = await isPortraitImage(data.thumbnail);
-          data.isPortrait = isPortrait;
-          await fs.promises.writeFile(
-            fullPath,
-            JSON.stringify(data, null, 2),
-            'utf-8'
-          );
-        }
+        const isPortrait = await isPortraitImage(data.thumbnail);
+        data.isPortrait = isPortrait;
+        await fs.promises.writeFile(
+          fullPath,
+          JSON.stringify(data, null, 2),
+          'utf-8'
+        );
         return {
           slug,
           fileName: filePath,

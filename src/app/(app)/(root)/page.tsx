@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getHomeBannerImages } from '@/actions/home-banner';
 import { Tag } from '@/constant';
@@ -9,7 +10,6 @@ import { ChevronRightIcon, TagIcon } from 'lucide-react';
 
 import { siteConfig } from '@/config/common';
 import { Gallery } from '@/lib/gallery';
-import { getAllBlogPosts } from '@/lib/mdx';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
 import { BrandIcons } from '@/components/shared/brand-icons';
@@ -28,7 +28,8 @@ export const metadata: Metadata = {
 };
 
 export default async function IndexPage() {
-  const allPosts = await getAllBlogPosts();
+  const blogResult = await getPublicBlogs({ all: true });
+  const allPosts = blogResult.success ? blogResult.data.items : [];
   const galleryResult = await getPublicGalleries();
   const galleries = galleryResult.success ? galleryResult.data.items : [];
   const bannerData = await getHomeBannerImages();
@@ -127,11 +128,11 @@ export default async function IndexPage() {
               <BlurFade inView key={post.slug}>
                 <LinkCard
                   key={post.slug}
-                  title={post.metadata.title}
-                  imageUrl={post.metadata.thumbnail || siteConfig.ogImage}
+                  title={post.title}
+                  imageUrl={post.thumbnail || siteConfig.ogImage}
                   link={`/blog/${post.slug}`}
-                  badgeText={formatDate(post.metadata.lastUpdated)}
-                  description={post.metadata.description}
+                  badgeText={formatDate(post.lastUpdated)}
+                  description={post.description}
                   priority={index === 0}
                   isPortrait={post.isPortrait}
                 />

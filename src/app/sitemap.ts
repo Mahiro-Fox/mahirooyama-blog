@@ -1,18 +1,19 @@
 import type { MetadataRoute } from 'next';
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { tagStore } from '@/store/tag-store';
 
 import { siteConfig } from '@/config/common';
-import { getAllBlogPosts } from '@/lib/mdx';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
 
-  const [blogPosts, galleryResult, allTags] = await Promise.all([
-    getAllBlogPosts(),
+  const [blogResult, galleryResult, allTags] = await Promise.all([
+    getPublicBlogs({ all: true }),
     getPublicGalleries({ all: true }),
     tagStore.getAll(),
   ]);
+  const blogPosts = blogResult.success ? blogResult.data.items : [];
   const galleryItems = galleryResult.success ? galleryResult.data.items : [];
 
   // 博客页

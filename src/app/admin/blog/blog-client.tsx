@@ -3,19 +3,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  adminCreateBlogFile,
+  adminCreateBlog,
   adminDeleteBlogFile,
-  adminGetBlogFile,
-  adminGetBlogFiles,
+  adminGetBlog,
+  adminGetBlogs,
   adminRenameBlogFile,
-  adminUpdateBlogFile,
+  adminUpdateBlog,
   adminUploadBlogThumbnail,
 } from '@/actions/admin/blog-actions';
 import { formatDate, formatSize } from '@/utils/utils';
 import { Image as ImageIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { BlogFile } from '@/lib/blog';
+import { AdminBlog } from '@/lib/blog';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
@@ -32,7 +32,7 @@ import { OptimizedImage } from '@/components/shared/optimized-image';
 import { TagPicker } from '@/components/shared/tag-picker';
 
 // 表格列定义
-const columns: Column<BlogFile>[] = [
+const columns: Column<AdminBlog>[] = [
   {
     key: 'title',
     header: '标题',
@@ -84,14 +84,14 @@ const columns: Column<BlogFile>[] = [
 export default function BlogClient({
   initialFiles,
 }: {
-  initialFiles: BlogFile[];
+  initialFiles: AdminBlog[];
 }) {
-  const [files, setFiles] = useState<BlogFile[]>(initialFiles);
+  const [files, setFiles] = useState<AdminBlog[]>(initialFiles);
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // 本地状态
-  const [selectedFile, setSelectedFile] = useState<BlogFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<AdminBlog | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -108,7 +108,7 @@ export default function BlogClient({
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const result = await adminGetBlogFiles();
+      const result = await adminGetBlogs();
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -179,7 +179,7 @@ ${editBody}`;
           setIsSaving(false);
           return;
         }
-        const result = await adminCreateBlogFile({
+        const result = await adminCreateBlog({
           slug: editFileName.trim(),
           content: mdxContent,
         });
@@ -189,7 +189,7 @@ ${editBody}`;
         toast.success('文件创建成功');
       } else {
         if (!selectedFile) return;
-        const result = await adminUpdateBlogFile(selectedFile.slug, mdxContent);
+        const result = await adminUpdateBlog(selectedFile.slug, mdxContent);
 
         if (!result.success) {
           throw new Error(result.error);
@@ -240,9 +240,9 @@ ${editBody}`;
   }, [handleSave, selectedFile]);
 
   // 编辑文件
-  const handleEdit = async (file: BlogFile) => {
+  const handleEdit = async (file: AdminBlog) => {
     try {
-      const result = await adminGetBlogFile(file.slug);
+      const result = await adminGetBlog(file.slug);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -326,7 +326,7 @@ ${editBody}`;
   };
 
   // 打开删除对话框
-  const openDelete = (file: BlogFile) => {
+  const openDelete = (file: AdminBlog) => {
     setSelectedFile(file);
     setIsDeleteDialogOpen(true);
   };

@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 
 import { siteConfig } from '@/config/common';
-import { getAllBlogPosts } from '@/lib/mdx';
 
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
-  const posts = await getAllBlogPosts();
+  const blogResult = await getPublicBlogs({ all: true });
+  const posts = blogResult.success ? blogResult.data.items : [];
 
   const galleryResult = await getPublicGalleries({ all: true });
   const galleryImages = galleryResult.success ? galleryResult.data.items : [];
@@ -23,14 +24,14 @@ export async function GET() {
           .map((post) => {
             return `
               <item>
-                <title><![CDATA[${post.metadata.title}]]></title>
+                <title><![CDATA[${post.title}]]></title>
                 <link>${baseUrl}/blog/${post.slug}</link>
                 <guid isPermaLink="true">${baseUrl}/blog/${post.slug}</guid>
-                <pubDate>${new Date(post.metadata.lastUpdated).toUTCString()}</pubDate>
-                <description><![CDATA[${post.metadata.description || ''}]]></description>
+                <pubDate>${new Date(post.lastUpdated).toUTCString()}</pubDate>
+                <description><![CDATA[${post.description || ''}]]></description>
                 ${
-                  post.metadata.tags
-                    ? post.metadata.tags
+                  post.tags
+                    ? post.tags
                         .map((tag) => `<category>${tag}</category>`)
                         .join('')
                     : ''

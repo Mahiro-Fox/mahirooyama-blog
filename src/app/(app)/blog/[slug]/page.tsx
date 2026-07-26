@@ -3,9 +3,10 @@ import { notFound } from 'next/navigation';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
+import { getPublicBlog } from '@/actions/admin/blog-actions';
 import { siteConfig } from '@/config/common';
 import { author } from '@/lib/author';
-import { getAllBlogPosts, getBlogPostBySlug } from '@/lib/mdx';
+import { getBlogs } from '@/lib/blog';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,7 +25,7 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  const allPosts = await getAllBlogPosts();
+  const allPosts = await getBlogs();
   return allPosts.map((post) => ({
     slug: post.slug,
   }));
@@ -32,21 +33,22 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const [post] = await Promise.all([
-    getBlogPostBySlug(slug),
+  const [postResult] = await Promise.all([
+    getPublicBlog(slug),
     tagStore.getByType('blog'),
   ]);
 
-  if (!post) {
+  if (!postResult.success) {
     return {};
   }
+  const post = postResult.data;
 
   return {
-    title: post.metadata.title,
-    description: post.metadata.description,
+    title: post.title,
+    description: post.description,
     openGraph: {
-      title: post.metadata.title,
-      description: post.metadata.description,
+      title: post.title,
+      description: post.description,
       type: 'article',
       url: absoluteUrl(`/blog/${post.slug}`),
       images: [
@@ -54,14 +56,14 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
           url: siteConfig.ogImage,
           width: 1200,
           height: 630,
-          alt: post.metadata.title,
+          alt: post.title,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: post.metadata.title,
-      description: post.metadata.description,
+      title: post.title,
+      description: post.description,
       images: [siteConfig.ogImage],
     },
   };
@@ -69,30 +71,31 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const [post, tags] = await Promise.all([
-    getBlogPostBySlug(slug),
+  const [postResult, tags] = await Promise.all([
+    getPublicBlog(slug),
     tagStore.getByType('blog'),
   ]);
 
-  if (!post) {
+  if (!postResult.success) {
     notFound();
   }
+  const post = postResult.data;
 
   const breadcrumbItems = [
-    ...(post.metadata.tags && post.metadata.tags.length > 0
+    ...(post.tags && post.tags.length > 0
       ? [
           {
-            link: `/tag/blog/${post.metadata.tags[0]}`,
-            label: tags[post.metadata.tags[0]]?.name || post.metadata.tags[0],
+            link: `/tag/blog/${post.tags[0]}`,
+            label: tags[post.tags[0]]?.name || post.tags[0],
           },
         ]
       : []),
     {
       link: '',
-      label: post.metadata.title,
+      label: post.title,
     },
   ];
-  const thumbnailUrl = post.metadata.thumbnail;
+  const thumbnailUrl = post.thumbnail;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -129,7 +132,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {thumbnailUrl && (
             <BlurredHeroImage
               imageUrl={thumbnailUrl}
-              alt={`${post.metadata.title} thumbnail image`}
+              alt={`${post.title} thumbnail image`}
               isPortrait={post.isPortrait}
             />
           )}
@@ -142,15 +145,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               <header className="mb-10 space-y-2 md:space-y-6">
                 {/* Date & Time */}
                 <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-[11px] md:text-xs">
-                  {post.metadata.lastUpdated && (
+                  {post.lastUpdated && (
                     <div className="inline-flex items-center gap-1">
-                      <time dateTime={post.metadata.lastUpdated}>
-                        {`${formatDate(post.metadata.lastUpdated)}`}
+                      <time dateTime={post.lastUpdated}>
+                        {`${formatDate(post.lastUpdated)}`}
                       </time>
                     </div>
                   )}
                   <div className="hidden md:flex md:gap-2">
-                    {post.metadata.tags?.map((slug) => (
+                    {post.tags?.map((slug) => (
                       <LinkBadge
                         key={slug}
                         link={`/tag/blog/${slug}`}
@@ -162,7 +165,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
                 {/* Title */}
                 <h1 className="text-lg leading-normal font-bold tracking-tight md:text-2xl md:leading-tight md:font-normal">
-                  {post.metadata.title}
+                  {post.title}
                 </h1>
 
                 <div className="py-4">
@@ -183,8 +186,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* <div className="py-4">
                 <ArticleShareButtons
                   url={absoluteUrl(`/blog/${slug}`)}
-                  title={post.metadata.title}
-                  description={post.metadata.description}
+                  title={post.title}
+                  description={post.description}
                   image={thumbnailUrl}
                 />
               </div> */}
