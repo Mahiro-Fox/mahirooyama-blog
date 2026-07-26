@@ -130,7 +130,9 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                     <div className="border-t border-slate-700 pt-4">
                       <p className="text-xs text-gray-500">
                         添加于{' '}
-                        {new Date(movie.updated_at).toLocaleDateString('zh-CN')}
+                        {new Date(movie.lastUpdated).toLocaleDateString(
+                          'zh-CN'
+                        )}
                       </p>
                     </div>
                   </div>

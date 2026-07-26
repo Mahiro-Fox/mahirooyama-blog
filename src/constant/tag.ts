@@ -11,13 +11,12 @@ export interface Tag {
   lastUpdated: string;
 }
 
-export interface TagsData {
-  blog: Record<string, Tag>;
-  gallery: Record<string, Tag>;
-}
+export type TagsData = {
+  [K in TagType]: Record<string, Tag>;
+};
 
 export interface TagTypeConfig {
-  id: 'blog' | 'gallery';
+  id: TagType;
   name: string;
   label: string;
   icon: LucideIcon;

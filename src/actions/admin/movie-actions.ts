@@ -38,7 +38,7 @@ export async function getPublicMovies(
     // 按创建时间倒序排列
     movies.sort(
       (a, b) =>
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
     );
 
     return { success: true, data: movies };
@@ -57,7 +57,7 @@ export async function adminGetMovies(): Promise<ActionResponse<Movie[]>> {
       // 按创建时间倒序排列
       movies.sort(
         (a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+          new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
       );
 
       return { success: true, data: movies };
@@ -70,7 +70,7 @@ export async function adminGetMovies(): Promise<ActionResponse<Movie[]>> {
 
 // POST - 创建电影
 export async function adminCreateMovie(
-  input: Omit<Movie, 'updated_at'>
+  input: Omit<Movie, 'lastUpdated'>
 ): Promise<ActionResponse<Movie>> {
   return withActionPermission('movies:create', async (user) => {
     // 速率限制检查
@@ -121,7 +121,7 @@ export async function adminCreateMovie(
         year: year.trim(),
         tags: tags || [],
         summary: summary || '',
-        updated_at,
+        lastUpdated: updated_at,
         sources: sources || [],
       };
 

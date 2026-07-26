@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getHomeBannerImages } from '@/actions/home-banner';
-import { Tag } from '@/constant';
 import { tagStore } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon, TagIcon } from 'lucide-react';
@@ -98,7 +97,7 @@ export default async function IndexPage() {
             </div>
             {Object.entries(tags).map(([key, value]) => (
               <div key={key} className="flex flex-wrap gap-2">
-                {Object.values<Tag>(value).map((tag) => {
+                {Object.values(value).map((tag) => {
                   const IconComponent =
                     BrandIcons[tag.icon as keyof typeof BrandIcons] || TagIcon;
                   return (

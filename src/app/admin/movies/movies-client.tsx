@@ -256,7 +256,7 @@ export default function MoviesClient({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-xs">
-                      添加于 {formatDate(movie.updated_at)}
+                      添加于 {formatDate(movie.lastUpdated)}
                     </span>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="sm">
