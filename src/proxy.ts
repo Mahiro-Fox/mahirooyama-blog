@@ -50,10 +50,10 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
       "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;",
       // ip解析
       "connect-src 'self' *;",
-      // 允许 img-src 使用任何源的图片资源、blob: 和 base64(data:)
-      'img-src * blob: data:;',
-      // 允许 media-src 使用 self 和 bilivideo.com 域名、blob: 和 base64(data:)
-      "media-src 'self' *.bilivideo.com blob: data:;",
+      // 允许 img-src 使用任何源的图片资源
+      "img-src 'self' *;",
+      // 允许 media-src 使用任何源的音频资源
+      "media-src 'self' *;",
     ].join(' ')
   );
   return response;

@@ -1,7 +1,7 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { BugReport, BugStatus, BugStore } from '@/store/bug-store';
+import { BugReport, BugStatus, bugStore } from '@/store/bug-store';
 import {
   withActionPermission,
   type ActionResponse,
@@ -51,7 +51,7 @@ export async function submitBugReport(input: {
       return { success: false, error: '内容过长，请简明扼要' };
     }
 
-    await BugStore.create({
+    await bugStore.create({
       content: input.content.trim(),
       contact: input.contact?.trim(),
       url: input.url,
@@ -74,7 +74,7 @@ export async function adminGetBugReports(): Promise<
 > {
   return withActionPermission('bugs:read', async () => {
     try {
-      const bugs = await BugStore.getAll();
+      const bugs = await bugStore.getAll();
       // 按创建时间倒序
       bugs.sort(
         (a, b) =>
@@ -97,7 +97,7 @@ export async function adminUpdateBugStatus(
 ): Promise<ActionResponse<void>> {
   return withActionPermission('bugs:update', async (user) => {
     try {
-      const ok = await BugStore.updateStatus(id, status);
+      const ok = await bugStore.updateStatus(id, status);
       if (!ok) return { success: false, error: '报告不存在' };
 
       logger.info('更新 BUG 状态成功', { id, status, adminId: user.id });
@@ -117,7 +117,7 @@ export async function adminDeleteBugReport(
 ): Promise<ActionResponse<void>> {
   return withActionPermission('bugs:delete', async (user) => {
     try {
-      const ok = await BugStore.delete(id);
+      const ok = await bugStore.delete(id);
       if (!ok) return { success: false, error: '报告不存在' };
 
       logger.info('删除 BUG 报告成功', { id, adminId: user.id });

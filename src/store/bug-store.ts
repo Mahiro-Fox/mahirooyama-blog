@@ -14,22 +14,22 @@ export interface BugReport {
   url?: string;
 }
 
-export class BugStore {
-  private static async getBugs(): Promise<BugReport[]> {
+export const bugStore = {
+  async getBugs(): Promise<BugReport[]> {
     await ensureFileInitialized(BUGS_FILE);
     const content = await fs.readFile(BUGS_FILE, 'utf-8');
     return JSON.parse(content);
-  }
+  },
 
-  private static async saveBugs(bugs: BugReport[]): Promise<void> {
+  async saveBugs(bugs: BugReport[]): Promise<void> {
     await fs.writeFile(BUGS_FILE, JSON.stringify(bugs, null, 2), 'utf-8');
-  }
+  },
 
-  static async getAll(): Promise<BugReport[]> {
+  async getAll(): Promise<BugReport[]> {
     return this.getBugs();
-  }
+  },
 
-  static async create(input: {
+  async create(input: {
     content: string;
     contact?: string;
     userAgent?: string;
@@ -48,22 +48,22 @@ export class BugStore {
     bugs.push(newBug);
     await this.saveBugs(bugs);
     return newBug;
-  }
+  },
 
-  static async updateStatus(id: string, status: BugStatus): Promise<boolean> {
+  async updateStatus(id: string, status: BugStatus): Promise<boolean> {
     const bugs = await this.getBugs();
     const index = bugs.findIndex((b) => b.id === id);
     if (index === -1) return false;
     bugs[index].status = status;
     await this.saveBugs(bugs);
     return true;
-  }
+  },
 
-  static async delete(id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const bugs = await this.getBugs();
     const filtered = bugs.filter((b) => b.id !== id);
     if (filtered.length === bugs.length) return false;
     await this.saveBugs(filtered);
     return true;
-  }
-}
+  },
+};
