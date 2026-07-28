@@ -81,7 +81,9 @@ export function GlobalMusicPlayer() {
     <div
       className={cn(
         'border-border/50 bg-card/90 fixed bottom-6 left-6 z-50 flex flex-col items-center gap-3 rounded-lg border p-2 shadow-lg backdrop-blur-lg',
-        isCollapsed ? 'h-16 w-16 rounded-full' : 'w-48'
+        isCollapsed
+          ? 'h-16 w-16 rounded-full'
+          : 'w-auto max-w-[calc(100vw-3rem)]'
       )}
     >
       {isCollapsed ? (
