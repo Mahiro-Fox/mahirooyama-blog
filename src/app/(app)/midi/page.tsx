@@ -8,7 +8,8 @@ export const metadata = {
 };
 
 export default async function MidiPage() {
-  const midiFiles = await getPublicMidis();
+  const res = await getPublicMidis();
+  const midiFiles = res.success ? res.data : [];
 
   return (
     <div className="container-wrapper">

@@ -8,8 +8,9 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { throttle } from '@/utils/utils';
 
-import { Song } from '@/types/music';
+import { Song } from '@/lib/music';
 
 interface MusicContextValue {
   currentSong: Song | null;
@@ -17,7 +18,7 @@ interface MusicContextValue {
   progress: number;
   duration: number;
   volume: number;
-  isExpanded: boolean;
+  isCollapsed: boolean;
   playlist: Song[];
   currentIndex: number;
   play: (index?: number) => void;
@@ -54,7 +55,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextRef = useRef<() => void>(() => {});
@@ -66,7 +67,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
     }
     const savedExpanded = localStorage.getItem(STORAGE_KEY_EXPANDED);
     if (savedExpanded) {
-      setIsExpanded(savedExpanded === 'true');
+      setIsCollapsed(savedExpanded === 'true');
     }
   }, []);
 
@@ -94,11 +95,12 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
   }, [volume]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_EXPANDED, isExpanded.toString());
-  }, [isExpanded]);
+    localStorage.setItem(STORAGE_KEY_EXPANDED, isCollapsed.toString());
+  }, [isCollapsed]);
 
   const currentSong = playlist[currentIndex] || null;
 
+  // 当前歌曲变化时，更新音频源
   useEffect(() => {
     if (!audioRef.current || !currentSong) return;
 
@@ -109,14 +111,18 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
     const handleLoadedMetadata = () => {
       if (audioRef.current) {
         setDuration(audioRef.current.duration || 0);
+        // 播放当前歌曲
+        setIsPlaying(true);
+        notifyPlay();
       }
     };
 
-    const handleTimeUpdate = () => {
+    // 节流更新进度
+    const handleTimeUpdate = throttle(() => {
       if (audioRef.current) {
         setProgress(audioRef.current.currentTime || 0);
       }
-    };
+    }, 1000);
 
     const handleEnded = () => {
       nextRef.current();
@@ -142,18 +148,23 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
     };
   }, [currentSong]);
 
+  // 播放状态切换时，通知浏览器播放
   useEffect(() => {
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.play().catch((e) => {
-        console.warn('Autoplay prevented:', e);
-        setIsPlaying(false);
-      });
-    } else {
-      audioRef.current.pause();
-    }
+    const callback = isPlaying ? notifyPlay : notifyPause;
+    callback();
   }, [isPlaying]);
+
+  const notifyPlay = () => {
+    audioRef.current?.play().catch((e) => {
+      if (e.name === 'AbortError') return; // 被新的 load 打断，属于正常现象，忽略即可
+      console.warn('Autoplay prevented:', e);
+      setIsPlaying(false);
+    });
+  };
+
+  const notifyPause = () => {
+    audioRef.current?.pause();
+  };
 
   const play = useCallback(
     (index?: number) => {
@@ -167,6 +178,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
 
   const pause = useCallback(() => {
     setIsPlaying(false);
+    notifyPause();
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -193,7 +205,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
   }, []);
 
   const toggleExpand = useCallback(() => {
-    setIsExpanded((prev) => !prev);
+    setIsCollapsed((prev) => !prev);
   }, []);
 
   return (
@@ -204,7 +216,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
         progress,
         duration,
         volume,
-        isExpanded,
+        isCollapsed,
         playlist,
         currentIndex,
         play,

@@ -16,6 +16,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'mahirooyama.cn',
       },
+      {
+        protocol: 'http',
+        hostname: 'p2.music.126.net',
+      },
     ],
   },
   pageExtensions: ['ts', 'tsx', 'mdx'],

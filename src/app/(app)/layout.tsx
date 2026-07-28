@@ -1,3 +1,4 @@
+import { getPublicMusic } from '@/actions/admin/music-actions';
 import { MusicProvider } from '@/context/music-provider';
 
 import { getCurrentAdminUser } from '@/lib/admin-auth';
@@ -13,10 +14,11 @@ interface AppLayoutProps {
 
 export default async function AppLayout({ children }: AppLayoutProps) {
   const adminUser = await getCurrentAdminUser();
-
+  const res = await getPublicMusic();
+  const songs = res.success ? res.data : [];
   return (
     <div className="bg-background relative z-10 flex min-h-svh flex-col">
-      <MusicProvider playlist={[]}>
+      <MusicProvider playlist={songs}>
         <PageTracker />
         <SiteHeader initialIsAuth={!!adminUser} />
         <main className="flex flex-1 flex-col">{children}</main>

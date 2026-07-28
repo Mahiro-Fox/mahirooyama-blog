@@ -214,12 +214,20 @@ export async function adminRenameMidiFile(
   });
 }
 
-export async function getPublicMidis(): Promise<MidiFile[]> {
-  const files = await getMidis();
-  const midiFiles = await Promise.all(
-    files.map((file) => readMidiFile(path.join(MIDI_DIR, file)))
-  );
+export async function getPublicMidis(): Promise<ActionResponse<MidiFile[]>> {
+  try {
+    const files = await getMidis();
+    const midiFiles = await Promise.all(
+      files.map((file) => readMidiFile(path.join(MIDI_DIR, file)))
+    );
 
-  // Sort alphabetically by name
-  return midiFiles.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+    // Sort alphabetically by name
+    return {
+      success: true,
+      data: midiFiles.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN')),
+    };
+  } catch (error) {
+    logger.error('获取 MIDI 文件列表失败', error);
+    return { success: false, error: '获取 MIDI 文件列表失败' };
+  }
 }

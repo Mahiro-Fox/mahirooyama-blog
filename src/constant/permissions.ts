@@ -64,6 +64,11 @@ export type Permission =
   | 'movies:create'
   | 'movies:update'
   | 'movies:delete'
+  // 音乐管理权限
+  | 'music:read'
+  | 'music:create'
+  | 'music:update'
+  | 'music:delete'
   // 系统权限
   | 'system:revalidate'
   | 'system:convertImages'
@@ -139,6 +144,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'movies:create',
     'movies:update',
     'movies:delete',
+
+    // 音乐权限：完整的CRUD
+    'music:read',
+    'music:create',
+    'music:update',
+    'music:delete',
 
     // 系统权限：可以刷新缓存
     'system:revalidate',
@@ -378,6 +389,27 @@ export const ALL_PERMISSIONS: {
         description: '修改电影信息',
       },
       { value: 'movies:delete', label: '删除电影', description: '删除电影' },
+    ],
+  },
+  {
+    group: '音乐管理',
+    permissions: [
+      {
+        value: 'music:read',
+        label: '查看音乐',
+        description: '查看音乐列表',
+      },
+      {
+        value: 'music:create',
+        label: '添加音乐',
+        description: '添加新音乐',
+      },
+      {
+        value: 'music:update',
+        label: '修改音乐',
+        description: '修改音乐信息',
+      },
+      { value: 'music:delete', label: '删除音乐', description: '删除音乐' },
     ],
   },
   {

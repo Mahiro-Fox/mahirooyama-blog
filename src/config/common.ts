@@ -136,6 +136,16 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     category: 'Content',
   },
   {
+    name: 'Music',
+    adminHref: '/admin/music',
+    label: '音乐管理',
+    title: '管理网站音乐列表',
+    icon: Music,
+    navDescription: '浏览网站音乐',
+    description: '添加、编辑、删除网站音乐，支持歌曲名称、歌手、链接和封面。',
+    category: 'Content',
+  },
+  {
     name: 'Guestbook',
     navHref: '/guestbook',
     adminHref: '/admin/guestbook',
