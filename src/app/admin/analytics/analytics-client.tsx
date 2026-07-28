@@ -84,6 +84,29 @@ const columns: Column<AnalyticsLog>[] = [
     render: (log) => <span className="text-sm">{log.device.browser}</span>,
   },
   {
+    key: 'properties',
+    header: '数据属性',
+    width: 'max-w-24',
+    render: (log) => {
+      const data =
+        JSON.stringify(log.properties) === '{}'
+          ? '-'
+          : JSON.stringify(log.properties);
+      return (
+        <span
+          className="text-sm"
+          title={data}
+          onClick={() => {
+            navigator.clipboard.writeText(data);
+            toast.success('已复制到剪贴板');
+          }}
+        >
+          {data}
+        </span>
+      );
+    },
+  },
+  {
     key: 'location',
     header: '位置',
     width: 'max-w-28',

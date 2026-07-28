@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { useMusic } from '@/context/music-provider';
+import { trackEvent } from '@/utils/tracker';
 import { cn } from '@/utils/utils';
 import {
   ListMusic,
@@ -16,6 +17,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 
+import { Song } from '@/lib/music';
 import { useClickOutside } from '@/hooks/use-click-outside';
 
 export function GlobalMusicPlayer() {
@@ -55,6 +57,13 @@ export function GlobalMusicPlayer() {
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
     seek(percent * duration);
+  };
+
+  const handleSwitch = (index: number, song: Song) => {
+    seek(0);
+    play(index);
+    setCurrentView('player');
+    trackEvent('switch_song', { song });
   };
 
   // const toggleView = () => {
@@ -211,11 +220,7 @@ export function GlobalMusicPlayer() {
                             ? 'bg-primary/10 text-primary'
                             : 'hover:bg-accent/50'
                         )}
-                        onClick={() => {
-                          seek(0);
-                          play(index);
-                          setCurrentView('player');
-                        }}
+                        onClick={() => handleSwitch(index, song)}
                       >
                         <span className="text-muted-foreground text-xs">
                           {index + 1}
