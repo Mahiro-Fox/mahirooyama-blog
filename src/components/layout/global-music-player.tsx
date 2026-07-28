@@ -87,6 +87,7 @@ export function GlobalMusicPlayer() {
             alt={currentSong.name}
             className="animate-spin-slow h-full w-full object-cover transition-transform"
             style={{ animationPlayState }}
+            unoptimized
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black/20">
             <Icon className="ml-0.5 h-4 w-4 text-white" />
@@ -114,6 +115,7 @@ export function GlobalMusicPlayer() {
                       alt={currentSong.name}
                       className="animate-spin-slow h-full w-full rounded-full object-cover transition-transform"
                       style={{ animationPlayState }}
+                      unoptimized
                     />
                     <div className="absolute inset-0 rounded-full border bg-black/10" />
                   </div>
