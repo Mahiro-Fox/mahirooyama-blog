@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useT } from '@/i18n/dictionary-provider';
 import { Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -36,6 +37,7 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
+  const t = useT();
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
   const { setTheme, resolvedTheme } = useTheme();
@@ -64,7 +66,7 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
             >
               <Link href="/">
                 <SiteLogo className="overflow-hidden rounded-full" />
-                <span className="sr-only">{siteConfig.name}</span>
+                <span className="sr-only">{t('site_name')}</span>
               </Link>
             </Button>
             {/* 桌面端导航 - 在中等屏幕以上显示 */}
@@ -72,13 +74,13 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
               <NavigationMenuList>
                 {Object.entries(groupedNavRoutes).map(
                   ([categoryName, items]) => {
-                    if (categoryName === 'Admin' && !isAdminAuth) {
+                    if (categoryName === 'admin' && !isAdminAuth) {
                       return null;
                     }
                     return (
                       <NavigationMenuItem key={categoryName}>
                         <NavigationMenuTrigger>
-                          {categoryName}
+                          {t(categoryName)}
                         </NavigationMenuTrigger>
                         <NavigationMenuContent className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
                           {items.map(
@@ -98,14 +100,14 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
                                       {item.icon && (
                                         <item.icon className="h-4 w-4" />
                                       )}
-                                      <span>{item.name}</span>
+                                      <span>{t(item.label)}</span>
                                     </p>
                                     <p
                                       className="text-muted-foreground text-xs"
                                       key={item.name}
                                       title={item.name}
                                     >
-                                      {item.navDescription}
+                                      {t(item.navDescription || '')}
                                     </p>
                                   </Link>
                                 </NavigationMenuLink>
@@ -134,12 +136,12 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
                     >
                       <Link href="/">
                         <SiteLogo className="overflow-hidden rounded-full" />
-                        <span className="sr-only">{siteConfig.name}</span>
+                        <span className="sr-only">{t('site_name')}</span>
                       </Link>
                     </Button>
                   </SheetClose>
-                  <SheetTitle>{siteConfig.name}</SheetTitle>
-                  <SheetDescription>{siteConfig.description}</SheetDescription>
+                  <SheetTitle>{t('site_name')}</SheetTitle>
+                  <SheetDescription>{t('site_description')}</SheetDescription>
                 </SheetHeader>
                 <nav className="flex flex-col gap-2 overflow-auto">
                   {Object.entries(groupedNavRoutes).map(
@@ -191,7 +193,7 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
                 rel="noreferrer"
               >
                 <BrandIcons.gitHub />
-                <span className="sr-only">GitHub Repository</span>
+                <span className="sr-only">{t('github_repository')}</span>
               </Link>
             </Button>
             <Separator orientation="vertical" />

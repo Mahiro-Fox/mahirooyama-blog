@@ -4,7 +4,7 @@ import { formatDate } from '@/utils/utils';
 
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
-import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
+import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 
 interface GalleryListPageProps {
   params: Promise<{ page: string }>;

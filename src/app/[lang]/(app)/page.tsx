@@ -14,8 +14,8 @@ import { Button } from '@/components/shadcn-ui/button';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
-import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
-import { HomeBanner } from '@/app/(app)/(root)/_components/home-banner';
+import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
+import { HomeBanner } from '@/app/[lang]/(app)/_components/home-banner';
 
 export const metadata: Metadata = {
   title: "欢迎来到 mahirooyama 的网站喵~ - Welcome to mahiooyama's blog",

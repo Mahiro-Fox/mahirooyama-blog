@@ -1,14 +1,14 @@
 import { notFound } from 'next/navigation';
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { formatDate } from '@/utils/utils';
 
-import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { siteConfig } from '@/config/common';
-import { getBlogs } from '@/lib/blog';
 import { DEFAULT_BLOG_LIST_LIMIT } from '@/config/limit';
+import { getBlogs } from '@/lib/blog';
 import { paginateItems } from '@/lib/pagination';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
-import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
+import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 
 interface BlogListPageProps {
   params: Promise<{ page: string }>;
@@ -38,11 +38,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
     return notFound();
   }
 
-  const {
-    items: paginatedPosts,
-    currentPage,
-    totalPages,
-  } = result.data;
+  const { items: paginatedPosts, currentPage, totalPages } = result.data;
 
   if (currentPage > totalPages) {
     return notFound();

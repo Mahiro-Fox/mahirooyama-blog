@@ -17,7 +17,7 @@ import {
 import { TextAnimate } from '@/components/shadcn-ui/text-animate';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
-import { AboutCta } from '@/app/(app)/(root)/_components/about-cta';
+import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 
 interface BlogTagPageProps {
   params: Promise<{ slug: string }>;

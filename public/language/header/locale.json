@@ -1,0 +1,194 @@
+{
+  "en": {
+    "site_name": "Mahirooyama Blog",
+    "site_description": "this is mahirooyama's blog, welcome to visit!",
+    "github_repository": "GitHub Repository",
+    "content": "Content",
+    "tools": "Tools",
+    "admin": "Admin",
+    "other": "Other",
+
+    "admin_label": "Admin",
+    "admin_title": "Admin Panel",
+    "admin_nav_description": "Manage your site",
+    "admin_description": "Site administration and management console",
+
+    "frontpage_label": "Home",
+    "frontpage_title": "Front Page",
+    "frontpage_description": "Back to the main site",
+
+    "blog_label": "Blog",
+    "blog_title": "Blog Posts",
+    "blog_nav_description": "Read the latest posts",
+    "blog_description": "Manage blog articles and posts",
+
+    "gallery_label": "Gallery",
+    "gallery_title": "Photo Gallery",
+    "gallery_nav_description": "Browse image galleries",
+    "gallery_description": "Manage image galleries",
+
+    "photos_label": "Photos",
+    "photos_title": "Photos",
+    "photos_nav_description": "View all photos",
+    "photos_description": "Photo collection",
+
+    "moments_label": "Moments",
+    "moments_title": "Moments",
+    "moments_nav_description": "Share life's little moments",
+    "moments_description": "Manage moments and short updates",
+
+    "movies_label": "Movies",
+    "movies_title": "Movies",
+    "movies_nav_description": "Browse movie collection",
+    "movies_description": "Manage movie entries",
+
+    "music_label": "Music",
+    "music_title": "Music",
+    "music_nav_description": "Listen to music",
+    "music_description": "Manage music tracks",
+
+    "guestbook_label": "Guestbook",
+    "guestbook_title": "Guestbook",
+    "guestbook_nav_description": "Leave a message",
+    "guestbook_description": "Manage guestbook messages",
+
+    "upload_files_label": "Upload Files",
+    "upload_files_title": "File Upload",
+    "upload_files_description": "Upload and manage files",
+
+    "user_management_label": "Users",
+    "user_management_title": "User Management",
+    "user_management_description": "Manage user accounts and permissions",
+
+    "midi_label": "MIDI",
+    "midi_title": "MIDI Player",
+    "midi_nav_description": "Play MIDI files",
+    "midi_description": "Manage MIDI music files",
+
+    "bilibili_parse_label": "Bilibili Parser",
+    "bilibili_parse_title": "Bilibili Video Parser",
+    "bilibili_parse_nav_description": "Parse Bilibili video links",
+    "bilibili_parse_description": "Parse and extract Bilibili video information",
+
+    "image_compressor_label": "Image Compressor",
+    "image_compressor_title": "Image Compressor",
+    "image_compressor_nav_description": "Compress images online",
+
+    "about_label": "About",
+    "about_title": "About Me",
+    "about_nav_description": "Learn more about this site",
+
+    "secret_label": "Secret",
+    "secret_title": "Secret Page",
+    "secret_nav_description": "Members only content",
+
+    "tags_label": "Tags",
+    "tags_title": "Tags",
+    "tags_nav_description": "Browse posts by tag",
+    "tags_description": "Manage content tags",
+
+    "analytics_label": "Analytics",
+    "analytics_title": "Site Analytics",
+    "analytics_description": "View site traffic and statistics",
+
+    "bug_report_label": "Bug Reports",
+    "bug_report_title": "Bug Reports",
+    "bug_report_description": "Manage submitted bug reports"
+  },
+  "cn": {
+    "site_name": "Mahirooyama 博客",
+    "site_description": "这是 Mahiirooyama 博客，欢迎访问！",
+    "github_repository": "GitHub 仓库",
+    "content": "内容",
+    "tools": "工具",
+    "admin": "后台",
+    "other": "其他",
+
+    "admin_label": "后台",
+    "admin_title": "管理面板",
+    "admin_nav_description": "管理你的站点",
+    "admin_description": "网站后台管理控制台",
+
+    "frontpage_label": "首页",
+    "frontpage_title": "前台首页",
+    "frontpage_description": "返回网站首页",
+
+    "blog_label": "博客",
+    "blog_title": "博客文章",
+    "blog_nav_description": "查看最新文章",
+    "blog_description": "管理博客文章",
+
+    "gallery_label": "相册",
+    "gallery_title": "图片相册",
+    "gallery_nav_description": "浏览图片相册",
+    "gallery_description": "管理图片相册",
+
+    "photos_label": "照片",
+    "photos_title": "照片",
+    "photos_nav_description": "查看全部照片",
+    "photos_description": "照片集合",
+
+    "moments_label": "瞬间",
+    "moments_title": "生活瞬间",
+    "moments_nav_description": "分享生活中的小瞬间",
+    "moments_description": "管理动态与瞬间记录",
+
+    "movies_label": "电影",
+    "movies_title": "电影",
+    "movies_nav_description": "浏览电影收藏",
+    "movies_description": "管理电影条目",
+
+    "music_label": "音乐",
+    "music_title": "音乐",
+    "music_nav_description": "在线听音乐",
+    "music_description": "管理音乐曲目",
+
+    "guestbook_label": "留言板",
+    "guestbook_title": "留言板",
+    "guestbook_nav_description": "留下你的留言",
+    "guestbook_description": "管理留言板消息",
+
+    "upload_files_label": "文件上传",
+    "upload_files_title": "文件上传",
+    "upload_files_description": "上传与管理文件",
+
+    "user_management_label": "用户管理",
+    "user_management_title": "用户管理",
+    "user_management_description": "管理用户账号与权限",
+
+    "midi_label": "MIDI",
+    "midi_title": "MIDI 播放器",
+    "midi_nav_description": "播放 MIDI 文件",
+    "midi_description": "管理 MIDI 音乐文件",
+
+    "bilibili_parse_label": "B站解析",
+    "bilibili_parse_title": "B站视频解析",
+    "bilibili_parse_nav_description": "解析B站视频链接",
+    "bilibili_parse_description": "解析并提取B站视频信息",
+
+    "image_compressor_label": "图片压缩",
+    "image_compressor_title": "图片压缩工具",
+    "image_compressor_nav_description": "在线压缩图片",
+
+    "about_label": "关于",
+    "about_title": "关于我",
+    "about_nav_description": "了解本站更多信息",
+
+    "secret_label": "秘密页面",
+    "secret_title": "秘密页面",
+    "secret_nav_description": "仅限特定用户访问的内容",
+
+    "tags_label": "标签",
+    "tags_title": "标签",
+    "tags_nav_description": "按标签浏览文章",
+    "tags_description": "管理内容标签",
+
+    "analytics_label": "统计分析",
+    "analytics_title": "站点统计",
+    "analytics_description": "查看站点访问与统计数据",
+
+    "bug_report_label": "问题反馈",
+    "bug_report_title": "问题反馈",
+    "bug_report_description": "管理已提交的问题反馈"
+  }
+}
