@@ -66,11 +66,11 @@ export function BugReportTrigger() {
       <Button
         variant="outline"
         size="icon"
-        className="fixed right-10 bottom-20 z-50 h-10 w-10 rounded-full shadow-lg transition-transform hover:scale-110 md:bottom-24"
+        className="fixed right-6 bottom-16 z-10 h-8 w-8 cursor-pointer rounded-full p-2 shadow-lg transition-transform hover:scale-110"
         title="提交 BUG"
         onClick={handleClick}
       >
-        <Bug className="h-8 w-8" />
+        <Bug className="h-4 w-4" />
         <span className="sr-only">提交 BUG</span>
       </Button>
 

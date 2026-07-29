@@ -21,14 +21,14 @@ export function BackToTop() {
     <div
       title="返回顶部"
       className={cn(
-        'bg-foreground fixed right-10 bottom-10 z-50 cursor-pointer rounded-full p-2 shadow-lg backdrop-blur-sm transition-opacity duration-300',
+        'bg-foreground fixed right-6 bottom-6 z-10 cursor-pointer rounded-full p-2 shadow-lg backdrop-blur-sm transition-opacity duration-300',
         show
           ? 'pointer-events-auto opacity-100'
           : 'pointer-events-none opacity-0'
       )}
       aria-label="Back to top"
     >
-      <ArrowUp onClick={handleClick} className="text-background" />
+      <ArrowUp onClick={handleClick} className="text-background h-4 w-4" />
     </div>
   );
 }

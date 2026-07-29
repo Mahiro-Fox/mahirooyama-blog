@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useRef, useState } from 'react';
+import Image from 'next/image';
 import { formatSize } from '@/utils/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Image as ImageIcon, Trash, Upload } from 'lucide-react';
@@ -159,20 +160,6 @@ export default function ImageUploader({
   }, [disabled]);
 
   /**
-   * 处理文件输入变化
-   */
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      handleFiles(e.target.files);
-      // 重置 input 以允许重复选择相同文件
-      if (inputRef.current) {
-        inputRef.current.value = '';
-      }
-    },
-    [handleFiles]
-  );
-
-  /**
    * 处理剪贴板粘贴
    */
   const handlePaste = useCallback(
@@ -237,7 +224,7 @@ export default function ImageUploader({
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={handleInputChange}
+                onChange={(e) => handleFiles(e.target.files)}
                 className="hidden"
               />
 
@@ -317,9 +304,10 @@ export default function ImageUploader({
                   >
                     <div className="aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
                       <div className="relative h-full w-full">
-                        <img
+                        <Image
                           src={file.preview}
                           alt={file.name}
+                          fill
                           className="h-full w-full object-cover"
                         />
                         {/* 悬停遮罩 */}
@@ -373,7 +361,7 @@ export default function ImageUploader({
               type="file"
               accept="image/*"
               multiple
-              onChange={handleInputChange}
+              onChange={(e) => handleFiles(e.target.files)}
               className="hidden"
             />
           </motion.div>

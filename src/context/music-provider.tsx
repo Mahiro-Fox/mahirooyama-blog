@@ -13,21 +13,37 @@ import { throttle } from '@/utils/utils';
 import { Song } from '@/lib/music';
 
 interface MusicContextValue {
+  /** 当前播放的歌曲，null 表示没有歌曲 */
   currentSong: Song | null;
+  /** 是否正在播放 */
   isPlaying: boolean;
+  /** 当前播放进度 */
   progress: number;
+  /** 歌曲总时长 */
   duration: number;
+  /** 音量 */
   volume: number;
+  /** 是否展开播放器 */
   isCollapsed: boolean;
+  /** 歌曲列表 */
   playlist: Song[];
+  /** 当前播放的歌曲索引 */
   currentIndex: number;
+  /** 播放指定索引的歌曲 */
   play: (index?: number) => void;
+  /** 暂停播放 */
   pause: () => void;
+  /** 切换播放状态 */
   togglePlay: () => void;
+  /** 播放上一首歌曲 */
   prev: () => void;
+  /** 播放下一首歌曲 */
   next: () => void;
+  /** 跳转到指定时间点 */
   seek: (time: number) => void;
+  /** 设置音量 */
   setVolume: (volume: number) => void;
+  /** 切换展开状态 */
   toggleExpand: () => void;
 }
 
@@ -60,22 +76,19 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextRef = useRef<() => void>(() => {});
 
+  // 初始化音频元素，从本地存储获取音量和展开状态
   useEffect(() => {
-    const savedVolume = localStorage.getItem(STORAGE_KEY_VOLUME);
-    if (savedVolume) {
-      setVolume(parseFloat(savedVolume));
-    }
+    const savedVolume = parseFloat(
+      localStorage.getItem(STORAGE_KEY_VOLUME) || '0.7'
+    );
+    setVolume(savedVolume);
     const savedExpanded = localStorage.getItem(STORAGE_KEY_EXPANDED);
-    if (savedExpanded) {
-      setIsCollapsed(savedExpanded === 'true');
-    }
-  }, []);
+    setIsCollapsed(savedExpanded === 'true');
 
-  useEffect(() => {
     const audio = new Audio();
     audio.preload = 'metadata';
     audio.autoplay = false;
-    audio.volume = volume;
+    audio.volume = savedVolume;
     audioRef.current = audio;
 
     return () => {
@@ -87,6 +100,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
     };
   }, []);
 
+  // 音量变化时，更新音频元素音量
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_VOLUME, volume.toString());
     if (audioRef.current) {
@@ -94,9 +108,21 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
     }
   }, [volume]);
 
+  // 展开状态变化时，更新本地存储
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_EXPANDED, isCollapsed.toString());
   }, [isCollapsed]);
+
+  // 监听pause事件，处理其他程序导致的暂停播放, 并更新播放状态。
+  useEffect(() => {
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+    audioRef.current?.addEventListener('pause', handlePause);
+    return () => {
+      audioRef.current?.removeEventListener('pause', handlePause);
+    };
+  }, []);
 
   const currentSong = playlist[currentIndex] || null;
 
@@ -166,6 +192,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
     audioRef.current?.pause();
   };
 
+  // 播放index索引的歌曲
   const play = useCallback(
     (index?: number) => {
       if (index !== undefined && index >= 0 && index < playlist.length) {
@@ -176,20 +203,23 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
     [playlist.length]
   );
 
+  // 暂停播放
   const pause = useCallback(() => {
     setIsPlaying(false);
-    notifyPause();
   }, []);
 
+  // 切换播放状态
   const togglePlay = useCallback(() => {
     setIsPlaying((prev) => !prev);
   }, []);
 
+  // 播放上一首歌曲
   const prev = useCallback(() => {
     setCurrentIndex((prev) => (prev === 0 ? playlist.length - 1 : prev - 1));
     setIsPlaying(true);
   }, [playlist.length]);
 
+  // 播放下一首歌曲
   const next = useCallback(() => {
     setCurrentIndex((prev) => (prev === playlist.length - 1 ? 0 : prev + 1));
     setIsPlaying(true);
@@ -197,6 +227,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
 
   nextRef.current = next;
 
+  // 跳转到指定时间点
   const seek = useCallback((time: number) => {
     if (audioRef.current) {
       audioRef.current.currentTime = time;
@@ -204,6 +235,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
     }
   }, []);
 
+  // 切换展开状态
   const toggleExpand = useCallback(() => {
     setIsCollapsed((prev) => !prev);
   }, []);

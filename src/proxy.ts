@@ -51,9 +51,9 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
       // ip解析
       "connect-src 'self' *;",
       // 允许 img-src 使用任何源的图片资源
-      "img-src 'self' *;",
+      "img-src 'self' * blob:;",
       // 允许 media-src 使用任何源的音频资源
-      "media-src 'self' *;",
+      "media-src 'self' * blob:;",
     ].join(' ')
   );
   return response;
