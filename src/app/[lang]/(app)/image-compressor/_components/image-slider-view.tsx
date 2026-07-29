@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 
@@ -79,6 +80,8 @@ export default function ImageSliderView({
   hasPrevious = false,
   hasNext = false,
 }: ImageSliderViewProps) {
+  const t = useT();
+
   /**
    * 键盘事件处理
    */
@@ -189,13 +192,17 @@ export default function ImageSliderView({
             <div className="flex items-center justify-between border-t border-gray-800 bg-gray-900/50 p-4 backdrop-blur-sm">
               <div className="flex items-center gap-6">
                 <div className="text-sm text-gray-400">
-                  <span className="text-gray-600">原图:</span>{' '}
+                  <span className="text-gray-600">
+                    {t('image-compressor.compare_original')}:
+                  </span>{' '}
                   <span className="font-medium text-white">
                     {formatFileSize(result.originalSize)}
                   </span>
                 </div>
                 <div className="text-sm text-gray-400">
-                  <span className="text-gray-600">处理后:</span>{' '}
+                  <span className="text-gray-600">
+                    {t('image-compressor.compare_processed')}:
+                  </span>{' '}
                   <span className="font-medium text-white">
                     {formatFileSize(result.metadata?.size || 0)}
                   </span>
@@ -203,14 +210,16 @@ export default function ImageSliderView({
                 {savings > 0 && (
                   <div className="text-sm">
                     <span className="font-semibold text-green-400">
-                      节省 {savings}%
+                      {t('image-compressor.saved', {
+                        percent: savings,
+                      })}
                     </span>
                   </div>
                 )}
               </div>
 
               <div className="text-xs text-gray-500">
-                拖动滑块对比 • 滚轮缩放 • 键盘 ← → 切换
+                {t('image-compressor.compare_operate_hint')}
               </div>
             </div>
           </motion.div>

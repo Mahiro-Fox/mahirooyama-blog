@@ -18,14 +18,9 @@ function interpolate(text: string, values?: Record<string, string | number>) {
   return text.replace(/\{\{(\w+)\}\}/g, (_, k) => String(values[k] ?? ''));
 }
 
-export function Trans({
-  i18nKey,
-  fallback = '',
-  values,
-  components = {},
-}: TransProps) {
+export function Trans({ i18nKey, values, components = {} }: TransProps) {
   const t = useT();
-  const raw = t(i18nKey, fallback);
+  const raw = t(i18nKey);
   const text = interpolate(raw, values);
   const nodes = useMemo(() => parseTemplate(text), [text]);
 

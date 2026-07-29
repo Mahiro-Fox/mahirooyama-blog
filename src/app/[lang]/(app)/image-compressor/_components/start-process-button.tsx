@@ -1,4 +1,5 @@
 import React from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 import { Zap } from 'lucide-react';
 
 import { Spinner } from '@/components/shadcn-ui/spinner';
@@ -12,9 +13,12 @@ interface StartProcessButtonProps {
   results: Array<ProcessedImageResult | null>;
   handleStartProcess: () => void;
 }
+
 const StartProcessButton: React.FC<StartProcessButtonProps> = (props) => {
   const { uploadedFiles, isProcessing, progress, results, handleStartProcess } =
     props;
+  const t = useT();
+
   return (
     uploadedFiles.length > 0 && (
       <button
@@ -24,14 +28,19 @@ const StartProcessButton: React.FC<StartProcessButtonProps> = (props) => {
       >
         {isProcessing ? <Spinner /> : <Zap className="h-5 w-5" />}
         {isProcessing ? (
-          <span>正在转换... {progress}%</span>
+          <span>
+            {t('image-compressor.processing_images')} {progress}%
+          </span>
         ) : results.length > 0 ? (
-          `重新转换 (${uploadedFiles.length})`
+          t('image-compressor.reconvert', { count: uploadedFiles.length })
         ) : (
-          `开始转换 (${uploadedFiles.length})`
+          t('image-compressor.start_converting', {
+            count: uploadedFiles.length,
+          })
         )}
       </button>
     )
   );
 };
+
 export default StartProcessButton;

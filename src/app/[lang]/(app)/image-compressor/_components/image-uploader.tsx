@@ -2,6 +2,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 import Image from 'next/image';
+import { useT } from '@/i18n/dictionary-provider';
 import { formatSize } from '@/utils/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Image as ImageIcon, Trash, Upload } from 'lucide-react';
@@ -56,6 +57,7 @@ export default function ImageUploader({
   onClearAll,
   disabled = false,
 }: ImageUploaderProps) {
+  const t = useT();
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -81,14 +83,21 @@ export default function ImageUploader({
       filesArray.forEach((file) => {
         // 验证文件类型
         if (!validTypes.includes(file.type)) {
-          toast.error(`不支持的文件类型: ${file.type}`);
+          toast.error(
+            t('image-compressor.unsupported_format', { type: file.type })
+          );
           return;
         }
 
         // 验证文件大小
         if (file.size > MAX_FILE_SIZE) {
           const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-          toast.error(`${file.name} 图片大小超过了 ${sizeMB}MB`);
+          toast.error(
+            t('image-compressor.file_too_large', {
+              name: file.name,
+              size: sizeMB,
+            })
+          );
           return;
         }
 
@@ -108,7 +117,7 @@ export default function ImageUploader({
         onFilesAdd(newFiles);
       }
     },
-    [disabled, onFilesAdd]
+    [disabled, onFilesAdd, t]
   );
 
   /**
@@ -245,15 +254,19 @@ export default function ImageUploader({
 
                 <div className="space-y-2">
                   <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                    {isDragging ? '松开鼠标上传图片' : '点击或拖拽图片到此处'}
+                    {isDragging
+                      ? t('image-compressor.drag_to_upload')
+                      : t('image-compressor.drop_or_click')}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    支持 JPG、PNG、WebP、GIF、AVIF 格式，单张最大
-                    20MB，总大小不超过 100MB
+                    {t('image-compressor.supported_formats')}
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    {t('image-compressor.max_size')}
                   </p>
                   <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
                     <Copy className="h-4 w-4" />
-                    <span>支持 Ctrl+V 粘贴图片</span>
+                    <span>{t('image-compressor.paste_supported')}</span>
                   </div>
                 </div>
               </motion.div>
@@ -272,9 +285,10 @@ export default function ImageUploader({
               <div className="flex items-center gap-2">
                 <ImageIcon className="h-5 w-5 text-blue-500" />
                 <span className="font-semibold text-gray-700 dark:text-gray-300">
-                  已选择 {files.length} 张图片（
-                  {formatSize(files.reduce((sum, f) => sum + f.size, 0))}
-                  ）（总大小不超过 100MB）
+                  {t('image-compressor.selected_count', {
+                    count: files.length,
+                    size: formatSize(files.reduce((sum, f) => sum + f.size, 0)),
+                  })}
                 </span>
               </div>
               <button
@@ -286,7 +300,7 @@ export default function ImageUploader({
                     : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50'
                 } `}
               >
-                清空全部
+                {t('image-compressor.clear_all')}
               </button>
             </div>
 
@@ -352,7 +366,7 @@ export default function ImageUploader({
             >
               <div className="flex items-center justify-center gap-2">
                 <Upload className="h-5 w-5" />
-                <span>添加更多图片</span>
+                <span>{t('image-compressor.add_more')}</span>
               </div>
             </button>
 

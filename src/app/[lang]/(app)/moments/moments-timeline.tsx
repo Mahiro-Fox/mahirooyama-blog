@@ -63,11 +63,12 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
 
                 {/* 内容 */}
                 <p className="mb-4 text-base">{moment.content}</p>
-
                 {/* 配图 */}
                 {moment.image && (
                   <div className="relative inline-block">
                     <OptimizedImage
+                      // 开发环境下，请求不到图片时，使用fill属性，避免报错
+                      fill={process.env.NODE_ENV === 'development'}
                       previewable
                       src={moment.image.url}
                       alt="配图"

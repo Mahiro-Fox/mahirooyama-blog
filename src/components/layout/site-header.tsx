@@ -1,13 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useCallback, useEffect, useState, useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { setLocale } from '@/actions/set-locale';
 import { useT } from '@/i18n/dictionary-provider';
-import { Menu } from 'lucide-react';
+import { i18nConfig } from '@/i18n/i18n.config';
+import { defaultLang, locales, useLocale } from '@/i18n/use-locale';
+import { Languages, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { groupedNavRoutes, siteConfig } from '@/config/common';
 import { Button } from '@/components/shadcn-ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/shadcn-ui/dropdown-menu';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -196,11 +206,60 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
                 <span className="sr-only">{t('github_repository')}</span>
               </Link>
             </Button>
+            <SwitchLanguage />
             <Separator orientation="vertical" />
             <AnimatedThemeToggler onThemeChange={toggleTheme} />
           </div>
         </div>
       </div>
     </header>
+  );
+}
+
+function switchLocaleHref(pathname: string, targetLocale: string): string {
+  const segments = pathname.split('/').filter(Boolean);
+  if (locales.includes(segments[0])) segments.shift(); // 去掉当前语言前缀（如果有）
+
+  const rest = segments.length ? `/${segments.join('/')}` : '';
+  return targetLocale === defaultLang ? rest || '/' : `/${targetLocale}${rest}`;
+}
+
+export function SwitchLanguage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = useLocale();
+  const [isPending, startTransition] = useTransition();
+  const handleSwitch = (targetLocale: string) => {
+    const targetHref = switchLocaleHref(pathname, targetLocale);
+
+    // 1. 直接导航到目标 URL —— 这一步不依赖 cookie，立即生效
+    router.push(targetHref);
+
+    // 2. 顺带持久化 cookie，供下次访问（比如直接打开根路径 /）时 middleware 使用
+    startTransition(() => {
+      setLocale(targetLocale);
+    });
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger>
+        <Languages className="h-8" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-20" align="start">
+        <DropdownMenuGroup>
+          {i18nConfig.languageOptions.map((item) => (
+            <DropdownMenuItem
+              disabled={isPending || item.value === currentLocale}
+              className="cursor-pointer"
+              key={item.value}
+              onClick={() => handleSwitch(item.value)}
+            >
+              {item.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 import { trackEvent } from '@/utils/tracker';
 import JSZip from 'jszip';
 import { Zap } from 'lucide-react';
@@ -19,6 +20,7 @@ import StartProcessButton from './_components/start-process-button';
  * 管理全局状态和组件集成
  */
 export default function ImageCompressorClient() {
+  const t = useT();
   const resultsSectionRef = useRef<HTMLDivElement>(null);
   // 上传的文件列表
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -83,7 +85,7 @@ export default function ImageCompressorClient() {
 
     if (isOverLimit) {
       setTimeout(() => {
-        toast.error('图片总大小超过了 100MB，已移除末尾部分图片');
+        toast.error(t('image-compressor.total_size_exceeded'));
       }, 2000);
     }
 
@@ -144,12 +146,12 @@ export default function ImageCompressorClient() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || '处理失败');
+        throw new Error(error.error || t('image-compressor.process_failed'));
       }
 
       // 读取流式响应
       const reader = response.body?.getReader();
-      if (!reader) throw new Error('无法读取响应流');
+      if (!reader) throw new Error('Unable to read response stream');
 
       const decoder = new TextDecoder();
       let buffer = '';
@@ -206,10 +208,14 @@ export default function ImageCompressorClient() {
           }
         }
       }
-      scollToResults();
+      scrollToResults();
     } catch (error) {
-      console.error('处理失败:', error);
-      alert(error instanceof Error ? error.message : '处理失败，请重试');
+      console.error('Processing failed:', error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : t('image-compressor.process_failed')
+      );
     } finally {
       setIsProcessing(false);
       setProgress(0);
@@ -219,7 +225,7 @@ export default function ImageCompressorClient() {
   /**
    * 滚动到结果区域
    */
-  const scollToResults = () => {
+  const scrollToResults = () => {
     resultsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
   /**
@@ -303,8 +309,8 @@ export default function ImageCompressorClient() {
       // 释放 URL 对象
       URL.revokeObjectURL(link.href);
     } catch (error) {
-      console.error('打包下载失败:', error);
-      alert('打包下载失败，请重试');
+      console.error('Bundle download failed:', error);
+      alert(t('image-compressor.bundle_download_failed'));
     }
   };
 
@@ -352,10 +358,10 @@ export default function ImageCompressorClient() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  图片压缩转换工具
+                  {t('image-compressor.page_title')}
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  批量压缩 · 格式转换 · 隐私保护
+                  {t('image-compressor.subtitle')}
                 </p>
               </div>
             </div>
@@ -371,10 +377,10 @@ export default function ImageCompressorClient() {
         </div>
       </div>
 
-      {/* 主内容 */}
+      {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* 左侧：上传区域 */}
+          {/* Left: Upload area */}
           <div className="lg:col-span-2">
             <ImageUploader
               files={uploadedFiles}
@@ -385,7 +391,7 @@ export default function ImageCompressorClient() {
             />
           </div>
 
-          {/* 右侧：配置面板 */}
+          {/* Right: Config panel */}
           <div className="lg:col-span-1">
             <ConfigPanel
               config={config}
@@ -396,7 +402,7 @@ export default function ImageCompressorClient() {
           </div>
         </div>
 
-        {/* 处理状态 */}
+        {/* Processing status */}
         {results.length > 0 && (
           <div
             className="mt-8 scroll-mt-12 sm:scroll-mt-16"
@@ -414,7 +420,7 @@ export default function ImageCompressorClient() {
         )}
       </div>
 
-      {/* 对比视图 */}
+      {/* Comparison view */}
       <ImageSliderView
         isOpen={comparisonOpen}
         result={comparisonResult}
@@ -425,12 +431,12 @@ export default function ImageCompressorClient() {
         hasNext={comparisonIndex < results.length - 1}
       />
 
-      {/* 页脚 */}
+      {/* Footer */}
       <div className="mt-16 border-t border-gray-200 bg-white/50 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/50">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-            <p>所有图片处理均在本地完成，您的图片不会上传到任何服务器</p>
-            <p>基于 Next.js + Sharp 构建</p>
+            <p>{t('image-compressor.privacy_notice')}</p>
+            <p>{t('image-compressor.built_with')}</p>
           </div>
         </div>
       </div>

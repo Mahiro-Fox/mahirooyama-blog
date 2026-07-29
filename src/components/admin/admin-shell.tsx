@@ -6,6 +6,7 @@ import { adminLogout } from '@/actions/admin/logout';
 import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
 import { adminUploadAvatar } from '@/actions/admin/user-actions';
 import { MAX_FILE_SIZE } from '@/constant/file-upload';
+import { useT } from '@/i18n/dictionary-provider';
 import type { UserRole } from '@/store/user-store';
 import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -23,6 +24,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
+import { SwitchLanguage } from '@/components/layout/site-header';
 import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
 import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
@@ -51,6 +53,7 @@ export default function AdminShell({
   currentUser: CurrentUser;
   guestbookPendingCount?: number;
 }) {
+  const t = useT();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -173,7 +176,7 @@ export default function AdminShell({
                   className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
                 >
                   {item.icon && <item.icon className="h-4 w-4" />}
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               ) : (
                 <Link
@@ -186,7 +189,7 @@ export default function AdminShell({
                   }`}
                 >
                   {item.icon && <item.icon className="h-4 w-4" />}
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               )
             )}
@@ -399,6 +402,7 @@ export default function AdminShell({
                 </>
               )}
             </div>
+            <SwitchLanguage />
             <AnimatedThemeToggler
               onThemeChange={toggleTheme}
               className="ml-auto"

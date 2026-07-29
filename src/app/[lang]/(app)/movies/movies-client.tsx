@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
+import { useT } from '@/i18n/dictionary-provider';
 import { cn } from '@/utils/utils';
 import { Play, Search } from 'lucide-react';
 
@@ -17,6 +18,7 @@ interface MoviesClientProps {
 }
 
 export function MoviesClient({ initialMovies }: MoviesClientProps) {
+  const t = useT();
   const [movies] = useState<Movie[]>(() => {
     // 尝试从 sessionStorage 读取缓存
     if (typeof window !== 'undefined') {
@@ -72,17 +74,12 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
   return (
     <div className="to-slate-90 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800">
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="mb-12 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-white">私人影视收藏</h1>
-          <p className="text-gray-400">探索我的电影收藏，享受沉浸式观影体验</p>
-        </div>
-
         <div className="mb-8 flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
             <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <Input
               type="text"
-              placeholder="搜索电影名称或剧情..."
+              placeholder={t('movies.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="border-slate-700 bg-slate-800 pl-10 text-white placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500"
@@ -99,7 +96,7 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
                   : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
               )}
             >
-              全部
+              {t('movies.all')}
             </button>
             {allTags.map((tag) => (
               <button
@@ -120,7 +117,7 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
 
         {filteredMovies.length === 0 ? (
           <div className="py-20 text-center">
-            <p className="text-lg text-gray-500">没有找到匹配的电影</p>
+            <p className="text-lg text-gray-500">{t('movies.no_results')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -165,7 +162,9 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
                         variant="outline"
                         className="border-white/20 bg-white/10 text-white"
                       >
-                        {movie.sources.length} 线路
+                        {t('movies.channel_count', {
+                          count: movie.sources.length,
+                        })}
                       </Badge>
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -194,11 +193,7 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
         {filteredMovies.length > 0 && (
           <div className="mt-12 text-center">
             <p className="text-gray-500">
-              共找到{' '}
-              <span className="font-bold text-orange-500">
-                {filteredMovies.length}
-              </span>{' '}
-              部电影
+              {t('movies.total_movies', { count: filteredMovies.length })}
             </p>
           </div>
         )}

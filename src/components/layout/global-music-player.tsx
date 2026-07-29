@@ -3,6 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { useMusic } from '@/context/music-provider';
+import { useT } from '@/i18n/dictionary-provider';
 import { trackEvent } from '@/utils/tracker';
 import { cn } from '@/utils/utils';
 import {
@@ -37,6 +38,7 @@ export function GlobalMusicPlayer() {
     setVolume,
     toggleExpand,
   } = useMusic();
+  const t = useT();
   const playerRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(playerRef, () => {
@@ -76,7 +78,9 @@ export function GlobalMusicPlayer() {
 
   const animationPlayState = isPlaying ? 'running' : 'paused';
   const Icon = isPlaying ? Pause : Play;
-  const text = isPlaying ? '暂停' : '播放';
+  const text = isPlaying
+    ? t('global-music-player.pause')
+    : t('global-music-player.play');
   return (
     <div
       className={cn(
@@ -144,7 +148,7 @@ export function GlobalMusicPlayer() {
                     <button
                       onClick={prev}
                       className="hover:bg-accent/50 text-foreground/70 hover:text-foreground cursor-pointer rounded-full p-1.5 transition-colors"
-                      title="上一首"
+                      title={t('global-music-player.prev')}
                     >
                       <SkipBack className="h-4 w-4" />
                     </button>
@@ -158,7 +162,7 @@ export function GlobalMusicPlayer() {
                     <button
                       onClick={next}
                       className="hover:bg-accent/50 text-foreground/70 hover:text-foreground cursor-pointer rounded-full p-1.5 transition-colors"
-                      title="下一首"
+                      title={t('global-music-player.next')}
                     >
                       <SkipForward className="h-4 w-4" />
                     </button>
@@ -186,7 +190,11 @@ export function GlobalMusicPlayer() {
                     <button
                       onClick={() => setVolume(volume > 0 ? 0 : 0.7)}
                       className="hover:bg-accent/50 text-foreground/70 hover:text-foreground cursor-pointer p-1 transition-colors"
-                      title={volume > 0 ? '静音' : '取消静音'}
+                      title={
+                        volume > 0
+                          ? t('global-music-player.mute')
+                          : t('global-music-player.unmute')
+                      }
                     >
                       {volume > 0 ? (
                         <Volume2 className="h-4 w-4" />
@@ -210,7 +218,7 @@ export function GlobalMusicPlayer() {
               <div className="w-full flex-shrink-0">
                 <div className="flex flex-col items-center gap-2">
                   <h3 className="text-foreground text-sm font-medium">
-                    歌曲列表
+                    {t('global-music-player.playlist')}
                   </h3>
                   <ul className="flex max-h-[180px] w-full flex-col gap-1 overflow-y-auto">
                     {playlist.map((song, index) => (
@@ -246,24 +254,24 @@ export function GlobalMusicPlayer() {
               <button
                 onClick={() => setCurrentView('player')}
                 className={cn(
-                  'hover:bg-accent/50 cursor-pointer rounded-full p-1.5 transition-colors',
+                  'hover:bg-accent/50 cursor-pointer rounded-full border-1 border-transparent p-1.5 transition-colors',
                   currentView === 'player'
-                    ? 'text-primary'
-                    : 'text-foreground/70 hover:text-foreground'
+                    ? 'text-foreground border-foreground'
+                    : ''
                 )}
-                title="播放"
+                title={t('global-music-player.play')}
               >
                 <Music className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setCurrentView('playlist')}
                 className={cn(
-                  'hover:bg-accent/50 cursor-pointer rounded-full p-1.5 transition-colors',
+                  'hover:bg-accent/50 cursor-pointer rounded-full border-1 border-transparent p-1.5 transition-colors',
                   currentView === 'playlist'
-                    ? 'text-primary'
-                    : 'text-foreground/70 hover:text-foreground'
+                    ? 'text-foreground border-foreground'
+                    : ''
                 )}
-                title="列表"
+                title={t('global-music-player.playlist')}
               >
                 <ListMusic className="h-4 w-4" />
               </button>

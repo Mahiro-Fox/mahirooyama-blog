@@ -1,4 +1,14 @@
 export const i18nConfig = {
-  defaultLang: "en",
-  locales: ['cn', 'de', 'en', 'es', 'fr', 'jp', 'pt', 'tw', 'it', 'id', 'ar'],
+  defaultLang: 'en',
+  locales: ['cn', 'en'],
+  languageOptions: [
+    {
+      value: 'cn',
+      label: '中文',
+    },
+    {
+      value: 'en',
+      label: 'English',
+    },
+  ],
 };

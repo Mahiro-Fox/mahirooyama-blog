@@ -93,7 +93,21 @@
 
     "bug_report_label": "Bug Reports",
     "bug_report_title": "Bug Reports",
-    "bug_report_description": "Manage submitted bug reports"
+    "bug_report_description": "Manage submitted bug reports",
+
+    "search_title": "Search Content",
+    "search_placeholder": "Search articles, galleries, etc.",
+    "search_results": "Search Results ({{count}})",
+    "search_no_results": "No results found",
+    "search_no_results_placeholder": "Search with keywords...",
+
+    "global-music-player.playlist": "Playlist",
+    "global-music-player.pause": "Pause",
+    "global-music-player.play": "Play",
+    "global-music-player.mute": "Mute",
+    "global-music-player.unmute": "Unmute",
+    "global-music-player.next": "Next",
+    "global-music-player.prev": "Prev"
   },
   "cn": {
     "site_name": "Mahirooyama 博客",
@@ -189,6 +203,20 @@
 
     "bug_report_label": "问题反馈",
     "bug_report_title": "问题反馈",
-    "bug_report_description": "管理已提交的问题反馈"
+    "bug_report_description": "管理已提交的问题反馈",
+
+    "search_title": "搜索内容",
+    "search_placeholder": "搜索文章、相册等",
+    "search_results": "搜索结果 ({{count}})",
+    "search_no_results": "未找到相关结果",
+    "search_no_results_placeholder": "输入关键词开始搜索...",
+
+    "global-music-player.playlist": "播放列表",
+    "global-music-player.pause": "暂停",
+    "global-music-player.play": "播放",
+    "global-music-player.mute": "静音",
+    "global-music-player.unmute": "取消静音",
+    "global-music-player.next": "下一首",
+    "global-music-player.prev": "上一首"
   }
 }

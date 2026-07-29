@@ -9,6 +9,7 @@ import { paginateItems } from '@/lib/pagination';
 import { LinkCard } from '@/components/shared/link-card';
 import { Pagination } from '@/components/shared/pagination';
 import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
+import PageTitle from '@/app/[lang]/(app)/page/page-title';
 
 interface BlogListPageProps {
   params: Promise<{ page: string }>;
@@ -54,11 +55,7 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
       <div className="container-wrapper">
         <div className="container flex flex-col gap-1">
           <section className="container border-b py-6">
-            <div className="flex flex-col gap-1 pb-6">
-              <h2 className="text-2xl font-medium tracking-tight">
-                Paginated Blog Post List
-              </h2>
-            </div>
+            <PageTitle tKey="page.posts_page_title" />
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {paginatedPosts.map((post) => (
                 <LinkCard

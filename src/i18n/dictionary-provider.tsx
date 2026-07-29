@@ -1,7 +1,9 @@
-"use client";
+'use client';
 
-import { createContext, useContext, useEffect, useMemo } from "react";
-import { setDictionary } from "./runtime";
+import { createContext, useContext, useEffect, useMemo } from 'react';
+import { Dictionary } from '@/i18n/dictionary';
+
+import { setDictionary } from './runtime';
 
 const DictionaryContext = createContext({});
 
@@ -12,7 +14,14 @@ const DictionaryContext = createContext({});
  * 服务端组件中按页取字典后包一层即可：
  * <DictionaryProvider dictionary={dictionary}>{children}</DictionaryProvider>
  */
-export function DictionaryProvider({ dictionary, children }: { dictionary: Record<string, string>, children: React.ReactNode }) {
+
+export function DictionaryProvider({
+  dictionary,
+  children,
+}: {
+  dictionary: Dictionary;
+  children: React.ReactNode;
+}) {
   const value = useMemo(() => dictionary || {}, [dictionary]);
 
   useEffect(() => {
@@ -30,13 +39,28 @@ export function useDictionary() {
   return useContext(DictionaryContext);
 }
 
+type TransOptions = Record<string, string | number>;
+
+function interpolate(
+  text: string,
+  values?: Record<string, string | number>
+): string {
+  if (!values) return text;
+  return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    const val = values[key];
+    return val == null ? match : String(val);
+  });
+}
+
 export function useT() {
   const dictionary = useContext(DictionaryContext);
 
   return useMemo(
-    () => (key: string, fallback = "") => {
-      const value = dictionary?.[key as keyof typeof dictionary];
-      return value == null ? fallback : value;
+    () => (key: string, options?: TransOptions) => {
+      const { ...values } = options ?? {};
+      const raw = dictionary?.[key as keyof typeof dictionary];
+      const text = raw == null ? '' : raw;
+      return interpolate(text, values);
     },
     [dictionary]
   );

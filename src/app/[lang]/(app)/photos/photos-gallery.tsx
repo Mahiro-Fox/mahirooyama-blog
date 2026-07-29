@@ -1,5 +1,6 @@
 'use client';
 
+import { useT } from '@/i18n/dictionary-provider';
 import { Loader2 } from 'lucide-react';
 
 import { usePhotos } from '@/hooks/use-photos';
@@ -10,6 +11,8 @@ import { OptimizedImage } from '@/components/shared/optimized-image';
 export function PhotosGallery() {
   const { images, isLoading, isLoadingMore, error, hasMore, loadMoreRef } =
     usePhotos({ limit: 8 });
+
+  const t = useT();
 
   if (isLoading) {
     return (
@@ -22,12 +25,14 @@ export function PhotosGallery() {
   if (error) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">加载失败: {error}</p>
+        <p className="text-muted-foreground">
+          {t('common.load_failed')}: {error}
+        </p>
         <button
           onClick={() => window.location.reload()}
           className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm"
         >
-          重试
+          {t('common.retry')}
         </button>
       </div>
     );
@@ -36,7 +41,7 @@ export function PhotosGallery() {
   if (images.length === 0) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-muted-foreground">暂无图片</p>
+        <p className="text-muted-foreground">{t('photos.no_images')}</p>
       </div>
     );
   }
@@ -70,7 +75,9 @@ export function PhotosGallery() {
           <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
         )}
         {!hasMore && images.length > 0 && (
-          <p className="text-muted-foreground text-sm">已加载全部图片</p>
+          <p className="text-muted-foreground text-sm">
+            {t('photos.all_images_loaded')}
+          </p>
         )}
       </div>
     </div>

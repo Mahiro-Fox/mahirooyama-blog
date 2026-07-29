@@ -1,0 +1,16 @@
+{
+  "en": {
+    "photos.title": "Welcome to mahiooyama's photo wall",
+    "photos.description": "Here are some photos of Mahiro's daily life...",
+    "photos.keywords": ["photos", "daily life"],
+    "photos.no_images": "No images available",
+    "photos.all_images_loaded": "All images loaded"
+  },
+  "cn": {
+    "photos.title": "欢迎来到 mahirooyama 的照片墙喵~",
+    "photos.description": "这里是一些mahiro日常的一些照片...",
+    "photos.keywords": ["照片墙", "日常"],
+    "photos.no_images": "暂无照片",
+    "photos.all_images_loaded": "已加载所有照片"
+  }
+}

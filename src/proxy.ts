@@ -17,14 +17,11 @@ if (rawSecret.length < 32) {
 }
 const JWT_SECRET = new TextEncoder().encode(rawSecret);
 
-// 动态获取需要保护的路由
-const getProtectedRoutes = () => {
+// 保持不带语言前缀，只维护一份配置
+function getProtectedRoutes() {
   const routes = new Set<string>();
-
-  // 默认保护所有 /admin 开头的路由
   routes.add('/admin');
 
-  // 从配置中提取需要 auth 的路由
   pageRoutesConfig.forEach((route) => {
     if (route.needAuth) {
       if (route.navHref) routes.add(route.navHref);
@@ -33,10 +30,9 @@ const getProtectedRoutes = () => {
   });
 
   return Array.from(routes);
-};
+}
 
-const protectedRoutes = getProtectedRoutes();
-
+const protectedRoutes = getProtectedRoutes(); // 提到模块顶层，只算一次，不用每次请求都重新算
 // 添加安全响应头
 function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Frame-Options', 'DENY');
@@ -62,61 +58,86 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
+  // 默认语言
   const defaultLang = i18nConfig.defaultLang;
+  // 支持的语言列表
   const locales = i18nConfig.locales;
-  // ---------------- 第一步：语言前缀处理 ----------------
+  // 从cookie中获取语言设置
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value || defaultLang;
+
   const pathSegments = pathname.split('/').filter(Boolean);
+  // 第一个路径段，即语言前缀
   const firstSegment = pathSegments[0];
-  // 情况 A：URL 显式带了默认语言前缀（如 /en/xxx）——重定向去掉前缀，保持地址栏干净
-  if (locales.includes(firstSegment) && firstSegment === defaultLang) {
+  // 检查路径是否包含语言前缀
+  const hasLocaleInPath = locales.includes(firstSegment);
+
+  // 情况 A ：路径包含默认语言前缀，且默认语言是当前语言
+  if (hasLocaleInPath && firstSegment === defaultLang) {
     const newPath = `/${pathSegments.slice(1).join('/')}`;
     const url = request.nextUrl.clone();
     url.pathname = newPath || '/';
     return NextResponse.redirect(url);
   }
-  // 情况 B：URL 没有任何语言前缀 —— 内部 rewrite 到默认语言目录，但地址栏不变
+
   let rewriteUrl: URL | null = null;
-  if (!locales.includes(firstSegment)) {
+  let visibleLocalePrefix = '';
+
+  if (hasLocaleInPath) {
+    // 情况 C ：路径包含其他语言前缀
+    visibleLocalePrefix = `/${firstSegment}`;
+  } else {
+    // 情况 B ：路径不包含语言前缀，且cookie中包含语言设置
+    if (
+      cookieLocale &&
+      locales.includes(cookieLocale) &&
+      cookieLocale !== defaultLang
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${cookieLocale}${pathname === '/' ? '' : pathname}`;
+      return NextResponse.redirect(url);
+    }
     const newPath = `/${defaultLang}${pathname === '/' ? '' : pathname}`;
     rewriteUrl = request.nextUrl.clone();
     rewriteUrl.pathname = newPath;
   }
-  // 情况 C：URL 带了非默认语言前缀（如 /zh/xxx）—— 无需处理，[lang] 目录本身就能匹配
 
-  // 添加 x-pathname header 供 Server Components 使用
+  // 登录路径
+  const loginPath = `${visibleLocalePrefix}/login`;
+
+  // 去掉语言前缀后的真实路径，两种情况统一处理
+  const pathnameWithoutLocale = hasLocaleInPath
+    ? '/' + pathSegments.slice(1).join('/') || '/'
+    : pathname;
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
 
-  // 检查路径是否在受保护名单中
+  // 用不带前缀的路径 vs 不带前缀的配置比较，两边基准统一
   const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathnameWithoutLocale.startsWith(route)
   );
 
   if (isProtectedRoute) {
     const token = request.cookies.get('admin-session')?.value;
 
     if (!token) {
-      const loginUrl = new URL('/login', request.url);
+      const loginUrl = new URL(loginPath, request.url);
       loginUrl.searchParams.set('redirect', pathname);
       const response = NextResponse.redirect(loginUrl);
       return addSecurityHeaders(response);
     }
 
     try {
-      // 验证 token
       const { payload } = await jwtVerify(token, JWT_SECRET);
       const now = Math.floor(Date.now() / 1000);
       const exp = payload.exp || 0;
 
-      // 创建基础响应
-      const response = NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
+      const response = rewriteUrl
+        ? NextResponse.rewrite(rewriteUrl, {
+            request: { headers: requestHeaders },
+          })
+        : NextResponse.next({ request: { headers: requestHeaders } });
 
-      // 会话刷新（Sliding Session）：剩余时间少于4小时时续期
       if (exp - now < SESSION_REFRESH_THRESHOLD) {
         const newToken = await new SignJWT({
           userId: payload.userId,
@@ -146,8 +167,7 @@ export async function proxy(request: NextRequest) {
 
       return addSecurityHeaders(response);
     } catch {
-      // token 无效或过期
-      const loginUrl = new URL('/login', request.url);
+      const loginUrl = new URL(loginPath, request.url);
       loginUrl.searchParams.set('redirect', pathname);
       const response = NextResponse.redirect(loginUrl);
       response.cookies.delete('admin-session');
@@ -157,11 +177,7 @@ export async function proxy(request: NextRequest) {
 
   const response = rewriteUrl
     ? NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })
-    : NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
+    : NextResponse.next({ request: { headers: requestHeaders } });
   return addSecurityHeaders(response);
 }
 

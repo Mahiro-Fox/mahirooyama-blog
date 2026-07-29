@@ -1,20 +1,3 @@
-// import { Link } from '@/components/shared/link';
-// import { FileText, Folder, ImageIcon } from 'lucide-react';
-
-// import { navRoutesConfig } from '@/lib/config';
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardHeader,
-//   CardTitle,
-// } from '@/components/shadcn-ui/card';
-
-export const metadata = {
-  title: '内容浏览',
-  description: '浏览博客文章和画廊图片',
-};
-
 export default function BrowsePage() {
   return (
     <div className="container-wrapper">

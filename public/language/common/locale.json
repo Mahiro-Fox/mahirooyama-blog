@@ -1,37 +1,10 @@
 {
   "en": {
-    "network-error": "Failed to connectnet work!",
-    "cancel": "Cancel",
-    "save": "Save"
-  },
-  "fr": {
-    "network-error": "Erreur réseau. Veuillez réessayer."
-  },
-  "de": {
-    "network-error": "Netzwerkfehler. Bitte versuchen Sie es erneut."
-  },
-  "es": {
-    "network-error": "Error de red. Inténtalo de nuevo."
-  },
-  "pt": {
-    "network-error": "Erro de rede. Tente novamente."
-  },
-  "jp": {
-    "network-error": "ネットワークエラー。再試行してください。"
-  },
-  "ar": {
-    "network-error": "خطأ في الشبكة. يرجى المحاولة مرة أخرى."
+    "common.load_failed": "Failed to load content",
+    "common.retry": "Retry"
   },
   "cn": {
-    "network-error": "网络错误，请重试"
-  },
-  "tw": {
-    "network-error": "網路錯誤，請再試一次"
-  },
-  "it": {
-    "network-error": "Errore di rete. Riprova."
-  },
-  "id": {
-    "network-error": "Kesalahan jaringan. Silakan coba lagi."
+    "common.load_failed": "加载失败",
+    "common.retry": "重试"
   }
 }

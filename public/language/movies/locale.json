@@ -1,0 +1,36 @@
+{
+  "en": {
+    "movies.title": "Private Movie Collection",
+    "movies.description": "Explore my movie collection and enjoy an immersive viewing experience",
+    "movies.search_placeholder": "Search movie title or plot...",
+    "movies.all": "All",
+    "movies.no_results": "No matching movies found",
+    "movies.channel_count": "{{count}} channels",
+    "movies.total_movies": "A total of {{count}} movies found",
+    "movies.movie_detail_title": "{{title}} - Private Movie Collection",
+    "movies.movie_not_found": "Movie not found",
+    "movies.plot_summary": "Plot Summary",
+    "movies.play_sources": "Playback Sources",
+    "movies.available": "Available",
+    "movies.tags": "Tags",
+    "movies.added_on": "Added on",
+    "movies.last_updated": "Last updated"
+  },
+  "cn": {
+    "movies.title": "私人影视收藏",
+    "movies.description": "探索我的电影收藏，享受沉浸式观影体验",
+    "movies.search_placeholder": "搜索电影名称或剧情...",
+    "movies.all": "全部",
+    "movies.no_results": "没有找到匹配的电影",
+    "movies.channel_count": "{{count}} 线路",
+    "movies.total_movies": "共找到 {{count}} 部电影",
+    "movies.movie_detail_title": "{{title}} - 私人影视收藏",
+    "movies.movie_not_found": "电影未找到",
+    "movies.plot_summary": "剧情简介",
+    "movies.play_sources": "播放线路",
+    "movies.available": "可用",
+    "movies.tags": "标签",
+    "movies.added_on": "添加于",
+    "movies.last_updated": "最后更新"
+  }
+}

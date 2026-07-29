@@ -1,8 +1,36 @@
 {
   "en": {
-    "home.banner.title": "One day I must chase the <AuroraText>aurora</AuroraText>"
+    "home.title": "Welcome to mahirooyama's website!",
+    "home.description_1": "The main content of this website consists of some photos, such as those taken in VRChat with friends. If you'd like to upload photos, feel free to contact me in <a>VRChat</a>~",
+    "home.description_2": " The secondary content includes some programming notes and other technical shares, with potential additions of new content and features in the future",
+    "home.description_3": " The source code is on <a>GitHub</a>. Feel free to check it out~",
+    "home.banner.title": "One day I must chase the <AuroraText>aurora</AuroraText>",
+    "home.keywords": [
+      "blog",
+      "mahirooyama",
+      "photo",
+      "post",
+      "gallery",
+      "midi",
+      "tag"
+    ],
+    "home.posts": "Posts",
+    "home.galleries": "Galleries",
+    "home.tags": "Tags",
+    "home.see_more_galleries": "See More Galleries",
+    "home.see_more_posts": "See More Posts"
   },
   "cn": {
-    "home.banner.title": "有朝一日一定要去追一次<AuroraText>极光</AuroraText>"
+    "home.title": "欢迎来到 mahirooyama 的网站喵~",
+    "home.banner.title": "有朝一日一定要去追一次<AuroraText>极光</AuroraText>",
+    "home.description_1": "本网站主要内容是一些照片，例如和朋友在VRChat里拍的照片。如果想上传照片，可以在 <a>VRChat</a> 联系我哦~",
+    "home.description_2": "次要内容是一些编程笔记和其他技术分享，后续也可能加入一些新的内容与功能~",
+    "home.description_3": "源代码在 <a>GitHub</a> ，欢迎查看哦~",
+    "home.keywords": ["博客", "绪山真寻", "照片", "编程笔记", "技术分享"],
+    "home.posts": "帖子",
+    "home.galleries": "相册",
+    "home.tags": "标签",
+    "home.see_more_galleries": "查看更多相册",
+    "home.see_more_posts": "查看更多帖子"
   }
 }

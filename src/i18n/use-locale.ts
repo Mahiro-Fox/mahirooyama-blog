@@ -10,7 +10,10 @@ const defaultLang = i18nConfig.defaultLang;
 export function useLocale(): string {
   const pathname = usePathname();
   const firstSegment = pathname.split('/').filter(Boolean)[0];
-  return locales.includes(firstSegment) ? firstSegment : defaultLang;
+  const currentLang = locales.includes(firstSegment)
+    ? firstSegment
+    : defaultLang;
+  return currentLang;
 }
 
 export { locales, defaultLang };

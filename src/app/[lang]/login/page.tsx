@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { checkLogin, login } from '@/actions/admin/auth';
+import { useT } from '@/i18n/dictionary-provider';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/shadcn-ui/button';
@@ -17,6 +18,7 @@ import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
 
 function LoginForm() {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
@@ -68,15 +70,15 @@ function LoginForm() {
       const result = await login(username, password);
 
       if (!result.success) {
-        toast.error(result.error || '登录失败');
+        toast.error(result.error || t('login.login_failed'));
       } else {
-        toast.success('登录成功');
+        toast.success(t('login.login_success'));
         // 登录成功，跳转到原目标页面或管理后台
         const redirect = searchParams.get('redirect') || '/admin';
         router.push(redirect);
       }
     } catch {
-      toast.error('登录失败，请稍后重试');
+      toast.error(t('login.login_failed_retry'));
     } finally {
       setLoading(false);
     }
@@ -87,20 +89,20 @@ function LoginForm() {
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
           <CardTitle className="text-center text-2xl font-bold">
-            管理后台
+            {t('login.admin_panel')}
           </CardTitle>
           <CardDescription className="text-center">
-            请输入用户名和密码登录
+            {t('login.page_description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">用户名</Label>
+              <Label htmlFor="username">{t('login.username')}</Label>
               <Input
                 id="username"
                 type="text"
-                placeholder="请输入用户名"
+                placeholder={t('login.enter_username')}
                 value={username}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setUsername(e.target.value)
@@ -109,11 +111,11 @@ function LoginForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
+              <Label htmlFor="password">{t('login.password')}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="请输入密码"
+                placeholder={t('login.enter_password')}
                 value={password}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setPassword(e.target.value)
@@ -127,14 +129,14 @@ function LoginForm() {
               disabled={loading || !!rateLimitTime}
             >
               {rateLimitTime
-                ? `请等待 ${Math.ceil(rateLimitTime / 60)} 分 ${rateLimitTime % 60} 秒`
+                ? `${t('login.wait')} ${Math.ceil(rateLimitTime / 60)}分 ${rateLimitTime % 60}秒`
                 : loading
-                  ? '登录中...'
-                  : '登录'}
+                  ? t('login.logging_in')
+                  : t('login.login')}
             </Button>
             {rateLimitTime && (
               <p className="text-muted-foreground text-center text-sm">
-                尝试次数过多，请稍后再试
+                {t('login.rate_limit_warning')}
               </p>
             )}
           </form>
@@ -144,27 +146,30 @@ function LoginForm() {
   );
 }
 
+function LoginFallback() {
+  const t = useT();
+  return (
+    <div className="bg-muted/50 flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-center text-2xl font-bold">
+            {t('login.admin_panel')}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {t('login.loading')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-8">
+          <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="bg-muted/50 flex min-h-screen items-center justify-center p-4">
-          <Card className="w-full max-w-sm">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-center text-2xl font-bold">
-                管理后台
-              </CardTitle>
-              <CardDescription className="text-center">
-                加载中...
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center py-8">
-              <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-            </CardContent>
-          </Card>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoginFallback />}>
       <LoginForm />
     </Suspense>
   );

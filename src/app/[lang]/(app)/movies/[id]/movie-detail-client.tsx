@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useT } from '@/i18n/dictionary-provider';
 import { cn } from '@/utils/utils';
 import { Calendar, Check, Clock, Tag } from 'lucide-react';
 
@@ -14,11 +15,13 @@ interface MovieDetailClientProps {
 }
 
 export function MovieDetailClient({ movie }: MovieDetailClientProps) {
+  const t = useT();
   const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
 
   const changeSource = (index: number) => {
     setCurrentSourceIndex(index);
   };
+
   return (
     <div className="min-h-screen bg-black">
       <div className="pt-20">
@@ -54,11 +57,17 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                   </div>
                   <div className="flex items-center gap-2 text-gray-400">
                     <Clock className="h-5 w-5" />
-                    <span>{movie.sources.length} 条播放线路</span>
+                    <span>
+                      {t('movies.channel_count', {
+                        count: movie.sources.length,
+                      })}
+                    </span>
                   </div>
                 </div>
 
-                <h2 className="mb-3 text-lg font-bold text-white">剧情简介</h2>
+                <h2 className="mb-3 text-lg font-bold text-white">
+                  {t('movies.plot_summary')}
+                </h2>
                 <p className="leading-relaxed text-gray-300">{movie.summary}</p>
               </div>
             </div>
@@ -83,7 +92,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
 
                     <div className="mb-4">
                       <h4 className="mb-2 text-sm font-medium text-gray-400">
-                        播放线路
+                        {t('movies.play_sources')}
                       </h4>
                       <div className="space-y-2">
                         {movie.sources.map((source, index) => (
@@ -101,7 +110,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                               {source.name}
                             </span>
                             <span className="flex items-center gap-1 text-xs text-green-500">
-                              可用{' '}
+                              {t('movies.available')}
                               {index === currentSourceIndex && (
                                 <Check className="h-4 w-4" />
                               )}
@@ -113,7 +122,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
 
                     <div className="mb-4">
                       <h4 className="mb-2 text-sm font-medium text-gray-400">
-                        标签
+                        {t('movies.tags')}
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {movie.tags.map((tag) => (
@@ -129,7 +138,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
 
                     <div className="border-t border-slate-700 pt-4">
                       <p className="text-xs text-gray-500">
-                        添加于{' '}
+                        {t('movies.added_on')}{' '}
                         {new Date(movie.lastUpdated).toLocaleDateString(
                           'zh-CN'
                         )}

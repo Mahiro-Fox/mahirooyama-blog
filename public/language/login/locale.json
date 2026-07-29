@@ -1,0 +1,38 @@
+{
+  "en": {
+    "login.page_title": "Admin Dashboard Login",
+    "login.page_description": "Enter your username and password to login",
+    "login.loading": "Loading...",
+    "login.admin_panel": "Admin Dashboard",
+    "login.username": "Username",
+    "login.password": "Password",
+    "login.enter_username": "Enter username",
+    "login.enter_password": "Enter password",
+    "login.login": "Login",
+    "login.logging_in": "Logging in...",
+    "login.wait": "Please wait",
+    "login.rate_limit_warning": "Too many attempts, please try again later",
+    "login.login_failed": "Login failed",
+    "login.login_success": "Login successful",
+    "login.login_failed_retry": "Login failed, please try again later",
+    "login.network_error": "Network error, please try again later"
+  },
+  "cn": {
+    "login.page_title": "管理后台",
+    "login.page_description": "请输入用户名和密码登录",
+    "login.loading": "加载中...",
+    "login.admin_panel": "管理后台",
+    "login.username": "用户名",
+    "login.password": "密码",
+    "login.enter_username": "请输入用户名",
+    "login.enter_password": "请输入密码",
+    "login.login": "登录",
+    "login.logging_in": "登录中...",
+    "login.wait": "请等待",
+    "login.rate_limit_warning": "尝试次数过多，请稍后再试",
+    "login.login_failed": "登录失败",
+    "login.login_success": "登录成功",
+    "login.login_failed_retry": "登录失败，请稍后重试",
+    "login.network_error": "网络错误，请稍后重试"
+  }
+}

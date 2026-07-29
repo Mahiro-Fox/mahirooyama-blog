@@ -1,19 +1,30 @@
 import commonLocale from '../../public/language/common/locale.json';
 import { i18nConfig } from './i18n.config';
 
-type LocaleModule = { default: Record<string, Record<string, string>> };
+export type Dictionary = Record<string, string | string[]>;
+type LocaleModule = {
+  default: Record<string, Dictionary>;
+};
 
 // 静态字面量手动映射，方便 bundle 的 tree-shaking
 const loaders: Record<string, () => Promise<LocaleModule>> = {
-  home: () => import('../../public/language/home/locale.json'),
   header: () => import('../../public/language/header/locale.json'),
   footer: () => import('../../public/language/footer/locale.json'),
+  home: () => import('../../public/language/home/locale.json'),
+  page: () => import('../../public/language/page/locale.json'),
+  photos: () => import('../../public/language/photos/locale.json'),
+  moments: () => import('../../public/language/moments/locale.json'),
+  guestbook: () => import('../../public/language/guestbook/locale.json'),
+  login: () => import('../../public/language/login/locale.json'),
+  midi: () => import('../../public/language/midi/locale.json'),
+  movies: () => import('../../public/language/movies/locale.json'),
+  'bilibili-parse': () =>
+    import('../../public/language/bilibili-parse/locale.json'),
+  'image-compressor': () =>
+    import('../../public/language/image-compressor/locale.json'),
 };
 
-function pickLang(
-  localeData: Record<string, Record<string, string>>,
-  lang: string
-) {
+function pickLang(localeData: Record<string, Dictionary>, lang: string) {
   return localeData?.[lang] || localeData?.[i18nConfig.defaultLang] || {};
 }
 

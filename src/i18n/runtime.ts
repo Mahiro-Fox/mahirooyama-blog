@@ -11,27 +11,28 @@
  * 因此在服务端不允许写入（避免请求间串读）；服务端组件请走 getDictionary。
  */
 
-export type Dictionary = Record<string, string>;
+import { Dictionary } from '@/i18n/dictionary';
+
 export type DictionaryListener = (dict: Dictionary) => void;
 
 let currentDict: Dictionary = {};
 const listeners = new Set<DictionaryListener>();
-const isServer = typeof window === "undefined";
+const isServer = typeof window === 'undefined';
 
 export function setDictionary(dict: Dictionary | null | undefined): void {
-    if (isServer) return;
-    currentDict = dict || {};
-    listeners.forEach((fn) => {
-        try {
-            fn(currentDict);
-        } catch (e) {
-            console.error("[i18n runtime] listener error:", e);
-        }
-    });
+  if (isServer) return;
+  currentDict = dict || {};
+  listeners.forEach((fn) => {
+    try {
+      fn(currentDict);
+    } catch (e) {
+      console.error('[i18n runtime] listener error:', e);
+    }
+  });
 }
 
 export function getRuntimeDictionary(): Dictionary {
-    return currentDict;
+  return currentDict;
 }
 
 /**
@@ -39,10 +40,10 @@ export function getRuntimeDictionary(): Dictionary {
  * @param key
  * @param fallback 缺失时返回的兜底值，默认空串
  */
-export function t(key: string, fallback = ""): string {
-    if (isServer) return fallback;
-    const value = currentDict[key];
-    return value == null ? fallback : value;
+export function t(key: string, fallback = ''): string | string[] {
+  if (isServer) return fallback;
+  const value = currentDict[key];
+  return value == null ? fallback : value;
 }
 
 /**
@@ -51,8 +52,8 @@ export function t(key: string, fallback = ""): string {
  * @returns 取消订阅
  */
 export function subscribe(fn: DictionaryListener): () => void {
-    listeners.add(fn);
-    return () => {
-        listeners.delete(fn);
-    };
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
 }

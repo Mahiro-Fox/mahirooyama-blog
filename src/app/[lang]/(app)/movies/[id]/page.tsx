@@ -1,30 +1,38 @@
 import { notFound } from 'next/navigation';
 import { getPublicMovies } from '@/actions/admin/movie-actions';
+import { getDictionary } from '@/i18n/dictionary';
 
 import { Movie } from '@/lib/movies';
 
 import { MovieDetailClient } from './movie-detail-client';
 
-export async function generateMetadata({
+export const generateMetadata = async ({
   params,
 }: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+  params: Promise<{ id: string; lang: string }>;
+}) => {
+  const { id, lang } = await params;
   const result = await getPublicMovies();
   const movies = result.success ? result.data : [];
   const movie = movies.find((m: Movie) => m.id === id);
+  const moviesDictionary = await getDictionary(lang, 'movies');
 
   return {
-    title: movie ? `${movie.title} - 私人影视收藏` : '电影未找到',
-    description: movie?.summary || '私人影视收藏',
+    title: movie
+      ? (moviesDictionary['movies.movie_detail_title'] as string).replace(
+          '{{title}}',
+          movie.title
+        )
+      : (moviesDictionary['movies.movie_not_found'] as string),
+    description:
+      movie?.summary || (moviesDictionary['movies.page_description'] as string),
   };
-}
+};
 
 export default async function MoviePlayPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; lang: string }>;
 }) {
   const { id } = await params;
   const result = await getPublicMovies();

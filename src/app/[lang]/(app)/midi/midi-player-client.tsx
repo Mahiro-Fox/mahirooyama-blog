@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 import { trackEvent } from '@/utils/tracker';
 import { debounce } from '@/utils/utils';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -33,6 +34,7 @@ function formatDuration(seconds: number): string {
 }
 
 export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
+  const t = useT();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredFiles, setFilteredFiles] = useState<MidiFile[]>(initialFiles);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -99,7 +101,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Music className="text-muted-foreground mb-4 h-12 w-12" />
-        <p className="text-muted-foreground text-lg">No MIDI files found</p>
+        <p className="text-muted-foreground text-lg">{t('midi.no_files')}</p>
       </div>
     );
   }
@@ -110,10 +112,11 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
         <div className="border-destructive/50 bg-destructive/10 mb-4 flex items-center gap-3 rounded-lg border p-4">
           <AlertCircle className="text-destructive h-5 w-5 shrink-0" />
           <div>
-            <p className="text-destructive font-medium">MIDI Access Denied</p>
+            <p className="text-destructive font-medium">
+              {t('midi.access_denied')}
+            </p>
             <p className="text-destructive/80 text-sm">
-              Web MIDI API权限被拒绝。请允许MIDI访问
-              请检查您的浏览器设置并刷新。
+              {t('midi.access_denied_desc')}
             </p>
           </div>
         </div>
@@ -124,7 +127,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
           <AlertCircle className="text-destructive h-5 w-5 shrink-0" />
           <div>
             <p className="text-destructive font-medium">
-              未找到loopMIDI端口，请确保开启了任意端口。
+              {t('midi.no_output_found')}
             </p>
           </div>
         </div>
@@ -135,11 +138,13 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
           <div className="flex items-center gap-3">
             <CircleCheck className="text-brand-line h-5 w-5 shrink-0" />
             <p className="text-muted-foreground text-sm">
-              <span className="font-medium">MIDI Outputs:</span>{' '}
+              <span className="font-medium">{t('midi.outputs')}</span>{' '}
               {midiOutputs.join(', ') || 'None'}
             </p>
           </div>
-          <p className="text-xs text-green-400">已成功连接loopMIDI。</p>
+          <p className="text-xs text-green-400">
+            {t('midi.outputs_connected')}
+          </p>
         </div>
       )}
 
@@ -147,7 +152,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
       <div className="relative">
         <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
-          placeholder="Search / 搜索"
+          placeholder={t('midi.search_placeholder')}
           value={searchQuery}
           onChange={(e) => handleInputChange(e.target.value)}
           className="pl-10"
@@ -157,7 +162,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
             variant="ghost"
             size="icon-sm"
             onClick={scrollToCurrent}
-            title="定位到当前播放"
+            title={t('midi.locate_current')}
             className="absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2"
           >
             <LocateFixed className="h-4 w-4" />
@@ -167,9 +172,9 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
 
       <div className="bg-card overflow-hidden rounded-lg border">
         <div className="grid grid-cols-[1fr_auto_auto] gap-4 border-b px-4 py-3 text-sm font-medium">
-          <div>Name</div>
-          <div className="text-right">Duration</div>
-          <div className="w-32 text-right">Action</div>
+          <div>{t('midi.name')}</div>
+          <div className="text-right">{t('midi.duration')}</div>
+          <div className="w-32 text-right">{t('midi.action')}</div>
         </div>
 
         <div ref={parentRef} className="max-h-[60vh] overflow-auto">
@@ -218,7 +223,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
                       <Button
                         variant="default"
                         size="icon-sm"
-                        title="Download"
+                        title={t('midi.download')}
                         className="h-8 w-8"
                       >
                         <a
@@ -248,12 +253,12 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
                         ) : isCurrentlyPlaying ? (
                           <>
                             <Pause className="mr-1 h-4 w-4" />
-                            Pause
+                            {t('midi.pause')}
                           </>
                         ) : (
                           <>
                             <Play className="mr-1 h-4 w-4" />
-                            Play
+                            {t('midi.play')}
                           </>
                         )}
                       </Button>

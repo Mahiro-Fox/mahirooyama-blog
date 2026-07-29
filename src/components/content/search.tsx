@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 import { trackEvent } from '@/utils/tracker';
 import {
   FileText,
@@ -22,6 +23,7 @@ import { Input } from '@/components/shadcn-ui/input';
 import { Link } from '@/components/shared/link';
 
 export function Search() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const { keyword, setKeyword, results, isLoading, clearSearch } =
     useSearch(10);
@@ -75,7 +77,7 @@ export function Search() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl gap-0 p-0">
           <DialogHeader className="sr-only">
-            <DialogTitle>搜索内容</DialogTitle>
+            <DialogTitle>{t('search_title')}</DialogTitle>
           </DialogHeader>
 
           {/* 搜索输入框 */}
@@ -83,7 +85,7 @@ export function Search() {
             <SearchIcon className="mr-2 h-4 w-4 shrink-0 opacity-50" />
             <Input
               className="placeholder:text-muted-foreground flex h-14 w-full rounded-md border-0 bg-transparent py-4 text-sm outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="搜索文章、画廊..."
+              placeholder={t('search_placeholder')}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               autoFocus
@@ -109,7 +111,7 @@ export function Search() {
             ) : results.length > 0 ? (
               <div className="px-2">
                 <div className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
-                  搜索结果 ({results.length})
+                  {t('search_results', { count: results.length })}
                 </div>
                 {results.map((result) => (
                   <SearchResultItem
@@ -121,11 +123,11 @@ export function Search() {
               </div>
             ) : keyword ? (
               <div className="text-muted-foreground py-8 text-center text-sm">
-                未找到相关结果
+                {t('search_no_results')}
               </div>
             ) : (
               <div className="text-muted-foreground py-8 text-center text-sm">
-                输入关键词开始搜索...
+                {t('search_no_results_placeholder')}
               </div>
             )}
           </div>

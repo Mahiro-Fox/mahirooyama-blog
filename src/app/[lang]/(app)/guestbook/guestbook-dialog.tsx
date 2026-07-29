@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { submitGuestbook } from '@/actions/admin/guestbook-actions';
 import { COLOR_OPTIONS } from '@/config';
+import { useT } from '@/i18n/dictionary-provider';
 import { trackEvent } from '@/utils/tracker';
 import { isEmail } from '@/utils/utils';
 // 莫兰迪色系颜色选项
@@ -21,6 +22,7 @@ import { Input } from '@/components/shadcn-ui/input';
 import { Toggle } from '@/components/shadcn-ui/toggle';
 
 export function GuestbookWallDialog() {
+  const t = useT();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,7 +37,7 @@ export function GuestbookWallDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nickname.trim() || !content.trim()) {
-      toast.error('请填写昵称和留言内容');
+      toast.error(t('guestbook.form.validate.required'));
       return;
     }
 
@@ -50,7 +52,7 @@ export function GuestbookWallDialog() {
       });
 
       if (result.success) {
-        toast.success('留言提交成功，等待审核后显示');
+        toast.success(t('guestbook.form.submit.success'));
         trackEvent('submit_guestbook_success', { nickname });
         setIsDialogOpen(false);
         // 重置表单
@@ -62,7 +64,7 @@ export function GuestbookWallDialog() {
         toast.error(result.error);
       }
     } catch {
-      toast.error('提交失败，请稍后重试');
+      toast.error(t('guestbook.form.submit.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -78,28 +80,34 @@ export function GuestbookWallDialog() {
         }}
       >
         <Sticker className="h-5 w-5" />
-        写一条！
+        {t('guestbook.button.write')}
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="relative m-auto sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>留下你的足迹</DialogTitle>
-            <DialogDescription>选择喜欢的颜色，写下你的留言</DialogDescription>
+            <DialogTitle>{t('guestbook.dialog.title')}</DialogTitle>
+            <DialogDescription>
+              {t('guestbook.dialog.description')}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium">昵称</label>
+              <label className="mb-2 block text-sm font-medium">
+                {t('guestbook.form.label.nickname')}
+              </label>
               <Input
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder="你的昵称"
+                placeholder={t('guestbook.form.placeholder.nickname')}
                 maxLength={20}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">卡片颜色</label>
+              <label className="mb-2 block text-sm font-medium">
+                {t('guestbook.form.label.bg_color')}
+              </label>
               <div className="flex flex-wrap gap-2">
                 {COLOR_OPTIONS.map((color) => (
                   <button
@@ -120,14 +128,17 @@ export function GuestbookWallDialog() {
 
             <div>
               <label className="mb-2 block text-sm font-medium">
-                联系方式（可选，不会展示在公开页面，仅用于联系你喵~）
+                {t('guestbook.form.label.contact')}
               </label>
               <div className="flex flex-col gap-2">
                 <Input
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
-                  placeholder="网址或联系方式（若是邮箱，可选择是否接收邮箱通知）"
+                  placeholder={t('guestbook.form.placeholder.contact')}
                 />
+                <p className="text-muted-foreground text-xs">
+                  {t('guestbook.form.tip.contact')}
+                </p>
                 {isEmail(contact) && (
                   <Toggle
                     onClick={() =>
@@ -149,7 +160,7 @@ export function GuestbookWallDialog() {
                           isEmailNotificationEnabled ? 'text-green-500' : ''
                         }
                       >
-                        是否接收邮箱通知
+                        {t('guestbook.form.label.email_notification')}
                       </span>
                     </>
                   </Toggle>
@@ -158,24 +169,31 @@ export function GuestbookWallDialog() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">留言内容</label>
+              <label className="mb-2 block text-sm font-medium">
+                {t('guestbook.form.label.content')}
+              </label>
               <textarea
                 value={content}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   setContent(e.target.value)
                 }
-                placeholder="写下你的想法...（最多300字）"
+                placeholder={t('guestbook.form.placeholder.content')}
                 maxLength={300}
                 rows={4}
                 className="focus:ring-primary w-full resize-none rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
               />
               <div className="text-muted-foreground mt-1 text-right text-xs">
-                {content.length}/300
+                {t('guestbook.form.char_count').replace(
+                  '{count}',
+                  String(content.length)
+                )}
               </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? '提交中...' : '提交留言'}
+              {isSubmitting
+                ? t('guestbook.form.submitting')
+                : t('guestbook.form.submit')}
               <Send className="ml-2 h-4 w-4" />
             </Button>
           </form>

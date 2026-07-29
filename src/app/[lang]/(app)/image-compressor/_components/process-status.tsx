@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
@@ -87,6 +88,8 @@ export default function ProcessStatus({
   onDownloadAll,
   onViewComparison,
 }: ProcessStatusProps) {
+  const t = useT();
+
   const validResults = results.filter(
     (r): r is ProcessedImageResult => r !== null
   );
@@ -116,7 +119,7 @@ export default function ProcessStatus({
             <div className="flex items-center gap-3">
               <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
               <span className="font-medium text-gray-700 dark:text-gray-300">
-                正在处理图片...
+                {t('image-compressor.processing_images')}
               </span>
             </div>
             <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
@@ -147,7 +150,7 @@ export default function ProcessStatus({
               {results.length}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              总处理数
+              {t('image-compressor.total_count')}
             </div>
           </div>
 
@@ -155,14 +158,18 @@ export default function ProcessStatus({
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {successCount}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">成功</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">
+              {t('image-compressor.success')}
+            </div>
           </div>
 
           <div className="rounded-xl bg-red-50 p-4 dark:bg-red-950/30">
             <div className="text-2xl font-bold text-red-600 dark:text-red-400">
               {failureCount}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">失败</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">
+              {t('image-compressor.failed')}
+            </div>
           </div>
 
           {totalSavings > 0 && (
@@ -171,7 +178,7 @@ export default function ProcessStatus({
                 {formatFileSize(totalSavings)}
               </div>
               <div className="text-xs text-gray-600 dark:text-gray-400">
-                总节省
+                {t('image-compressor.total_saved')}
               </div>
             </div>
           )}
@@ -190,7 +197,7 @@ export default function ProcessStatus({
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-blue-500 to-blue-600 py-4 font-medium text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:from-blue-600 hover:to-blue-700 hover:shadow-blue-500/40"
           >
             <Package className="h-5 w-5" />
-            打包下载全部 ({successCount} 张)
+            {t('image-compressor.batch_download', { count: successCount })}
           </button>
         </motion.div>
       )}
@@ -205,7 +212,7 @@ export default function ProcessStatus({
             className="space-y-3"
           >
             <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              处理结果
+              {t('image-compressor.process_results')}
             </div>
 
             <div className="max-h-96 space-y-3 overflow-y-auto pr-2">
@@ -268,12 +275,12 @@ export default function ProcessStatus({
 
                             {result.metadata.size < result.originalSize && (
                               <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-                                已节省{' '}
-                                {calculateSavings(
-                                  result.originalSize,
-                                  result.metadata.size
-                                )}
-                                %
+                                {t('image-compressor.saved', {
+                                  percent: calculateSavings(
+                                    result.originalSize,
+                                    result.metadata.size
+                                  ),
+                                })}
                               </span>
                             )}
                           </div>
@@ -281,7 +288,10 @@ export default function ProcessStatus({
                       ) : (
                         <div className="flex items-center gap-2 text-xs text-red-600 dark:text-red-400">
                           <AlertCircle className="h-4 w-4" />
-                          <span>{result.error || '处理失败'}</span>
+                          <span>
+                            {result.error ||
+                              t('image-compressor.process_failed_short')}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -292,14 +302,14 @@ export default function ProcessStatus({
                         <button
                           onClick={() => onViewComparison(result)}
                           className="rounded-lg bg-gray-200 p-2 transition-colors duration-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-                          title="查看对比"
+                          title={t('image-compressor.view_compare')}
                         >
                           <Eye className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                         </button>
                         <button
                           onClick={() => onDownload(result)}
                           className="rounded-lg bg-blue-100 p-2 transition-colors duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
-                          title="下载"
+                          title={t('image-compressor.download_single')}
                         >
                           <Download className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </button>

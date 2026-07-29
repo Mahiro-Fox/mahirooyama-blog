@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
@@ -63,29 +64,6 @@ export interface ConfigPanelProps {
 }
 
 /**
- * 格式选项配置
- */
-const FORMAT_OPTIONS: {
-  value: TargetFormat;
-  label: string;
-  description: string;
-}[] = [
-  { value: 'webp', label: 'WebP', description: '现代格式，最佳压缩率' },
-  { value: 'png', label: 'PNG', description: '无损格式，适合透明背景' },
-  { value: 'jpeg', label: 'JPEG', description: '兼容性好，适合照片' },
-  { value: 'avif', label: 'AVIF', description: '新一代格式，极致压缩' },
-];
-
-/**
- * 适配模式选项
- */
-const FIT_OPTIONS: { value: ResizeFit; label: string }[] = [
-  { value: 'cover', label: '裁剪填充' },
-  { value: 'contain', label: '完整显示' },
-  { value: 'inside', label: '适应尺寸' },
-];
-
-/**
  * 配置面板组件
  * 提供格式选择、质量控制、高级选项等配置
  */
@@ -95,6 +73,7 @@ export default function ConfigPanel({
   resetConfig,
   disabled = false,
 }: ConfigPanelProps) {
+  const t = useT();
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
   /**
@@ -116,15 +95,51 @@ export default function ConfigPanel({
     });
   };
 
+  const FORMAT_OPTIONS: {
+    value: TargetFormat;
+    label: string;
+    description: string;
+  }[] = [
+    {
+      value: 'webp',
+      label: 'WebP',
+      description: t('image-compressor.webp_desc'),
+    },
+    {
+      value: 'png',
+      label: 'PNG',
+      description: t('image-compressor.png_desc'),
+    },
+    {
+      value: 'jpeg',
+      label: 'JPEG',
+      description: t('image-compressor.jpeg_desc'),
+    },
+    {
+      value: 'avif',
+      label: 'AVIF',
+      description: t('image-compressor.avif_desc'),
+    },
+  ];
+
+  const FIT_OPTIONS: { value: ResizeFit; label: string }[] = [
+    { value: 'cover', label: t('image-compressor.cover') },
+    {
+      value: 'contain',
+      label: t('image-compressor.contain'),
+    },
+    { value: 'inside', label: t('image-compressor.inside') },
+  ];
+
   return (
     <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-      {/* 标题 */}
+      {/* Title */}
       <div className="flex items-center gap-3">
         <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
           <Settings className="h-5 w-5 text-blue-600 dark:text-blue-400" />
         </div>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          转换配置
+          {t('image-compressor.config_title')}
         </h2>
         <Button
           onClick={resetConfig}
@@ -132,16 +147,16 @@ export default function ConfigPanel({
           variant="outline"
           className="ml-auto"
         >
-          重置所有配置
+          {t('image-compressor.reset_config')}
         </Button>
       </div>
 
       {/* 格式选择 */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-          目标格式
+          {t('image-compressor.target_format')}
         </label>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3">
           {FORMAT_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -183,11 +198,11 @@ export default function ConfigPanel({
         </div>
       </div>
 
-      {/* 质量滑块 */}
+      {/* Quality slider */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            压缩质量
+            {t('image-compressor.quality')}
           </label>
           <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
             {config.quality}%
@@ -208,8 +223,8 @@ export default function ConfigPanel({
           }}
         />
         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>最小体积</span>
-          <span>最佳画质</span>
+          <span>{t('image-compressor.min_size')}</span>
+          <span>{t('image-compressor.best_quality')}</span>
         </div>
       </div>
 
@@ -221,7 +236,7 @@ export default function ConfigPanel({
           className={`flex w-full items-center justify-between rounded-lg p-3 transition-colors duration-200 ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'} `}
         >
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            高级选项
+            {t('image-compressor.advanced')}
           </span>
           {isAdvancedOpen ? (
             <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400" />
@@ -248,10 +263,10 @@ export default function ConfigPanel({
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        擦除元数据
+                        {t('image-compressor.strip_metadata')}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        移除 EXIF 信息保护隐私
+                        {t('image-compressor.strip_metadata_desc')}
                       </div>
                     </div>
                   </div>
@@ -287,10 +302,10 @@ export default function ConfigPanel({
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        转换动图
+                        {t('image-compressor.convert_animation')}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        将 GIF 转换为动态 WebP/AVIF
+                        {t('image-compressor.convert_animation_desc')}
                       </div>
                     </div>
                   </div>
@@ -328,10 +343,10 @@ export default function ConfigPanel({
                     </div>
                     <div>
                       <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        调整尺寸
+                        {t('image-compressor.resize')}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        可选，留空则保持原尺寸
+                        {t('image-compressor.resize_desc')}
                       </div>
                     </div>
                   </div>
@@ -339,7 +354,7 @@ export default function ConfigPanel({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
-                        宽度（像素）
+                        {t('image-compressor.width')}
                       </label>
                       <input
                         type="number"
@@ -353,13 +368,13 @@ export default function ConfigPanel({
                           updateResize({ width: value });
                         }}
                         disabled={disabled}
-                        placeholder="自动"
+                        placeholder={t('image-compressor.auto')}
                         className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
-                        高度（像素）
+                        {t('image-compressor.height')}
                       </label>
                       <input
                         type="number"
@@ -373,7 +388,7 @@ export default function ConfigPanel({
                           updateResize({ height: value });
                         }}
                         disabled={disabled}
-                        placeholder="自动"
+                        placeholder={t('image-compressor.auto')}
                         className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                       />
                     </div>
@@ -381,7 +396,7 @@ export default function ConfigPanel({
 
                   <div className="space-y-2">
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
-                      适配模式
+                      {t('image-compressor.fit_mode')}
                     </label>
                     <div className="flex gap-2">
                       {FIT_OPTIONS.map((option) => (

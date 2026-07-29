@@ -1,0 +1,16 @@
+{
+  "en": {
+    "moments.title": "Welcome to mahiooyama's moments",
+    "moments.description": "Here are some daily roast and notes of Mahiro ...",
+    "moments.keywords": ["moments", "daily roast"],
+    "moments.page_title": "Moments",
+    "moments.page_description": "Record my daily moments here"
+  },
+  "cn": {
+    "moments.title": "欢迎来到 mahirooyama 的随记喵~",
+    "moments.description": "这里是一些mahiro日常的一些吐槽、随记...",
+    "moments.keywords": ["随记", "吐槽"],
+    "moments.page_title": "随记",
+    "moments.page_description": "记录生活中的美好时刻"
+  }
+}

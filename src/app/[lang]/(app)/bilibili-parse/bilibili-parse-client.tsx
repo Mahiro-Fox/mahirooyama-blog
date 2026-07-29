@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 import { formatSize } from '@/utils/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Clock, Copy, Download, History, Trash2, Video } from 'lucide-react';
@@ -40,6 +41,7 @@ interface HistoryItem extends ParseResult {
 }
 
 export default function BilibiliParsePage() {
+  const t = useT();
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ParseResult | null>(null);
@@ -94,7 +96,7 @@ export default function BilibiliParsePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || '解析失败');
+        setError(data.error || t('bilibili-parse.parse_failed'));
         return;
       }
 
@@ -120,10 +122,10 @@ export default function BilibiliParsePage() {
         }
         return newHistory;
       });
-      toast.success('解析成功');
+      toast.success(t('bilibili-parse.parse_success'));
     } catch {
-      setError('网络错误，请稍后重试');
-      toast.error('解析失败');
+      setError(t('bilibili-parse.network_error'));
+      toast.error(t('bilibili-parse.parse_failed'));
     } finally {
       setLoading(false);
     }
@@ -140,7 +142,6 @@ export default function BilibiliParsePage() {
   const handleLoadFromHistory = (item: HistoryItem) => {
     setUrl(item.url);
     setResult(item);
-    // setShowHistory(false);
   };
 
   return (
@@ -158,7 +159,7 @@ export default function BilibiliParsePage() {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="请输入 B 站视频链接，例如：https://www.bilibili.com/video/BV1xxx/"
+              placeholder={t('bilibili-parse.enter_url_placeholder')}
               disabled={loading}
               className="flex-1"
             />
@@ -166,10 +167,10 @@ export default function BilibiliParsePage() {
               {loading ? (
                 <>
                   <motion.div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  解析中...
+                  {t('bilibili-parse.parsing')}
                 </>
               ) : (
-                '解析'
+                t('bilibili-parse.parse')
               )}
             </Button>
           </form>
@@ -182,7 +183,7 @@ export default function BilibiliParsePage() {
           className="relative w-24"
         >
           <History className="h-4 w-4" />
-          <span>历史记录</span>
+          <span>{t('bilibili-parse.history')}</span>
           {history.length > 0 && (
             <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px]">
               {history.length}
@@ -223,7 +224,7 @@ export default function BilibiliParsePage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
-                    解析历史
+                    {t('bilibili-parse.history')}
                   </CardTitle>
                   {history.length > 0 && (
                     <Button
@@ -232,14 +233,16 @@ export default function BilibiliParsePage() {
                       onClick={handleClearHistory}
                       className="text-destructive hover:text-destructive"
                     >
-                      清空
+                      {t('bilibili-parse.clear')}
                     </Button>
                   )}
                 </div>
                 <CardDescription>
                   {history.length === 0
-                    ? '暂无解析记录'
-                    : `共 ${history.length} 条记录`}
+                    ? t('bilibili-parse.no_history')
+                    : t('bilibili-parse.history_count', {
+                        count: history.length,
+                      })}
                 </CardDescription>
               </CardHeader>
               {history.length > 0 && (
@@ -307,15 +310,17 @@ export default function BilibiliParsePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Video className="h-5 w-5" />
-                  解析结果
+                  {t('bilibili-parse.parse_result')}
                 </CardTitle>
-                <CardDescription>视频信息已成功解析</CardDescription>
+                <CardDescription>
+                  {t('bilibili-parse.parse_success')}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Video Title */}
                 <div>
                   <label className="text-muted-foreground mb-2 block text-sm font-medium">
-                    视频标题
+                    {t('bilibili-parse.video_title')}
                   </label>
                   <p className="text-base font-medium">{result.title}</p>
                 </div>
@@ -328,7 +333,7 @@ export default function BilibiliParsePage() {
                   >
                     <div className="text-muted-foreground flex items-center gap-2 text-sm">
                       <Clock className="h-4 w-4" />
-                      视频时长
+                      {t('bilibili-parse.video_duration')}
                     </div>
                     <p className="mt-1 text-lg font-semibold">
                       {formatDuration(result.duration)}
@@ -341,7 +346,7 @@ export default function BilibiliParsePage() {
                   >
                     <div className="text-muted-foreground flex items-center gap-2 text-sm">
                       <Download className="h-4 w-4" />
-                      文件大小
+                      {t('bilibili-parse.file_size')}
                     </div>
                     <p className="mt-1 text-lg font-semibold">
                       {formatSize(result.fileSize)}
@@ -353,7 +358,7 @@ export default function BilibiliParsePage() {
                     className="bg-card rounded-lg border p-4"
                   >
                     <div className="text-muted-foreground text-sm">
-                      当前画质
+                      {t('bilibili-parse.current_quality')}
                     </div>
                     <p className="mt-1 text-lg font-semibold">
                       {result.format}
@@ -365,7 +370,7 @@ export default function BilibiliParsePage() {
                     className="bg-card rounded-lg border p-4"
                   >
                     <div className="text-muted-foreground text-sm">
-                      质量等级
+                      {t('bilibili-parse.quality_level')}
                     </div>
                     <p className="mt-1 text-lg font-semibold">
                       {result.quality}
@@ -376,7 +381,7 @@ export default function BilibiliParsePage() {
                 {/* Cover Image */}
                 <div>
                   <label className="text-muted-foreground mb-2 block text-sm font-medium">
-                    封面图
+                    {t('bilibili-parse.cover_image')}
                   </label>
                   <motion.div
                     whileHover={{ scale: 1.01 }}
@@ -394,7 +399,7 @@ export default function BilibiliParsePage() {
                 {/* Supported Formats */}
                 <div>
                   <label className="text-muted-foreground mb-2 block text-sm font-medium">
-                    支持的画质
+                    {t('bilibili-parse.supported_formats')}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {result.supportFormats.map((fmt) => (
@@ -413,7 +418,7 @@ export default function BilibiliParsePage() {
                 {/* MP4 URL */}
                 <div>
                   <label className="text-muted-foreground mb-2 block text-sm font-medium">
-                    MP4 直链
+                    {t('bilibili-parse.mp4_link')}
                   </label>
                   <div className="flex gap-2">
                     <Input
@@ -427,7 +432,7 @@ export default function BilibiliParsePage() {
                       size="icon"
                       onClick={() => {
                         navigator.clipboard.writeText(result.mp4Url);
-                        toast.success('已复制到剪贴板');
+                        toast.success(t('bilibili-parse.copy_to_clipboard'));
                       }}
                     >
                       <Copy className="h-4 w-4" />
@@ -443,7 +448,7 @@ export default function BilibiliParsePage() {
                 {/* Video Preview */}
                 <div>
                   <label className="text-muted-foreground mb-2 block text-sm font-medium">
-                    视频预览
+                    {t('bilibili-parse.video_preview')}
                   </label>
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}

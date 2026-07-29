@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { adminGetGuestbookEntries } from '@/actions/admin/guestbook-actions';
+import { getDictionary } from '@/i18n/dictionary';
+import { DictionaryProvider } from '@/i18n/dictionary-provider';
 import type { UserRole } from '@/store/user-store';
 
 import { verifyAuth } from '@/lib/admin-auth';
@@ -16,14 +18,23 @@ export const metadata: Metadata = {
   },
 };
 
+interface AdminLayoutProps {
+  children: React.ReactNode;
+  params: Promise<{ lang: string }>;
+}
+
 export default async function AdminLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  params,
+}: AdminLayoutProps) {
+  const { lang } = await params;
+  const [dictionary, authCheck, permissionCheck] = await Promise.all([
+    getDictionary(lang, 'header'),
+    verifyAuth(),
+    requirePermission('guestbook:read'),
+  ]);
   // 虽然已经在 proxy 中处理了认证，但是这里还是再次检查一下，确保安全
   // 这样可以确保在代理中间件处理完成后，用户信息会被正确设置
-  const authCheck = await verifyAuth();
 
   if (!authCheck.success) {
     // Get current pathname for redirect
@@ -38,7 +49,6 @@ export default async function AdminLayout({
   const currentUser = authCheck;
 
   // 获取未审核的留言条数
-  const permissionCheck = await requirePermission('guestbook:read');
   let guestbookPendingCount = 0;
   if (permissionCheck.allowed) {
     const result = await adminGetGuestbookEntries();
@@ -47,7 +57,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <>
+    <DictionaryProvider dictionary={dictionary}>
       <QueryToast />
       <AdminShell
         currentUser={{
@@ -62,6 +72,6 @@ export default async function AdminLayout({
       >
         {children}
       </AdminShell>
-    </>
+    </DictionaryProvider>
   );
 }
