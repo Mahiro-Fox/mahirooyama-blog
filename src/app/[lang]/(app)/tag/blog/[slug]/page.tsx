@@ -1,6 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
+import { i18nConfig } from '@/i18n/i18n.config';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
@@ -22,13 +23,15 @@ import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 interface BlogTagPageProps {
   params: Promise<{ slug: string }>;
 }
-export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const tags = await tagStore.getByType('blog');
-  return Object.keys(tags).map((slug) => ({
-    slug,
-  }));
+  return i18nConfig.locales.flatMap((locale) =>
+    Object.keys(tags).map((slug) => ({
+      slug,
+      lang: locale,
+    }))
+  );
 }
 
 export async function generateMetadata({ params }: BlogTagPageProps) {

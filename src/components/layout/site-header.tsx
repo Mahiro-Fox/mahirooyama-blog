@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { setLocale } from '@/actions/set-locale';
 import { useT } from '@/i18n/dictionary-provider';
 import { i18nConfig } from '@/i18n/i18n.config';
-import { defaultLang, locales, useLocale } from '@/i18n/use-locale';
+import { useLocale } from '@/i18n/use-locale';
 import { Languages, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -218,10 +218,12 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
 
 function switchLocaleHref(pathname: string, targetLocale: string): string {
   const segments = pathname.split('/').filter(Boolean);
-  if (locales.includes(segments[0])) segments.shift(); // 去掉当前语言前缀（如果有）
+  if (i18nConfig.locales.includes(segments[0])) segments.shift(); // 去掉当前语言前缀（如果有）
 
   const rest = segments.length ? `/${segments.join('/')}` : '';
-  return targetLocale === defaultLang ? rest || '/' : `/${targetLocale}${rest}`;
+  return targetLocale === i18nConfig.defaultLang
+    ? rest || '/'
+    : `/${targetLocale}${rest}`;
 }
 
 export function SwitchLanguage() {

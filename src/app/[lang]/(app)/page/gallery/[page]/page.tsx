@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
+import { i18nConfig } from '@/i18n/i18n.config';
 import { formatDate } from '@/utils/utils';
 
 import { LinkCard } from '@/components/shared/link-card';
@@ -10,16 +11,18 @@ import PageTitle from '@/app/[lang]/(app)/page/page-title';
 interface GalleryListPageProps {
   params: Promise<{ page: string }>;
 }
-export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const result = await getPublicGalleries({ page: 1 });
   const totalPages = result.success ? result.data.totalPages : 1;
 
   return await Promise.all(
-    Array.from({ length: totalPages }, (_, i) => ({
-      page: String(i + 1),
-    }))
+    i18nConfig.locales.flatMap((locale) =>
+      Array.from({ length: totalPages }, (_, i) => ({
+        page: String(i + 1),
+        lang: locale,
+      }))
+    )
   );
 }
 

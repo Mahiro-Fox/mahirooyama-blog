@@ -2,8 +2,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { i18nConfig } from '@/i18n/i18n.config';
 
-import { defaultLang, useLocale } from './use-locale';
+import { useLocale } from './use-locale';
 
 /** 自定义路由，根据当前语言添加路由前缀
  * @example
@@ -18,7 +19,7 @@ export function useLocalizedRouter() {
 
   const localize = (href: string) => {
     if (!href.startsWith('/') || href.startsWith('//')) return href;
-    if (locale === defaultLang) return href;
+    if (locale === i18nConfig.defaultLang) return href;
     return `/${locale}${href === '/' ? '' : href}`;
   };
 

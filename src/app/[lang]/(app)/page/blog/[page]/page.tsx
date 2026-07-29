@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
+import { i18nConfig } from '@/i18n/i18n.config';
 import { formatDate } from '@/utils/utils';
 
 import { siteConfig } from '@/config/common';
@@ -14,16 +15,18 @@ import PageTitle from '@/app/[lang]/(app)/page/page-title';
 interface BlogListPageProps {
   params: Promise<{ page: string }>;
 }
-export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const all = await getBlogs();
   const { totalPages } = paginateItems(all, 1, DEFAULT_BLOG_LIST_LIMIT);
 
   return await Promise.all(
-    Array.from({ length: totalPages }, (_, i) => ({
-      page: String(i + 1),
-    }))
+    i18nConfig.locales.flatMap((locale) =>
+      Array.from({ length: totalPages }, (_, i) => ({
+        page: String(i + 1),
+        lang: locale,
+      }))
+    )
   );
 }
 

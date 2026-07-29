@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPublicGallery } from '@/actions/admin/gallery-actions';
+import { i18nConfig } from '@/i18n/i18n.config';
 import { tagStore } from '@/store/tag-store';
 import { formatDate } from '@/utils/utils';
 
@@ -23,13 +24,15 @@ interface GalleryImagePageProps {
     slug: string;
   }>;
 }
-export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const images = await getGalleries();
-  return images.map((image) => ({
-    slug: image.slug,
-  }));
+  return i18nConfig.locales.flatMap((locale) =>
+    images.map((image) => ({
+      slug: image.slug,
+      lang: locale,
+    }))
+  );
 }
 
 export async function generateMetadata({

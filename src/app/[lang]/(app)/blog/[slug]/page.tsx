@@ -1,6 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { getPublicBlog } from '@/actions/admin/blog-actions';
+import { i18nConfig } from '@/i18n/i18n.config';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
@@ -23,13 +24,15 @@ import { LinkBadge } from '@/components/shared/link-badge';
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
-export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const allPosts = await getBlogs();
-  return allPosts.map((post) => ({
-    slug: post.slug,
-  }));
+  return i18nConfig.locales.flatMap((locale) =>
+    allPosts.map((post) => ({
+      slug: post.slug,
+      lang: locale,
+    }))
+  );
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
