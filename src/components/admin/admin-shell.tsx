@@ -139,7 +139,7 @@ export default function AdminShell({
     const config = adminRoutesConfig.find(
       (item) => item.adminHref === pathname
     );
-    return config?.label || '管理后台';
+    return config?.adminTitle || '管理后台';
   };
 
   const isActive = (href: string) => {
@@ -176,7 +176,7 @@ export default function AdminShell({
                   className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
                 >
                   {item.icon && <item.icon className="h-4 w-4" />}
-                  {t(item.label)}
+                  {t(item.adminTitle || '')}
                 </Link>
               ) : (
                 <Link
@@ -189,7 +189,7 @@ export default function AdminShell({
                   }`}
                 >
                   {item.icon && <item.icon className="h-4 w-4" />}
-                  {t(item.label)}
+                  {t(item.adminTitle || '')}
                 </Link>
               )
             )}
@@ -269,7 +269,7 @@ export default function AdminShell({
                           className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
                         >
                           {item.icon && <item.icon className="h-4 w-4" />}
-                          {item.label}
+                          {t(item.adminTitle || '')}
                         </Link>
                       ) : (
                         <SheetClose asChild key={item.adminHref}>
@@ -282,7 +282,7 @@ export default function AdminShell({
                             }`}
                           >
                             {item.icon && <item.icon className="h-4 w-4" />}
-                            {item.label}
+                            {t(item.adminTitle || '')}
                           </Link>
                         </SheetClose>
                       )

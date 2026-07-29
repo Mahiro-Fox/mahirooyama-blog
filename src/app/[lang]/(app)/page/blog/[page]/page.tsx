@@ -14,6 +14,7 @@ import PageTitle from '@/app/[lang]/(app)/page/page-title';
 interface BlogListPageProps {
   params: Promise<{ page: string }>;
 }
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const all = await getBlogs();

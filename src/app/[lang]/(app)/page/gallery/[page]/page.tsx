@@ -10,6 +10,7 @@ import PageTitle from '@/app/[lang]/(app)/page/page-title';
 interface GalleryListPageProps {
   params: Promise<{ page: string }>;
 }
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const result = await getPublicGalleries({ page: 1 });

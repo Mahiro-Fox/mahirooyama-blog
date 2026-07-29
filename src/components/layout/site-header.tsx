@@ -110,7 +110,7 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
                                       {item.icon && (
                                         <item.icon className="h-4 w-4" />
                                       )}
-                                      <span>{t(item.label)}</span>
+                                      <span>{t(item.navLabel || '')}</span>
                                     </p>
                                     <p
                                       className="text-muted-foreground text-xs"

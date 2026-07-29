@@ -1,9 +1,9 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
+import { getPublicBlog } from '@/actions/admin/blog-actions';
 import { tagStore } from '@/store/tag-store';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
-import { getPublicBlog } from '@/actions/admin/blog-actions';
 import { siteConfig } from '@/config/common';
 import { author } from '@/lib/author';
 import { getBlogs } from '@/lib/blog';
@@ -23,6 +23,7 @@ import { LinkBadge } from '@/components/shared/link-badge';
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const allPosts = await getBlogs();

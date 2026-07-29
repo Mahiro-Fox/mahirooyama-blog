@@ -23,6 +23,7 @@ interface GalleryImagePageProps {
     slug: string;
   }>;
 }
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const images = await getGalleries();

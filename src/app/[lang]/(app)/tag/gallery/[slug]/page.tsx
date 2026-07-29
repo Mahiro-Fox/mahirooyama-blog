@@ -22,6 +22,7 @@ import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 interface GalleryTagPageProps {
   params: Promise<{ slug: string }>;
 }
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   const tags = await tagStore.getByType('gallery');

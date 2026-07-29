@@ -1,3 +1,4 @@
+import NextLink from 'next/link';
 import { cn } from '@/utils/utils';
 import { MailIcon, RssIcon } from 'lucide-react';
 
@@ -64,14 +65,14 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
               <BrandIcons.x className="size-4" />
             </Link>
           )}
-          <Link
+          <NextLink
             href="/rss.xml"
             className={buttonVariants({ variant: 'outline', size: 'icon' })}
             aria-label="RSS"
             title="RSS Feed (mahirooyama-blog)"
           >
             <RssIcon className="size-4" />
-          </Link>
+          </NextLink>
         </div>
       </div>
     </footer>
