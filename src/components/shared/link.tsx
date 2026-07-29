@@ -1,7 +1,6 @@
 // src/components/shared/link.tsx
 'use client';
 
-import { forwardRef } from 'react';
 import type { ComponentProps } from 'react';
 import NextLink from 'next/link';
 import { i18nConfig } from '@/i18n/i18n.config';
@@ -19,17 +18,19 @@ function localizeHref(href: string, locale: string): string {
   // 非默认语言，拼上前缀（避免 /zh/zh 这种重复拼接）
   return `/${locale}${href === '/' ? '' : href}`;
 }
+
+interface WithLocaleLinkProps extends LinkProps {
+  href: string;
+}
 /**
  * 自动根据当前语言添加前缀的链接组件
  */
-export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ href, ...props }, ref) => {
-    const locale = useLocale();
-    const localizedHref =
-      typeof href === 'string' ? localizeHref(href, locale) : href; // href 是 UrlObject 的情况暂不处理，按需扩展
+export const Link = ({ href, ...props }: WithLocaleLinkProps) => {
+  const locale = useLocale();
+  const localizedHref =
+    typeof href === 'string' ? localizeHref(href, locale) : href; // href 是 UrlObject 的情况暂不处理，按需扩展
 
-    return <NextLink ref={ref} href={localizedHref} {...props} />;
-  }
-);
+  return <NextLink href={localizedHref} {...props} />;
+};
 
 Link.displayName = 'Link';

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import { Button, buttonVariants } from '@/components/shadcn-ui/button';
+import { Link } from '@/components/shared/link';
 
 function Pagination({ className, ...props }: React.ComponentProps<'nav'>) {
   return (
@@ -39,6 +40,7 @@ function PaginationItem({ ...props }: React.ComponentProps<'li'>) {
 
 type PaginationLinkProps = {
   isActive?: boolean;
+  href: string;
 } & Pick<React.ComponentProps<typeof Button>, 'size'> &
   React.ComponentProps<'a'>;
 
@@ -46,10 +48,12 @@ function PaginationLink({
   className,
   isActive,
   size = 'icon',
+  href,
   ...props
 }: PaginationLinkProps) {
   return (
-    <a
+    <Link
+      href={href}
       aria-current={isActive ? 'page' : undefined}
       aria-disabled={isActive || undefined}
       tabIndex={isActive ? -1 : undefined}
