@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import {
   adminCreateTag,
   adminDeleteTag,
@@ -39,6 +38,7 @@ import { DataTable, type Column } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { IconPicker } from '@/components/shared/icon-picker';
+import { Link } from '@/components/shared/link';
 
 // 表格列定义
 const getColumns = (type: TagType): Column<Tag>[] => [

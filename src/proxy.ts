@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { SESSION_EXPIRY, SESSION_REFRESH_THRESHOLD } from '@/constant/auth';
+import { i18nConfig } from '@/i18n/i18n.config';
 import { jwtVerify, SignJWT } from 'jose';
 
 import { pageRoutesConfig } from '@/config/common';
@@ -61,6 +62,27 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const defaultLang = i18nConfig.defaultLang;
+  const locales = i18nConfig.locales;
+  // ---------------- 第一步：语言前缀处理 ----------------
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const firstSegment = pathSegments[0];
+  // 情况 A：URL 显式带了默认语言前缀（如 /en/xxx）——重定向去掉前缀，保持地址栏干净
+  if (locales.includes(firstSegment) && firstSegment === defaultLang) {
+    const newPath = `/${pathSegments.slice(1).join('/')}`;
+    const url = request.nextUrl.clone();
+    url.pathname = newPath || '/';
+    return NextResponse.redirect(url);
+  }
+  // 情况 B：URL 没有任何语言前缀 —— 内部 rewrite 到默认语言目录，但地址栏不变
+  let rewriteUrl: URL | null = null;
+  if (!locales.includes(firstSegment)) {
+    const newPath = `/${defaultLang}${pathname === '/' ? '' : pathname}`;
+    rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = newPath;
+  }
+  // 情况 C：URL 带了非默认语言前缀（如 /zh/xxx）—— 无需处理，[lang] 目录本身就能匹配
 
   // 添加 x-pathname header 供 Server Components 使用
   const requestHeaders = new Headers(request.headers);
@@ -133,11 +155,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  const response = rewriteUrl
+    ? NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })
+    : NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
   return addSecurityHeaders(response);
 }
 

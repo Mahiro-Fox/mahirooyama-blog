@@ -1,5 +1,4 @@
-import Link from 'next/link';
-
+import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface AuthorProps {

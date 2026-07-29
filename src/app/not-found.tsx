@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { ArrowLeftIcon, HomeIcon } from 'lucide-react';
 
 import { Button } from '@/components/shadcn-ui/button';
+import { Link } from '@/components/shared/link';
 
 export default function NotFound() {
   return (

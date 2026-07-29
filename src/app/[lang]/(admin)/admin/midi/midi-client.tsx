@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import Link from 'next/link';
 import {
   adminDeleteMidiFile,
   adminGetMidiFiles,
@@ -30,6 +29,7 @@ import {
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
+import { Link } from '@/components/shared/link';
 
 // 表格列定义
 const columns: Column<MidiAdminFile>[] = [

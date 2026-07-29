@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { cn } from '@/utils/utils';
 import Autoplay from 'embla-carousel-autoplay';
 import {
@@ -18,6 +17,7 @@ import {
   CarouselItem as UICarouselItem,
   type CarouselApi,
 } from '@/components/shadcn-ui/carousel';
+import { Link } from '@/components/shared/link';
 import {
   imageSizes,
   OptimizedImage,

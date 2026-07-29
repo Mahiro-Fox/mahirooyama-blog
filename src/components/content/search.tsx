@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { trackEvent } from '@/utils/tracker';
 import {
   FileText,
@@ -20,6 +19,7 @@ import {
   DialogTitle,
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
+import { Link } from '@/components/shared/link';
 
 export function Search() {
   const [open, setOpen] = useState(false);

@@ -18,10 +18,11 @@ interface AppLayoutProps {
 
 export default async function AppLayout({ children, params }: AppLayoutProps) {
   const { lang } = await params;
-  const [navDictionary, footerDictionary, adminUser, musicRes] =
+  const [navDictionary, footerDictionary, homeDictionary, adminUser, musicRes] =
     await Promise.all([
       getDictionary(lang, 'header'),
       getDictionary(lang, 'footer'),
+      getDictionary(lang, 'home'),
       getCurrentAdminUser(),
       getPublicMusic(),
     ]);
@@ -29,7 +30,11 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
   return (
     <div className="bg-background relative z-10 flex min-h-svh flex-col">
       <DictionaryProvider
-        dictionary={{ ...navDictionary, ...footerDictionary }}
+        dictionary={{
+          ...navDictionary,
+          ...footerDictionary,
+          ...homeDictionary,
+        }}
       >
         <MusicProvider playlist={songs}>
           <PageTracker />

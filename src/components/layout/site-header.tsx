@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useT } from '@/i18n/dictionary-provider';
 import { Menu } from 'lucide-react';
@@ -30,6 +29,7 @@ import {
 import { Search } from '@/components/content/search';
 import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
 import { BrandIcons } from '@/components/shared/brand-icons';
+import { Link } from '@/components/shared/link';
 import { SiteLogo } from '@/components/shared/site-logo';
 
 interface SiteHeaderProps {

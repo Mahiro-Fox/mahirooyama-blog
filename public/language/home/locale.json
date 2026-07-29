@@ -1,5 +1,8 @@
 {
   "en": {
-    "title": "Analytics"
+    "home.banner.title": "One day I must chase the <AuroraText>aurora</AuroraText>"
+  },
+  "cn": {
+    "home.banner.title": "有朝一日一定要去追一次<AuroraText>极光</AuroraText>"
   }
 }

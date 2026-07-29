@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Trans } from '@/i18n/Trans';
 
 import { siteConfig } from '@/config/common';
 import { PhotoItem } from '@/lib/photos';
@@ -46,7 +47,7 @@ export const HomeBanner: React.FC<HomeBannerImage> = ({
         <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
           <div className="text-center">
             <h2 className="text-4xl font-bold text-white md:text-5xl">
-              有朝一日一定要去追一次<AuroraText>极光</AuroraText>
+              <Trans i18nKey="home.banner.title" components={{ AuroraText }} />
             </h2>
           </div>
         </div>

@@ -1,4 +1,4 @@
-// import Link from 'next/link';
+// import { Link } from '@/components/shared/link';
 // import { FileText, Folder, ImageIcon } from 'lucide-react';
 
 // import { navRoutesConfig } from '@/lib/config';

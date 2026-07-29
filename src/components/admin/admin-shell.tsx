@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { adminLogout } from '@/actions/admin/logout';
 import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
@@ -25,6 +24,7 @@ import {
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
 import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
+import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface CurrentUser {

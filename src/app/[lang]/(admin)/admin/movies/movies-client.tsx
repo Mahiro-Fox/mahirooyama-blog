@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import {
   adminCreateMovie,
   adminDeleteMovie,
@@ -23,6 +22,7 @@ import {
 } from '@/components/admin/admin-page-layout';
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { Link } from '@/components/shared/link';
 
 export default function MoviesClient({
   initialMovies,

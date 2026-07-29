@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getHomeBannerImages } from '@/actions/home-banner';
@@ -12,6 +11,7 @@ import { Gallery } from '@/lib/gallery';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
 import { BrandIcons } from '@/components/shared/brand-icons';
+import { Link } from '@/components/shared/link';
 import { LinkCard } from '@/components/shared/link-card';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
 import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
@@ -44,7 +44,6 @@ export default async function IndexPage() {
         <HomeBanner images={bannerData} initialIndex={initialIndex} />
       )}
       <section className="py-8">
-        <h2 className="sr-only">Hero Carousel Items</h2>
         <HeroCarousel galleries={galleries} />
       </section>
       {/* About Section */}
