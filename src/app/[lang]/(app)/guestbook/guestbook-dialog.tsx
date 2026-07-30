@@ -1,15 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { submitGuestbook } from '@/actions/admin/guestbook-actions';
 import { COLOR_OPTIONS } from '@/config';
-import { useT } from '@/i18n/dictionary-provider';
-import { trackEvent } from '@/utils/tracker';
-import { isEmail } from '@/utils/utils';
 // 莫兰迪色系颜色选项
 import { CheckIcon, Send, Sticker, X, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { useState } from 'react';
+import { submitGuestbook } from '@/actions/admin/guestbook-actions';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Dialog,
@@ -20,6 +16,9 @@ import {
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
 import { Toggle } from '@/components/shadcn-ui/toggle';
+import { useT } from '@/i18n/dictionary-provider';
+import { trackEvent } from '@/utils/tracker';
+import { isEmail } from '@/utils/utils';
 
 export function GuestbookWallDialog() {
   const t = useT();

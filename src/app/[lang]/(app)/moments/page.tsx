@@ -1,5 +1,4 @@
 import { getPublicMoments } from '@/actions/admin/moments-actions';
-
 import { MomentsTimeline } from './moments-timeline';
 
 export default async function MomentsPage() {

@@ -1,8 +1,6 @@
-import { redirect } from 'next/navigation';
 import { userStore } from '@/store/user-store';
-
+import { redirect } from 'next/navigation';
 import { requirePermission } from '@/lib/permissions';
-
 import UsersClient from './users-client';
 
 export default async function UsersPage() {

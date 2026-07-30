@@ -1,5 +1,7 @@
 'use client';
 
+import { Edit, Music, Music2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 import {
   adminCreateMusic,
@@ -8,12 +10,6 @@ import {
   adminUpdateMusic,
   adminUploadMusicFile,
 } from '@/actions/admin/music-actions';
-import { Edit, Music, Music2, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { Song } from '@/lib/music';
-import { Button } from '@/components/shadcn-ui/button';
-import { Input } from '@/components/shadcn-ui/input';
 import {
   AdminPageLayout,
   createAddAction,
@@ -22,7 +18,10 @@ import {
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
+import { Button } from '@/components/shadcn-ui/button';
+import { Input } from '@/components/shadcn-ui/input';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { Song } from '@/lib/music';
 
 export default function MusicClient({
   songs: initialSongs,

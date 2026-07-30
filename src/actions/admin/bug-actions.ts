@@ -1,14 +1,13 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { BugReport, BugStatus, bugStore } from '@/store/bug-store';
+import { headers } from 'next/headers';
+import { apiRateLimiter } from '@/lib/rate-limit';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
 import { createLogger } from '@/utils/logger';
-
-import { apiRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('BugActions');
 

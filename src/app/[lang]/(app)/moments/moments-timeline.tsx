@@ -1,12 +1,11 @@
 'use client';
 
-import { formatDateWithSecond } from '@/utils/utils';
 import { MapPin, Smile } from 'lucide-react';
 import { motion } from 'motion/react';
-
-import { Moment } from '@/lib/moments';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { Moment } from '@/lib/moments';
+import { formatDateWithSecond } from '@/utils/utils';
 
 interface MomentsTimelineProps {
   moments: Moment[];

@@ -2,19 +2,18 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { UserResponse, UserRole, userStore } from '@/store/user-store';
 import { AVATAR_DIR } from '@/constant/dir';
 import { MAX_FILE_SIZE } from '@/constant/file-upload';
-import { UserResponse, UserRole, userStore } from '@/store/user-store';
+import { verifyAuth } from '@/lib/admin-auth';
+import { requirePermission } from '@/lib/permissions';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
 import { processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
-
-import { verifyAuth } from '@/lib/admin-auth';
-import { requirePermission } from '@/lib/permissions';
-import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('UserActions');
 

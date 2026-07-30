@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
 import { BadgeContent } from '@/config/about';
 
 interface BadgeCardProps {

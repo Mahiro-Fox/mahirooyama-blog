@@ -1,9 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
-import { MediaContent } from '@/config/about';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { MediaContent } from '@/config/about';
 
 interface MediaCardProps {
   content: MediaContent;

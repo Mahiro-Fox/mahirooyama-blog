@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { PHOTO_DIR } from '@/constant';
-import { ensureDirectory } from '@/utils/file-utils';
 import sharp from 'sharp';
+import { ensureDirectory } from '@/utils/file-utils';
 
 export interface PhotoItem {
   id: string;

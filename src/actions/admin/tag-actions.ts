@@ -1,15 +1,14 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { TagsData, TagType } from '@/constant';
 import { tagStore } from '@/store/tag-store';
+import { revalidatePath } from 'next/cache';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
 import { createLogger } from '@/utils/logger';
-
-import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('TagActions');
 

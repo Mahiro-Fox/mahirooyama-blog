@@ -1,12 +1,11 @@
 'use client';
 
-import { useT } from '@/i18n/dictionary-provider';
 import { Loader2 } from 'lucide-react';
-
-import { usePhotos } from '@/hooks/use-photos';
-import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import Masonry from '@/components/content/masonry';
+import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { usePhotos } from '@/hooks/use-photos';
+import { useT } from '@/i18n/dictionary-provider';
 
 export function PhotosGallery() {
   const { images, isLoading, isLoadingMore, error, hasMore, loadMoreRef } =

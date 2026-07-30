@@ -1,5 +1,4 @@
 import { getPublicGuestbook } from '@/actions/admin/guestbook-actions';
-
 import { GuestbookWall } from './guestbook-wall';
 
 export default async function GuestbookPage() {

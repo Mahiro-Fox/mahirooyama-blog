@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { Dictionary } from '@/i18n/dictionary';
-
 import { setDictionary } from './runtime';
 
 const DictionaryContext = createContext({});

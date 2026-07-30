@@ -5,7 +5,6 @@ import {
   adminUpdateMovie,
   getPublicMovies,
 } from '@/actions/admin/movie-actions';
-
 import { Movie } from '@/lib/movies';
 
 export async function GET(request: NextRequest) {

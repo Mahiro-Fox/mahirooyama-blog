@@ -1,10 +1,9 @@
-import * as React from 'react';
-import * as runtime from 'react/jsx-runtime';
 import { evaluate, type EvaluateOptions } from '@mdx-js/mdx';
+import * as runtime from 'react/jsx-runtime';
 import rehypePrettyCode from 'rehype-pretty-code';
 import remarkGfm from 'remark-gfm';
 import type { ShikiTransformer } from 'shiki';
-
+import * as React from 'react';
 import { mdxComponents } from '@/components/content/mdx-components';
 
 interface CustomMDXProps {

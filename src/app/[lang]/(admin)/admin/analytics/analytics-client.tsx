@@ -1,5 +1,7 @@
 'use client';
 
+import { Globe, Monitor, Smartphone, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 import {
   adminGetAnalyticsLogs,
@@ -7,18 +9,15 @@ import {
   type AnalyticsLog,
   type AnalyticsStats,
 } from '@/actions/admin/analytics-actions';
-import { formatDateWithSecond } from '@/utils/utils';
-import { Globe, Monitor, Smartphone, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { Badge } from '@/components/shadcn-ui/badge';
-import { Button } from '@/components/shadcn-ui/button';
 import {
   AdminPageLayout,
   createRefreshAction,
 } from '@/components/admin/admin-page-layout';
 import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { Badge } from '@/components/shadcn-ui/badge';
+import { Button } from '@/components/shadcn-ui/button';
+import { formatDateWithSecond } from '@/utils/utils';
 
 // import AnalyticsCharts from './analytics-charts';
 

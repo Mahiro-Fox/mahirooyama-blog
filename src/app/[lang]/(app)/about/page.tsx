@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-
 import { BentoGridClient } from './bento-grid-client';
 
 export const metadata: Metadata = {

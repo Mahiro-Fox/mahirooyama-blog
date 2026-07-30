@@ -1,7 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-import { type AnalyticsLog } from '@/actions/admin/analytics-actions';
 import {
   Bar,
   BarChart,
@@ -16,6 +14,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useMemo } from 'react';
+import { type AnalyticsLog } from '@/actions/admin/analytics-actions';
 
 // 图表颜色配置
 const COLORS = [

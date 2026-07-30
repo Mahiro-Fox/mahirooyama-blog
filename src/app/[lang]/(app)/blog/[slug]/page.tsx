@@ -1,13 +1,9 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import { getPublicBlog } from '@/actions/admin/blog-actions';
-import { i18nConfig } from '@/i18n/i18n.config';
 import { tagStore } from '@/store/tag-store';
-import { absoluteUrl, formatDate } from '@/utils/utils';
-
-import { siteConfig } from '@/config/common';
-import { author } from '@/lib/author';
-import { getBlogs } from '@/lib/blog';
+import { notFound } from 'next/navigation';
+import React from 'react';
+import { getPublicBlog } from '@/actions/admin/blog-actions';
+import { Author } from '@/components/content/author';
+import { CustomMDX } from '@/components/content/custom-mdx';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,10 +12,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/shadcn-ui/breadcrumb';
-import { Author } from '@/components/content/author';
-import { CustomMDX } from '@/components/content/custom-mdx';
 import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';
 import { LinkBadge } from '@/components/shared/link-badge';
+import { siteConfig } from '@/config/common';
+import { i18nConfig } from '@/i18n/i18n.config';
+import { author } from '@/lib/author';
+import { getBlogs } from '@/lib/blog';
+import { absoluteUrl, formatDate } from '@/utils/utils';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;

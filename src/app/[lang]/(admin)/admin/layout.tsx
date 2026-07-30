@@ -1,15 +1,14 @@
+import type { UserRole } from '@/store/user-store';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { adminGetGuestbookEntries } from '@/actions/admin/guestbook-actions';
-import { getDictionary } from '@/i18n/dictionary';
-import { DictionaryProvider } from '@/i18n/dictionary-provider';
-import type { UserRole } from '@/store/user-store';
-
-import { verifyAuth } from '@/lib/admin-auth';
-import { requirePermission } from '@/lib/permissions';
 import AdminShell from '@/components/admin/admin-shell';
 import { QueryToast } from '@/components/admin/query-toast';
+import { getDictionary } from '@/i18n/dictionary';
+import { DictionaryProvider } from '@/i18n/dictionary-provider';
+import { verifyAuth } from '@/lib/admin-auth';
+import { requirePermission } from '@/lib/permissions';
 
 export const metadata: Metadata = {
   robots: {

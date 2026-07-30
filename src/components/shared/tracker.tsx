@@ -1,7 +1,7 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
 import { trackEvent, trackPageView } from '@/utils/tracker';
 
 /**

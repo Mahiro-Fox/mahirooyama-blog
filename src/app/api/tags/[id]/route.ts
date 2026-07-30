@@ -1,7 +1,6 @@
+import { tagStore } from '@/store/tag-store';
 import { NextRequest, NextResponse } from 'next/server';
 import { TagType } from '@/constant/tag';
-import { tagStore } from '@/store/tag-store';
-
 import { requirePermission } from '@/lib/permissions';
 
 // 更新标签

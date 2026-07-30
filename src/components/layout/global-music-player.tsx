@@ -1,11 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import Image from 'next/image';
 import { useMusic } from '@/context/music-provider';
-import { useT } from '@/i18n/dictionary-provider';
-import { trackEvent } from '@/utils/tracker';
-import { cn } from '@/utils/utils';
 import {
   ListMusic,
   Minimize2,
@@ -17,9 +12,13 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-
-import { Song } from '@/lib/music';
+import Image from 'next/image';
+import React, { useRef, useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
+import { useT } from '@/i18n/dictionary-provider';
+import { Song } from '@/lib/music';
+import { trackEvent } from '@/utils/tracker';
+import { cn } from '@/utils/utils';
 
 export function GlobalMusicPlayer() {
   const {

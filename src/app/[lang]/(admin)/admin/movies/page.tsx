@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { adminGetMovies } from '@/actions/admin/movie-actions';
-
 import { requirePermission } from '@/lib/permissions';
 import MoviesClient from './movies-client';
 

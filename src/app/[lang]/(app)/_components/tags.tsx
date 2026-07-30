@@ -1,11 +1,10 @@
 'use client';
 
 import { TagsData } from '@/constant';
-import { useT } from '@/i18n/dictionary-provider';
 import { TagIcon } from 'lucide-react';
-
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { Link } from '@/components/shared/link';
+import { useT } from '@/i18n/dictionary-provider';
 
 export default function Tags({ tags }: { tags: TagsData }) {
   const t = useT();

@@ -1,16 +1,15 @@
-import { notFound } from 'next/navigation';
-import { getPublicBlogs } from '@/actions/admin/blog-actions';
-import { i18nConfig } from '@/i18n/i18n.config';
-import { formatDate } from '@/utils/utils';
-
-import { siteConfig } from '@/config/common';
-import { DEFAULT_BLOG_LIST_LIMIT } from '@/config/limit';
-import { getBlogs } from '@/lib/blog';
-import { paginateItems } from '@/lib/pagination';
-import { LinkCard } from '@/components/shared/link-card';
-import { Pagination } from '@/components/shared/pagination';
 import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 import PageTitle from '@/app/[lang]/(app)/page/page-title';
+import { notFound } from 'next/navigation';
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
+import { LinkCard } from '@/components/shared/link-card';
+import { Pagination } from '@/components/shared/pagination';
+import { siteConfig } from '@/config/common';
+import { DEFAULT_BLOG_LIST_LIMIT } from '@/config/limit';
+import { i18nConfig } from '@/i18n/i18n.config';
+import { getBlogs } from '@/lib/blog';
+import { paginateItems } from '@/lib/pagination';
+import { formatDate } from '@/utils/utils';
 
 interface BlogListPageProps {
   params: Promise<{ page: string }>;

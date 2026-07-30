@@ -3,13 +3,12 @@
 import { ALL_PERMISSIONS, Permission } from '@/constant';
 import { rolePermissionStore } from '@/store/role-permission-store';
 import { UserRole } from '@/store/user-store';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
 import { createLogger } from '@/utils/logger';
-
-import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('RolePermissionActions');
 

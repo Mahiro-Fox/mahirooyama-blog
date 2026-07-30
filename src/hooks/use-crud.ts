@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import { useCallback, useState } from 'react';
 
 export interface CrudConfig<T> {
   apiPath: string;

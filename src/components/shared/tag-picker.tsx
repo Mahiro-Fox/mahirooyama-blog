@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { adminGetTags } from '@/actions/admin/tag-actions';
 import { TagType, type TagsData } from '@/constant';
 import { Tag } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { adminGetTags } from '@/actions/admin/tag-actions';
 
 interface TagPickerProps {
   value: string[];

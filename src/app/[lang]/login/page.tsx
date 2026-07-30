@@ -1,11 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { checkLogin, login } from '@/actions/admin/auth';
-import { useT } from '@/i18n/dictionary-provider';
 import { toast } from 'sonner';
-
+import { Suspense, useEffect, useState } from 'react';
+import { checkLogin, login } from '@/actions/admin/auth';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,
@@ -16,6 +14,7 @@ import {
 } from '@/components/shadcn-ui/card';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
+import { useT } from '@/i18n/dictionary-provider';
 
 function LoginForm() {
   const t = useT();

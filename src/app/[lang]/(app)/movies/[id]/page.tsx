@@ -1,9 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getPublicMovies } from '@/actions/admin/movie-actions';
 import { getDictionary } from '@/i18n/dictionary';
-
 import { Movie } from '@/lib/movies';
-
 import { MovieDetailClient } from './movie-detail-client';
 
 export const generateMetadata = async ({

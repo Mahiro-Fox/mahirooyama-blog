@@ -1,15 +1,14 @@
 'use client';
 
 import { siteConfig } from '@/config';
-import { useT } from '@/i18n/dictionary-provider';
-import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
-
-import { Blog } from '@/lib/blog';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
 import { Link } from '@/components/shared/link';
 import { LinkCard } from '@/components/shared/link-card';
+import { useT } from '@/i18n/dictionary-provider';
+import { Blog } from '@/lib/blog';
+import { formatDate } from '@/utils/utils';
 
 export default function Posts({ posts }: { posts: Blog[] }) {
   const t = useT();

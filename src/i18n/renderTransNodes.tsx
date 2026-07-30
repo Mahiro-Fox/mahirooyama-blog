@@ -1,5 +1,4 @@
 import { createElement, Fragment, ReactNode } from 'react';
-
 import type { TransNode } from './parseTemplate';
 
 type ComponentsMap = Record<string, React.ComponentType<any>>;

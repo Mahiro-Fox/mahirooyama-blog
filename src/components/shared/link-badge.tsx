@@ -1,7 +1,6 @@
-import { cn } from '@/utils/utils';
-
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Link } from '@/components/shared/link';
+import { cn } from '@/utils/utils';
 
 interface LinkBadgeProps {
   label: string;

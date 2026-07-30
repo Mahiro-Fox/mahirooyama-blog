@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useT } from '@/i18n/dictionary-provider';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
@@ -11,8 +9,9 @@ import {
   Settings,
   Shield,
 } from 'lucide-react';
-
+import React, { useState } from 'react';
 import { Button } from '@/components/shadcn-ui/button';
+import { useT } from '@/i18n/dictionary-provider';
 
 /**
  * 目标格式类型

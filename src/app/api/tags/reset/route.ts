@@ -1,6 +1,5 @@
-import { NextResponse } from 'next/server';
 import { tagStore } from '@/store/tag-store';
-
+import { NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 
 // 重置为默认标签

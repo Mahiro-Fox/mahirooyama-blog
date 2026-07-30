@@ -1,16 +1,15 @@
-import { getPublicMusic } from '@/actions/admin/music-actions';
 import { MusicProvider } from '@/context/music-provider';
-import { getDictionary } from '@/i18n/dictionary';
-import { DictionaryProvider } from '@/i18n/dictionary-provider';
-
-import { siteConfig } from '@/config/common';
-import { getCurrentAdminUser } from '@/lib/admin-auth';
+import { getPublicMusic } from '@/actions/admin/music-actions';
 import { BackToTop } from '@/components/layout/back-to-top';
 import { BugReportTrigger } from '@/components/layout/bug-report-trigger';
 import { GlobalMusicPlayer } from '@/components/layout/global-music-player';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { PageTracker } from '@/components/shared/tracker';
+import { siteConfig } from '@/config/common';
+import { getDictionary } from '@/i18n/dictionary';
+import { DictionaryProvider } from '@/i18n/dictionary-provider';
+import { getCurrentAdminUser } from '@/lib/admin-auth';
 
 export const generateMetadata = async (params: Promise<{ lang: string }>) => {
   const { lang } = await params;

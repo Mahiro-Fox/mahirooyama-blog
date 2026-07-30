@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { adminGetMoments } from '@/actions/admin/moments-actions';
-
 import { requirePermission } from '@/lib/permissions';
-
 import MomentsClient from './moments-client';
 
 export default async function MomentsAdminPage() {

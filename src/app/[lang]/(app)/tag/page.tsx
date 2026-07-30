@@ -1,11 +1,10 @@
-import { Metadata } from 'next';
-import { Tag as TagType } from '@/constant/tag';
 import { tagStore } from '@/store/tag-store';
 import { FileText, Image, Tag } from 'lucide-react';
-
+import { Metadata } from 'next';
 import { Card, CardContent } from '@/components/shadcn-ui/card';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { Link } from '@/components/shared/link';
+import { Tag as TagType } from '@/constant/tag';
 
 export const metadata: Metadata = {
   title: '标签列表 - mahirooyama',

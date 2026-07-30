@@ -1,16 +1,15 @@
-import { getPublicBlogs } from '@/actions/admin/blog-actions';
-import { getPublicGalleries } from '@/actions/admin/gallery-actions';
-import { getHomeBannerImages } from '@/actions/home-banner';
-import { tagStore } from '@/store/tag-store';
-
-import { Gallery } from '@/lib/gallery';
-import { BlurFade } from '@/components/shadcn-ui/blur-fade';
-import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
 import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 import Galleries from '@/app/[lang]/(app)/_components/galleries';
 import { HomeBanner } from '@/app/[lang]/(app)/_components/home-banner';
 import Posts from '@/app/[lang]/(app)/_components/posts';
 import Tags from '@/app/[lang]/(app)/_components/tags';
+import { tagStore } from '@/store/tag-store';
+import { getPublicBlogs } from '@/actions/admin/blog-actions';
+import { getPublicGalleries } from '@/actions/admin/gallery-actions';
+import { getHomeBannerImages } from '@/actions/home-banner';
+import { BlurFade } from '@/components/shadcn-ui/blur-fade';
+import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
+import { Gallery } from '@/lib/gallery';
 
 export default async function IndexPage() {
   const blogResult = await getPublicBlogs({ all: true });

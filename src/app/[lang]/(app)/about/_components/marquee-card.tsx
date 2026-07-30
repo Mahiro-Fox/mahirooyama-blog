@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
 import { MarqueeContent } from '@/config/about';
 
 interface MarqueeCardProps {

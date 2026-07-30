@@ -1,24 +1,23 @@
 'use client';
 
+import { type BugReport, type BugStatus } from '@/store/bug-store';
+import { CheckCircle, Clock } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 import {
   adminDeleteBugReport,
   adminGetBugReports,
   adminUpdateBugStatus,
 } from '@/actions/admin/bug-actions';
-import { type BugReport, type BugStatus } from '@/store/bug-store';
-import { formatDate } from '@/utils/utils';
-import { CheckCircle, Clock } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { Badge } from '@/components/shadcn-ui/badge';
-import { Button } from '@/components/shadcn-ui/button';
 import {
   AdminPageLayout,
   createRefreshAction,
 } from '@/components/admin/admin-page-layout';
 import { DataTable, type Column } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { Badge } from '@/components/shadcn-ui/badge';
+import { Button } from '@/components/shadcn-ui/button';
+import { formatDate } from '@/utils/utils';
 
 export default function BugsClient({
   initialBugs,

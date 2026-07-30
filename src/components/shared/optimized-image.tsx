@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
-import Image from 'next/image';
-import { cn } from '@/utils/utils';
 import { useInView } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
-
+import Image from 'next/image';
+import { useCallback, useRef, useState } from 'react';
+import { cn } from '@/utils/utils';
 import { useImagePreview } from '../../context/image-preview-provider';
 
 interface OptimizedImageProps {

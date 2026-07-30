@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
+import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import {
   bufferToBase64,
   getMimeType,
@@ -43,8 +43,6 @@ interface ProcessImageResponse {
   /** 错误信息（如果有全局错误） */
   error?: string;
 }
-
-import { MAX_FILE_SIZE } from '@/constant/file-upload';
 
 /**
  * 默认图片处理配置

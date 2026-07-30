@@ -1,9 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
-import { SkillsContent } from '@/config/about';
 import { Marquee } from '@/components/shadcn-ui/marquee';
+import { SkillsContent } from '@/config/about';
 
 interface SkillsCardProps {
   content: SkillsContent;

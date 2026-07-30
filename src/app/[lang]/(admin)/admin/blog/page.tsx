@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { adminGetBlogs } from '@/actions/admin/blog-actions';
-
 import { requirePermission } from '@/lib/permissions';
-
 import BlogClient from './blog-client';
 
 export default async function BlogAdminPage() {

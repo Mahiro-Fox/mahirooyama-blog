@@ -1,11 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { submitBugReport } from '@/actions/admin/bug-actions';
-import { trackEvent } from '@/utils/tracker';
 import { Bug, Send } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { useState } from 'react';
+import { submitBugReport } from '@/actions/admin/bug-actions';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Dialog,
@@ -17,6 +15,7 @@ import {
 } from '@/components/shadcn-ui/dialog';
 import { Field, FieldLabel } from '@/components/shadcn-ui/field';
 import { Input } from '@/components/shadcn-ui/input';
+import { trackEvent } from '@/utils/tracker';
 
 export function BugReportTrigger() {
   const [open, setOpen] = useState(false);

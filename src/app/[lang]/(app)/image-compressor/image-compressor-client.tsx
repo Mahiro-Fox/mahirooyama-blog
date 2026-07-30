@@ -1,12 +1,11 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { useT } from '@/i18n/dictionary-provider';
-import { trackEvent } from '@/utils/tracker';
 import JSZip from 'jszip';
 import { Zap } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { useRef, useState } from 'react';
+import { useT } from '@/i18n/dictionary-provider';
+import { trackEvent } from '@/utils/tracker';
 import ConfigPanel, { ImageProcessConfig } from './_components/config-panel';
 import ImageSliderView from './_components/image-slider-view';
 import ImageUploader, { UploadedFile } from './_components/image-uploader';

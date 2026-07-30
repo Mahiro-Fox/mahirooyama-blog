@@ -1,10 +1,9 @@
+import { jwtVerify, SignJWT } from 'jose';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { pageRoutesConfig } from '@/config/common';
 import { SESSION_EXPIRY, SESSION_REFRESH_THRESHOLD } from '@/constant/auth';
 import { i18nConfig } from '@/i18n/i18n.config';
-import { jwtVerify, SignJWT } from 'jose';
-
-import { pageRoutesConfig } from '@/config/common';
 
 // JWT 密钥检查（最少32字符）
 const rawSecret =

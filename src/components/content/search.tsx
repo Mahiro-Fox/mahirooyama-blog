@@ -1,8 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useT } from '@/i18n/dictionary-provider';
-import { trackEvent } from '@/utils/tracker';
 import {
   FileText,
   Image,
@@ -10,8 +7,7 @@ import {
   Search as SearchIcon,
   X,
 } from 'lucide-react';
-
-import { SearchResult, useSearch } from '@/hooks/use-search';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Dialog,
@@ -21,6 +17,9 @@ import {
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
 import { Link } from '@/components/shared/link';
+import { SearchResult, useSearch } from '@/hooks/use-search';
+import { useT } from '@/i18n/dictionary-provider';
+import { trackEvent } from '@/utils/tracker';
 
 export function Search() {
   const t = useT();

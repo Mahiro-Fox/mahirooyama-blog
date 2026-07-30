@@ -1,13 +1,10 @@
 import { ImagePreviewProvider } from '@/context/image-preview-provider';
 import { ThemeProvider } from '@/context/theme-provider';
-import { cn } from '@/utils/utils';
-
-import { fontVariables } from '@/lib/fonts';
 import { Toaster } from '@/components/shadcn-ui/sonner';
 import { TailwindIndicator } from '@/components/shared/tailwind-indicator';
-
+import { fontVariables } from '@/lib/fonts';
+import { cn } from '@/utils/utils';
 import '@/styles/globals.css';
-
 import { WebVitals } from '@/components/shared/web-vitals';
 
 interface RootLayoutProps {

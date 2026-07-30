@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { MonitorOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 export function DeviceDetector() {
   useEffect(() => {

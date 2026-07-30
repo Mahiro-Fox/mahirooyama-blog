@@ -1,6 +1,5 @@
-import { ReactElement } from 'react';
 import { render } from '@react-email/components';
-
+import { ReactElement } from 'react';
 import { EMAIL_FROM, getResendClient } from './resend-client';
 
 interface SendEmailParams {

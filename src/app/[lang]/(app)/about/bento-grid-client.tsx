@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-
+import { TextAnimate } from '@/components/shadcn-ui/text-animate';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 import {
   aboutConfig,
   type BadgeContent,
@@ -13,9 +14,6 @@ import {
   type PursuitContent,
   type SkillsContent,
 } from '@/config/about';
-import { TextAnimate } from '@/components/shadcn-ui/text-animate';
-import { OptimizedImage } from '@/components/shared/optimized-image';
-
 import { BadgeCard } from './_components/badge-card';
 import { MapCard } from './_components/map-card';
 import { MarqueeCard } from './_components/marquee-card';

@@ -8,9 +8,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { throttle } from '@/utils/utils';
-
 import { Song } from '@/lib/music';
+import { throttle } from '@/utils/utils';
 
 interface MusicContextValue {
   /** 当前播放的歌曲，null 表示没有歌曲 */

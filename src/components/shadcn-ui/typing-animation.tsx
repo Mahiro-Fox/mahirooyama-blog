@@ -1,6 +1,13 @@
 'use client';
 
 import {
+  motion,
+  useInView,
+  type DOMMotionComponents,
+  type HTMLMotionProps,
+  type MotionProps,
+} from 'motion/react';
+import {
   useEffect,
   useMemo,
   useRef,
@@ -10,13 +17,6 @@ import {
   type RefObject,
 } from 'react';
 import { cn } from '@/utils/utils';
-import {
-  motion,
-  useInView,
-  type DOMMotionComponents,
-  type HTMLMotionProps,
-  type MotionProps,
-} from 'motion/react';
 
 const motionElements = {
   article: motion.article,

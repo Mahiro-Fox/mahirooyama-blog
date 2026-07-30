@@ -2,7 +2,6 @@
 
 import { AVAILABLE_ICONS } from '@/config';
 import { Tag } from 'lucide-react';
-
 import {
   Select,
   SelectContent,
@@ -10,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/shadcn-ui/select';
-
 import { BrandIcons } from './brand-icons';
 
 interface IconPickerProps {

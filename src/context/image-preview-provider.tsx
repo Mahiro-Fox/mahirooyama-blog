@@ -1,5 +1,6 @@
 'use client';
 
+import { Download, X, ZoomIn, ZoomOut } from 'lucide-react';
 import React, {
   createContext,
   useCallback,
@@ -8,7 +9,6 @@ import React, {
   useState,
 } from 'react';
 import { cn } from '@/utils/utils';
-import { Download, X, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface PreviewImage {
   src: string;

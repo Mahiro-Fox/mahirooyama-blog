@@ -1,6 +1,5 @@
-import type { Permission } from '@/constant/permissions';
 import type { User } from '@/store/user-store';
-
+import type { Permission } from '@/constant/permissions';
 import { requirePermission } from '@/lib/permissions';
 
 export type ActionResponse<T = unknown> =

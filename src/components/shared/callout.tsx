@@ -1,10 +1,10 @@
-import { cn } from '@/utils/utils';
 import {
   AlertTriangleIcon,
   FileTextIcon,
   InfoIcon,
   XCircleIcon,
 } from 'lucide-react';
+import { cn } from '@/utils/utils';
 
 type CalloutType = 'info' | 'note' | 'warning' | 'danger';
 

@@ -1,8 +1,8 @@
 // src/components/shared/link.tsx
 'use client';
 
-import type { ComponentProps } from 'react';
 import NextLink from 'next/link';
+import type { ComponentProps } from 'react';
 import { i18nConfig } from '@/i18n/i18n.config';
 import { useLocale } from '@/i18n/use-locale';
 

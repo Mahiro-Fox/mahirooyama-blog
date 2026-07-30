@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { PlaneTakeoff } from 'lucide-react';
-
 import { PursuitContent } from '@/config/about';
 
 interface PursuitCardProps {

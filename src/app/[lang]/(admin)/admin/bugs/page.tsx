@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { adminGetBugReports } from '@/actions/admin/bug-actions';
-
 import { requirePermission } from '@/lib/permissions';
-
 import BugsClient from './bugs-client';
 
 export default async function BugsAdminPage() {

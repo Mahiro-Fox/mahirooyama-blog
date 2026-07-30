@@ -5,8 +5,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { UPLOADS_DIR } from '@/constant/dir';
 import sharp from 'sharp';
+import { UPLOADS_DIR } from '@/constant/dir';
 
 /**
  * 判断图片是否为竖屏图片

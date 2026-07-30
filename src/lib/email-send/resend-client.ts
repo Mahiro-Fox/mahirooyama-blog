@@ -15,4 +15,5 @@ export function getResendClient(): Resend {
 }
 
 // 统一管理发件地址，避免散落在各处硬编码
-export const EMAIL_FROM = process.env.EMAIL_FROM ?? '你的网站 <notify@yourdomain.com>';
+export const EMAIL_FROM =
+  process.env.EMAIL_FROM ?? '你的网站 <notify@yourdomain.com>';

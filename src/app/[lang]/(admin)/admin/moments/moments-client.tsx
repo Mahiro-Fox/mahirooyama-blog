@@ -1,5 +1,8 @@
 'use client';
 
+import { MOOD_OPTIONS } from '@/config';
+import { Edit, Image as ImageIcon, MapPin, Smile, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 import {
   adminCreateMoment,
@@ -8,14 +11,6 @@ import {
   adminUpdateMoment,
   adminUploadMomentImage,
 } from '@/actions/admin/moments-actions';
-import { MOOD_OPTIONS } from '@/config';
-import { formatDate } from '@/utils/utils';
-import { Edit, Image as ImageIcon, MapPin, Smile, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { Moment, MomentImage } from '@/lib/moments';
-import { Button } from '@/components/shadcn-ui/button';
-import { Input } from '@/components/shadcn-ui/input';
 import {
   AdminPageLayout,
   createAddAction,
@@ -24,7 +19,11 @@ import {
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
+import { Button } from '@/components/shadcn-ui/button';
+import { Input } from '@/components/shadcn-ui/input';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { Moment, MomentImage } from '@/lib/moments';
+import { formatDate } from '@/utils/utils';
 
 export default function MomentsClient({
   initialMoments,

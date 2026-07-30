@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
-
 import { siteConfig } from '@/config/common';
 
 export async function GET() {

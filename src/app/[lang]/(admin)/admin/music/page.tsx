@@ -1,8 +1,6 @@
 import { Metadata } from 'next';
 import { adminGetMusic } from '@/actions/admin/music-actions';
-
 import { requirePermission } from '@/lib/permissions';
-
 import MusicClient from './music-client';
 
 export const metadata: Metadata = {

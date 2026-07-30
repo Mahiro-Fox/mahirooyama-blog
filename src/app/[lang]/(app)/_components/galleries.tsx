@@ -1,15 +1,14 @@
 'use client';
 
 import { siteConfig } from '@/config';
-import { useT } from '@/i18n/dictionary-provider';
-import { formatDate } from '@/utils/utils';
 import { ChevronRightIcon } from 'lucide-react';
-
-import { Gallery } from '@/lib/gallery';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
 import { Link } from '@/components/shared/link';
 import { LinkCard } from '@/components/shared/link-card';
+import { useT } from '@/i18n/dictionary-provider';
+import { Gallery } from '@/lib/gallery';
+import { formatDate } from '@/utils/utils';
 
 export default function Galleries({ galleries }: { galleries: Gallery[] }) {
   const t = useT();

@@ -1,11 +1,8 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import { getPublicGalleries } from '@/actions/admin/gallery-actions';
-import { i18nConfig } from '@/i18n/i18n.config';
+import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 import { tagStore } from '@/store/tag-store';
-import { absoluteUrl, formatDate } from '@/utils/utils';
-
-import { siteConfig } from '@/config/common';
+import { notFound } from 'next/navigation';
+import React from 'react';
+import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { Badge } from '@/components/shadcn-ui/badge';
 import {
   Breadcrumb,
@@ -18,7 +15,9 @@ import {
 import { TextAnimate } from '@/components/shadcn-ui/text-animate';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
-import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
+import { siteConfig } from '@/config/common';
+import { i18nConfig } from '@/i18n/i18n.config';
+import { absoluteUrl, formatDate } from '@/utils/utils';
 
 interface GalleryTagPageProps {
   params: Promise<{ slug: string }>;

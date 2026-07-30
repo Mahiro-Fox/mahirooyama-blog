@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { adminGetAnalyticsLogs } from '@/actions/admin/analytics-actions';
-
 import { requirePermission } from '@/lib/permissions';
-
 import AnalyticsClient from './analytics-client';
 
 export default async function AnalyticsAdminPage() {

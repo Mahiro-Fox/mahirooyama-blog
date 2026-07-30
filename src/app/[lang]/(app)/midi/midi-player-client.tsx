@@ -1,9 +1,5 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { useT } from '@/i18n/dictionary-provider';
-import { trackEvent } from '@/utils/tracker';
-import { debounce } from '@/utils/utils';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   AlertCircle,
@@ -15,11 +11,14 @@ import {
   Play,
   Search,
 } from 'lucide-react';
-
-import type { MidiFile } from '@/lib/midi-files';
-import { useMidiPlayer } from '@/hooks/use-midi-player';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
+import { useMidiPlayer } from '@/hooks/use-midi-player';
+import { useT } from '@/i18n/dictionary-provider';
+import type { MidiFile } from '@/lib/midi-files';
+import { trackEvent } from '@/utils/tracker';
+import { debounce } from '@/utils/utils';
 
 interface MidiPlayerClientProps {
   initialFiles: MidiFile[];

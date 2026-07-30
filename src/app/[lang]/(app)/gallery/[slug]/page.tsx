@@ -1,12 +1,8 @@
-import React from 'react';
+import { tagStore } from '@/store/tag-store';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import React from 'react';
 import { getPublicGallery } from '@/actions/admin/gallery-actions';
-import { i18nConfig } from '@/i18n/i18n.config';
-import { tagStore } from '@/store/tag-store';
-import { formatDate } from '@/utils/utils';
-
-import { getGalleries } from '@/lib/gallery';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import {
   Breadcrumb,
@@ -18,6 +14,9 @@ import {
 } from '@/components/shadcn-ui/breadcrumb';
 import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';
 import { LinkBadge } from '@/components/shared/link-badge';
+import { i18nConfig } from '@/i18n/i18n.config';
+import { getGalleries } from '@/lib/gallery';
+import { formatDate } from '@/utils/utils';
 
 interface GalleryImagePageProps {
   params: Promise<{

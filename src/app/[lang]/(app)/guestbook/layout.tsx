@@ -2,7 +2,6 @@ import { ReactNode } from 'react';
 import { getPublicGuestbook } from '@/actions/admin/guestbook-actions';
 import { getDictionary } from '@/i18n/dictionary';
 import { DictionaryProvider } from '@/i18n/dictionary-provider';
-
 import { GuestbookWallDialog } from './guestbook-dialog';
 
 export const generateMetadata = async (params: Promise<{ lang: string }>) => {

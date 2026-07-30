@@ -1,7 +1,6 @@
-import { adminGetAnalyticsLogs } from '@/actions/admin/analytics-actions';
-
-import { DeviceDetector } from '@/components/admin/device-detector';
 import AnalyticsCharts from '@/app/[lang]/(admin)/admin/analytics/analytics-charts';
+import { adminGetAnalyticsLogs } from '@/actions/admin/analytics-actions';
+import { DeviceDetector } from '@/components/admin/device-detector';
 
 export default async function AdminPage() {
   const result = await adminGetAnalyticsLogs();

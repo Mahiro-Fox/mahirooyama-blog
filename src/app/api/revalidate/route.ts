@@ -1,6 +1,5 @@
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
-
 import { requirePermission } from '@/lib/permissions';
 
 export async function POST(request: NextRequest) {

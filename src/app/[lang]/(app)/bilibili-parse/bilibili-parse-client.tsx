@@ -1,12 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useT } from '@/i18n/dictionary-provider';
-import { formatSize } from '@/utils/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Clock, Copy, Download, History, Trash2, Video } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,
@@ -16,6 +13,8 @@ import {
   CardTitle,
 } from '@/components/shadcn-ui/card';
 import { Input } from '@/components/shadcn-ui/input';
+import { useT } from '@/i18n/dictionary-provider';
+import { formatSize } from '@/utils/utils';
 
 interface ParseResult {
   title: string;

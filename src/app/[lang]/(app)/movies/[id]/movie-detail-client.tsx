@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { useT } from '@/i18n/dictionary-provider';
-import { cn } from '@/utils/utils';
 import { Calendar, Check, Clock, Tag } from 'lucide-react';
-
-import type { Movie } from '@/lib/movies';
+import Image from 'next/image';
+import { useState } from 'react';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { VideoPlayer } from '@/components/VideoPlayer';
+import { useT } from '@/i18n/dictionary-provider';
+import type { Movie } from '@/lib/movies';
+import { cn } from '@/utils/utils';
 
 interface MovieDetailClientProps {
   movie: Movie;

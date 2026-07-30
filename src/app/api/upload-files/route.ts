@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import sharp from 'sharp';
 import { UPLOADS_DIR } from '@/constant/dir';
 import {
   ALLOWED_MIME_TYPES,
@@ -9,14 +10,12 @@ import {
   MAX_TOTAL_SIZE,
   WEBP_QUALITY,
 } from '@/constant/file-upload';
+import { requirePermission } from '@/lib/permissions';
 import {
   checkFileConflict,
   ensureDirectory,
   isPathSafe,
 } from '@/utils/file-utils';
-import sharp from 'sharp';
-
-import { requirePermission } from '@/lib/permissions';
 
 /**
  * 验证文件是否符合上传要求

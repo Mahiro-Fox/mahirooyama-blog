@@ -1,15 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { setLocale } from '@/actions/set-locale';
-import { useT } from '@/i18n/dictionary-provider';
-import { i18nConfig } from '@/i18n/i18n.config';
-import { useLocale } from '@/i18n/use-locale';
 import { Languages, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
-
-import { groupedNavRoutes, siteConfig } from '@/config/common';
+import { usePathname } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { setLocale } from '@/actions/set-locale';
+import { Search } from '@/components/content/search';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   DropdownMenu,
@@ -36,11 +32,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
-import { Search } from '@/components/content/search';
 import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { Link } from '@/components/shared/link';
 import { SiteLogo } from '@/components/shared/site-logo';
+import { groupedNavRoutes, siteConfig } from '@/config/common';
+import { useT } from '@/i18n/dictionary-provider';
+import { i18nConfig } from '@/i18n/i18n.config';
+import { useLocale } from '@/i18n/use-locale';
 
 interface SiteHeaderProps {
   initialIsAuth?: boolean;

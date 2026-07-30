@@ -1,9 +1,8 @@
 'use client';
 
+import { siteConfig } from '@/config/common';
 import { useT } from '@/i18n/dictionary-provider';
 import { Trans } from '@/i18n/Trans';
-
-import { siteConfig } from '@/config/common';
 
 export function AboutCta() {
   const t = useT();

@@ -1,11 +1,10 @@
-import { cn } from '@/utils/utils';
-
-import { Button } from '@/components/shadcn-ui/button';
 import { LinkPreview } from '@/components/content/link-preview';
+import { Button } from '@/components/shadcn-ui/button';
 import { getIconForLanguageExtension } from '@/components/shared/brand-icons';
 import { Callout } from '@/components/shared/callout';
 import { CopyButton } from '@/components/shared/copy-button';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { cn } from '@/utils/utils';
 
 export const mdxComponents = {
   h1: ({ className, ...props }: React.ComponentProps<'h1'>) => (

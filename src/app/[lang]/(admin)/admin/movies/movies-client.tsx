@@ -1,20 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { Edit, Link as LinkIcon, Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
+import { useState } from 'react';
 import {
   adminCreateMovie,
   adminDeleteMovie,
   adminGetMovies,
   adminUpdateMovie,
 } from '@/actions/admin/movie-actions';
-import { formatDate } from '@/utils/utils';
-import { Edit, Link as LinkIcon, Plus, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { Movie, MovieSource } from '@/lib/movies';
-import { Button } from '@/components/shadcn-ui/button';
-import { Input } from '@/components/shadcn-ui/input';
 import {
   AdminPageLayout,
   createAddAction,
@@ -22,7 +17,11 @@ import {
 } from '@/components/admin/admin-page-layout';
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { Button } from '@/components/shadcn-ui/button';
+import { Input } from '@/components/shadcn-ui/input';
 import { Link } from '@/components/shared/link';
+import { Movie, MovieSource } from '@/lib/movies';
+import { formatDate } from '@/utils/utils';
 
 export default function MoviesClient({
   initialMovies,

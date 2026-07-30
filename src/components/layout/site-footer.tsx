@@ -1,11 +1,10 @@
-import NextLink from 'next/link';
-import { cn } from '@/utils/utils';
 import { MailIcon, RssIcon } from 'lucide-react';
-
-import { siteConfig } from '@/config/common';
+import NextLink from 'next/link';
 import { buttonVariants } from '@/components/shadcn-ui/button';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { Link } from '@/components/shared/link';
+import { siteConfig } from '@/config/common';
+import { cn } from '@/utils/utils';
 
 export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
   return (

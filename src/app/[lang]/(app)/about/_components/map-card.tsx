@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { Heart, MapPin } from 'lucide-react';
-
 import { MapContent } from '@/config/about';
 
 interface MapCardProps {

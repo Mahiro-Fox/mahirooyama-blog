@@ -1,8 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { Midi } from '@tonejs/midi';
-
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MidiFile } from '@/lib/midi-files';
 
 export interface MidiPlayerState {

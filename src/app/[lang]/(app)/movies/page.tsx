@@ -1,5 +1,4 @@
 import { getPublicMovies } from '@/actions/admin/movie-actions';
-
 import { MoviesClient } from './movies-client';
 
 export default async function MoviesPage() {

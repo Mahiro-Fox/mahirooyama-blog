@@ -2,7 +2,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { GALLERY_DIR } from '@/constant/dir';
-
 import { requirePermission } from '@/lib/permissions';
 
 interface RouteParams {

@@ -1,5 +1,14 @@
 'use client';
 
+import {
+  INITIAL_FORM_DATA,
+  Tag,
+  TAG_TYPES,
+  TagsData,
+  TagType,
+} from '@/constant';
+import { Tag as LucideTag, RefreshCwIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { useState } from 'react';
 import {
   adminCreateTag,
@@ -9,17 +18,13 @@ import {
   adminUpdateTag,
 } from '@/actions/admin/tag-actions';
 import {
-  INITIAL_FORM_DATA,
-  Tag,
-  TAG_TYPES,
-  TagsData,
-  TagType,
-} from '@/constant';
-import { formatDate } from '@/utils/utils';
-import { Tag as LucideTag, RefreshCwIcon } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { getTagTypeConfig } from '@/config/tag';
+  AdminPageLayout,
+  createAddAction,
+  createRefreshAction,
+} from '@/components/admin/admin-page-layout';
+import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
+import { DataTable, type Column } from '@/components/admin/data-table';
+import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
 import {
@@ -28,17 +33,11 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/shadcn-ui/tabs';
-import {
-  AdminPageLayout,
-  createAddAction,
-  createRefreshAction,
-} from '@/components/admin/admin-page-layout';
-import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
-import { DataTable, type Column } from '@/components/admin/data-table';
-import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { IconPicker } from '@/components/shared/icon-picker';
 import { Link } from '@/components/shared/link';
+import { getTagTypeConfig } from '@/config/tag';
+import { formatDate } from '@/utils/utils';
 
 // 表格列定义
 const getColumns = (type: TagType): Column<Tag>[] => [

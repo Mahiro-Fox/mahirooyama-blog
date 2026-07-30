@@ -22,6 +22,7 @@
 ## 1️⃣ 项目架构概览
 
 ### 技术栈
+
 - **框架**: Next.js 16 (App Router + Turbopack)
 - **语言**: TypeScript (strict mode)
 - **样式**: Tailwind CSS v4 + shadcn/ui
@@ -47,7 +48,8 @@
 └─────────────────────────────────────────────────────┘
 ```
 
-**关键原则**: 
+**关键原则**:
+
 - ❌ 不要引入 Redux/Zustand 等全局状态管理库
 - ✅ 使用 Server Components + Server Actions 模式
 - ✅ 数据通过 props 从上往下传递
@@ -97,10 +99,10 @@ src/
 export default async function BlogAdminPage() {
   // 1. 权限验证
   const permissionCheck = await requirePermission('blog:read');
-  
+
   // 2. 数据获取 (调用 Server Action)
   const result = await adminGetBlogFiles();
-  
+
   // 3. 传递给 Client Component
   return <BlogClient initialFiles={result.data} />;
 }
@@ -113,6 +115,7 @@ export default function BlogClient({ initialFiles }) {
 ```
 
 **❌ 错误做法**:
+
 - 不要在 Client Component 中直接读取文件系统
 - 不要跳过权限验证
 - 不要将所有逻辑写在一个文件中
@@ -123,12 +126,12 @@ export default function BlogClient({ initialFiles }) {
 
 ### 3.1 组件命名规范
 
-| 类型 | 命名规则 | 示例 |
-|------|---------|------|
-| Server Component | `PascalCase` | `BlogAdminPage`, `AboutPage` |
-| Client Component | `*client.tsx` | `blog-client.tsx`, `analytics-client.tsx` |
-| 共享组件 | `PascalCase` | `TagPicker`, `DataTable` |
-| 页面子组件 | `_components/*.tsx` | `home-banner.tsx`, `profile-card.tsx` |
+| 类型             | 命名规则            | 示例                                      |
+| ---------------- | ------------------- | ----------------------------------------- |
+| Server Component | `PascalCase`        | `BlogAdminPage`, `AboutPage`              |
+| Client Component | `*client.tsx`       | `blog-client.tsx`, `analytics-client.tsx` |
+| 共享组件         | `PascalCase`        | `TagPicker`, `DataTable`                  |
+| 页面子组件       | `_components/*.tsx` | `home-banner.tsx`, `profile-card.tsx`     |
 
 ### 3.2 导入路径别名
 
@@ -146,18 +149,18 @@ import { Button } from '../../../components/shadcn-ui/button';
 
 ```typescript
 // config/index.ts - 统一导出
-export * from './config';      // siteConfig, pageRoutesConfig
-export * from './tag-config';  // tag 相关配置
-export * from './moods';       // 心情配置
-export * from './ui';          // UI 配置
-export * from './limit';       // 限制配置
+export * from './config'; // siteConfig, pageRoutesConfig
+export * from './tag-config'; // tag 相关配置
+export * from './moods'; // 心情配置
+export * from './ui'; // UI 配置
+export * from './limit'; // 限制配置
 
 // constant/index.ts - 统一导出
-export * from './dir';         // 路径常量
-export * from './auth';        // 认证常量
-export * from './cache';       // 缓存常量
-export * from './form';        // 表单常量
-export * from './tag';         // 标签常量
+export * from './dir'; // 路径常量
+export * from './auth'; // 认证常量
+export * from './cache'; // 缓存常量
+export * from './form'; // 表单常量
+export * from './tag'; // 标签常量
 export * from './permissions'; // 权限定义
 ```
 
@@ -170,12 +173,13 @@ export * from './permissions'; // 权限定义
 ### 4.1 🎯 管理后台专用组件 (`src/components/admin/`)
 
 #### ✅ AdminPageLayout - 管理页面布局
+
 ```typescript
 // ✅ 使用示例
-import { 
-  AdminPageLayout, 
-  createRefreshAction, 
-  createAddAction 
+import {
+  AdminPageLayout,
+  createRefreshAction,
+  createAddAction
 } from '@/components/admin/admin-page-layout';
 
 <AdminPageLayout
@@ -189,11 +193,13 @@ import {
   {/* 内容区域 */}
 </AdminPageLayout>
 ```
+
 **适用场景**: 所有管理后台页面的统一布局
 
 ---
 
 #### ✅ DataTable - 通用数据表格 (带虚拟滚动)
+
 ```typescript
 // ✅ 使用示例
 import { Column, DataTable } from '@/components/admin/data-table';
@@ -221,7 +227,9 @@ const columns: Column<BlogPost>[] = [
   virtualOptions={{ maxHeight: '65vh' }}
 />
 ```
-**特性**: 
+
+**特性**:
+
 - 支持虚拟滚动 (@tanstack/react-virtual)
 - 内置编辑/删除按钮
 - 支持 loading/empty 状态
@@ -230,6 +238,7 @@ const columns: Column<BlogPost>[] = [
 ---
 
 #### ✅ CrudFormDialog - CRUD 表单对话框
+
 ```typescript
 // ✅ 使用示例
 import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
@@ -247,11 +256,13 @@ import { CrudFormDialog } from '@/components/admin/crud-form-dialog';
   <Textarea ... />
 </CrudFormDialog>
 ```
+
 **适用场景**: 创建/编辑表单对话框
 
 ---
 
 #### ✅ DeleteConfirmDialog - 删除确认对话框
+
 ```typescript
 // ✅ 使用示例
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
@@ -268,6 +279,7 @@ import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 ---
 
 #### ✅ FileUploadTrigger - 文件上传触发器
+
 ```typescript
 // ✅ 使用示例
 import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
@@ -283,6 +295,7 @@ import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
 ---
 
 #### ✅ EditorDialog - 编辑器对话框 (MDX编辑)
+
 ```typescript
 import { EditorDialog } from '@/components/admin/editor-dialog';
 
@@ -300,6 +313,7 @@ import { EditorDialog } from '@/components/admin/editor-dialog';
 ### 4.2 🎯 全局共享组件 (`src/components/shared/`)
 
 #### ✅ TagPicker - 标签选择器
+
 ```typescript
 import { TagPicker } from '@/components/shared/tag-picker';
 
@@ -313,6 +327,7 @@ import { TagPicker } from '@/components/shared/tag-picker';
 ---
 
 #### ✅ ImagePreviewProvider - 图片预览提供者
+
 ```typescript
 import { ImagePreviewProvider } from '@/components/shared/image-preview-provider';
 
@@ -324,6 +339,7 @@ import { ImagePreviewProvider } from '@/components/shared/image-preview-provider
 ---
 
 #### ✅ OptimizedImage - 优化图片组件
+
 ```typescript
 import { OptimizedImage } from '@/components/shared/optimized-image';
 
@@ -339,6 +355,7 @@ import { OptimizedImage } from '@/components/shared/optimized-image';
 ---
 
 #### ✅ Pagination - 分页组件
+
 ```typescript
 import { Pagination } from '@/components/shared/pagination';
 
@@ -352,6 +369,7 @@ import { Pagination } from '@/components/shared/pagination';
 ---
 
 #### ✅ LinkCard, FadeCarousel, IconPicker 等
+
 查看 `src/components/shared/` 目录获取完整列表
 
 ---
@@ -359,6 +377,7 @@ import { Pagination } from '@/components/shared/pagination';
 ### 4.3 🎯 shadcn/ui 基础组件 (`src/components/shadcn-ui/`)
 
 **已包含的完整组件列表**:
+
 - `Button`, `Input`, `Label`, `Textarea`, `Select`
 - `Dialog`, `AlertDialog`, `Sheet`
 - `Table`, `Card`, `Badge`, `Separator`
@@ -377,7 +396,7 @@ import { Pagination } from '@/components/shared/pagination';
 ### 5.1 通用工具 (`src/utils/utils.ts`)
 
 ```typescript
-import { 
+import {
   cn,                    // CSS 类名合并 (clsx + tailwind-merge)
   formatDate,            // 格式化日期 (2024/1/1)
   formatDateWithSecond,  // 格式化日期+时间 (2024/1/1 12:00:00)
@@ -400,12 +419,12 @@ import {
 
 ```typescript
 import {
-  isPathSafe,            // 路径安全检查 (防目录遍历)
-  ensureDirectory,       // 确保目录存在
-  fileExists,            // 检查文件是否存在
+  checkFileConflict, // 检查文件名冲突
+  ensureDirectory, // 确保目录存在
   ensureFileInitialized, // 确保文件初始化
-  checkFileConflict,     // 检查文件名冲突
-  validateSlug,          // 验证 slug 合法性
+  fileExists, // 检查文件是否存在
+  isPathSafe, // 路径安全检查 (防目录遍历)
+  validateSlug, // 验证 slug 合法性
 } from '@/utils/file-utils';
 ```
 
@@ -415,7 +434,7 @@ import {
 
 ```typescript
 import {
-  processAndSaveImage,   // 处理并保存图片 (压缩/转换)
+  processAndSaveImage, // 处理并保存图片 (压缩/转换)
 } from '@/utils/image-utils';
 ```
 
@@ -431,7 +450,7 @@ const logger = createLogger('ModuleName');
 logger.info('操作成功', { userId: '123' });
 logger.error('操作失败', error, { context: '额外信息' });
 logger.warn('警告信息');
-logger.debug('调试信息');  // 仅 development 环境
+logger.debug('调试信息'); // 仅 development 环境
 ```
 
 ---
@@ -473,11 +492,11 @@ export async function myAction() {
 ### 5.7 自定义 Hooks (`src/hooks/`)
 
 ```typescript
-import { useCrud } from '@/hooks/use-crud';        // CRUD 操作 Hook
-import { useMediaQuery } from '@/hooks/use-media-query';  // 媒体查询
-import { useMidiPlayer } from '@/hooks/use-midi-player';  // MIDI 播放器
-import { usePhotos } from '@/hooks/use-photos';          // 照片管理
-import { useSearch } from '@/hooks/use-search';          // 搜索功能
+import { useCrud } from '@/hooks/use-crud'; // CRUD 操作 Hook
+import { useMediaQuery } from '@/hooks/use-media-query'; // 媒体查询
+import { useMidiPlayer } from '@/hooks/use-midi-player'; // MIDI 播放器
+import { usePhotos } from '@/hooks/use-photos'; // 照片管理
+import { useSearch } from '@/hooks/use-search'; // 搜索功能
 ```
 
 ---
@@ -489,12 +508,14 @@ import { useSearch } from '@/hooks/use-search';          // 搜索功能
 #### 6.1 Config 目录 (`src/config/`) - **业务配置**
 
 **存放内容**:
+
 - 站点信息 (名称、描述、链接)
 - 导航菜单配置
 - UI 展示选项
 - 业务规则配置
 
 **✅ 正确做法**:
+
 ```typescript
 // src/config/config.ts
 export const siteConfig = {
@@ -511,10 +532,11 @@ export const COMPRESSION_CONFIG = {
 ```
 
 **❌ 错误做法**:
+
 ```typescript
 // 不要在其他文件中硬编码!
-const SITE_URL = 'https://mahirooyama.cn/';  // ❌ 应该放在 config 中
-const MAX_WIDTH = 1920;                      // ❌ 应该放在 config 中
+const SITE_URL = 'https://mahirooyama.cn/'; // ❌ 应该放在 config 中
+const MAX_WIDTH = 1920; // ❌ 应该放在 config 中
 ```
 
 ---
@@ -522,6 +544,7 @@ const MAX_WIDTH = 1920;                      // ❌ 应该放在 config 中
 #### 6.2 Constant 目录 (`src/constant/`) - **技术常量**
 
 **存放内容**:
+
 - 文件系统路径
 - 权限定义
 - 缓存配置
@@ -529,6 +552,7 @@ const MAX_WIDTH = 1920;                      // ❌ 应该放在 config 中
 - 表单验证规则
 
 **✅ 正确做法**:
+
 ```typescript
 // src/constant/dir.ts
 export const DATA_DIR = path.join(process.cwd(), 'data');
@@ -540,12 +564,13 @@ export type Permission = 'blog:read' | 'blog:create' | ...;
 ```
 
 **❌ 错误做法**:
+
 ```typescript
 // 不要硬编码路径!
-const blogDir = './uploads/content/blog';  // ❌ 应该从 constant 导入
+const blogDir = './uploads/content/blog'; // ❌ 应该从 constant 导入
 
 // 不要直接写数字!
-const retentionDays = 30;                   // ❌ 应该定义在 constant 中
+const retentionDays = 30; // ❌ 应该定义在 constant 中
 ```
 
 ---
@@ -555,19 +580,22 @@ const retentionDays = 30;                   // ❌ 应该定义在 constant 中
 当需要添加新配置时:
 
 1. **判断类型**:
+
    - 业务/UI 相关 → `src/config/`
    - 技术/底层相关 → `src/constant/`
 
 2. **创建文件**:
+
    ```typescript
    // src/config/my-feature.ts
    export const MY_FEATURE_CONFIG = { ... };
-   
+
    // 或 src/constant/my-feature.ts
    export const MY_FEATURE_CONSTANT = ...;
    ```
 
 3. **更新 index.ts 导出**:
+
    ```typescript
    // src/config/index.ts
    export * from './my-feature';
@@ -626,7 +654,7 @@ export async function adminGetMyData(): Promise<ActionResponse<MyData[]>> {
     try {
       // 业务逻辑
       const data = await fs.readFile(...);
-      
+
       logger.info('获取数据成功', { count: data.length });
       return { success: true, data };
     } catch (error) {
@@ -643,7 +671,7 @@ export async function adminCreateMyData(
   return withActionPermission('my-feature:create', async () => {
     try {
       // 业务逻辑
-      
+
       logger.info('创建数据成功', { id: newData.id });
       return { success: true, data: newData, message: '创建成功' };
     } catch (error) {
@@ -660,7 +688,7 @@ export async function adminDeleteMyData(
   return withActionPermission('my-feature:delete', async () => {
     try {
       // 业务逻辑
-      
+
       logger.info('删除数据成功', { id });
       return { success: true, message: '删除成功' };
     } catch (error) {
@@ -730,14 +758,13 @@ export async function GET(request: NextRequest) {
     // 2. 解析查询参数
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    
+
     // 3. 业务逻辑
     const data = await fetchData(page);
-    
+
     // 4. 返回响应
     logger.info('GET 请求成功', { count: data.length });
     return ApiResponse.success(data);
-    
   } catch (error) {
     logger.error('GET 请求失败', error);
     return ApiResponse.internalError(
@@ -754,22 +781,21 @@ export async function POST(request: NextRequest) {
     if (!permissionCheck.allowed) {
       return permissionCheck.response || ApiResponse.forbidden();
     }
-    
+
     // 2. 解析请求体
     const body = await request.json();
-    
+
     // 3. 验证输入
     if (!body.name) {
       return ApiResponse.badRequest('名称不能为空');
     }
-    
+
     // 4. 业务逻辑
     const newItem = await createItem(body);
-    
+
     // 5. 返回响应
     logger.info('POST 请求成功', { id: newItem.id });
     return ApiResponse.created(newItem, '创建成功');
-    
   } catch (error) {
     logger.error('POST 请求失败', error);
     return ApiResponse.internalError();
@@ -797,6 +823,7 @@ export async function DELETE(request: NextRequest) {
 ### 🔴 严重错误 (会导致问题)
 
 #### ❌ 1. 重复创建已有组件
+
 ```typescript
 // ❌ 错误: 创建新的按钮组件
 function MyButton({ children, onClick }) {
@@ -809,6 +836,7 @@ import { Button } from '@/components/shadcn-ui/button';
 ```
 
 **常见被重复创建的组件**:
+
 - Button, Input, Dialog, Card (shadcn/ui 已包含)
 - DataTable, AdminPageLayout, CrudFormDialog (admin 组件)
 - TagPicker, Pagination, ImagePreview (shared 组件)
@@ -816,31 +844,33 @@ import { Button } from '@/components/shadcn-ui/button';
 ---
 
 #### ❌ 2. 在错误位置添加配置
-```typescript
-// ❌ 错误: 直接在组件中硬编码
-function MyComponent() {
-  const apiUrl = 'https://api.example.com';  // ❌ 应该在 config 中
-  const maxRetries = 3;                        // ❌ 应该在 config/constant 中
-}
 
+```typescript
 // ✅ 正确: 从 config/constant 导入
 import { API_CONFIG } from '@/config';
 import { MAX_RETRIES } from '@/constant';
+
+// ❌ 错误: 直接在组件中硬编码
+function MyComponent() {
+  const apiUrl = 'https://api.example.com'; // ❌ 应该在 config 中
+  const maxRetries = 3; // ❌ 应该在 config/constant 中
+}
 ```
 
 ---
 
 #### ❌ 3. 不遵循页面双文件模式
+
 ```typescript
 // ❌ 错误: 将所有逻辑写在 page.tsx
 // app/admin/my-feature/page.tsx
 export default function MyPage() {
   const [data, setData] = useState([]);  // ❌ 不要在 Server Component 中使用 useState
-  
+
   useEffect(() => {
     fetch('/api/data').then(setData);     // ❌ 不要在 Server Component 中使用 useEffect
   }, []);
-  
+
   return <div>...</div>;
 }
 
@@ -861,10 +891,11 @@ export default function MyClient({ initialData }) {
 ---
 
 #### ❌ 4. 跳过权限验证
+
 ```typescript
 // ❌ 错误: 没有权限检查
 export async function GET() {
-  const data = await sensitiveOperation();  // 危险!
+  const data = await sensitiveOperation(); // 危险!
   return NextResponse.json(data);
 }
 
@@ -874,7 +905,7 @@ export async function GET() {
   if (!permissionCheck.allowed) {
     return ApiResponse.forbidden();
   }
-  
+
   const data = await sensitiveOperation();
   return ApiResponse.success(data);
 }
@@ -883,26 +914,29 @@ export async function GET() {
 ---
 
 #### ❌ 5. 使用 console.log 而非结构化日志
-```typescript
-// ❌ 错误: 使用 console.log
-console.log('用户登录:', user);  // 生产环境会泄露敏感信息
-console.error('错误:', error);
 
+```typescript
 // ✅ 正确: 使用 Logger
 import { createLogger } from '@/utils/logger';
+
+// ❌ 错误: 使用 console.log
+console.log('用户登录:', user); // 生产环境会泄露敏感信息
+console.error('错误:', error);
+
 const logger = createLogger('Auth');
 
-logger.info('用户登录成功', { userId: user.id });  // 结构化日志
-logger.error('登录失败', error, { username });     // 自动记录堆栈
+logger.info('用户登录成功', { userId: user.id }); // 结构化日志
+logger.error('登录失败', error, { username }); // 自动记录堆栈
 ```
 
 ---
 
 #### ❌ 6. 不安全的文件操作
+
 ```typescript
 // ❌ 错误: 未验证路径安全性
 const filePath = path.join(baseDir, userInput);
-await fs.readFile(filePath);  // 可能导致目录遍历攻击!
+await fs.readFile(filePath); // 可能导致目录遍历攻击!
 
 // ✅ 正确: 使用 isPathSafe 验证
 import { isPathSafe } from '@/utils/file-utils';
@@ -919,6 +953,7 @@ await fs.readFile(filePath);
 ### 🟡 中等错误 (影响代码质量)
 
 #### ❌ 7. 过度使用 useEffect
+
 ```typescript
 // ❌ 错误: 不必要地使用 useEffect
 useEffect(() => {
@@ -934,6 +969,7 @@ const formattedDate = useMemo(() => formatDate(date), [date]);
 ---
 
 #### ❌ 8. Props drilling 过深
+
 ```typescript
 // ❌ 错误: 传递多层 props
 <Layout>
@@ -955,6 +991,7 @@ const formattedDate = useMemo(() => formatDate(date), [date]);
 ---
 
 #### ❌ 9. 不处理加载和错误状态
+
 ```typescript
 // ❌ 错误: 没有处理 loading/error
 const [data, setData] = useState([]);
@@ -984,6 +1021,7 @@ if (error) return <ErrorMessage error={error} />;
 ### 🟢 轻微错误 (代码风格问题)
 
 #### ❌ 10. 不一致的导入顺序
+
 ```typescript
 // ❌ 错误: 混乱的导入顺序
 import { Card } from '@/components/shadcn-ui/card';
@@ -1007,29 +1045,34 @@ import { formatDate } from '@/utils/utils';
 在提交代码前，请确保：
 
 ### ✅ 架构层面
+
 - [ ] 是否遵循了页面双文件模式 (Server + Client)?
 - [ ] 是否使用了已有的可复用组件?
 - [ ] 配置是否放在了正确的位置 (config/constant)?
 - [ ] 是否使用了 `@/` 路径别名?
 
 ### ✅ 安全层面
+
 - [ ] Server Action/API 是否进行了权限验证?
 - [ ] 文件操作是否使用了 `isPathSafe()`?
 - [ ] 用户输入是否进行了验证和清理?
 - [ ] 敏感信息是否通过日志泄露?
 
 ### ✅ 代码质量
+
 - [ ] 是否使用了结构化日志 (`createLogger`)?
 - [ ] 是否正确处理了异步操作的错误?
 - [ ] 是否避免了 `console.log`?
 - [ ] 类型是否完整 (TypeScript strict)?
 
 ### ✅ 性能层面
+
 - [ ] 大数据列表是否使用了虚拟滚动 (DataTable)?
 - [ ] 图片是否使用了 `OptimizedImage`?
 - [ ] 是否有不必要的 re-render?
 
 ### ✅ 一致性
+
 - [ ] 命名是否符合项目规范?
 - [ ] 文件是否放在了正确的目录?
 - [ ] 是否导出到了 index.ts (如果是新模块)?
@@ -1040,22 +1083,22 @@ import { formatDate } from '@/utils/utils';
 
 ### 项目关键文件速查
 
-| 用途 | 文件路径 |
-|------|---------|
-| 站点配置 | [src/config/config.ts](src/config/config.ts) |
-| 路径常量 | [src/constant/dir.ts](src/constant/dir.ts) |
-| 权限定义 | [src/constant/permissions.ts](src/constant/permissions.ts) |
-| 通用工具 | [src/utils/utils.ts](src/utils/utils.ts) |
-| 日志工具 | [src/utils/logger.ts](src/utils/logger.ts) |
-| 文件工具 | [src/utils/file-utils.ts](src/utils/file-utils.ts) |
-| API响应 | [src/utils/api-response.ts](src/utils/api-response.ts) |
-| Action响应 | [src/utils/action-response.ts](src/utils/action-response.ts) |
-| 管理布局 | [src/components/admin/admin-page-layout.tsx](src/components/admin/admin-page-layout.tsx) |
-| 数据表格 | [src/components/admin/data-table.tsx](src/components/admin/data-table.tsx) |
-| CRUD表单 | [src/components/admin/crud-form-dialog.tsx](src/components/admin/crud-form-dialog.tsx) |
-| CRUD Hook | [src/hooks/use-crud.ts](src/hooks/use-crud.ts) |
-| 权限验证 | [src/lib/permissions.ts](src/lib/permissions.ts) |
-| 认证模块 | [src/lib/admin-auth.ts](src/lib/admin-auth.ts) |
+| 用途       | 文件路径                                                                                 |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| 站点配置   | [src/config/config.ts](src/config/config.ts)                                             |
+| 路径常量   | [src/constant/dir.ts](src/constant/dir.ts)                                               |
+| 权限定义   | [src/constant/permissions.ts](src/constant/permissions.ts)                               |
+| 通用工具   | [src/utils/utils.ts](src/utils/utils.ts)                                                 |
+| 日志工具   | [src/utils/logger.ts](src/utils/logger.ts)                                               |
+| 文件工具   | [src/utils/file-utils.ts](src/utils/file-utils.ts)                                       |
+| API响应    | [src/utils/api-response.ts](src/utils/api-response.ts)                                   |
+| Action响应 | [src/utils/action-response.ts](src/utils/action-response.ts)                             |
+| 管理布局   | [src/components/admin/admin-page-layout.tsx](src/components/admin/admin-page-layout.tsx) |
+| 数据表格   | [src/components/admin/data-table.tsx](src/components/admin/data-table.tsx)               |
+| CRUD表单   | [src/components/admin/crud-form-dialog.tsx](src/components/admin/crud-form-dialog.tsx)   |
+| CRUD Hook  | [src/hooks/use-crud.ts](src/hooks/use-crud.ts)                                           |
+| 权限验证   | [src/lib/permissions.ts](src/lib/permissions.ts)                                         |
+| 认证模块   | [src/lib/admin-auth.ts](src/lib/admin-auth.ts)                                           |
 
 ---
 
@@ -1090,15 +1133,12 @@ import { formatDate } from '@/utils/utils';
 1. **先搜索，再创建**
    - 使用 IDE 搜索功能查找是否有类似组件
    - 查看本文档的可复用组件清单
-   
 2. **阅读现有代码**
    - 参考同类型的页面实现 (如 blog-client.tsx)
    - 遵循已有的模式和约定
-   
 3. **保持一致性**
    - 如果不确定，选择与现有代码一致的方式
    - 宁可多导入一个现有工具，也不要重新实现
-   
 4. **小步迭代**
    - 先实现最小可行方案
    - 逐步重构和优化
@@ -1113,6 +1153,6 @@ import { formatDate } from '@/utils/utils';
 
 ## 📝 版本历史
 
-| 版本 | 日期 | 变更内容 |
-|------|------|---------|
+| 版本  | 日期       | 变更内容                   |
+| ----- | ---------- | -------------------------- |
 | 1.0.0 | 2026-05-29 | 初始版本，基于项目现状整理 |

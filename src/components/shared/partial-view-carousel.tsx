@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { cn } from '@/utils/utils';
 import Autoplay from 'embla-carousel-autoplay';
 import {
   ChevronLeftIcon,
@@ -9,7 +7,7 @@ import {
   PauseIcon,
   PlayIcon,
 } from 'lucide-react';
-
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Carousel,
@@ -22,6 +20,7 @@ import {
   imageSizes,
   OptimizedImage,
 } from '@/components/shared/optimized-image';
+import { cn } from '@/utils/utils';
 
 interface CarouselItem {
   title: string;

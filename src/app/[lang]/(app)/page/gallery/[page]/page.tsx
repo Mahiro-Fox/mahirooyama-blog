@@ -1,12 +1,11 @@
-import { notFound } from 'next/navigation';
-import { getPublicGalleries } from '@/actions/admin/gallery-actions';
-import { i18nConfig } from '@/i18n/i18n.config';
-import { formatDate } from '@/utils/utils';
-
-import { LinkCard } from '@/components/shared/link-card';
-import { Pagination } from '@/components/shared/pagination';
 import { AboutCta } from '@/app/[lang]/(app)/_components/about-cta';
 import PageTitle from '@/app/[lang]/(app)/page/page-title';
+import { notFound } from 'next/navigation';
+import { getPublicGalleries } from '@/actions/admin/gallery-actions';
+import { LinkCard } from '@/components/shared/link-card';
+import { Pagination } from '@/components/shared/pagination';
+import { i18nConfig } from '@/i18n/i18n.config';
+import { formatDate } from '@/utils/utils';
 
 interface GalleryListPageProps {
   params: Promise<{ page: string }>;

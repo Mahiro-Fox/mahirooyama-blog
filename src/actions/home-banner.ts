@@ -1,7 +1,6 @@
 'use server';
 
 import { cache } from 'react';
-
 import { getPhotos, PhotoItem } from '@/lib/photos';
 
 export const getHomeBannerImages = cache(

@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
-import { cn } from '@/utils/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { cn } from '@/utils/utils';
 
 interface CarouselItem {
   id: string;

@@ -4,8 +4,8 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
   type Permission,
 } from '@/constant';
-import { DATA_DIR, ROLE_PERMISSIONS_FILE } from '@/constant/dir';
 import type { UserRole } from '@/store/user-store';
+import { DATA_DIR, ROLE_PERMISSIONS_FILE } from '@/constant/dir';
 import { ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
 
 /**

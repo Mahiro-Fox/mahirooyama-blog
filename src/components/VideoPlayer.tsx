@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { throttle } from '@/utils/utils';
 import ArtPlayer from 'artplayer';
 import Hls from 'hls.js';
 import { toast } from 'sonner';
+import { useEffect, useRef, useState } from 'react';
+import { throttle } from '@/utils/utils';
 
 export interface MovieSource {
   name: string;

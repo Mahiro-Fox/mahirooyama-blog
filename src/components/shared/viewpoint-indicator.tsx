@@ -1,7 +1,6 @@
 'use client';
 
 import { MOBILE_BREAKPOINT } from '@/config';
-
 import { useMediaQuery } from '@/hooks/use-media-query';
 
 /**

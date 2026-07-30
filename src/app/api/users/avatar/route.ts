@@ -1,13 +1,12 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { userStore } from '@/store/user-store';
 import { NextRequest, NextResponse } from 'next/server';
 import { AVATAR_DIR } from '@/constant/dir';
 import { MAX_FILE_SIZE } from '@/constant/file-upload';
-import { userStore } from '@/store/user-store';
+import { verifyAuth } from '@/lib/admin-auth';
 import { ensureDirectory } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
-
-import { verifyAuth } from '@/lib/admin-auth';
 
 // POST /api/users/avatar - 上传用户头像
 export async function POST(request: NextRequest) {

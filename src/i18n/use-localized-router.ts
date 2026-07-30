@@ -3,7 +3,6 @@
 
 import { useRouter } from 'next/navigation';
 import { i18nConfig } from '@/i18n/i18n.config';
-
 import { useLocale } from './use-locale';
 
 /** 自定义路由，根据当前语言添加路由前缀

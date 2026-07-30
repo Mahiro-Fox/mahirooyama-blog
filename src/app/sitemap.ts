@@ -1,9 +1,8 @@
+import { tagStore } from '@/store/tag-store';
 import type { MetadataRoute } from 'next';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getPublicMovies } from '@/actions/admin/movie-actions';
-import { tagStore } from '@/store/tag-store';
-
 import { siteConfig } from '@/config/common';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

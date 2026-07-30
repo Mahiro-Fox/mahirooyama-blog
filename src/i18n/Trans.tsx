@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useT } from '@/i18n/dictionary-provider';
-
 import { parseTemplate } from './parseTemplate';
 import { renderTransNodes } from './renderTransNodes';
 

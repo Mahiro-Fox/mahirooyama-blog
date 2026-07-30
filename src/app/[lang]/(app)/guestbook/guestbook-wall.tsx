@@ -1,10 +1,9 @@
 'use client';
 
-import { formatDateWithSecond } from '@/utils/utils';
 import { MessageSquare } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-
 import { Guestbook } from '@/lib/guestbook';
+import { formatDateWithSecond } from '@/utils/utils';
 
 interface GuestbookWallProps {
   entries: Guestbook[];

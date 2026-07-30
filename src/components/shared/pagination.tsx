@@ -1,5 +1,4 @@
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-
 import {
   Pagination as PaginationCN,
   PaginationContent,

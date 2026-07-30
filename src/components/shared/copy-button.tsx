@@ -1,15 +1,14 @@
 'use client';
 
-import * as React from 'react';
-import { cn } from '@/utils/utils';
 import { CheckIcon, ClipboardIcon } from 'lucide-react';
-
+import * as React from 'react';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/shadcn-ui/tooltip';
+import { cn } from '@/utils/utils';
 
 export function copyToClipboardWithMeta(value: string) {
   navigator.clipboard.writeText(value);

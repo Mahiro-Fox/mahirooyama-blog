@@ -1,16 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Trans } from '@/i18n/Trans';
-
-import { siteConfig } from '@/config/common';
-import { PhotoItem } from '@/lib/photos';
 import { AuroraText } from '@/components/shadcn-ui/aurora-text';
 import { FadeCarousel } from '@/components/shared/fade-carousel';
 import {
   imageSizes,
   OptimizedImage,
 } from '@/components/shared/optimized-image';
+import { siteConfig } from '@/config/common';
+import { Trans } from '@/i18n/Trans';
+import { PhotoItem } from '@/lib/photos';
 
 interface HomeBannerImage {
   images: PhotoItem[];

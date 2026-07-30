@@ -1,9 +1,9 @@
 import fs, { promises as fsPromises } from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
+import { UAParser } from 'ua-parser-js';
 import { AnalyticsLog } from '@/actions/admin/analytics-actions';
 import { ANALYTICS_DIR, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
-import { UAParser } from 'ua-parser-js';
 
 /**
  * 严格判断是否为公网 IP（排除本地回环和私有局域网 IP）

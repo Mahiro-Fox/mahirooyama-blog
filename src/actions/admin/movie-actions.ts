@@ -3,14 +3,13 @@
 import fs from 'fs/promises';
 import { revalidatePath } from 'next/cache';
 import { MOVIES_DIR } from '@/constant/dir';
+import { getMovies, Movie } from '@/lib/movies';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
 import { createLogger } from '@/utils/logger';
-
-import { getMovies, Movie } from '@/lib/movies';
-import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('MovieActions');
 

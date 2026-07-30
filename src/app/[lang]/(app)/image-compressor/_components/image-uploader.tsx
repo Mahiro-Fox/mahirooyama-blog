@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useCallback, useRef, useState } from 'react';
-import Image from 'next/image';
-import { useT } from '@/i18n/dictionary-provider';
-import { formatSize } from '@/utils/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Copy, Image as ImageIcon, Trash, Upload } from 'lucide-react';
+import Image from 'next/image';
 import { toast } from 'sonner';
+import React, { useCallback, useRef, useState } from 'react';
+import { useT } from '@/i18n/dictionary-provider';
+import { formatSize } from '@/utils/utils';
 
 /**
  * 上传的文件信息

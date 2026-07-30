@@ -1,8 +1,8 @@
 'use client';
 
+import { ArrowUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/utils/utils';
-import { ArrowUp } from 'lucide-react';
 
 export function BackToTop() {
   const [show, setShow] = useState(false);

@@ -182,6 +182,9 @@ export default function AdminShell({
                 <Link
                   key={item.adminHref}
                   href={item.adminHref!}
+                  onClick={(e) =>
+                    isActive(item.adminHref!) && e.preventDefault()
+                  }
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                     isActive(item.adminHref!)
                       ? 'bg-primary text-primary-foreground'
@@ -275,6 +278,9 @@ export default function AdminShell({
                         <SheetClose asChild key={item.adminHref}>
                           <Link
                             href={item.adminHref!}
+                            onClick={(e) =>
+                              isActive(item.adminHref!) && e.preventDefault()
+                            }
                             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                               isActive(item.adminHref!)
                                 ? 'bg-primary text-primary-foreground'

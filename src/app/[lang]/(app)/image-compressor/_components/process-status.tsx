@@ -1,7 +1,5 @@
 'use client';
 
-import React from 'react';
-import { useT } from '@/i18n/dictionary-provider';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
@@ -12,6 +10,8 @@ import {
   Package,
   XCircle,
 } from 'lucide-react';
+import React from 'react';
+import { useT } from '@/i18n/dictionary-provider';
 
 /**
  * 处理后的图片元数据

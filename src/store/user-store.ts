@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import { DATA_DIR, USERS_FILE } from '@/constant';
-import { ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
 import bcrypt from 'bcryptjs';
+import { ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
 
 // 用户角色类型
 export type UserRole = 'super_admin' | 'user';

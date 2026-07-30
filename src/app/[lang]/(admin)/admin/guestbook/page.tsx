@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { adminGetGuestbookEntries } from '@/actions/admin/guestbook-actions';
-
 import { requirePermission } from '@/lib/permissions';
-
 import GuestbookClient from './guestbook-client';
 
 export default async function GuestbookAdminPage() {

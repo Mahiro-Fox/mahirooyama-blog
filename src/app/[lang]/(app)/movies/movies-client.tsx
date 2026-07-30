@@ -1,14 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import Image from 'next/image';
-import { useT } from '@/i18n/dictionary-provider';
-import { cn } from '@/utils/utils';
 import { Play, Search } from 'lucide-react';
-
-import { Movie } from '@/lib/movies';
+import Image from 'next/image';
+import { useMemo, useState } from 'react';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Input } from '@/components/shadcn-ui/input';
+import { useT } from '@/i18n/dictionary-provider';
+import { Movie } from '@/lib/movies';
+import { cn } from '@/utils/utils';
 
 const CACHE_KEY = 'movies_cache';
 const CACHE_EXPIRY = 5 * 60 * 1000; // 5 分钟缓存

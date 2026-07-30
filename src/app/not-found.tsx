@@ -1,7 +1,6 @@
 'use client';
 
 import { ArrowLeftIcon, HomeIcon } from 'lucide-react';
-
 import { Button } from '@/components/shadcn-ui/button';
 import { Link } from '@/components/shared/link';
 

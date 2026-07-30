@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getPhotosAction } from '@/actions/photos';
-
 import { PhotoItem } from '@/lib/photos';
 
 interface UsePhotosOptions {

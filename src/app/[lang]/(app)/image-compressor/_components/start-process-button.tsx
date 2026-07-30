@@ -1,10 +1,9 @@
-import React from 'react';
-import { useT } from '@/i18n/dictionary-provider';
-import { Zap } from 'lucide-react';
-
-import { Spinner } from '@/components/shadcn-ui/spinner';
 import { UploadedFile } from '@/app/[lang]/(app)/image-compressor/_components/image-uploader';
 import { ProcessedImageResult } from '@/app/[lang]/(app)/image-compressor/_components/process-status';
+import { Zap } from 'lucide-react';
+import React from 'react';
+import { Spinner } from '@/components/shadcn-ui/spinner';
+import { useT } from '@/i18n/dictionary-provider';
 
 interface StartProcessButtonProps {
   uploadedFiles: UploadedFile[];
