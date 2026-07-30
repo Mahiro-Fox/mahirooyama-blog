@@ -4,6 +4,7 @@
 import { usePathname } from 'next/navigation';
 import { i18nConfig } from '@/i18n/i18n.config';
 
+// 获取当前语言
 export function useLocale(): string {
   const locales = i18nConfig.locales;
   const defaultLang = i18nConfig.defaultLang;

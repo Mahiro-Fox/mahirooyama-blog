@@ -1,23 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
-import {
-  adminGetUploadFiles,
-  cacheUploadPath,
-  convertImages,
-  createFolder,
-  deleteFile,
-  renameFile,
-} from '@/actions/admin/upload-files-actions';
-import {
-  ALLOWED_MIME_TYPES,
-  MAX_FILE_SIZE,
-  MAX_FILES_COUNT,
-  MAX_TOTAL_SIZE,
-} from '@/constant/file-upload';
 import { useImagePreview } from '@/context/image-preview-provider';
-import { formatDate, formatSize } from '@/utils/utils';
 import {
   ArrowLeft,
   Copy,
@@ -30,8 +13,18 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import Image from 'next/image';
 import { toast } from 'sonner';
-
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  adminGetUploadFiles,
+  cacheUploadPath,
+  convertImages,
+  createFolder,
+  deleteFile,
+  renameFile,
+} from '@/actions/admin/upload-files-actions';
+import { AdminPageLayout } from '@/components/admin/admin-page-layout';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,7 +60,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/shadcn-ui/table';
-import { AdminPageLayout } from '@/components/admin/admin-page-layout';
+import {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+  MAX_FILES_COUNT,
+  MAX_TOTAL_SIZE,
+} from '@/constant/file-upload';
+import { formatDate, formatSize } from '@/utils/utils';
 
 interface FileItem {
   name: string;
@@ -150,21 +149,24 @@ export default function UploadFilesClient({
     }
 
     fetchFiles(currentPath);
-  }, [currentPath, fetchFiles, initialData.currentPath]);
+  }, [currentPath, fetchFiles]);
 
   // 缓存当前路径到服务端
   useEffect(() => {
+    // 防抖或仅在 currentPath 存在时触发
+    let isMounted = true;
+
     const cachePath = async () => {
       const result = await cacheUploadPath(currentPath);
-      if (!result.success) {
+      if (!result.success && isMounted) {
         console.error('缓存路径失败:', result.error);
       }
     };
 
     cachePath();
-    // 组件卸载时缓存路径
+
     return () => {
-      cachePath();
+      isMounted = false; // 👈 标记卸载即可，绝对不要在 return 里调用异步请求！
     };
   }, [currentPath]);
 

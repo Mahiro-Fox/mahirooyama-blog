@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
 import { adminGetUploadFiles } from '@/actions/admin/upload-files-actions';
-
 import { requirePermission } from '@/lib/permissions';
-
 import UploadFilesClient from './upload-files-client';
 
 export default async function UploadFilesAdminPage() {

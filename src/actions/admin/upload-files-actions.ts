@@ -2,8 +2,9 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { UPLOADS_DIR } from '@/constant/dir';
 import { pathCacheStore } from '@/store/path-cache-store';
+import { UPLOADS_DIR } from '@/constant/dir';
+import { serverActionRateLimiter } from '@/lib/rate-limit';
 import {
   withActionPermission,
   type ActionResponse,
@@ -15,8 +16,6 @@ import {
 } from '@/utils/file-utils';
 import { processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
-
-import { serverActionRateLimiter } from '@/lib/rate-limit';
 
 const logger = createLogger('UploadFilesActions');
 

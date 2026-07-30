@@ -1,18 +1,15 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
-import { adminLogout } from '@/actions/admin/logout';
-import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
-import { adminUploadAvatar } from '@/actions/admin/user-actions';
-import { MAX_FILE_SIZE } from '@/constant/file-upload';
-import { useT } from '@/i18n/dictionary-provider';
 import type { UserRole } from '@/store/user-store';
 import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-
-import { adminRoutesConfig } from '@/config/common';
+import { useCallback, useState } from 'react';
+import { adminLogout } from '@/actions/admin/logout';
+import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
+import { adminUploadAvatar } from '@/actions/admin/user-actions';
+import { SwitchLanguage } from '@/components/layout/site-header';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -24,10 +21,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
-import { SwitchLanguage } from '@/components/layout/site-header';
 import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
 import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { adminRoutesConfig } from '@/config/common';
+import { MAX_FILE_SIZE } from '@/constant/file-upload';
+import { useT } from '@/i18n/dictionary-provider';
+import { usePathnameWithoutLocale } from '@/i18n/use-pathname-without-locale';
 
 interface CurrentUser {
   id: string;
@@ -55,7 +55,7 @@ export default function AdminShell({
 }) {
   const t = useT();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathnameWithoutLocale();
 
   const [currentUser, setCurrentUser] = useState<CurrentUser>(initialUser);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
@@ -135,11 +135,11 @@ export default function AdminShell({
   };
 
   const getCurrentPageTitle = () => {
-    if (pathname === '/admin') return '管理后台';
+    if (pathname === '/admin') return t('admin_title');
     const config = adminRoutesConfig.find(
       (item) => item.adminHref === pathname
     );
-    return config?.adminTitle || '管理后台';
+    return t(config?.adminTitle || 'admin_title');
   };
 
   const isActive = (href: string) => {

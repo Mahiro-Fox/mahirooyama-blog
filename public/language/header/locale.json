@@ -7,6 +7,9 @@
     "tools": "Tools",
     "admin": "Admin",
     "other": "Other",
+
+    "admin_title": "Admin Management System",
+
     "admin_nav_label": "Dashboard",
     "admin_nav_description": "Manage this site",
 
@@ -100,6 +103,8 @@
     "tools": "工具",
     "admin": "后台",
     "other": "其他",
+
+    "admin_title": "后台管理系统",
 
     "admin_nav_label": "后台",
     "admin_nav_description": "管理该站点",
