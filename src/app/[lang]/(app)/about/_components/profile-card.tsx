@@ -3,12 +3,14 @@
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { ProfileContent } from '@/config/about';
+import { useT } from '@/i18n/dictionary-provider';
 
 interface ProfileCardProps {
   content: ProfileContent;
 }
 
 export function ProfileCard({ content }: ProfileCardProps) {
+  const t = useT();
   return (
     <motion.div
       className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-500 p-6 text-white shadow-lg transition-all hover:shadow-xl"
@@ -21,13 +23,13 @@ export function ProfileCard({ content }: ProfileCardProps) {
       {/* Greeting with sparkle */}
       <div className="relative z-10 flex items-center gap-2 text-2xl font-semibold">
         <Sparkles className="h-6 w-6 text-yellow-300" />
-        <span>{content.greeting}</span>
+        <span>{t(content.greeting)}</span>
       </div>
 
       {/* Name and title */}
       <div className="relative z-10">
-        <h2 className="text-4xl font-bold tracking-tight">{content.name}</h2>
-        <p className="mt-2 text-lg text-blue-100/90">{content.title}</p>
+        <h2 className="text-4xl font-bold tracking-tight">{t(content.name)}</h2>
+        <p className="mt-2 text-lg text-blue-100/90">{t(content.title)}</p>
       </div>
 
       {/* Animated background pattern */}

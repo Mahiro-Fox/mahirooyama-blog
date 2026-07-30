@@ -18,6 +18,7 @@ const loaders: Record<string, () => Promise<LocaleModule>> = {
   login: () => import('../../public/language/login/locale.json'),
   midi: () => import('../../public/language/midi/locale.json'),
   movies: () => import('../../public/language/movies/locale.json'),
+  about: () => import('../../public/language/about/locale.json'),
   'bilibili-parse': () =>
     import('../../public/language/bilibili-parse/locale.json'),
   'image-compressor': () =>

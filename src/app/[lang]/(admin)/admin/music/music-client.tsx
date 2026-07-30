@@ -174,7 +174,7 @@ export default function MusicClient({
               暂无音乐，点击"添加音乐"开始添加
             </div>
           ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4 xl:grid-cols-3">
               {songs.map((song) => (
                 <div
                   key={song.id}

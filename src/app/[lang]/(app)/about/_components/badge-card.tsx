@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { BadgeContent } from '@/config/about';
+import { useT } from '@/i18n/dictionary-provider';
 
 interface BadgeCardProps {
   content: BadgeContent;
@@ -9,6 +10,8 @@ interface BadgeCardProps {
 }
 
 export function BadgeCard({ content, title }: BadgeCardProps) {
+  const t = useT();
+
   return (
     <motion.div
       className="relative flex h-full w-full items-center overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-red-500 p-6 shadow-lg"
@@ -17,16 +20,18 @@ export function BadgeCard({ content, title }: BadgeCardProps) {
       <div className="flex w-full items-center justify-between">
         <div className="flex-1">
           {title && (
-            <h3 className="mb-2 text-lg font-bold text-white">{title}</h3>
+            <h3 className="mb-2 text-lg font-bold text-white">{t(title)}</h3>
           )}
           <div className="mb-1 text-3xl font-bold text-white">
             {content.type}
           </div>
           <div className="text-xl font-semibold text-white/90">
-            {content.label}
+            {t(content.label)}
           </div>
           {content.description && (
-            <p className="mt-2 text-sm text-white/80">{content.description}</p>
+            <p className="mt-2 text-sm text-white/80">
+              {t(content.description)}
+            </p>
           )}
         </div>
 

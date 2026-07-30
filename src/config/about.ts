@@ -115,16 +115,16 @@ export interface AboutConfig {
 export const aboutConfig: AboutConfig = {
   name: author.name,
   avatar: author.image,
-  bio: '暂时不会翘首期盼夏季的到来了吧，心好痛，眼泪不止。但是停留在手尖的温柔触感，连带着夏天的记忆，都将和我一起一直下去',
+  bio: 'about.bio',
   cards: [
     {
       id: 'profile',
       type: 'profile',
       size: 'md:col-span-3',
       content: {
-        greeting: '👋 你好呀！',
+        greeting: 'about.profile.greeting',
         name: 'MahiroOyama',
-        title: '全栈开发，社畜',
+        title: 'about.profile.title',
       },
     },
     {
@@ -132,8 +132,8 @@ export const aboutConfig: AboutConfig = {
       type: 'pursuit',
       size: 'md:col-span-1',
       content: {
-        text: '追求',
-        emphasis: '想去看看世界，想去看极光',
+        text: 'about.pursuit.text',
+        emphasis: 'about.pursuit.emphasis',
       },
     },
     {
@@ -141,7 +141,7 @@ export const aboutConfig: AboutConfig = {
       type: 'marquee',
       size: 'md:col-span-4',
       content: {
-        text: '欢迎来到我的网站！愿你拥有美好的一天！ - Welcome to visit my website! wish you have a good day! ',
+        text: 'about.marquee.text',
         repeat: 3,
       },
     },
@@ -149,24 +149,28 @@ export const aboutConfig: AboutConfig = {
       id: 'skills',
       type: 'skills',
       size: 'row-span-2  md:col-span-2 md:row-span-2',
-      title: '开启创造力',
+      title: 'about.skills.title',
       content: {
         skills: [
-          { name: '前端开发', icon: Code, level: 95 },
-          { name: 'UI 设计', icon: Palette, level: 90 },
-          { name: '移动端', icon: Smartphone, level: 85 },
-          { name: 'Web 技术', icon: Globe, level: 90 },
-          { name: '数据库', icon: Database, level: 80 },
-          { name: '云计算', icon: Cloud, level: 75 },
-          { name: '命令行', icon: Terminal, level: 85 },
-          { name: '硬件', icon: Cpu, level: 70 },
-          { name: '游戏', icon: Gamepad2, level: 80 },
-          { name: '音乐', icon: Music, level: 65 },
-          { name: '视频', icon: Video, level: 70 },
-          { name: '摄影', icon: Camera, level: 75 },
-          { name: '写作', icon: Pen, level: 60 },
-          { name: '烹饪', icon: Utensils, level: 55 },
-          { name: '旅行', icon: MapPin, level: 60 },
+          { name: 'about.skills.frontend_development', icon: Code, level: 95 },
+          { name: 'about.skills.ui_designer', icon: Palette, level: 90 },
+          {
+            name: 'about.skills.mobile_application',
+            icon: Smartphone,
+            level: 85,
+          },
+          { name: 'about.skills.web_technology', icon: Globe, level: 90 },
+          { name: 'about.skills.database', icon: Database, level: 80 },
+          { name: 'about.skills.cloud_computing', icon: Cloud, level: 75 },
+          { name: 'about.skills.command_line', icon: Terminal, level: 85 },
+          { name: 'about.skills.hardware', icon: Cpu, level: 70 },
+          { name: 'about.skills.game', icon: Gamepad2, level: 80 },
+          { name: 'about.skills.music', icon: Music, level: 65 },
+          { name: 'about.skills.video', icon: Video, level: 70 },
+          { name: 'about.skills.photo', icon: Camera, level: 75 },
+          { name: 'about.skills.write', icon: Pen, level: 60 },
+          { name: 'about.skills.cooking', icon: Utensils, level: 55 },
+          { name: 'about.skills.travel', icon: MapPin, level: 60 },
         ],
       },
     },
@@ -177,8 +181,8 @@ export const aboutConfig: AboutConfig = {
       title: 'MBTI',
       content: {
         type: 'INFP',
-        label: '调停者',
-        description: '富有想象力、理想主义的调停者',
+        label: 'about.badge.label',
+        description: 'about.badge.description',
       },
     },
     {
@@ -186,9 +190,9 @@ export const aboutConfig: AboutConfig = {
       type: 'map',
       size: 'md:col-span-2',
       content: {
-        location: '中国',
-        country: '中国',
-        city: '成都市',
+        location: 'about.map.location',
+        country: 'about.map.country',
+        city: 'about.map.city',
       },
     },
     {
@@ -196,10 +200,10 @@ export const aboutConfig: AboutConfig = {
       type: 'media',
       size: 'md:col-span-2 md:row-span-2',
       content: {
-        category: '游戏',
+        category: 'about.media.category_game',
         title: 'Minecraft',
         image: '/uploads/images/about/minecraft.webp',
-        description: '像素世界的无限可能',
+        description: 'about.media.category_game_minecraft_description',
       },
     },
     {
@@ -207,10 +211,10 @@ export const aboutConfig: AboutConfig = {
       type: 'media',
       size: 'md:col-span-2 md:row-span-2',
       content: {
-        category: '游戏',
+        category: 'about.media.category_game',
         title: 'VRChat',
         image: '/uploads/images/about/vrchat.webp',
-        description: '我的第二人生',
+        description: 'about.media.category_game_vrchat_description',
       },
     },
     {
@@ -218,10 +222,10 @@ export const aboutConfig: AboutConfig = {
       type: 'media',
       size: 'md:col-span-2 md:row-span-2',
       content: {
-        category: '数码科技',
-        title: '数码探索',
+        category: 'about.media.category_tech',
+        title: 'about.media.category_tech_title',
         image: '/uploads/images/about/tech.webp',
-        description: '无人机、VR、AR眼镜...',
+        description: 'about.media.category_tech_description',
       },
     },
     {
@@ -229,10 +233,10 @@ export const aboutConfig: AboutConfig = {
       type: 'media',
       size: 'md:col-span-2 md:row-span-2',
       content: {
-        category: '梦核',
-        title: '梦境空间',
+        category: 'about.media.category_dream',
+        title: 'about.media.category_dream_title',
         image: '/uploads/images/about/dream.webp',
-        description: '超现实的梦幻世界',
+        description: 'about.media.category_dream_description',
       },
     },
   ],

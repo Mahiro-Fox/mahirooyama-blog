@@ -11,6 +11,9 @@ import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
 
 export const metadata: Metadata = {
+  title: 'Admin Panel',
+  description: 'Admin panel',
+  keywords: ['admin', 'panel'],
   robots: {
     index: false,
     follow: false,

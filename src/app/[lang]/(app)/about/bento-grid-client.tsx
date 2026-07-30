@@ -14,6 +14,7 @@ import {
   type PursuitContent,
   type SkillsContent,
 } from '@/config/about';
+import { useT } from '@/i18n/dictionary-provider';
 import { BadgeCard } from './_components/badge-card';
 import { MapCard } from './_components/map-card';
 import { MarqueeCard } from './_components/marquee-card';
@@ -47,6 +48,7 @@ const itemVariants = {
 };
 
 export function BentoGridClient() {
+  const t = useT();
   const renderCard = (card: BentoCard) => {
     switch (card.type) {
       case 'profile':
@@ -88,11 +90,11 @@ export function BentoGridClient() {
           height={128}
         />
       </div>
-      <TextAnimate className="text-3xl font-bold" animation="blurInUp">
+      <TextAnimate once className="text-3xl font-bold" animation="blurInUp">
         {aboutConfig.name}
       </TextAnimate>
-      <TextAnimate className="text-lg" by="character" animation="blurInUp">
-        {aboutConfig.bio}
+      <TextAnimate once className="text-lg" by="character" animation="blurInUp">
+        {t(aboutConfig.bio)}
       </TextAnimate>
       <motion.div
         className="grid auto-rows-[180px] grid-cols-1 gap-4 md:grid-cols-4"

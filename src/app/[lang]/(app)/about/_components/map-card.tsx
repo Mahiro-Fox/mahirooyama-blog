@@ -3,12 +3,14 @@
 import { motion } from 'framer-motion';
 import { Heart, MapPin } from 'lucide-react';
 import { MapContent } from '@/config/about';
+import { useT } from '@/i18n/dictionary-provider';
 
 interface MapCardProps {
   content: MapContent;
 }
 
 export function MapCard({ content }: MapCardProps) {
+  const t = useT();
   return (
     <motion.div
       className="relative flex h-full w-full items-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-400 via-blue-500 to-purple-600 shadow-lg"
@@ -57,9 +59,9 @@ export function MapCard({ content }: MapCardProps) {
         <div className="flex items-center gap-2">
           <Heart className="h-4 w-4 fill-red-400 text-red-400" />
           <p className="text-sm font-medium text-white">
-            我现在居住在{' '}
+            {t('about.now_living_in')}{' '}
             <span className="font-bold">
-              {content.country}，{content.city}
+              {t(content.country)}，{t(content.city)}
             </span>
           </p>
         </div>

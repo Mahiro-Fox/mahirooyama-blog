@@ -2,14 +2,15 @@
 
 import { motion } from 'framer-motion';
 import { MarqueeContent } from '@/config/about';
+import { useT } from '@/i18n/dictionary-provider';
 
 interface MarqueeCardProps {
   content: MarqueeContent;
 }
 
 export function MarqueeCard({ content }: MarqueeCardProps) {
+  const t = useT();
   const repeatCount = content.repeat || 3;
-
   return (
     <motion.div
       className="relative flex h-full w-full items-center overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 shadow-lg"
@@ -32,7 +33,7 @@ export function MarqueeCard({ content }: MarqueeCardProps) {
         >
           {Array.from({ length: repeatCount }).map((_, i) => (
             <span key={i} className="mr-8 text-4xl font-bold text-white">
-              {content.text}
+              {t(content.text)}
             </span>
           ))}
         </motion.div>
@@ -52,7 +53,7 @@ export function MarqueeCard({ content }: MarqueeCardProps) {
         >
           {Array.from({ length: repeatCount }).map((_, i) => (
             <span key={i} className="mr-8 text-4xl font-bold text-white">
-              {content.text}
+              {t(content.text)}
             </span>
           ))}
         </motion.div>

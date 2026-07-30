@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Marquee } from '@/components/shadcn-ui/marquee';
 import { SkillsContent } from '@/config/about';
+import { useT } from '@/i18n/dictionary-provider';
 
 interface SkillsCardProps {
   content: SkillsContent;
@@ -22,7 +23,8 @@ const splitSkills = (skills: SkillsContent['skills']) => {
 };
 
 export function SkillsCard({ content, title }: SkillsCardProps) {
-  const groups = splitSkills(content.skills);
+  const t = useT();
+  const groups = splitSkills(content.skills || []);
   return (
     <motion.div
       className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-6 shadow-lg transition-colors dark:from-gray-900 dark:to-gray-800"
@@ -30,7 +32,7 @@ export function SkillsCard({ content, title }: SkillsCardProps) {
     >
       {title && (
         <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-          {title}
+          {t(title)}
         </h3>
       )}
       {groups.map((group, index) => (
@@ -46,7 +48,7 @@ export function SkillsCard({ content, title }: SkillsCardProps) {
             >
               <skill.icon className="mb-1.5 h-7 w-7 text-blue-600 dark:text-blue-400" />
               <span className="text-center text-xs font-medium text-gray-700 dark:text-gray-300">
-                {skill.name}
+                {t(skill.name)}
               </span>
             </div>
           ))}
