@@ -43,7 +43,7 @@ export async function adminCreateMusic(input: {
   artist: string;
   url: string;
   cover: string;
-}): Promise<ActionResponse<{ id: string }>> {
+}): Promise<ActionResponse<void>> {
   return withActionPermission('music:create', async (user) => {
     if (user.id) {
       const rateLimit = await serverActionRateLimiter.check(`music:${user.id}`);
@@ -89,7 +89,7 @@ export async function adminCreateMusic(input: {
 
       logger.info('创建音乐成功', { songId: id, userId: user.id });
       revalidatePath('/', 'layout');
-      return { success: true, data: { id } };
+      return { success: true, data: undefined };
     } catch (error) {
       logger.error('创建音乐失败', error);
       return { success: false, error: '创建失败，请稍后重试' };

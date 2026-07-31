@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { ANALYTICS_DIR, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
+import { ANALYTICS_FILE, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
 import {
   withActionPermission,
   type ActionResponse,
@@ -48,7 +48,7 @@ export async function adminGetAnalyticsLogs(): Promise<
   return withActionPermission('analytics:read', async () => {
     try {
       try {
-        await fs.access(ANALYTICS_DIR);
+        await fs.access(ANALYTICS_FILE);
       } catch {
         return {
           success: true,
@@ -65,7 +65,7 @@ export async function adminGetAnalyticsLogs(): Promise<
         };
       }
 
-      const files = await fs.readdir(ANALYTICS_DIR);
+      const files = await fs.readdir(ANALYTICS_FILE);
       const logFiles = files
         .filter((f) => f.startsWith('analytics-') && f.endsWith('.json'))
         .sort()
@@ -77,7 +77,7 @@ export async function adminGetAnalyticsLogs(): Promise<
       cutoffDate.setDate(cutoffDate.getDate() - ANALYTICS_RETENTION_DAYS);
 
       for (const file of logFiles) {
-        const filePath = path.join(ANALYTICS_DIR, file);
+        const filePath = path.join(ANALYTICS_FILE, file);
         const fileDateStr = file.replace('analytics-', '').replace('.json', '');
         const fileDate = new Date(fileDateStr);
         const isExpired = fileDate < cutoffDate;
@@ -141,7 +141,7 @@ export async function deleteExpiredAnalyticsLogs(): Promise<
   return withActionPermission('analytics:delete', async () => {
     try {
       try {
-        await fs.access(ANALYTICS_DIR);
+        await fs.access(ANALYTICS_FILE);
       } catch {
         return {
           success: true,
@@ -153,7 +153,7 @@ export async function deleteExpiredAnalyticsLogs(): Promise<
         };
       }
 
-      const files = await fs.readdir(ANALYTICS_DIR);
+      const files = await fs.readdir(ANALYTICS_FILE);
       const logFiles = files.filter(
         (f) => f.startsWith('analytics-') && f.endsWith('.json')
       );
@@ -169,7 +169,7 @@ export async function deleteExpiredAnalyticsLogs(): Promise<
         const fileDate = new Date(dateStr);
 
         if (fileDate < cutoffDate) {
-          const filePath = path.join(ANALYTICS_DIR, file);
+          const filePath = path.join(ANALYTICS_FILE, file);
 
           try {
             const content = await fs.readFile(filePath, 'utf-8');

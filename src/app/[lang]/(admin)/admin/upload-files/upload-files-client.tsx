@@ -398,7 +398,7 @@ export default function UploadFilesClient({
       return <Folder className="h-6 w-6 text-blue-500" />;
     } else {
       if (isImage(item)) {
-        if (item.size <= 50 * 1024) {
+        if (item.size <= 100 * 1024) {
           return (
             <Image
               src={item.path}

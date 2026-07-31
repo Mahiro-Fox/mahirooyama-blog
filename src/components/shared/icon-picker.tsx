@@ -22,15 +22,15 @@ export function IconPicker({
   onChange,
   placeholder = '选择图标',
 }: IconPickerProps) {
-  const SelectedIcon = value
-    ? BrandIcons[value as keyof typeof BrandIcons] || Tag
-    : Tag;
+  // const SelectedIcon = value
+  //   ? BrandIcons[value as keyof typeof BrandIcons] || Tag
+  //   : Tag;
 
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger>
         <div className="flex items-center gap-2">
-          <SelectedIcon className="h-4 w-4" />
+          {/* <SelectedIcon className="h-4 w-4" /> */}
           <SelectValue placeholder={placeholder} />
         </div>
       </SelectTrigger>

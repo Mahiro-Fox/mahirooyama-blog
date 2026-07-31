@@ -146,7 +146,7 @@ export const BrandIcons = {
       x="0px"
       y="0px"
       viewBox="0 0 720 257.797"
-      enable-background="new 0 0 720 257.797"
+      enableBackground="new 0 0 720 257.797"
       xmlSpace="preserve"
       {...props}
     >

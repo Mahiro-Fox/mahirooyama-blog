@@ -92,8 +92,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 确保目录存在
-    await ensureFileInitialized(BLOG_DIR);
+    // 确保文件已初始化
+    await ensureFileInitialized(filePath);
 
     // 写入文件
     await fs.writeFile(filePath, content, 'utf-8');

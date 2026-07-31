@@ -3,7 +3,7 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { UAParser } from 'ua-parser-js';
 import { AnalyticsLog } from '@/actions/admin/analytics-actions';
-import { ANALYTICS_DIR, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
+import { ANALYTICS_FILE, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
 
 /**
  * 严格判断是否为公网 IP（排除本地回环和私有局域网 IP）
@@ -43,7 +43,7 @@ function maskIpAddress(ip: string): string {
  */
 function getLogFilePath(date: Date = new Date()): string {
   const dateStr = date.toISOString().split('T')[0];
-  return path.join(ANALYTICS_DIR, `analytics-${dateStr}.json`);
+  return path.join(ANALYTICS_FILE, `analytics-${dateStr}.json`);
 }
 
 /**
@@ -70,7 +70,7 @@ async function processQueue() {
   isWriting = true; // 上锁
 
   try {
-    await fsPromises.mkdir(ANALYTICS_DIR, { recursive: true });
+    await fsPromises.mkdir(ANALYTICS_FILE, { recursive: true });
 
     const currentBatch = logQueue.splice(0, logQueue.length);
 
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    if (!fs.existsSync(ANALYTICS_DIR)) {
+    if (!fs.existsSync(ANALYTICS_FILE)) {
       return NextResponse.json({
         logs: [],
         stats: {
@@ -207,7 +207,7 @@ export async function GET() {
       });
     }
 
-    const files = await fsPromises.readdir(ANALYTICS_DIR);
+    const files = await fsPromises.readdir(ANALYTICS_FILE);
     const logFiles = files
       .filter((f) => f.startsWith('analytics-') && f.endsWith('.json'))
       .sort()
@@ -219,7 +219,7 @@ export async function GET() {
     cutoffDate.setDate(cutoffDate.getDate() - ANALYTICS_RETENTION_DAYS);
 
     for (const file of logFiles) {
-      const filePath = path.join(ANALYTICS_DIR, file);
+      const filePath = path.join(ANALYTICS_FILE, file);
       const fileDateStr = file.replace('analytics-', '').replace('.json', '');
       const fileDate = new Date(fileDateStr);
       const isExpired = fileDate < cutoffDate;
@@ -272,7 +272,7 @@ export async function GET() {
  */
 export async function DELETE() {
   try {
-    if (!fs.existsSync(ANALYTICS_DIR)) {
+    if (!fs.existsSync(ANALYTICS_FILE)) {
       return NextResponse.json({
         success: true,
         message: '没有找到日志目录',
@@ -281,7 +281,7 @@ export async function DELETE() {
       });
     }
 
-    const files = await fsPromises.readdir(ANALYTICS_DIR);
+    const files = await fsPromises.readdir(ANALYTICS_FILE);
     const logFiles = files.filter(
       (f) => f.startsWith('analytics-') && f.endsWith('.json')
     );
@@ -297,7 +297,7 @@ export async function DELETE() {
       const fileDate = new Date(dateStr);
 
       if (fileDate < cutoffDate) {
-        const filePath = path.join(ANALYTICS_DIR, file);
+        const filePath = path.join(ANALYTICS_FILE, file);
 
         try {
           const content = await fsPromises.readFile(filePath, 'utf-8');

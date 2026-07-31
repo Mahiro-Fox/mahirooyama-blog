@@ -2,8 +2,7 @@
 
 import { Edit, Link as LinkIcon, Plus, Trash2 } from 'lucide-react';
 import Image from 'next/image';
-import { toast } from 'sonner';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   adminCreateMovie,
   adminDeleteMovie,
@@ -22,95 +21,102 @@ import { Input } from '@/components/shadcn-ui/input';
 import { Link } from '@/components/shared/link';
 import { Movie, MovieSource } from '@/lib/movies';
 import { formatDate } from '@/utils/utils';
+import { useCrud } from '@/hooks/use-crud';
+
+type MovieCreateInput = Omit<Movie, 'lastUpdated'>;
+type MovieUpdateInput = Partial<Omit<Movie, 'id' | 'lastUpdated'>>;
 
 export default function MoviesClient({
   initialMovies,
 }: {
   initialMovies: Movie[];
 }) {
-  const [movies, setMovies] = useState<Movie[]>(initialMovies);
-  const [loading, setLoading] = useState(false);
+  // === useCrud：注意 adminUpdateMovie 签名是 (obj)，适配为 (id, input) ===
+  const crud = useCrud<Movie, MovieCreateInput, MovieUpdateInput>({
+    getList: adminGetMovies,
+    create: adminCreateMovie,
+    update: (id, input) => adminUpdateMovie({ id, ...input }),
+    delete: adminDeleteMovie,
+    idField: 'id',
+    initialData: initialMovies,
+    createSuccessMessage: '影视添加成功',
+    updateSuccessMessage: '影视更新成功',
+    deleteSuccessMessage: '影视删除成功',
+  });
 
-  // 本地状态
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editMode, setEditMode] = useState<'create' | 'edit'>('create');
+  const {
+    items: movies,
+    loading,
+    isSubmitting,
+    selectedItem: selectedMovie,
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    editMode,
+    fetchItems,
+    createItem,
+    updateItem,
+    deleteItem,
+    openCreateDialog,
+    openEditDialog,
+    openDeleteDialog,
+    closeDialogs,
+    setIsDeleteDialogOpen,
+  } = crud;
 
-  // 表单状态
+  // === 表单状态（页面独有） ===
   const [id, setId] = useState('');
   const [title, setTitle] = useState('');
   const [poster, setPoster] = useState('');
   const [year, setYear] = useState('');
   const [tags, setTags] = useState('');
   const [summary, setSummary] = useState('');
-  const [sources, setSources] = useState<MovieSource[]>([
-    { name: '', url: '' },
-  ]);
+  const [sources, setSources] = useState<MovieSource[]>([{ name: '', url: '' }]);
 
-  // 刷新列表
-  const fetchItems = async () => {
-    setLoading(true);
-    try {
-      const result = await adminGetMovies();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      setMovies(result.data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '获取影视列表失败');
-    } finally {
-      setLoading(false);
+  // 编辑模式下回填表单
+  useEffect(() => {
+    if (isEditDialogOpen && selectedMovie) {
+      setId(selectedMovie.id);
+      setTitle(selectedMovie.title);
+      setPoster(selectedMovie.poster);
+      setYear(selectedMovie.year);
+      setTags(selectedMovie.tags.join(', '));
+      setSummary(selectedMovie.summary);
+      setSources(
+        selectedMovie.sources.length > 0
+          ? [...selectedMovie.sources]
+          : [{ name: '', url: '' }]
+      );
     }
+  }, [isEditDialogOpen, selectedMovie]);
+
+  // 创建模式下清空表单
+  useEffect(() => {
+    if (isCreateDialogOpen) {
+      setId('');
+      setTitle('');
+      setPoster('');
+      setYear('');
+      setTags('');
+      setSummary('');
+      setSources([{ name: '', url: '' }]);
+    }
+  }, [isCreateDialogOpen]);
+
+  // create / edit 对话框合并
+  const isFormDialogOpen = isCreateDialogOpen || isEditDialogOpen;
+  const handleFormDialogOpenChange = (open: boolean) => {
+    if (!open) closeDialogs();
   };
 
-  // 新增影视
-  const handleCreate = () => {
-    setEditMode('create');
-    setSelectedMovie(null);
-    setId('');
-    setTitle('');
-    setPoster('');
-    setYear('');
-    setTags('');
-    setSummary('');
-    setSources([{ name: '', url: '' }]);
-    setIsFormDialogOpen(true);
-  };
-
-  // 编辑影视
-  const handleEdit = (movie: Movie) => {
-    setEditMode('edit');
-    setSelectedMovie(movie);
-    setId(movie.id);
-    setTitle(movie.title);
-    setPoster(movie.poster);
-    setYear(movie.year);
-    setTags(movie.tags.join(', '));
-    setSummary(movie.summary);
-    setSources(
-      movie.sources.length > 0 ? [...movie.sources] : [{ name: '', url: '' }]
-    );
-    setIsFormDialogOpen(true);
-  };
-
-  // 添加源链接
-  const addSource = () => {
-    setSources([...sources, { name: '', url: '' }]);
-  };
-
-  // 删除源链接
+  // === sources 动态增减（页面逻辑） ===
+  const addSource = () => setSources([...sources, { name: '', url: '' }]);
   const removeSource = (index: number) => {
-    if (sources.length <= 1) {
-      return; // 至少保留一个
-    }
+    if (sources.length <= 1) return;
     const newSources = [...sources];
     newSources.splice(index, 1);
     setSources(newSources);
   };
-
-  // 更新源链接
   const updateSource = (
     index: number,
     field: 'name' | 'url',
@@ -121,81 +127,37 @@ export default function MoviesClient({
     setSources(newSources);
   };
 
-  // 保存（新增或编辑）
+  // === 保存 ===
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      // 过滤掉空的源链接
-      const filteredSources = sources.filter(
-        (s) => s.name.trim() || s.url.trim()
-      );
+    const filteredSources = sources.filter(
+      (s) => s.name.trim() || s.url.trim()
+    );
+    const tagList = tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t);
 
-      if (editMode === 'create') {
-        const result = await adminCreateMovie({
-          id,
-          title,
-          poster,
-          year,
-          tags: tags
-            .split(',')
-            .map((t) => t.trim())
-            .filter((t) => t),
-          summary,
-          sources: filteredSources,
-        });
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        toast.success('影视添加成功');
-      } else {
-        if (!selectedMovie) return;
-        const result = await adminUpdateMovie({
-          id: selectedMovie.id,
-          title,
-          poster,
-          year,
-          tags: tags
-            .split(',')
-            .map((t) => t.trim())
-            .filter((t) => t),
-          summary,
-          sources: filteredSources,
-        });
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        toast.success('影视更新成功');
-      }
-      setIsFormDialogOpen(false);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // 打开删除对话框
-  const openDelete = (movie: Movie) => {
-    setSelectedMovie(movie);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // 执行删除
-  const handleDelete = async () => {
-    if (!selectedMovie) return;
-    try {
-      const result = await adminDeleteMovie(selectedMovie.id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      toast.success('影视删除成功');
-      setIsDeleteDialogOpen(false);
-      setSelectedMovie(null);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败');
+    if (editMode === 'create') {
+      await createItem({
+        id,
+        title,
+        poster,
+        year,
+        tags: tagList,
+        summary,
+        sources: filteredSources,
+      });
+    } else {
+      if (!selectedMovie) return;
+      await updateItem(selectedMovie.id, {
+        title,
+        poster,
+        year,
+        tags: tagList,
+        summary,
+        sources: filteredSources,
+      });
     }
   };
 
@@ -206,7 +168,7 @@ export default function MoviesClient({
         description={`共 ${movies.length} 部影视`}
         actions={[
           createRefreshAction(fetchItems, loading),
-          createAddAction(handleCreate, '添加影视'),
+          createAddAction(openCreateDialog, '添加影视'),
         ]}
       >
         {/* 影视列表 */}
@@ -270,14 +232,14 @@ export default function MoviesClient({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(movie)}
+                        onClick={() => openEditDialog(movie)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => openDelete(movie)}
+                        onClick={() => openDeleteDialog(movie)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -293,7 +255,7 @@ export default function MoviesClient({
       {/* 表单对话框 */}
       <CrudFormDialog
         open={isFormDialogOpen}
-        onOpenChange={setIsFormDialogOpen}
+        onOpenChange={handleFormDialogOpenChange}
         title={editMode === 'create' ? '添加影视' : '编辑影视'}
         description="添加或编辑私人影视收藏"
         onSubmit={handleSave}
@@ -434,10 +396,8 @@ export default function MoviesClient({
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         title="确认删除"
-        description={
-          <>确定要删除电影 "{selectedMovie?.title}" 吗？此操作不可恢复。</>
-        }
-        onConfirm={handleDelete}
+        description={<>确定要删除电影 "{selectedMovie?.title}" 吗？此操作不可恢复。</>}
+        onConfirm={deleteItem}
         isDeleting={isSubmitting}
       />
     </>

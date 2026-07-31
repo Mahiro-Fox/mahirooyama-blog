@@ -2,7 +2,7 @@
 
 import { Image as ImageIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   adminCreateGallery,
   adminDeleteGalleryFile,
@@ -27,7 +27,9 @@ import { Label } from '@/components/shadcn-ui/label';
 import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { TagPicker } from '@/components/shared/tag-picker';
+import { useCrud } from '@/hooks/use-crud';
 import { AdminGallery } from '@/lib/gallery';
+import type { ActionResponse } from '@/utils/action-response';
 import { formatDate, formatSize } from '@/utils/utils';
 
 // 截断文本
@@ -98,88 +100,110 @@ const columns: Column<AdminGallery>[] = [
   },
 ];
 
+// 传入 useCrud.create/createItem 的参数
+type GalleryCreateInput = { slug: string; content: string };
+// updateInput 中 content 是必填，newSlug 只有发生变化时才传
+type GalleryUpdateInput = { content: string; newSlug?: string };
+
 export default function GalleryClient({
   initialFiles,
 }: {
   initialFiles: AdminGallery[];
 }) {
-  const [files, setFiles] = useState<AdminGallery[]>(initialFiles);
-  const [loading, setLoading] = useState(false);
+  // === useCrud：把"更新内容+可选重命名"两步封装到 update ===
+  const crud = useCrud<AdminGallery, GalleryCreateInput, GalleryUpdateInput>({
+    getList: adminGetGalleries,
+    getDetail: (slug) => adminGetGallery(slug),
+    create: adminCreateGallery,
+    update: async (
+      id: string,
+      input: GalleryUpdateInput
+    ): Promise<ActionResponse<void>> => {
+      // 1. 更新内容
+      const updateRes = await adminUpdateGallery(id, input.content);
+      if (!updateRes.success) return updateRes;
+      // 2. 若 slug 变更，则执行重命名
+      if (input.newSlug && input.newSlug !== id) {
+        const renameRes = await adminRenameGalleryFile(id, input.newSlug);
+        if (!renameRes.success) return renameRes;
+      }
+      return { success: true, data: undefined };
+    },
+    delete: adminDeleteGalleryFile,
+    idField: 'slug',
+    initialData: initialFiles,
+    createSuccessMessage: '文件创建成功',
+    updateSuccessMessage: '文件保存成功',
+    deleteSuccessMessage: '文件删除成功',
+  });
 
-  // 本地状态
-  const [selectedFile, setSelectedFile] = useState<AdminGallery | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const {
+    items: files,
+    loading,
+    isSubmitting: isSaving,
+    selectedItem: selectedFile,
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    editMode,
+    fetchItems,
+    createItem,
+    updateItem,
+    deleteItem,
+    openCreateDialog: internalOpenCreate,
+    openEditDialog: internalOpenEdit,
+    openDeleteDialog,
+    closeDialogs,
+    setIsDeleteDialogOpen,
+  } = crud;
+
+  // === 表单状态（页面独有） ===
   const [isUploading, setIsUploading] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editMode, setEditMode] = useState<'create' | 'edit'>('edit');
   const [editFileName, setEditFileName] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editThumbnail, setEditThumbnail] = useState('');
   const [editTags, setEditTags] = useState<string[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
 
-  // 刷新文件列表
-  const fetchItems = async () => {
-    setLoading(true);
-    try {
-      const result = await adminGetGalleries();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      setFiles(result.data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '获取文件列表失败');
-    } finally {
-      setLoading(false);
+  // 创建模式下清空表单
+  useEffect(() => {
+    if (isCreateDialogOpen) {
+      setEditFileName('');
+      setEditTitle('');
+      setEditDescription('');
+      setEditThumbnail('');
+      setEditTags([]);
     }
-  };
+  }, [isCreateDialogOpen]);
 
-  // 新增文件
-  const handleCreate = () => {
-    setEditMode('create');
-    setSelectedFile(null);
-    setEditFileName('');
-    setEditTitle('');
-    setEditDescription('');
-    setEditThumbnail('');
-    setEditTags([]);
-    setIsEditDialogOpen(true);
-  };
-
-  // 编辑文件
-  const handleEdit = async (file: AdminGallery) => {
-    try {
-      const result = await adminGetGallery(file.slug);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      setEditMode('edit');
-      setSelectedFile(file);
-      setEditFileName(file.slug);
-
-      // Parse JSON content
-      try {
-        const data = result.data;
-        setEditTitle(data.title || '');
-        setEditTitle(data.title || '');
-        setEditDescription(data.description || '');
-        setEditThumbnail(data.thumbnail || '');
-        setEditTags(data.tags || []);
-      } catch {
-        toast.error('JSON 解析失败');
-        return;
-      }
-
-      setIsEditDialogOpen(true);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '获取文件内容失败');
+  // 编辑模式下：openEditDialog 已经调了 getDetail 并把 detail 放进 selectedItem
+  // 这里把 selectedItem 中的 Gallery detail 拆到表单字段
+  useEffect(() => {
+    if (isEditDialogOpen && selectedFile) {
+      const data = selectedFile as AdminGallery;
+      // 原始 slug（用于对比重命名）
+      setEditFileName(data.slug);
+      setEditTitle(data.title || '');
+      setEditDescription(data.description || '');
+      setEditThumbnail(data.thumbnail || '');
+      setEditTags(data.tags || []);
     }
+  }, [isEditDialogOpen, selectedFile]);
+
+  // 把 create/edit dialog 合并成同一个 CrudFormDialog（原页面共用一个）
+  const isFormDialogOpen = isCreateDialogOpen || isEditDialogOpen;
+  const handleFormDialogOpenChange = (open: boolean) => {
+    if (!open) closeDialogs();
   };
 
-  // 缩略图上传处理
-  const handleThumbnailUpload = async (files: FileList) => {
-    const file = files[0];
+  // openCreateDialog：包装一层，保持原句柄名（或直接用 internalOpenCreate）
+  const handleCreate = internalOpenCreate;
+  // openEditDialog：直接调用 hook 版（内部已处理 getDetail）
+  const handleEdit = internalOpenEdit;
+
+  // === 缩略图上传（页面特殊逻辑，保留） ===
+  const handleThumbnailUpload = async (list: FileList) => {
+    const file = list[0];
     if (!file) return;
 
     try {
@@ -199,86 +223,47 @@ export default function GalleryClient({
     }
   };
 
-  // 保存（新增或编辑）
-  const handleSave = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      // Generate JSON content from form fields
-      const lastUpdated = new Date().toISOString().split('T')[0];
+  // === 保存（create 或 update），组装 JSON 后调 useCrud ===
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const lastUpdated = new Date().toISOString().split('T')[0];
+    const content = JSON.stringify(
+      {
+        title: editTitle,
+        description: editDescription,
+        thumbnail: editThumbnail,
+        lastUpdated,
+        tags: editTags,
+      },
+      null,
+      2
+    );
 
-      const jsonContent = JSON.stringify(
-        {
-          title: editTitle,
-          description: editDescription,
-          thumbnail: editThumbnail,
-          lastUpdated: lastUpdated,
-          tags: editTags,
-        },
-        null,
-        2
-      );
-
-      if (editMode === 'create') {
-        if (!editFileName.trim()) {
-          toast.error('请输入文件名称');
-          setIsSaving(false);
-          return;
-        }
-        const result = await adminCreateGallery({
-          slug: editFileName.trim(),
-          content: jsonContent,
-        });
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        toast.success('文件创建成功');
-      } else {
-        if (!selectedFile) return;
-
-        // 更新内容
-        const saveResult = await adminUpdateGallery(
-          selectedFile.slug,
-          jsonContent
-        );
-        if (!saveResult.success) {
-          throw new Error(saveResult.error);
-        }
-
-        // 如果文件名变更，执行重命名
-        if (editFileName.trim() !== selectedFile.slug) {
-          const renameResult = await adminRenameGalleryFile(
-            selectedFile.slug,
-            editFileName.trim()
-          );
-          if (!renameResult.success) {
-            throw new Error(renameResult.error);
-          }
-        }
-        toast.success('文件保存成功');
+    if (editMode === 'create') {
+      if (!editFileName.trim()) {
+        toast.error('请输入文件名称');
+        return;
       }
-      setIsEditDialogOpen(false);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败');
-    } finally {
-      setIsSaving(false);
+      await createItem({
+        slug: editFileName.trim(),
+        content,
+      });
+    } else {
+      if (!selectedFile) return;
+      const oldSlug = selectedFile.slug;
+      await updateItem(oldSlug, {
+        content,
+        newSlug:
+          editFileName.trim() !== oldSlug ? editFileName.trim() : undefined,
+      });
     }
-  }, [
-    selectedFile,
-    editMode,
-    editFileName,
-    editTitle,
-    editDescription,
-    editThumbnail,
-    editTags,
-  ]);
+  };
 
-  // 上传文件（使用 FileUploadTrigger 组件）
-  const handleUpload = async (files: FileList) => {
-    const file = files[0];
+  // === 文件上传（走旧 API route，页面特殊逻辑，保留） ===
+  const handleUpload = async (list: FileList) => {
+    const file = list[0];
     if (!file) return;
-    const isJson = file.name.endsWith('.json');
-    if (!isJson) {
+    if (!file.name.endsWith('.json')) {
       toast.error('只支持 .json 文件');
       return;
     }
@@ -297,29 +282,6 @@ export default function GalleryClient({
       toast.error(error instanceof Error ? error.message : '上传失败');
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  // 打开删除对话框
-  const openDelete = (file: AdminGallery) => {
-    setSelectedFile(file);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // 执行删除
-  const handleDelete = async () => {
-    if (!selectedFile) return;
-    try {
-      const result = await adminDeleteGalleryFile(selectedFile.slug);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      toast.success('文件删除成功');
-      setIsDeleteDialogOpen(false);
-      setSelectedFile(null);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败');
     }
   };
 
@@ -354,7 +316,7 @@ export default function GalleryClient({
           emptyText="暂无图片，请上传 JSON 文件或新增配置"
           keyExtractor={(file) => file.slug}
           onEdit={handleEdit}
-          onDelete={openDelete}
+          onDelete={openDeleteDialog}
           actions={{ edit: true, delete: true }}
           virtual={true}
           virtualOptions={{
@@ -366,8 +328,8 @@ export default function GalleryClient({
 
       {/* 编辑/新增对话框 */}
       <CrudFormDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+        open={isFormDialogOpen}
+        onOpenChange={handleFormDialogOpenChange}
         title={
           editMode === 'create'
             ? '新增 JSON 文件'
@@ -378,10 +340,7 @@ export default function GalleryClient({
             ? '创建新的 Gallery 配置文件'
             : selectedFile?.fileName
         }
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSave();
-        }}
+        onSubmit={handleSave}
         isSubmitting={isSaving}
         submitLabel={
           isSaving
@@ -468,7 +427,7 @@ export default function GalleryClient({
             吗？此操作不可恢复。
           </>
         }
-        onConfirm={handleDelete}
+        onConfirm={deleteItem}
         isDeleting={isSaving}
       />
     </>

@@ -104,14 +104,20 @@ export async function adminGetGalleries(): Promise<
 // GET - 获取单个文件内容
 export async function adminGetGallery(
   slug: string
-): Promise<ActionResponse<Gallery>> {
+): Promise<ActionResponse<AdminGallery>> {
   return withActionPermission('gallery:read', async () => {
     try {
       // 使用 .json 扩展名
       const filePath = path.join(GALLERY_DIR, `${slug}.json`);
 
       const content = await fs.readFile(filePath, 'utf-8');
-      return { success: true, data: JSON.parse(content) as Gallery };
+      return {
+        success: true,
+        data: {
+          ...JSON.parse(content),
+          slug,
+        } as AdminGallery,
+      };
     } catch (error) {
       logger.error('获取图库文件失败', error, { slug });
       return { success: false, error: '文件不存在或读取失败' };

@@ -3,7 +3,6 @@
 import { type BugReport, type BugStatus } from '@/store/bug-store';
 import { CheckCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
 import {
   adminDeleteBugReport,
   adminGetBugReports,
@@ -17,6 +16,7 @@ import { DataTable, type Column } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
+import { useCrud } from '@/hooks/use-crud';
 import { formatDate } from '@/utils/utils';
 
 export default function BugsClient({
@@ -24,34 +24,34 @@ export default function BugsClient({
 }: {
   initialBugs: BugReport[];
 }) {
-  const [bugs, setBugs] = useState<BugReport[]>(initialBugs);
-  const [loading, setLoading] = useState(false);
-  const [selectedBug, setSelectedBug] = useState<BugReport | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // === useCrud：只使用 getList + delete，状态更新用 setItems 原地 patch ===
+  const crud = useCrud<BugReport, never, never>({
+    getList: adminGetBugReports,
+    delete: adminDeleteBugReport,
+    idField: 'id',
+    initialData: initialBugs,
+    deleteSuccessMessage: '删除成功',
+  });
 
-  const fetchBugs = async () => {
-    setLoading(true);
-    try {
-      const res = await adminGetBugReports();
-      if (res.success) {
-        setBugs(res.data);
-      } else {
-        toast.error(res.error || '获取失败');
-      }
-    } catch {
-      toast.error('网络错误');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    items: bugs,
+    loading,
+    isSubmitting,
+    isDeleteDialogOpen,
+    fetchItems,
+    deleteItem,
+    setItems,
+    openDeleteDialog,
+    setIsDeleteDialogOpen,
+  } = crud;
 
+  // === 自定义状态更新（原地 patch，不走标准 updateItem 全量刷新） ===
   const handleUpdateStatus = async (id: string, status: BugStatus) => {
     try {
       const res = await adminUpdateBugStatus(id, status);
       if (res.success) {
         toast.success('状态更新成功');
-        setBugs((prev) =>
+        setItems((prev) =>
           prev.map((bug) => (bug.id === id ? { ...bug, status } : bug))
         );
       } else {
@@ -59,25 +59,6 @@ export default function BugsClient({
       }
     } catch {
       toast.error('网络错误');
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedBug) return;
-    setIsDeleting(true);
-    try {
-      const res = await adminDeleteBugReport(selectedBug.id);
-      if (res.success) {
-        toast.success('删除成功');
-        setBugs((prev) => prev.filter((bug) => bug.id !== selectedBug.id));
-        setIsDeleteDialogOpen(false);
-      } else {
-        toast.error(res.error || '删除失败');
-      }
-    } catch {
-      toast.error('网络错误');
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -147,7 +128,7 @@ export default function BugsClient({
     <AdminPageLayout
       title="BUG 管理"
       description="查看和管理用户提交的 BUG 报告"
-      actions={[createRefreshAction(fetchBugs, loading)]}
+      actions={[createRefreshAction(fetchItems, loading)]}
     >
       <div className="bg-card rounded-md border">
         <DataTable
@@ -155,10 +136,7 @@ export default function BugsClient({
           columns={columns}
           isLoading={loading}
           keyExtractor={(bug) => bug.id}
-          onDelete={(bug) => {
-            setSelectedBug(bug);
-            setIsDeleteDialogOpen(true);
-          }}
+          onDelete={openDeleteDialog}
           actions={{
             custom: (bug) => (
               <>
@@ -193,10 +171,10 @@ export default function BugsClient({
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleDelete}
+        onConfirm={deleteItem}
         title="删除 BUG 报告"
         description="确定要删除这条 BUG 报告吗？此操作不可撤销。"
-        isDeleting={isDeleting}
+        isDeleting={isSubmitting}
       />
     </AdminPageLayout>
   );

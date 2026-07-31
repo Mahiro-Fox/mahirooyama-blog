@@ -1,7 +1,7 @@
 'use server';
 
 import fs from 'fs/promises';
-import { MOVIES_DIR } from '@/constant/dir';
+import { MOVIES_FILE } from '@/constant/dir';
 import { ensureFileInitialized } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
@@ -25,8 +25,8 @@ export interface Movie {
 // GET - 获取公开的电影列表（用于前端展示）
 export async function getMovies(): Promise<Movie[]> {
   try {
-    await ensureFileInitialized(MOVIES_DIR);
-    const content = await fs.readFile(MOVIES_DIR, 'utf-8');
+    await ensureFileInitialized(MOVIES_FILE);
+    const content = await fs.readFile(MOVIES_FILE, 'utf-8');
     const movies: Movie[] = JSON.parse(content);
     return movies;
   } catch (error) {

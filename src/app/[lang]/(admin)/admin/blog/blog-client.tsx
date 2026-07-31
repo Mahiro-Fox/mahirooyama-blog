@@ -27,7 +27,9 @@ import { Label } from '@/components/shadcn-ui/label';
 import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { TagPicker } from '@/components/shared/tag-picker';
+import { useCrud } from '@/hooks/use-crud';
 import { AdminBlog } from '@/lib/blog';
+import type { ActionResponse } from '@/utils/action-response';
 import { formatDate, formatSize } from '@/utils/utils';
 
 // 表格列定义
@@ -80,22 +82,64 @@ const columns: Column<AdminBlog>[] = [
   },
 ];
 
+type BlogCreateInput = { slug: string; content: string };
+type BlogUpdateInput = { content: string; newSlug?: string };
+
 export default function BlogClient({
   initialFiles,
 }: {
   initialFiles: AdminBlog[];
 }) {
-  const [files, setFiles] = useState<AdminBlog[]>(initialFiles);
-  const [loading, setLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  // === useCrud：blog adminGetBlog 返回 string(MDX) 而非 AdminBlog，
+  // 所以不使用 hook 的 getDetail / openEditDialog，页面自处理编辑流程 ===
+  const crud = useCrud<AdminBlog, BlogCreateInput, BlogUpdateInput>({
+    getList: adminGetBlogs,
+    create: adminCreateBlog,
+    update: async (
+      id: string,
+      input: BlogUpdateInput
+    ): Promise<ActionResponse<void>> => {
+      const updateRes = await adminUpdateBlog(id, input.content);
+      if (!updateRes.success) return updateRes;
+      if (input.newSlug && input.newSlug !== id) {
+        const renameRes = await adminRenameBlogFile(id, input.newSlug);
+        if (!renameRes.success) return renameRes;
+      }
+      return { success: true, data: undefined };
+    },
+    delete: adminDeleteBlogFile,
+    idField: 'slug',
+    initialData: initialFiles,
+    createSuccessMessage: '文件创建成功',
+    updateSuccessMessage: '文件保存成功',
+    deleteSuccessMessage: '文件删除成功',
+  });
 
-  // 本地状态
-  const [selectedFile, setSelectedFile] = useState<AdminBlog | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const {
+    items: files,
+    loading,
+    isSubmitting: isSaving,
+    selectedItem: selectedFile,
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    editMode,
+    fetchItems,
+    createItem,
+    updateItem,
+    deleteItem,
+    openCreateDialog,
+    openDeleteDialog,
+    closeDialogs,
+    setIsDeleteDialogOpen,
+    setSubmitting,
+    setSelectedItem,
+    setEditMode,
+    setIsEditDialogOpen,
+  } = crud;
+
+  // === 表单状态（页面独有） ===
   const [isUploading, setIsUploading] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editMode, setEditMode] = useState<'create' | 'edit'>('edit');
-
   const [editFileName, setEditFileName] = useState('');
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -103,50 +147,33 @@ export default function BlogClient({
   const [editTags, setEditTags] = useState<string[]>([]);
   const [editBody, setEditBody] = useState('');
 
-  // 刷新文件列表
-  const fetchItems = async () => {
-    setLoading(true);
-    try {
-      const result = await adminGetBlogs();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      setFiles(result.data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '获取文件列表失败');
-    } finally {
-      setLoading(false);
+  // 创建模式下清空表单
+  useEffect(() => {
+    if (isCreateDialogOpen) {
+      setEditFileName('');
+      setEditTitle('');
+      setEditDescription('');
+      setEditThumbnail('');
+      setEditTags([]);
+      setEditBody('');
     }
+  }, [isCreateDialogOpen]);
+
+  // create / edit 对话框合并（原页面共用一个 CrudFormDialog）
+  const isFormDialogOpen = isCreateDialogOpen || isEditDialogOpen;
+  const handleFormDialogOpenChange = (open: boolean) => {
+    if (!open) closeDialogs();
   };
 
-  // 新增文件
-  const handleCreate = () => {
-    setEditMode('create');
-    setSelectedFile(null);
-    setEditFileName('');
-    setEditTitle('');
-    setEditDescription('');
-    setEditThumbnail('');
-    setEditTags([]);
-    setEditBody('');
-    setIsEditDialogOpen(true);
-  };
-
-  // 缩略图上传处理
-  const handleThumbnailUpload = async (files: FileList) => {
-    const file = files[0];
+  // === 缩略图上传 ===
+  const handleThumbnailUpload = async (list: FileList) => {
+    const file = list[0];
     if (!file) return;
-
     try {
       const formData = new FormData();
       formData.append('image', file);
-
       const result = await adminUploadBlogThumbnail(formData);
-
-      if (!result.success) {
-        throw new Error(result.error || '上传失败');
-      }
-
+      if (!result.success) throw new Error(result.error || '上传失败');
       setEditThumbnail(result.data.url);
       toast.success(result.data.message);
     } catch (error) {
@@ -154,13 +181,11 @@ export default function BlogClient({
     }
   };
 
-  // 保存（新增或编辑）
+  // === 保存（组装 MDX，create 或 update） ===
   const handleSave = useCallback(async () => {
-    setIsSaving(true);
+    setSubmitting(true);
     try {
-      // Generate MDX content from form fields
       const lastUpdated = new Date().toISOString().split('T')[0];
-
       const mdxContent = `---
 title: '${editTitle}'
 description: '${editDescription}'
@@ -175,46 +200,26 @@ ${editBody}`;
       if (editMode === 'create') {
         if (!editFileName.trim()) {
           toast.error('请输入文件名称');
-          setIsSaving(false);
+          setSubmitting(false);
           return;
         }
-        const result = await adminCreateBlog({
-          slug: editFileName.trim(),
-          content: mdxContent,
-        });
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        toast.success('文件创建成功');
+        await createItem({ slug: editFileName.trim(), content: mdxContent });
       } else {
         if (!selectedFile) return;
-        const result = await adminUpdateBlog(selectedFile.slug, mdxContent);
-
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-
-        // 如果文件名变更，执行重命名
-        if (editFileName.trim() !== selectedFile.slug) {
-          const renameResult = await adminRenameBlogFile(
-            selectedFile.slug,
-            editFileName.trim()
-          );
-          if (!renameResult.success) {
-            throw new Error(renameResult.error);
-          }
-        }
-        toast.success('文件保存成功');
+        await updateItem(selectedFile.slug, {
+          content: mdxContent,
+          newSlug:
+            editFileName.trim() !== selectedFile.slug
+              ? editFileName.trim()
+              : undefined,
+        });
       }
-      setIsEditDialogOpen(false);
-      await fetchItems();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '保存失败');
     } finally {
-      setIsSaving(false);
+      setSubmitting(false);
     }
   }, [
-    selectedFile,
     editMode,
     editFileName,
     editTitle,
@@ -222,31 +227,33 @@ ${editBody}`;
     editThumbnail,
     editTags,
     editBody,
+    selectedFile,
+    createItem,
+    updateItem,
+    setSubmitting,
   ]);
 
+  // === Ctrl+S 快捷键保存（对话框打开时生效） ===
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!selectedFile) return;
-      if (e.ctrlKey && e.code === 'KeyS') {
+      if (isFormDialogOpen && e.ctrlKey && e.code === 'KeyS') {
         e.preventDefault();
         handleSave();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleSave, selectedFile]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave, isFormDialogOpen]);
 
-  // 编辑文件
+  // === handleEdit：页面自处理（因为 adminGetBlog 返回的是 string MDX 原文，不是 AdminBlog） ===
   const handleEdit = async (file: AdminBlog) => {
     try {
       const result = await adminGetBlog(file.slug);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+      if (!result.success) throw new Error(result.error);
+
+      // 填写 hook 状态：selectedItem, editMode='edit', open dialog
+      setSelectedItem(file);
       setEditMode('edit');
-      setSelectedFile(file);
       setEditFileName(file.slug);
 
       // Parse MDX frontmatter
@@ -298,9 +305,9 @@ ${editBody}`;
     }
   };
 
-  // 上传文件（使用 FileUploadTrigger 组件）
-  const handleUpload = async (files: FileList) => {
-    const file = files[0];
+  // === 上传文件（使用 FileUploadTrigger 组件） ===
+  const handleUpload = async (list: FileList) => {
+    const file = list[0];
     if (!file) return;
     if (!file.name.endsWith('.mdx')) {
       toast.error('只支持 .mdx 文件');
@@ -324,29 +331,6 @@ ${editBody}`;
     }
   };
 
-  // 打开删除对话框
-  const openDelete = (file: AdminBlog) => {
-    setSelectedFile(file);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // 执行删除
-  const handleDelete = async () => {
-    if (!selectedFile) return;
-    try {
-      const result = await adminDeleteBlogFile(selectedFile.slug);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      toast.success('文件删除成功');
-      setIsDeleteDialogOpen(false);
-      setSelectedFile(null);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败');
-    }
-  };
-
   return (
     <>
       <AdminPageLayout
@@ -354,7 +338,7 @@ ${editBody}`;
         description={`共 ${files.length} 篇文章`}
         actions={[
           createRefreshAction(fetchItems, loading),
-          createAddAction(handleCreate, '新增 MDX'),
+          createAddAction(openCreateDialog, '新增 MDX'),
         ]}
         primaryActions={[
           <FileUploadTrigger
@@ -377,7 +361,7 @@ ${editBody}`;
           emptyText="暂无文章，请上传 MDX 文件"
           keyExtractor={(file) => file.slug}
           onEdit={handleEdit}
-          onDelete={openDelete}
+          onDelete={openDeleteDialog}
           actions={{ edit: true, delete: true }}
           virtual={true}
           virtualOptions={{
@@ -389,8 +373,8 @@ ${editBody}`;
 
       {/* 编辑对话框 */}
       <CrudFormDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+        open={isFormDialogOpen}
+        onOpenChange={handleFormDialogOpenChange}
         title={
           editMode === 'create'
             ? '新增 MDX 文件'
@@ -501,7 +485,7 @@ ${editBody}`;
             吗？此操作不可恢复。
           </>
         }
-        onConfirm={handleDelete}
+        onConfirm={deleteItem}
         isDeleting={isSaving}
       />
     </>

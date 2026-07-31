@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import { revalidatePath } from 'next/cache';
-import { MOVIES_DIR } from '@/constant/dir';
+import { MOVIES_FILE } from '@/constant/dir';
 import { getMovies, Movie } from '@/lib/movies';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import {
@@ -70,7 +70,7 @@ export async function adminGetMovies(): Promise<ActionResponse<Movie[]>> {
 // POST - 创建电影
 export async function adminCreateMovie(
   input: Omit<Movie, 'lastUpdated'>
-): Promise<ActionResponse<Movie>> {
+): Promise<ActionResponse<void>> {
   return withActionPermission('movies:create', async (user) => {
     // 速率限制检查
     if (user.id) {
@@ -127,11 +127,11 @@ export async function adminCreateMovie(
       movies.push(newMovie);
 
       // 写入文件
-      await fs.writeFile(MOVIES_DIR, JSON.stringify(movies, null, 2), 'utf-8');
+      await fs.writeFile(MOVIES_FILE, JSON.stringify(movies, null, 2), 'utf-8');
 
       logger.info('创建电影成功', { movieId: id, userId: user.id });
       revalidatePath('/', 'layout');
-      return { success: true, data: newMovie };
+      return { success: true, data: undefined };
     } catch (error) {
       logger.error('创建电影失败', error);
       return { success: false, error: '创建失败，请稍后重试' };
@@ -142,7 +142,7 @@ export async function adminCreateMovie(
 // PUT - 更新电影
 export async function adminUpdateMovie(
   input: Partial<Movie> & { id: string }
-): Promise<ActionResponse<Movie>> {
+): Promise<ActionResponse<void>> {
   return withActionPermission('movies:update', async (user) => {
     // 速率限制检查
     if (user.id) {
@@ -194,11 +194,11 @@ export async function adminUpdateMovie(
       movies[index].sources = sources || [];
 
       // 写入文件
-      await fs.writeFile(MOVIES_DIR, JSON.stringify(movies, null, 2), 'utf-8');
+      await fs.writeFile(MOVIES_FILE, JSON.stringify(movies, null, 2), 'utf-8');
 
       logger.info('更新电影成功', { movieId: id, userId: user.id });
       revalidatePath('/', 'layout');
-      return { success: true, data: movies[index] };
+      return { success: true, data: undefined };
     } catch (error) {
       logger.error('更新电影失败', error, { movieId: input.id });
       return { success: false, error: '更新失败' };
@@ -238,7 +238,7 @@ export async function adminDeleteMovie(
 
       // 写入文件
       await fs.writeFile(
-        MOVIES_DIR,
+        MOVIES_FILE,
         JSON.stringify(filtered, null, 2),
         'utf-8'
       );
