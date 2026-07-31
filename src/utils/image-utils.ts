@@ -48,6 +48,8 @@ export async function processAndSaveImage(
     height?: number;
     fit?: keyof sharp.FitEnum;
     position?: string;
+    /** 原始 MIME 类型，用于判断是否跳过 WebP 转换 */
+    originalMimeType?: string;
   }
 ): Promise<{ url: string; width: number; height: number; size: number }> {
   const {
@@ -58,6 +60,7 @@ export async function processAndSaveImage(
     height,
     fit = 'cover',
     position = 'center',
+    originalMimeType,
   } = options;
 
   // 1. 确保目录存在
@@ -73,17 +76,38 @@ export async function processAndSaveImage(
   const finalFileName = `${cleanBaseName}.webp`;
   const filePath = path.join(fullDir, finalFileName);
 
-  // 保存原始图片（用于下载）
+  // 判断是否为 WebP 格式（已压缩）
+  const isWebp =
+    originalMimeType === 'image/webp' ||
+    fileName.toLowerCase().endsWith('.webp');
+
+  if (isWebp) {
+    // WebP 格式直接保存，跳过 sharp 转换
+    await fs.promises.writeFile(filePath, buffer);
+
+    // 读取已保存文件的实际尺寸
+    const metadata = await sharp(buffer).metadata();
+    const stat = await fs.promises.stat(filePath);
+
+    const relativeUrl = `/uploads/${dir}/${finalFileName}`.replace(/\/+/g, '/');
+
+    return {
+      url: relativeUrl,
+      width: metadata.width || 0,
+      height: metadata.height || 0,
+      size: stat.size,
+    };
+  }
+
+  // 3. 非 WebP：保存原始文件 + 转换为 WebP
   const originalFilePath = path.join(fullDir, fileName);
   await fs.promises.writeFile(originalFilePath, buffer);
 
-  // 3. 处理图片（生成 WebP 用于展示）
   let pipeline = sharp(buffer);
 
   if (width || height) {
     pipeline = pipeline.resize(width, height, { fit, position });
   }
-  // 转换为 WebP 并保存
   const info = await pipeline.webp({ quality }).toFile(filePath);
 
   // 4. 返回结果

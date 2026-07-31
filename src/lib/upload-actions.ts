@@ -185,24 +185,6 @@ async function performUpload(params: {
   if (conflict) {
     return { success: false, error: conflict.error };
   }
-  if (config.storage.kind === 'image') {
-    // 图片处理由 processAndSaveImage 负责（自带 WebP 转换）
-    // 注意：processAndSaveImage 内部使用 UPLOADS_DIR 拼接相对路径
-    const result = await processAndSaveImage(buffer, {
-      dir: config.storage.dir,
-      fileName,
-      quality: config.storage.quality ?? 50,
-      width: config.storage.width,
-      height: config.storage.height,
-    });
-    url = result.url;
-    width = result.width;
-    height = result.height;
-  } else {
-    // 原始文件存储
-    await fs.writeFile(filePath, buffer);
-    url = `/uploads/${config.storage.dir}/${fileName}`.replace(/\/+/g, '/');
-  }
 
   // ---- 存储前回调 ----
   if (config.beforeStorage) {
@@ -212,6 +194,26 @@ async function performUpload(params: {
       dir: config.storage.dir,
       fileName,
     });
+  }
+
+  if (config.storage.kind === 'image') {
+    // 图片处理由 processAndSaveImage 负责（自带 WebP 转换）
+    // 注意：processAndSaveImage 内部使用 UPLOADS_DIR 拼接相对路径
+    const result = await processAndSaveImage(buffer, {
+      dir: config.storage.dir,
+      fileName,
+      quality: config.storage.quality ?? 50,
+      width: config.storage.width,
+      height: config.storage.height,
+      originalMimeType: file.type,
+    });
+    url = result.url;
+    width = result.width;
+    height = result.height;
+  } else {
+    // 原始文件存储
+    await fs.writeFile(filePath, buffer);
+    url = `/uploads/${config.storage.dir}/${fileName}`.replace(/\/+/g, '/');
   }
 
   // ---- 存储后回调 ----
