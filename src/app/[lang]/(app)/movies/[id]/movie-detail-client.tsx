@@ -1,10 +1,10 @@
 'use client';
 
+import { VideoPlayer } from '@/app/[lang]/(app)/movies/[id]/video-player';
 import { Calendar, Check, Clock, Tag } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { Badge } from '@/components/shadcn-ui/badge';
-import { VideoPlayer } from '@/components/VideoPlayer';
 import { useT } from '@/i18n/dictionary-provider';
 import type { Movie } from '@/lib/movies';
 import { cn } from '@/utils/utils';

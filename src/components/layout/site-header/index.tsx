@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { setLocale } from '@/actions/set-locale';
-import { Search } from '@/components/content/search';
+import { Search } from '@/components/layout/site-header/search';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   DropdownMenu,
