@@ -132,11 +132,13 @@ const columns: Column<AnalyticsLog>[] = [
 
 export default function AnalyticsClient({
   initialLogs,
+  initialStats,
 }: {
   initialLogs: AnalyticsLog[];
+  initialStats: AnalyticsStats | null;
 }) {
   const [logs, setLogs] = useState<AnalyticsLog[]>(initialLogs);
-  const [stats, setStats] = useState<AnalyticsStats | null>(null);
+  const [stats, setStats] = useState<AnalyticsStats | null>(initialStats);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);

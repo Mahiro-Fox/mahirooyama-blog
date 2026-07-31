@@ -16,7 +16,7 @@ export const MUSIC_FILE = path.join(DATA_DIR, 'music.json');
 export const MOVIES_FILE = path.join(DATA_DIR, 'movies.json');
 export const MOMENTS_FILE = path.join(DATA_DIR, 'moments.json');
 export const GUESTBOOK_FILE = path.join(DATA_DIR, 'guestbook.json');
-export const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json');
+export const ANALYTICS_DIR = path.join(DATA_DIR, 'analytics');
 export const ROLE_PERMISSIONS_FILE = path.join(
   DATA_DIR,
   'role-permissions.json'
