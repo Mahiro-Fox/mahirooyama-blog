@@ -346,9 +346,9 @@ export default function AdminShell({
             <GuestbookBadge count={guestbookPendingCount} />
             {/* 用户头像下拉菜单 */}
             <div className="relative hidden lg:block">
-              <button
+              <div
                 onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
-                className="hover:bg-muted flex items-center gap-3 rounded-lg transition-colors"
+                className="hover:bg-muted flex cursor-pointer items-center gap-3 rounded-lg transition-colors"
               >
                 <OptimizedImage
                   src={currentUser.avatar}
@@ -360,8 +360,7 @@ export default function AdminShell({
                 <span className="text-sm font-medium">
                   {currentUser.username}
                 </span>
-              </button>
-
+              </div>
               {/* 下拉菜单 */}
               {avatarMenuOpen && (
                 <>

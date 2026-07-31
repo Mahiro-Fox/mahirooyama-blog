@@ -3,7 +3,7 @@
 import { MOOD_OPTIONS } from '@/config';
 import { Edit, Image as ImageIcon, MapPin, Smile, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   adminCreateMoment,
   adminDeleteMoment,
@@ -22,140 +22,88 @@ import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { useCrud } from '@/hooks/use-crud';
 import { Moment, MomentImage } from '@/lib/moments';
 import { formatDate } from '@/utils/utils';
+
+type MomentCreateInput = {
+  content: string;
+  image?: MomentImage;
+  moodEmoji?: string;
+  location?: string;
+};
 
 export default function MomentsClient({
   initialMoments,
 }: {
   initialMoments: Moment[];
 }) {
-  const [moments, setMoments] = useState<Moment[]>(initialMoments);
-  const [loading, setLoading] = useState(false);
+  // === 用 useCrud 管理 CRUD 状态 ===
+  const crud = useCrud<Moment, MomentCreateInput>({
+    getList: adminGetMoments,
+    create: adminCreateMoment,
+    update: adminUpdateMoment,
+    delete: adminDeleteMoment,
+    idField: 'id',
+    initialData: initialMoments,
+    createSuccessMessage: '碎碎念发布成功',
+    updateSuccessMessage: '碎碎念更新成功',
+    deleteSuccessMessage: '碎碎念删除成功',
+  });
 
-  // 本地状态
-  const [selectedMoment, setSelectedMoment] = useState<Moment | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editMode, setEditMode] = useState<'create' | 'edit'>('create');
+  const {
+    items: moments,
+    loading,
+    isSubmitting,
+    selectedItem: selectedMoment,
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    editMode,
+    fetchItems,
+    createItem,
+    updateItem,
+    deleteItem,
+    openCreateDialog,
+    openEditDialog,
+    openDeleteDialog,
+    closeDialogs,
+    setIsDeleteDialogOpen,
+  } = crud;
 
-  // 表单状态
+  // === 表单状态（页面独有） ===
   const [content, setContent] = useState('');
   const [image, setImage] = useState<MomentImage | null>(null);
   const [moodEmoji, setMoodEmoji] = useState('');
   const [location, setLocation] = useState('');
 
-  const getRealImageHeight = (moment: Moment) => {
-    const scaleRatio = Math.round(
-      moment.image?.width ? moment.image.width / 320 : 1
-    );
-    return Math.round(
-      moment.image?.height ? moment.image.height / scaleRatio : 0
-    );
-  };
-  // 刷新列表
-  const fetchItems = async () => {
-    setLoading(true);
-    try {
-      const result = await adminGetMoments();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      setMoments(result.data);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : '获取碎碎念列表失败'
-      );
-    } finally {
-      setLoading(false);
+  // 打开编辑时回填表单
+  useEffect(() => {
+    if (isEditDialogOpen && selectedMoment) {
+      setContent(selectedMoment.content);
+      setImage(selectedMoment.image || null);
+      setMoodEmoji(selectedMoment.moodEmoji || '');
+      setLocation(selectedMoment.location || '');
     }
-  };
+  }, [isEditDialogOpen, selectedMoment]);
 
-  // 新增碎碎念
-  const handleCreate = () => {
-    setEditMode('create');
-    setSelectedMoment(null);
-    setContent('');
-    setImage(null);
-    setMoodEmoji('');
-    setLocation('');
-    setIsFormDialogOpen(true);
-  };
-
-  // 编辑碎碎念
-  const handleEdit = (moment: Moment) => {
-    setEditMode('edit');
-    setSelectedMoment(moment);
-    setContent(moment.content);
-    setImage(moment.image || null);
-    setMoodEmoji(moment.moodEmoji || '');
-    setLocation(moment.location || '');
-    setIsFormDialogOpen(true);
-  };
-
-  // 保存（新增或编辑）
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      if (editMode === 'create') {
-        const result = await adminCreateMoment({
-          content,
-          image: image || undefined,
-          moodEmoji: moodEmoji || undefined,
-          location: location || undefined,
-        });
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        toast.success('碎碎念发布成功');
-      } else {
-        if (!selectedMoment) return;
-        const result = await adminUpdateMoment(selectedMoment.id, {
-          content,
-          image: image || undefined,
-          moodEmoji: moodEmoji || undefined,
-          location: location || undefined,
-        });
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        toast.success('碎碎念更新成功');
-      }
-      setIsFormDialogOpen(false);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败');
-    } finally {
-      setIsSubmitting(false);
+  // 打开创建时清空表单
+  useEffect(() => {
+    if (isCreateDialogOpen) {
+      setContent('');
+      setImage(null);
+      setMoodEmoji('');
+      setLocation('');
     }
+  }, [isCreateDialogOpen]);
+
+  // 合并 create/edit 对话框
+  const isFormDialogOpen = isCreateDialogOpen || isEditDialogOpen;
+  const handleFormDialogOpenChange = (open: boolean) => {
+    if (!open) closeDialogs();
   };
 
-  // 打开删除对话框
-  const openDelete = (moment: Moment) => {
-    setSelectedMoment(moment);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // 执行删除
-  const handleDelete = async () => {
-    if (!selectedMoment) return;
-    try {
-      const result = await adminDeleteMoment(selectedMoment.id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      toast.success('碎碎念删除成功');
-      setIsDeleteDialogOpen(false);
-      setSelectedMoment(null);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败');
-    }
-  };
-
-  // 图片上传处理
+  // === 图片上传（页面特殊逻辑，保留） ===
   const handleImageUpload = async (files: FileList) => {
     const file = files[0];
     if (!file) return;
@@ -177,7 +125,7 @@ export default function MomentsClient({
     }
   };
 
-  // 情绪点击处理
+  // === 情绪点击处理 ===
   const handleMoodEmojiClick = (emoji: string) => {
     if (moodEmoji === emoji) {
       setMoodEmoji('');
@@ -186,7 +134,7 @@ export default function MomentsClient({
     }
   };
 
-  // 获取用户位置
+  // === 获取用户位置 ===
   const handleGetLocation = async () => {
     if (!navigator.geolocation) {
       toast.error('您的浏览器不支持地理位置功能');
@@ -208,7 +156,6 @@ export default function MomentsClient({
 
       const { latitude, longitude } = position.coords;
 
-      // 使用 OpenStreetMap Nominatim 进行逆地理编码（免费，无需 API Key）
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=zh-CN`,
         {
@@ -224,12 +171,10 @@ export default function MomentsClient({
           setLocation(geo.display_name);
           toast.success('位置获取成功', { id: 'location-loading' });
         } else {
-          // 如果无法获取地址，回退到坐标
           setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
           toast.success('位置获取成功（仅坐标）', { id: 'location-loading' });
         }
       } else {
-        // API 请求失败，回退到坐标
         setLocation(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
         toast.success('位置获取成功（仅坐标）', { id: 'location-loading' });
       }
@@ -252,6 +197,36 @@ export default function MomentsClient({
     }
   };
 
+  // === 保存 ===
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editMode === 'create') {
+      await createItem({
+        content,
+        image: image || undefined,
+        moodEmoji: moodEmoji || undefined,
+        location: location || undefined,
+      });
+    } else {
+      if (!selectedMoment) return;
+      await updateItem(selectedMoment.id, {
+        content,
+        image: image || undefined,
+        moodEmoji: moodEmoji || undefined,
+        location: location || undefined,
+      });
+    }
+  };
+
+  const getRealImageHeight = (moment: Moment) => {
+    const scaleRatio = Math.round(
+      moment.image?.width ? moment.image.width / 320 : 1
+    );
+    return Math.round(
+      moment.image?.height ? moment.image.height / scaleRatio : 0
+    );
+  };
+
   return (
     <>
       <AdminPageLayout
@@ -259,7 +234,7 @@ export default function MomentsClient({
         description={`共 ${moments.length} 条碎碎念`}
         actions={[
           createRefreshAction(fetchItems, loading),
-          createAddAction(handleCreate, '发布碎碎念'),
+          createAddAction(openCreateDialog, '发布碎碎念'),
         ]}
       >
         {/* 碎碎念列表 */}
@@ -307,7 +282,6 @@ export default function MomentsClient({
                           previewable
                           src={moment.image.url}
                           alt="配图"
-                          // 优化LCP
                           priority={
                             Math.max(
                               getRealImageHeight(moments[0]),
@@ -325,14 +299,14 @@ export default function MomentsClient({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleEdit(moment)}
+                      onClick={() => openEditDialog(moment)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => openDelete(moment)}
+                      onClick={() => openDeleteDialog(moment)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -347,7 +321,7 @@ export default function MomentsClient({
       {/* 表单对话框 */}
       <CrudFormDialog
         open={isFormDialogOpen}
-        onOpenChange={setIsFormDialogOpen}
+        onOpenChange={handleFormDialogOpenChange}
         title={editMode === 'create' ? '发布碎碎念' : '编辑碎碎念'}
         description="记录生活中的美好时刻"
         onSubmit={handleSave}
@@ -450,7 +424,7 @@ export default function MomentsClient({
         onOpenChange={setIsDeleteDialogOpen}
         title="确认删除"
         description={<>确定要删除这条碎碎念吗？此操作不可恢复。</>}
-        onConfirm={handleDelete}
+        onConfirm={deleteItem}
         isDeleting={isSubmitting}
       />
     </>

@@ -119,7 +119,7 @@ export async function adminCreateMoment(input: {
   image?: MomentImage;
   moodEmoji?: string;
   location?: string;
-}): Promise<ActionResponse<{ id: string }>> {
+}): Promise<ActionResponse<void>> {
   return withActionPermission('moments:create', async (user) => {
     // 速率限制检查
     if (user.id) {
@@ -173,7 +173,7 @@ export async function adminCreateMoment(input: {
 
       logger.info('创建碎碎念成功', { momentId: id, userId: user.id });
       revalidatePath('/', 'layout');
-      return { success: true, data: { id } };
+      return { success: true, data: undefined };
     } catch (error) {
       logger.error('创建碎碎念失败', error);
       return { success: false, error: '创建失败，请稍后重试' };

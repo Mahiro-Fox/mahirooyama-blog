@@ -42,7 +42,7 @@ export async function adminCreateGuestbook(input: {
   bgColor: string;
   contact?: string;
   content: string;
-}): Promise<ActionResponse<{ id: string }>> {
+}): Promise<ActionResponse<void>> {
   return withActionPermission('guestbook:create', async (user) => {
     try {
       const { nickname, bgColor, contact, content } = input;
@@ -90,7 +90,7 @@ export async function adminCreateGuestbook(input: {
       );
 
       logger.info('管理员创建留言成功', { entryId: id, adminId: user.id });
-      return { success: true, data: { id } };
+      return { success: true, data: undefined };
     } catch (error) {
       logger.error('创建留言失败', error);
       return { success: false, error: '创建失败，请稍后重试' };

@@ -3,10 +3,9 @@
 import { COLOR_OPTIONS } from '@/config';
 import { Check, Edit, MessageSquare, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   adminApproveGuestbook,
-  adminCreateGuestbook,
   adminDeleteGuestbook,
   adminGetGuestbookEntries,
   adminReplyGuestbook,
@@ -22,161 +21,134 @@ import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
+import { useCrud } from '@/hooks/use-crud';
 import { Guestbook } from '@/lib/guestbook';
 import { formatDate, isEmail } from '@/utils/utils';
+
+type GuestbookCreateInput = {
+  nickname: string;
+  bgColor: string;
+  contact?: string;
+  content: string;
+};
+
+type GuestbookUpdateInput = Partial<GuestbookCreateInput>;
 
 export default function GuestbookClient({
   initialEntries,
 }: {
   initialEntries: Guestbook[];
 }) {
-  const [entries, setEntries] = useState<Guestbook[]>(initialEntries);
-  const [loading, setLoading] = useState(false);
+  // === 用 useCrud 管理标准 CRUD ===
+  const crud = useCrud<Guestbook, GuestbookCreateInput, GuestbookUpdateInput>({
+    getList: adminGetGuestbookEntries,
+    // 此处只能编辑留言，不能新增，占位，不实现新增功能
+    create: async () => ({
+      success: true,
+      data: undefined,
+    }),
+    update: adminUpdateGuestbook,
+    delete: adminDeleteGuestbook,
+    idField: 'id',
+    initialData: initialEntries,
+    updateSuccessMessage: '留言更新成功',
+    deleteSuccessMessage: '留言删除成功',
+  });
 
-  // 本地状态
-  const [selectedEntry, setSelectedEntry] = useState<Guestbook | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
-  const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editMode, setEditMode] = useState<'create' | 'edit'>('create');
+  const {
+    items: entries,
+    loading,
+    isSubmitting,
+    selectedItem: selectedEntry,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    fetchItems,
+    updateItem,
+    deleteItem,
+    openEditDialog,
+    openDeleteDialog,
+    closeDialogs,
+    setItems,
+    setSubmitting,
+    setIsDeleteDialogOpen,
+  } = crud;
 
-  // 表单状态
+  // === 表单状态（页面独有） ===
   const [nickname, setNickname] = useState('');
   const [bgColor, setBgColor] = useState(COLOR_OPTIONS[0].value);
   const [contact, setContact] = useState('');
   const [content, setContent] = useState('');
+
+  // === 回复对话框状态（独立于 CRUD hook 的对话框） ===
+  const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
   const [replyContent, setReplyContent] = useState('');
+  const [replyTarget, setReplyTarget] = useState<Guestbook | null>(null);
 
-  // 刷新列表
-  const fetchItems = async () => {
-    setLoading(true);
-    try {
-      const result = await adminGetGuestbookEntries();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      setEntries(result.data);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '获取留言列表失败');
-    } finally {
-      setLoading(false);
+  // 打开编辑时回填表单
+  useEffect(() => {
+    if (isEditDialogOpen && selectedEntry) {
+      setNickname(selectedEntry.nickname);
+      setBgColor(selectedEntry.bgColor);
+      setContact(selectedEntry.contact || '');
+      setContent(selectedEntry.content);
     }
+  }, [isEditDialogOpen, selectedEntry]);
+
+  // 合并 edit 对话框
+  const isFormDialogOpen = isEditDialogOpen;
+  const handleFormDialogOpenChange = (open: boolean) => {
+    if (!open) closeDialogs();
   };
 
-  // 新增留言
-  // const handleCreate = () => {
-  //   setEditMode('create');
-  //   setSelectedEntry(null);
-  //   setNickname('');
-  //   setBgColor(COLOR_OPTIONS[0].value);
-  //   setContact('');
-  //   setContent('');
-  //   setIsFormDialogOpen(true);
-  // };
-
-  // 编辑留言
-  const handleEdit = (entry: Guestbook) => {
-    setEditMode('edit');
-    setSelectedEntry(entry);
-    setNickname(entry.nickname);
-    setBgColor(entry.bgColor);
-    setContact(entry.contact || '');
-    setContent(entry.content);
-    setIsFormDialogOpen(true);
-  };
-
-  // 保存（新增或编辑）
+  // === 保存 ===
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      if (editMode === 'create') {
-        const result = await adminCreateGuestbook({
-          nickname,
-          bgColor,
-          contact: contact || undefined,
-          content,
-        });
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        toast.success('留言创建成功');
-      } else {
-        if (!selectedEntry) return;
-        const result = await adminUpdateGuestbook(selectedEntry.id, {
-          nickname,
-          bgColor,
-          contact: contact || undefined,
-          content,
-        });
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-        toast.success('留言更新成功');
-      }
-      setIsFormDialogOpen(false);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '保存失败');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // 打开删除对话框
-  const openDelete = (entry: Guestbook) => {
-    setSelectedEntry(entry);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // 执行删除
-  const handleDelete = async () => {
+    // 此处只能编辑留言，不能新增
     if (!selectedEntry) return;
-    try {
-      const result = await adminDeleteGuestbook(selectedEntry.id);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      toast.success('留言删除成功');
-      setIsDeleteDialogOpen(false);
-      setSelectedEntry(null);
-      await fetchItems();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败');
-    }
+    await updateItem(selectedEntry.id, {
+      nickname,
+      bgColor,
+      contact: contact || undefined,
+      content,
+    });
   };
 
-  // 打开回复对话框
-  const openReply = (entry: Guestbook) => {
-    setSelectedEntry(entry);
+  // === 打开回复对话框 ===
+  const openReplyDialog = (entry: Guestbook) => {
+    setReplyTarget(entry);
     setReplyContent(entry.replyContent || '');
     setIsReplyDialogOpen(true);
   };
 
-  // 保存回复
+  // === 保存回复 ===
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEntry) return;
-    setIsSubmitting(true);
+    if (!replyTarget) return;
 
+    setSubmitting(true);
     const {
       id: entryId,
       contact,
       content: originalContent,
       isRepliedEmail,
       isEmailNotificationEnabled = false,
-    } = selectedEntry;
+    } = replyTarget;
 
     try {
       const result = await adminReplyGuestbook(entryId, replyContent);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+      if (!result.success) throw new Error(result.error);
       toast.success('回复成功');
       setIsReplyDialogOpen(false);
-      setSelectedEntry(null);
-      await fetchItems();
+      setReplyTarget(null);
+
+      // 本地 patch — 无需重新拉取全部数据
+      setItems((prev) =>
+        prev.map((e) =>
+          e.id === entryId
+            ? { ...e, replyContent, replyAt: new Date().toISOString() }
+            : e
+        )
+      );
 
       // 如果是邮箱,且未发送回复邮件,且开启了邮箱通知
       if (
@@ -191,6 +163,12 @@ export default function GuestbookClient({
         );
         if (emailResult.success) {
           console.log(`[邮件通知] 回复邮件发送成功: ${contact}`);
+          // 更新 isRepliedEmail 标记
+          setItems((prev) =>
+            prev.map((e) =>
+              e.id === entryId ? { ...e, isRepliedEmail: true } : e
+            )
+          );
         } else {
           toast.error('邮件通知发送失败');
         }
@@ -198,19 +176,21 @@ export default function GuestbookClient({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '回复失败');
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  // 审核留言
+  // === 审核留言 ===
   const handleApprove = async (entry: Guestbook, approved: boolean) => {
     try {
       const result = await adminApproveGuestbook(entry.id, approved);
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+      if (!result.success) throw new Error(result.error);
       toast.success(approved ? '留言已通过审核' : '留言已拒绝');
-      await fetchItems();
+      setItems((prev) =>
+        prev.map((e) =>
+          e.id === entry.id ? { ...e, isApproved: approved } : e
+        )
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '操作失败');
     }
@@ -296,7 +276,7 @@ export default function GuestbookClient({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => openReply(entry)}
+                      onClick={() => openReplyDialog(entry)}
                       title="回复"
                     >
                       <MessageSquare className="h-4 w-4" />
@@ -304,14 +284,14 @@ export default function GuestbookClient({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleEdit(entry)}
+                      onClick={() => openEditDialog(entry)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => openDelete(entry)}
+                      onClick={() => openDeleteDialog(entry)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -323,15 +303,16 @@ export default function GuestbookClient({
         </div>
       </AdminPageLayout>
 
-      {/* 表单对话框 */}
+      {/* 表单对话框（编辑留言） */}
       <CrudFormDialog
+        // 此处只能编辑留言，不能新增
         open={isFormDialogOpen}
-        onOpenChange={setIsFormDialogOpen}
-        title={editMode === 'create' ? '新增留言' : '编辑留言'}
+        onOpenChange={handleFormDialogOpenChange}
+        title="编辑留言"
         description="管理留言墙内容"
         onSubmit={handleSave}
         isSubmitting={isSubmitting}
-        submitLabel={editMode === 'create' ? '创建' : '保存'}
+        submitLabel={'保存'}
       >
         <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
           <div>
@@ -391,19 +372,24 @@ export default function GuestbookClient({
         </div>
       </CrudFormDialog>
 
-      {/* 回复对话框 */}
+      {/* 回复对话框（独立于 CRUD hook） */}
       <CrudFormDialog
         open={isReplyDialogOpen}
-        onOpenChange={setIsReplyDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsReplyDialogOpen(false);
+            setReplyTarget(null);
+          }
+        }}
         title="回复留言"
-        description={`回复 ${selectedEntry?.nickname} 的留言`}
+        description={`回复 ${replyTarget?.nickname} 的留言`}
         onSubmit={handleReply}
         isSubmitting={isSubmitting}
         submitLabel="回复"
       >
         <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
           <div className="bg-muted rounded p-3 text-sm">
-            {selectedEntry?.content}
+            {replyTarget?.content}
           </div>
           <div>
             <label className="mb-2 block text-sm font-medium">回复内容</label>
@@ -431,7 +417,7 @@ export default function GuestbookClient({
             的留言吗？此操作不可恢复。
           </>
         }
-        onConfirm={handleDelete}
+        onConfirm={deleteItem}
         isDeleting={isSubmitting}
       />
     </>
