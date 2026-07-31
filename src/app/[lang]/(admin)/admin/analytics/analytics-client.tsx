@@ -17,7 +17,7 @@ import { Column, DataTable } from '@/components/admin/data-table';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
-import { formatDateWithSecond } from '@/utils/utils';
+import { formatDateWithHMS } from '@/utils/utils';
 
 // import AnalyticsCharts from './analytics-charts';
 
@@ -26,7 +26,7 @@ const columns: Column<AnalyticsLog>[] = [
     key: 'timestamp',
     header: '时间',
     width: 'max-w-32',
-    render: (log) => formatDateWithSecond(log.timestamp),
+    render: (log) => formatDateWithHMS(log.timestamp),
   },
   {
     key: 'event',

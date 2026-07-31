@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  INITIAL_FORM_DATA,
-  Tag,
-  TAG_TYPES,
-  TagsData,
-  TagType,
-} from '@/constant';
+import { Tag, TAG_TYPES, TagsData, TagType } from '@/constant';
 import { Tag as LucideTag, RefreshCwIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -87,6 +81,13 @@ const getColumns = (type: TagType): Column<Tag>[] => [
     ),
   },
 ];
+
+const INITIAL_FORM_DATA = {
+  id: '',
+  name: '',
+  icon: 'default',
+  description: '',
+};
 
 export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   const [tags, setTags] = useState<TagsData>(initialTags);

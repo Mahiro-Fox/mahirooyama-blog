@@ -31,7 +31,7 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
           'application/rss+xml': [
             {
               url: '/rss.xml',
-              title: 'mahirooyama-blog RSS Feed',
+              title: `${siteConfig.name} RSS Feed`,
             },
           ],
         },
@@ -90,12 +90,16 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
         }}
       >
         <MusicProvider playlist={songs}>
-          <PageTracker />
           <SiteHeader initialIsAuth={!!adminUser} />
           <main className="flex flex-1 flex-col">{children}</main>
-          <BackToTop />
-          <BugReportTrigger />
           <SiteFooter />
+          {/* 自动埋点组件 */}
+          <PageTracker />
+          {/* 回到顶部组件 */}
+          <BackToTop />
+          {/* 问题反馈组件 */}
+          <BugReportTrigger />
+          {/* 全局音乐播放器组件 */}
           <GlobalMusicPlayer />
         </MusicProvider>
       </DictionaryProvider>

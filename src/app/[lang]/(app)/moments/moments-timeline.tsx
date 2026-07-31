@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { BlurFade } from '@/components/shadcn-ui/blur-fade';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { Moment } from '@/lib/moments';
-import { formatDateWithSecond } from '@/utils/utils';
+import { formatDateWithHMS } from '@/utils/utils';
 
 interface MomentsTimelineProps {
   moments: Moment[];
@@ -44,7 +44,7 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                 {/* 时间和标签 */}
                 <div className="text-muted-foreground mb-3 flex items-center gap-3 text-sm">
                   <span className="text-foreground font-medium">
-                    {formatDateWithSecond(moment.createdAt)}
+                    {formatDateWithHMS(moment.createdAt)}
                   </span>
                   {moment.moodEmoji && (
                     <span className="flex items-center gap-1">

@@ -7,6 +7,5 @@
 export * from './dir';
 // export * from './auth'; // ❌ 不要在此导出！包含敏感信息，仅供服务端使用
 export * from './cache';
-export * from './form';
 export * from './tag';
 export * from './permissions';

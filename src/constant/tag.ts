@@ -23,7 +23,9 @@ export interface TagTypeConfig {
   description: string;
 }
 
-// 默认标签数据
+/**
+ * 默认标签数据
+ */
 export const DEFAULT_TAGS: TagsData = {
   blog: {
     mdx: {
@@ -121,7 +123,9 @@ export const DEFAULT_TAGS: TagsData = {
   },
 };
 
-// 标签类型配置
+/**
+ * 标签类型配置
+ */
 export const TAG_TYPES: TagTypeConfig[] = [
   {
     id: 'blog',

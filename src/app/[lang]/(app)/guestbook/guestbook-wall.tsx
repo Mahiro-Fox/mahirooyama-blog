@@ -3,7 +3,7 @@
 import { MessageSquare } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Guestbook } from '@/lib/guestbook';
-import { formatDateWithSecond } from '@/utils/utils';
+import { formatDateWithHMS } from '@/utils/utils';
 
 interface GuestbookWallProps {
   entries: Guestbook[];
@@ -46,7 +46,7 @@ export function GuestbookWall({ entries }: GuestbookWallProps) {
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-sm font-bold">{entry.nickname}</span>
                 <span className="text-xs opacity-70">
-                  {formatDateWithSecond(entry.createdAt)}
+                  {formatDateWithHMS(entry.createdAt)}
                 </span>
               </div>
 

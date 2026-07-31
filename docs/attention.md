@@ -399,7 +399,7 @@ import { Pagination } from '@/components/shared/pagination';
 import {
   cn,                    // CSS 类名合并 (clsx + tailwind-merge)
   formatDate,            // 格式化日期 (2024/1/1)
-  formatDateWithSecond,  // 格式化日期+时间 (2024/1/1 12:00:00)
+  formatDateWithHMS,  // 格式化日期+时间 (2024/1/1 12:00:00)
   absoluteUrl,           // 生成绝对 URL
   truncateText,          // 截断文本 (添加...)
   debounce,              // 防抖函数

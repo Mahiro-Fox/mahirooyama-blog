@@ -16,6 +16,10 @@ export function isPathSafe(
   return resolvedPath.startsWith(resolvedBase);
 }
 
+/**
+ * 确保目录存在，如果不存在则创建
+ * @param dirPath 目录路径
+ */
 export async function ensureDirectory(dirPath: string): Promise<void> {
   try {
     await fs.access(dirPath);
@@ -39,7 +43,9 @@ export async function fileExists(filePath: string): Promise<boolean> {
 }
 /**
  * 确保文件已初始化，如果不存在则创建
- *  * @param filePath 完整文件路径
+ * @param filePath 完整文件路径
+ * @param defaultContent 默认内容
+ * @param defaultOptions 默认选项
  */
 export async function ensureFileInitialized(
   filePath: string,

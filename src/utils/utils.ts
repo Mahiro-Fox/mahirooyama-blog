@@ -4,7 +4,11 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
+/**
+ * 格式化日期，不包含秒
+ * @param input 日期或时间戳
+ * @returns 格式化后的日期字符串
+ */
 export function formatDate(input: string | number): string {
   const date = new Date(input);
   return date.toLocaleDateString('zh-CN', {
@@ -14,7 +18,12 @@ export function formatDate(input: string | number): string {
     day: 'numeric',
   });
 }
-export function formatDateWithSecond(input: string | number): string {
+/**
+ * 格式化日期，包含时分秒
+ * @param input 日期或时间戳
+ * @returns 格式化后的日期+时间字符串
+ */
+export function formatDateWithHMS(input: string | number): string {
   const date = new Date(input);
   return date.toLocaleDateString('zh-CN', {
     timeZone: 'Asia/Shanghai',
@@ -26,10 +35,20 @@ export function formatDateWithSecond(input: string | number): string {
     second: '2-digit',
   });
 }
+/**
+ * 生成绝对URL
+ * @param path 相对路径
+ * @returns 绝对URL
+ */
 export function absoluteUrl(path: string): string {
   return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
 }
-
+/**
+ * 截断文本，超过最大长度时添加省略号
+ * @param inputText 输入文本
+ * @param maxLength 最大长度
+ * @returns 截断后的文本
+ */
 export function truncateText(inputText: string, maxLength: number): string {
   return inputText.length > maxLength
     ? inputText.slice(0, maxLength) + '...'
