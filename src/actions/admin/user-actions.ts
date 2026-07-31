@@ -4,15 +4,14 @@ import fs from 'fs/promises';
 import path from 'path';
 import { UserResponse, UserRole, userStore } from '@/store/user-store';
 import { AVATAR_DIR } from '@/constant/dir';
-import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { uploadFile } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('UserActions');
@@ -73,7 +72,7 @@ export async function adminUploadAvatar(
 
     const userId = authCheck.userId as string;
 
-    // 速率限制检查
+    // 2. 速率限制检查
     const rateLimit = await serverActionRateLimiter.check(`user:${userId}`);
     if (!rateLimit.success) {
       return {
@@ -83,46 +82,48 @@ export async function adminUploadAvatar(
       };
     }
 
-    // 2. 获取用户信息
+    // 3. 获取用户信息
     const user = await userStore.getById(userId);
     if (!user) {
       return { success: false, error: '用户不存在' };
     }
 
-    // 3. 解析上传的文件
-    const file = formData.get('avatar') as File | null;
+    // 4. 使用通用上传逻辑（校验 + 存储）
+    const uploadResult = await uploadFile<{
+      kind: 'custom';
+      build: (ctx: { url: string }) => { url: string };
+    }>(
+      formData,
+      {
+        name: '头像',
+        permission: 'users:update',
+        rateLimitKey: 'user:{userId}',
+        formField: 'avatar',
+        validation: { kind: 'mime', prefix: 'image/', label: '图片' },
+        storage: {
+          kind: 'image',
+          dir: 'images/avatar',
+          width: 200,
+          height: 200,
+          quality: 80,
+        },
+        result: {
+          kind: 'custom',
+          build: (ctx) => ({
+            url: ctx.url,
+          }),
+        },
+      },
+      { id: userId }
+    );
 
-    if (!file) {
-      return { success: false, error: '未提供头像文件' };
+    if (!uploadResult.success) {
+      return uploadResult;
     }
 
-    // 4. 验证文件类型
-    if (!file.type.startsWith('image/')) {
-      return { success: false, error: '只允许上传图片文件' };
-    }
+    const avatarUrl = uploadResult.data.url;
 
-    // 6. 验证文件大小 (最大 MAX_FILE_SIZE)
-    if (file.size > MAX_FILE_SIZE) {
-      return {
-        success: false,
-        error: `图片大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-      };
-    }
-
-    // 7. 读取文件并处理
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // 8. 处理并保存图片 (头像固定 200x200)
-    const result = await processAndSaveImage(buffer, {
-      dir: 'images/avatar',
-      fileName: `${userId}`,
-      width: 200,
-      height: 200,
-      quality: 80,
-    });
-
-    // 9. 删除旧头像（如果不是默认头像）
+    // 5. 删除旧头像（如果不是默认头像）
     if (user.avatar && !user.avatar.includes('default')) {
       try {
         const oldFileName = path.basename(user.avatar);
@@ -133,15 +134,14 @@ export async function adminUploadAvatar(
       }
     }
 
-    // 10. 更新用户头像路径
-    const avatarPath = result.url;
-    await userStore.update(userId, { avatar: avatarPath });
+    // 6. 更新用户头像路径
+    await userStore.update(userId, { avatar: avatarUrl });
 
     logger.info('更新头像成功', { userId });
     return {
       success: true,
       data: {
-        avatar: avatarPath,
+        avatar: avatarUrl,
         message: '头像更新成功',
       },
     };

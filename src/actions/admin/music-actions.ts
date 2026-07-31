@@ -1,17 +1,15 @@
 'use server';
 
 import fs from 'fs/promises';
-import path from 'path';
 import { revalidatePath } from 'next/cache';
-import { MUSIC_DIR, MUSIC_FILE } from '@/constant/dir';
-import { MAX_FILE_SIZE } from '@/constant/file-upload';
+import { MUSIC_FILE } from '@/constant/dir';
 import { getMusics, Song } from '@/lib/music';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { createUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { ensureDirectory } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MusicActions');
@@ -200,62 +198,12 @@ export async function adminDeleteMusic(
   });
 }
 
-export async function adminUploadMusicFile(
-  formData: FormData
-): Promise<ActionResponse<{ url: string; message: string }>> {
-  return withActionPermission('music:create', async (user) => {
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(`music:${user.id}`);
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
-      }
-    }
-
-    try {
-      const file = formData.get('audio') as File | null;
-
-      if (!file) {
-        return { success: false, error: '未提供音频文件' };
-      }
-
-      if (!file.type.startsWith('audio/')) {
-        return { success: false, error: '只允许上传音频文件' };
-      }
-
-      if (file.size > MAX_FILE_SIZE) {
-        return {
-          success: false,
-          error: `音频大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-        };
-      }
-
-      await ensureDirectory(MUSIC_DIR);
-
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      const timestamp = Date.now();
-      const ext = path.extname(file.name) || '.mp3';
-      const fileName = `${timestamp}${ext}`;
-      const filePath = path.join(MUSIC_DIR, fileName);
-
-      await fs.writeFile(filePath, buffer);
-
-      const url = `/uploads/music/${fileName}`;
-
-      logger.info('上传音频成功', { fileName, userId: user.id });
-
-      return {
-        success: true,
-        data: { url, message: '音频上传成功' },
-      };
-    } catch (error) {
-      logger.error('上传音频失败', error);
-      return { success: false, error: '上传失败' };
-    }
-  });
-}
+export const adminUploadMusicFile = createUploadAction({
+  name: '音频文件',
+  permission: 'music:create',
+  rateLimitKey: 'music:{userId}',
+  formField: 'audio',
+  validation: { kind: 'mime', prefix: 'audio/', label: '音频' },
+  storage: { kind: 'raw', dir: 'music' },
+  result: { kind: 'raw-url', message: '音频上传成功' },
+});

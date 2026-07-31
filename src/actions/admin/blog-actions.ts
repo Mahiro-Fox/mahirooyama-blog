@@ -5,10 +5,10 @@ import path from 'path';
 import matter from 'gray-matter';
 import { DEFAULT_BLOG_LIST_LIMIT } from '@/config/limit';
 import { BLOG_DIR } from '@/constant/dir';
-import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import { AdminBlog, Blog, getBlogs } from '@/lib/blog';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { createUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
@@ -18,7 +18,6 @@ import {
   fileExists,
   validateSlug,
 } from '@/utils/file-utils';
-import { processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('BlogActions');
@@ -284,64 +283,12 @@ export async function adminDeleteBlogFile(
   });
 }
 
-export async function adminUploadBlogThumbnail(
-  formData: FormData
-): Promise<ActionResponse<{ url: string; message: string }>> {
-  return withActionPermission('blog:create', async (user) => {
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(`blog:${user.id}`);
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
-      }
-    }
-
-    try {
-      const file = formData.get('image') as File | null;
-
-      if (!file) {
-        return { success: false, error: '未提供图片文件' };
-      }
-
-      if (!file.type.startsWith('image/')) {
-        return { success: false, error: '只允许上传图片文件' };
-      }
-
-      if (file.size > MAX_FILE_SIZE) {
-        return {
-          success: false,
-          error: `图片大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-        };
-      }
-
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      const result = await processAndSaveImage(buffer, {
-        dir: 'images/blog',
-        fileName: file.name,
-        quality: 85,
-      });
-
-      logger.info('博客缩略图上传成功', {
-        fileName: file.name,
-        userId: user.id,
-      });
-      return {
-        success: true,
-        data: {
-          url: result.url,
-          message: '图片上传成功',
-        },
-      };
-    } catch (error) {
-      logger.error('博客缩略图上传失败', error, { userId: user.id });
-      const errorMessage =
-        error instanceof Error ? error.message : '图片上传失败';
-      return { success: false, error: errorMessage };
-    }
-  });
-}
+export const adminUploadBlogThumbnail = createUploadAction({
+  name: '博客缩略图',
+  permission: 'blog:create',
+  rateLimitKey: 'blog:{userId}',
+  formField: 'image',
+  validation: { kind: 'mime', prefix: 'image/', label: '图片' },
+  storage: { kind: 'image', dir: 'images/blog', quality: 85 },
+  result: { kind: 'raw-url', message: '图片上传成功' },
+});

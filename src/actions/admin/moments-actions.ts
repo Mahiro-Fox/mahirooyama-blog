@@ -3,14 +3,13 @@
 import fs from 'fs/promises';
 import { revalidatePath } from 'next/cache';
 import { MOMENTS_FILE } from '@/constant/dir';
-import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import { getMoments, Moment, MomentImage } from '@/lib/moments';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { createUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { processAndSaveImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MomentsActions');
@@ -35,83 +34,15 @@ export async function adminGetMoments(): Promise<ActionResponse<Moment[]>> {
   });
 }
 
-// POST - 上传碎碎念图片
-export async function adminUploadMomentImage(
-  formData: FormData
-): Promise<ActionResponse<{ image: MomentImage; message: string }>> {
-  return withActionPermission('moments:create', async (user) => {
-    // 速率限制检查
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(
-        `moments:${user.id}`
-      );
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
-      }
-    }
-
-    try {
-      // 1. 解析上传的文件
-      const file = formData.get('image') as File | null;
-
-      if (!file) {
-        return { success: false, error: '未提供图片文件' };
-      }
-
-      // 2. 验证文件类型
-      if (!file.type.startsWith('image/')) {
-        return { success: false, error: '只允许上传图片文件' };
-      }
-
-      // 3. 验证文件大小 (最大 MAX_FILE_SIZE)
-      if (file.size > MAX_FILE_SIZE) {
-        return {
-          success: false,
-          error: `图片大小不能超过 ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-        };
-      }
-
-      // 4. 读取文件并处理
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      // 5. 处理并保存图片
-      const result = await processAndSaveImage(buffer, {
-        dir: 'images/moments',
-        fileName: file.name,
-        quality: 85,
-      });
-
-      // 6. 返回图片URL和尺寸信息
-      logger.info('碎碎念图片上传成功', {
-        fileName: file.name,
-        userId: user.id,
-      });
-      return {
-        success: true,
-        data: {
-          image: {
-            url: result.url,
-            width: result.width,
-            height: result.height,
-            ratio:
-              result.width && result.height ? result.width / result.height : 1,
-          },
-          message: '图片上传成功',
-        },
-      };
-    } catch (error) {
-      logger.error('碎碎念图片上传失败', error);
-      const errorMessage =
-        error instanceof Error ? error.message : '图片上传失败';
-      return { success: false, error: errorMessage };
-    }
-  });
-}
+export const adminUploadMomentImage = createUploadAction({
+  name: '碎碎念图片',
+  permission: 'moments:create',
+  rateLimitKey: 'moments:{userId}',
+  formField: 'image',
+  validation: { kind: 'mime', prefix: 'image/', label: '图片' },
+  storage: { kind: 'image', dir: 'images/moments', quality: 85 },
+  result: { kind: 'image-full', message: '图片上传成功' },
+});
 
 // POST - 创建碎碎念
 export async function adminCreateMoment(input: {

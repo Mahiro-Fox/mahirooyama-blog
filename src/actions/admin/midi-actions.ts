@@ -10,11 +10,12 @@ import {
   readMidiFile,
 } from '@/lib/midi-files';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { createUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
+import { checkFileConflict } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MidiActions');
@@ -68,62 +69,15 @@ export async function adminGetMidiFiles(): Promise<
   });
 }
 
-// POST - 上传 MIDI 文件
-export async function adminUploadMidiFile(
-  formData: FormData
-): Promise<ActionResponse<void>> {
-  return withActionPermission('midi:create', async (user) => {
-    // 速率限制检查
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(`midi:${user.id}`);
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
-      }
-    }
-
-    try {
-      const file = formData.get('file') as File;
-      if (!file) {
-        return { success: false, error: '没有提供文件' };
-      }
-
-      // 验证文件类型
-      if (!file.name.toLowerCase().endsWith('.mid')) {
-        return { success: false, error: '只支持 .mid 文件' };
-      }
-
-      // 获取文件名（不含扩展名）
-      const baseName = path.basename(file.name, '.mid');
-
-      const fileName = `${baseName}.mid`;
-      const filePath = path.join(MIDI_DIR, fileName);
-
-      // 检查文件是否已存在
-      const conflict = await checkFileConflict(filePath);
-      if (conflict) {
-        return { success: false, error: conflict.error };
-      }
-
-      // 确保目录存在
-      await ensureDirectory(MIDI_DIR);
-
-      console.log(123);
-      // 写入文件
-      const bytes = await file.arrayBuffer();
-      await fs.writeFile(filePath, Buffer.from(bytes));
-
-      logger.info('上传 MIDI 文件成功', { fileName, userId: user.id });
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('上传 MIDI 文件失败', error);
-      return { success: false, error: '上传文件失败' };
-    }
-  });
-}
+export const adminUploadMidiFile = createUploadAction({
+  name: 'MIDI 文件',
+  permission: 'midi:create',
+  rateLimitKey: 'midi:{userId}',
+  formField: 'file',
+  validation: { kind: 'extension', extensions: ['.mid'], label: 'MIDI' },
+  storage: { kind: 'raw', dir: 'midisongs' },
+  result: { kind: 'void' },
+});
 
 // DELETE - 删除 MIDI 文件
 export async function adminDeleteMidiFile(
