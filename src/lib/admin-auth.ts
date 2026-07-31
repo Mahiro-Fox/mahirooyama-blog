@@ -1,6 +1,7 @@
 'use server';
 
 import { sessionStore } from '@/store/session-store';
+import { userStore } from '@/store/user-store';
 import { jwtVerify, type JWTPayload } from 'jose';
 import { cookies } from 'next/headers';
 import { JWT_SECRET } from '@/constant/auth';
@@ -37,13 +38,18 @@ export async function getCurrentAdminUser(): Promise<CurrentAdminUser | null> {
     // The JWT signature verification is sufficient for Server Components.
     // Session validation (single-device login) is enforced in API Routes.
 
+    // JWT 仅作为身份凭证；头像/用户名/角色等展示信息以 userStore 中的最新数据为准，
+    // 避免 token 中的字段在用户更新后过期（例如头像上传后刷新页面回退到旧值）。
+    const freshUser = await userStore.getById(String(payload.userId));
+    if (!freshUser) return null;
+
     return {
-      id: String(payload.userId),
-      username: String(payload.username),
+      id: String(freshUser.id),
+      username: String(freshUser.username),
       avatar: String(
-        payload.avatar || '/uploads/images/avatar/default-avatar.webp'
+        freshUser.avatar || '/uploads/images/avatar/default-avatar.webp'
       ),
-      role: String(payload.role || 'user'),
+      role: String(freshUser.role || 'user'),
     };
   } catch {
     return null;
@@ -85,12 +91,20 @@ export async function verifyAuth() {
     // 更新会话最后使用时间
     sessionStore.update(token.value);
 
+    // JWT 仅作为身份凭证；头像/用户名/角色等展示信息以 userStore 中的最新数据为准，
+    // 避免 token 中的字段在用户更新后过期（例如头像上传后刷新页面回退到旧值）。
+    const freshUser = await userStore.getById(String(payload.userId));
+    if (!freshUser) {
+      // 用户已被删除：会话无效
+      return { success: false, error: '用户不存在或已被删除' };
+    }
+
     return {
       success: true,
       userId: payload.userId,
-      username: payload.username,
-      avatar: payload.avatar,
-      role: payload.role,
+      username: freshUser.username,
+      avatar: freshUser.avatar || '/uploads/images/avatar/default-avatar.webp',
+      role: freshUser.role,
       loggedInAt: payload.loggedInAt,
       expiresAt: payload.exp,
       sessionId: payload.sessionId,
