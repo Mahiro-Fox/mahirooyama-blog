@@ -25,6 +25,7 @@ export async function login(
         username: string;
         avatar: string;
         role: string;
+        mustChangePassword?: boolean;
       };
     }
   | { success: false; error: string; resetTime?: number }
@@ -114,6 +115,7 @@ export async function login(
         username: user.username,
         avatar: user.avatar,
         role: user.role,
+        mustChangePassword: user.mustChangePassword,
       },
     };
   } catch (error) {

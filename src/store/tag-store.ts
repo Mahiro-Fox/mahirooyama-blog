@@ -7,23 +7,34 @@ import {
   type TagsData,
   type TagType,
 } from '@/constant';
-import { ensureDirectory } from '@/utils/file-utils';
+import {
+  ensureDirectory,
+  isFileNotFoundError,
+  writeFileAtomic,
+} from '@/utils/file-utils';
 
 async function readTags(): Promise<TagsData> {
   await ensureDirectory(DATA_DIR);
   try {
     const data = await fs.readFile(TAGS_FILE, 'utf-8');
     return JSON.parse(data);
-  } catch {
-    // 文件不存在，使用默认值并创建文件
-    await writeTags(DEFAULT_TAGS);
+  } catch (error) {
+    if (isFileNotFoundError(error)) {
+      // 文件确实不存在：用默认值初始化
+      await writeTags(DEFAULT_TAGS);
+      return DEFAULT_TAGS;
+    }
+    // 其他错误（JSON 损坏、权限等）：不覆盖磁盘数据，返回默认值保证页面可用
+    console.error('读取标签失败，保留现有数据', error);
     return DEFAULT_TAGS;
   }
 }
 
 async function writeTags(tags: TagsData): Promise<void> {
   await ensureDirectory(DATA_DIR);
-  await fs.writeFile(TAGS_FILE, JSON.stringify(tags, null, 2), 'utf-8');
+  await writeFileAtomic(TAGS_FILE, JSON.stringify(tags, null, 2), {
+    encoding: 'utf-8',
+  });
 }
 
 // 标签存储操作

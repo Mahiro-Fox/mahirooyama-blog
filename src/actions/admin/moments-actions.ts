@@ -1,6 +1,5 @@
 'use server';
 
-import fs from 'fs/promises';
 import { revalidatePath } from 'next/cache';
 import { MOMENTS_FILE } from '@/constant/dir';
 import { getMoments, Moment, MomentImage } from '@/lib/moments';
@@ -10,6 +9,7 @@ import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
+import { writeFileAtomic } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MomentsActions');
@@ -96,10 +96,10 @@ export async function adminCreateMoment(input: {
       moments.push(newMoment);
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         MOMENTS_FILE,
         JSON.stringify(moments, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('创建碎碎念成功', { momentId: id, userId: user.id });
@@ -164,10 +164,10 @@ export async function adminUpdateMoment(
       moments[index].location = location?.trim() || undefined;
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         MOMENTS_FILE,
         JSON.stringify(moments, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('更新碎碎念成功', { momentId: id, userId: user.id });
@@ -211,10 +211,10 @@ export async function adminDeleteMoment(
       }
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         MOMENTS_FILE,
         JSON.stringify(filtered, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('删除碎碎念成功', { momentId: id, userId: user.id });

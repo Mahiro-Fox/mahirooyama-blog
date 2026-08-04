@@ -4,7 +4,12 @@ import matter from 'gray-matter';
 import { NextRequest, NextResponse } from 'next/server';
 import { BLOG_DIR } from '@/constant/dir';
 import { requirePermission } from '@/lib/permissions';
-import { checkFileConflict, ensureFileInitialized } from '@/utils/file-utils';
+import {
+  checkFileConflict,
+  ensureFileInitialized,
+  validateSlug,
+  writeFileAtomic,
+} from '@/utils/file-utils';
 
 export async function GET() {
   try {
@@ -76,10 +81,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 确定文件名
-    const fileName = slug
-      ? `${slug}.mdx`
-      : file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
+    // 确定文件名（提供 slug 时校验合法性，防止路径穿越）
+    let fileName: string;
+    if (slug) {
+      const cleanSlug = slug.trim().toLowerCase();
+      const slugError = validateSlug(cleanSlug);
+      if (slugError) {
+        return NextResponse.json({ error: '无效的文件名' }, { status: 400 });
+      }
+      fileName = `${cleanSlug}.mdx`;
+    } else {
+      fileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-');
+    }
 
     const filePath = path.join(BLOG_DIR, fileName);
 
@@ -96,7 +109,7 @@ export async function POST(request: NextRequest) {
     await ensureFileInitialized(filePath);
 
     // 写入文件
-    await fs.writeFile(filePath, content, 'utf-8');
+    await writeFileAtomic(filePath, content, { encoding: 'utf-8' });
 
     // 刷新缓存
     const newSlug = path.basename(fileName, '.mdx');

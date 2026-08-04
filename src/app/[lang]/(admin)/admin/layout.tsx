@@ -69,6 +69,7 @@ export default async function AdminLayout({
             currentUser.avatar || '/uploads/images/avatar/default-avatar.webp'
           ),
           role: currentUser.role as UserRole,
+          mustChangePassword: currentUser.mustChangePassword,
         }}
         guestbookPendingCount={guestbookPendingCount}
       >

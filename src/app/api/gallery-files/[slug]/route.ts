@@ -1,8 +1,8 @@
 import fs from 'fs/promises';
-import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { GALLERY_DIR } from '@/constant/dir';
 import { requirePermission } from '@/lib/permissions';
+import { resolveContentPath, writeFileAtomic } from '@/utils/file-utils';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -14,7 +14,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { slug } = await params;
 
     // 尝试 .json 扩展名
-    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
+    const filePath = resolveContentPath(GALLERY_DIR, slug, '.json');
+    if (!filePath) {
+      return NextResponse.json({ error: '无效的文件名' }, { status: 400 });
+    }
     const content = await fs.readFile(filePath, 'utf-8');
 
     return NextResponse.json({ content });
@@ -39,7 +42,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { slug } = await params;
 
     // 尝试 .json 扩展名
-    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
+    const filePath = resolveContentPath(GALLERY_DIR, slug, '.json');
+    if (!filePath) {
+      return NextResponse.json({ error: '无效的文件名' }, { status: 400 });
+    }
 
     await fs.unlink(filePath);
 
@@ -65,9 +71,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { slug } = await params;
     const { content } = await request.json();
 
-    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
+    const filePath = resolveContentPath(GALLERY_DIR, slug, '.json');
+    if (!filePath) {
+      return NextResponse.json({ error: '无效的文件名' }, { status: 400 });
+    }
 
-    await fs.writeFile(filePath, content, 'utf-8');
+    await writeFileAtomic(filePath, content, { encoding: 'utf-8' });
 
     return NextResponse.json({ message: '文件更新成功' });
   } catch (error) {
@@ -95,8 +104,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // 清理新文件名
     const cleanNewSlug = newSlug.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
 
+    // 校验新旧文件名（防止路径穿越）
+    const oldFilePath = resolveContentPath(GALLERY_DIR, slug, '.json');
+    const newFilePath = resolveContentPath(GALLERY_DIR, cleanNewSlug, '.json');
+    if (!oldFilePath || !newFilePath) {
+      return NextResponse.json({ error: '无效的文件名' }, { status: 400 });
+    }
+
     // 尝试找到原文件
-    const oldFilePath = path.join(GALLERY_DIR, `${slug}.json`);
     try {
       await fs.access(oldFilePath);
     } catch {
@@ -104,7 +119,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // 检查新文件名是否已存在
-    const newFilePath = path.join(GALLERY_DIR, `${cleanNewSlug}.json`);
     try {
       await fs.access(newFilePath);
       return NextResponse.json(

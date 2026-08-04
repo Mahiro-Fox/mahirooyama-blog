@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { MOMENTS_FILE } from '@/constant/dir';
-import { ensureFileInitialized } from '@/utils/file-utils';
+import { ensureFileInitialized, isFileNotFoundError } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MomentsLib');
@@ -28,7 +28,9 @@ export async function getMoments(): Promise<Moment[]> {
     const moments: Moment[] = JSON.parse(content);
     return moments;
   } catch (error) {
+    // 文件确实缺失 → 视为空；其他错误（JSON 损坏等）上抛，避免静默丢数据
+    if (isFileNotFoundError(error)) return [];
     logger.error('获取碎碎念列表失败', error);
-    return [];
+    throw error;
   }
 }

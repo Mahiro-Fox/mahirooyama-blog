@@ -1,6 +1,5 @@
 'use server';
 
-import fs from 'fs/promises';
 import { revalidatePath } from 'next/cache';
 import { MUSIC_FILE } from '@/constant/dir';
 import { getMusics, Song } from '@/lib/music';
@@ -10,6 +9,7 @@ import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
+import { writeFileAtomic } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MusicActions');
@@ -83,7 +83,9 @@ export async function adminCreateMusic(input: {
 
       songs.push(newSong);
 
-      await fs.writeFile(MUSIC_FILE, JSON.stringify(songs, null, 2), 'utf-8');
+      await writeFileAtomic(MUSIC_FILE, JSON.stringify(songs, null, 2), {
+        encoding: 'utf-8',
+      });
 
       logger.info('创建音乐成功', { songId: id, userId: user.id });
       revalidatePath('/', 'layout');
@@ -146,7 +148,9 @@ export async function adminUpdateMusic(
         songs[index].cover = cover.trim() || '';
       }
 
-      await fs.writeFile(MUSIC_FILE, JSON.stringify(songs, null, 2), 'utf-8');
+      await writeFileAtomic(MUSIC_FILE, JSON.stringify(songs, null, 2), {
+        encoding: 'utf-8',
+      });
 
       logger.info('更新音乐成功', { songId: id, userId: user.id });
       revalidatePath('/', 'layout');
@@ -182,10 +186,10 @@ export async function adminDeleteMusic(
         return { success: false, error: '音乐不存在' };
       }
 
-      await fs.writeFile(
+      await writeFileAtomic(
         MUSIC_FILE,
         JSON.stringify(filtered, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('删除音乐成功', { songId: id, userId: user.id });

@@ -8,10 +8,23 @@ import { toast } from 'sonner';
 import { useCallback, useState } from 'react';
 import { adminLogout } from '@/actions/admin/logout';
 import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
-import { adminUploadAvatar } from '@/actions/admin/user-actions';
+import {
+  adminUpdateUserPassword,
+  adminUploadAvatar,
+} from '@/actions/admin/user-actions';
 import { SwitchLanguage } from '@/components/layout/site-header';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/shadcn-ui/dialog';
+import { Input } from '@/components/shadcn-ui/input';
+import { Label } from '@/components/shadcn-ui/label';
 import {
   Sheet,
   SheetClose,
@@ -34,6 +47,7 @@ interface CurrentUser {
   username: string;
   avatar: string;
   role: UserRole;
+  mustChangePassword?: boolean;
 }
 const GuestbookBadge = ({ count }: { count: number }) => {
   if (count === 0) return null;
@@ -61,6 +75,12 @@ export default function AdminShell({
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isRevalidating, setIsRevalidating] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState<boolean>(
+    Boolean(initialUser.mustChangePassword)
+  );
+  const [forcePassword, setForcePassword] = useState('');
+  const [forceConfirmPassword, setForceConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const { setTheme, resolvedTheme } = useTheme();
 
@@ -131,6 +151,38 @@ export default function AdminShell({
       setIsUploadingAvatar(false);
       setAvatarMenuOpen(false);
       e.target.value = '';
+    }
+  };
+
+  // 首次登录强制修改密码
+  const handleForceChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forcePassword.length < 8) {
+      toast.error('新密码至少 8 位');
+      return;
+    }
+    if (forcePassword !== forceConfirmPassword) {
+      toast.error('两次输入的密码不一致');
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      const result = await adminUpdateUserPassword({
+        id: currentUser.id,
+        password: forcePassword,
+      });
+      if (!result.success) {
+        throw new Error(result.error || '修改密码失败');
+      }
+      toast.success('密码修改成功');
+      setForcePassword('');
+      setForceConfirmPassword('');
+      setMustChangePassword(false);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '修改密码失败');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -416,6 +468,49 @@ export default function AdminShell({
         </header>
         <main className="p-4 lg:p-6">{children}</main>
       </div>
+
+      {/* 首次登录强制修改密码 */}
+      <Dialog open={mustChangePassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>首次登录请修改密码</DialogTitle>
+            <DialogDescription>
+              出于安全考虑，请为账号设置一个新密码后才能继续使用管理后台。
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForceChangePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="force-password">新密码</Label>
+              <Input
+                id="force-password"
+                type="password"
+                value={forcePassword}
+                onChange={(e) => setForcePassword(e.target.value)}
+                placeholder="至少 8 位"
+                autoComplete="new-password"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="force-confirm-password">确认新密码</Label>
+              <Input
+                id="force-confirm-password"
+                type="password"
+                value={forceConfirmPassword}
+                onChange={(e) => setForceConfirmPassword(e.target.value)}
+                placeholder="再次输入新密码"
+                autoComplete="new-password"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={isChangingPassword}>
+                {isChangingPassword ? '提交中...' : '确认修改密码'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

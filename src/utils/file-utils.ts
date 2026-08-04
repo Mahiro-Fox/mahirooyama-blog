@@ -78,7 +78,9 @@ export async function ensureFileInitialized(
 /**
  * 检查错误是否为文件不存在错误
  */
-function isFileNotFoundError(error: unknown): error is NodeJS.ErrnoException {
+export function isFileNotFoundError(
+  error: unknown
+): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error && error.code === 'ENOENT';
 }
 
@@ -87,6 +89,56 @@ function isFileNotFoundError(error: unknown): error is NodeJS.ErrnoException {
  */
 function isFileExistsError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error && error.code === 'EEXIST';
+}
+
+/**
+ * 原子写入文件：先写同目录临时文件再 rename 替换，避免写入中途崩溃损坏目标文件。
+ * @param filePath 目标文件完整路径
+ * @param data 写入内容（字符串或二进制）
+ * @param options 编码选项
+ */
+let tmpCounter = 0;
+export async function writeFileAtomic(
+  filePath: string,
+  data: string | Uint8Array,
+  options?: { encoding?: BufferEncoding }
+): Promise<void> {
+  const dir = path.dirname(filePath);
+  await ensureDirectory(dir);
+  const tmpPath = path.join(
+    dir,
+    `.${path.basename(filePath)}.${process.pid}.${Date.now()}.${tmpCounter++}.tmp`
+  );
+  try {
+    await fs.writeFile(tmpPath, data, options?.encoding ?? 'utf-8');
+    // 同目录 rename 是原子替换（Windows 下 Node 用 MoveFileEx REPLACE_EXISTING）
+    await fs.rename(tmpPath, filePath);
+  } catch (error) {
+    try {
+      await fs.unlink(tmpPath);
+    } catch {
+      // 清理失败可忽略，临时文件残留不影响数据完整性
+    }
+    throw error;
+  }
+}
+
+/**
+ * 解析内容文件的合法路径（防止路径穿越）。
+ * @param dir 允许的基础目录
+ * @param slug URL/表单传入的文件标识
+ * @param ext 文件扩展名
+ * @returns 合法路径；slug 非法或逃逸出目录时返回 null
+ */
+export function resolveContentPath(
+  dir: string,
+  slug: string,
+  ext: '.mdx' | '.json'
+): string | null {
+  if (validateSlug(slug)) return null;
+  const filePath = path.join(dir, `${slug}${ext}`);
+  if (!isPathSafe(filePath, dir)) return null;
+  return filePath;
 }
 
 /**

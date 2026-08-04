@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { UAParser } from 'ua-parser-js';
 import { AnalyticsLog } from '@/actions/admin/analytics-actions';
 import { ANALYTICS_DIR, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
+import { writeFileAtomic } from '@/utils/file-utils';
 
 /**
  * 严格判断是否为公网 IP（排除本地回环和私有局域网 IP）
@@ -88,11 +89,9 @@ async function processQueue() {
 
       logs.push(log);
 
-      await fsPromises.writeFile(
-        filePath,
-        JSON.stringify(logs, null, 2),
-        'utf-8'
-      );
+      await writeFileAtomic(filePath, JSON.stringify(logs, null, 2), {
+        encoding: 'utf-8',
+      });
     }
   } catch (error) {
     console.error('[Analytics] 批量写入日志失败:', error);

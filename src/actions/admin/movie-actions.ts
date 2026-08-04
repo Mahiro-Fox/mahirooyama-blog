@@ -1,6 +1,5 @@
 'use server';
 
-import fs from 'fs/promises';
 import { revalidatePath } from 'next/cache';
 import { MOVIES_FILE } from '@/constant/dir';
 import { getMovies, Movie } from '@/lib/movies';
@@ -9,6 +8,7 @@ import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
+import { writeFileAtomic } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MovieActions');
@@ -127,7 +127,9 @@ export async function adminCreateMovie(
       movies.push(newMovie);
 
       // 写入文件
-      await fs.writeFile(MOVIES_FILE, JSON.stringify(movies, null, 2), 'utf-8');
+      await writeFileAtomic(MOVIES_FILE, JSON.stringify(movies, null, 2), {
+        encoding: 'utf-8',
+      });
 
       logger.info('创建电影成功', { movieId: id, userId: user.id });
       revalidatePath('/', 'layout');
@@ -194,7 +196,9 @@ export async function adminUpdateMovie(
       movies[index].sources = sources || [];
 
       // 写入文件
-      await fs.writeFile(MOVIES_FILE, JSON.stringify(movies, null, 2), 'utf-8');
+      await writeFileAtomic(MOVIES_FILE, JSON.stringify(movies, null, 2), {
+        encoding: 'utf-8',
+      });
 
       logger.info('更新电影成功', { movieId: id, userId: user.id });
       revalidatePath('/', 'layout');
@@ -237,10 +241,10 @@ export async function adminDeleteMovie(
       }
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         MOVIES_FILE,
         JSON.stringify(filtered, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('删除电影成功', { movieId: id, userId: user.id });

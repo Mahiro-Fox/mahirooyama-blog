@@ -17,6 +17,17 @@ export const JWT_SECRET = (() => {
 })();
 
 /**
+ * 默认管理员密码 (从环境变量获取)
+ */
+export const ADMIN_DEFAULT_PASSWORD = (() => {
+  const secret = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (!secret) {
+    throw new Error('ADMIN_DEFAULT_PASSWORD environment variable is required');
+  }
+  return secret;
+})();
+
+/**
  * 会话过期时间 (24小时，单位：秒)
  */
 export const SESSION_EXPIRY = 24 * 60 * 60;

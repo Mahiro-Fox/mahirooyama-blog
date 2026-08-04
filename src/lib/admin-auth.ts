@@ -105,6 +105,7 @@ export async function verifyAuth() {
       username: freshUser.username,
       avatar: freshUser.avatar || '/uploads/images/avatar/default-avatar.webp',
       role: freshUser.role,
+      mustChangePassword: freshUser.mustChangePassword,
       loggedInAt: payload.loggedInAt,
       expiresAt: payload.exp,
       sessionId: payload.sessionId,

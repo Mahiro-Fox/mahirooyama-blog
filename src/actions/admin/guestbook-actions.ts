@@ -1,6 +1,5 @@
 'use server';
 
-import fs from 'fs/promises';
 import { siteConfig } from '@/config/common';
 import { GUESTBOOK_FILE } from '@/constant/dir';
 import { notifyReply } from '@/lib/email-send/notify-reply';
@@ -10,6 +9,7 @@ import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
+import { writeFileAtomic } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('GuestbookActions');
@@ -83,10 +83,10 @@ export async function adminCreateGuestbook(input: {
       entries.push(newEntry);
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         GUESTBOOK_FILE,
         JSON.stringify(entries, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('管理员创建留言成功', { entryId: id, adminId: user.id });
@@ -165,10 +165,10 @@ export async function submitGuestbook(input: {
     entries.push(newEntry);
 
     // 写入文件
-    await fs.writeFile(
+    await writeFileAtomic(
       GUESTBOOK_FILE,
       JSON.stringify(entries, null, 2),
-      'utf-8'
+      { encoding: 'utf-8' }
     );
 
     logger.info('访客提交留言成功', { entryId: id, nickname: nickname.trim() });
@@ -229,10 +229,10 @@ export async function adminUpdateGuestbook(
       }
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         GUESTBOOK_FILE,
         JSON.stringify(entries, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('管理员更新留言成功', { entryId: id, adminId: user.id });
@@ -268,10 +268,10 @@ export async function adminReplyGuestbook(
       entries[index].replyAt = new Date().toISOString();
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         GUESTBOOK_FILE,
         JSON.stringify(entries, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('管理员回复留言成功', { entryId: id, adminId: user.id });
@@ -322,10 +322,10 @@ export async function adminSendReplyNotification(
         return { success: false, error: '留言不存在' };
       }
       entries[index].isRepliedEmail = true;
-      await fs.writeFile(
+      await writeFileAtomic(
         GUESTBOOK_FILE,
         JSON.stringify(entries, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('回复通知邮件发送成功', {
@@ -358,10 +358,10 @@ export async function adminApproveGuestbook(
       entries[index].isApproved = isApproved;
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         GUESTBOOK_FILE,
         JSON.stringify(entries, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('管理员审核留言成功', {
@@ -394,10 +394,10 @@ export async function adminDeleteGuestbook(
       }
 
       // 写入文件
-      await fs.writeFile(
+      await writeFileAtomic(
         GUESTBOOK_FILE,
         JSON.stringify(filtered, null, 2),
-        'utf-8'
+        { encoding: 'utf-8' }
       );
 
       logger.info('管理员删除留言成功', { entryId: id, adminId: user.id });
