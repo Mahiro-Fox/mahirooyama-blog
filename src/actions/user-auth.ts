@@ -1,63 +1,13 @@
 'use server';
 
+import { signIn, signOut } from '@/auth';
 import { accountStore } from '@/store/account-store';
-import { sessionStore } from '@/store/session-store';
-import { SignJWT } from 'jose';
-import { cookies } from 'next/headers';
-import {
-  JWT_SECRET,
-  SESSION_EXPIRY,
-  USER_SESSION_COOKIE,
-} from '@/constant/auth';
-import { verifyUserAuth } from '@/lib/user-auth';
+import { AuthError } from 'next-auth';
 import { loginRateLimiter } from '@/lib/rate-limit';
+import { getCurrentUser } from '@/lib/user-auth';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('UserAuthAction');
-
-async function setUserSessionCookie(token: string) {
-  const isSecure =
-    process.env.COOKIE_SECURE === 'true' ||
-    (process.env.COOKIE_SECURE !== 'false' &&
-      process.env.NODE_ENV === 'production');
-
-  const cookieStore = await cookies();
-  cookieStore.set(USER_SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite: 'strict',
-    maxAge: SESSION_EXPIRY,
-    path: '/',
-  });
-}
-
-async function createUserSession(
-  userId: string,
-  username: string,
-  sessionId: string
-) {
-  const token = await new SignJWT({
-    userId,
-    username,
-    sessionId,
-    loggedInAt: new Date().toISOString(),
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime(`${SESSION_EXPIRY}s`)
-    .sign(JWT_SECRET);
-
-  sessionStore.deleteByUserId(userId);
-  sessionStore.create(token, {
-    userId,
-    sessionId,
-    userAgent: 'server-action',
-    ip: 'server-action',
-  });
-
-  await setUserSessionCookie(token);
-  return token;
-}
 
 export async function userLogin(
   username: string,
@@ -75,6 +25,7 @@ export async function userLogin(
       return { success: false, error: 'Username and password required' };
     }
 
+    // 限流（在 server action 层做，便于把 resetTime 返回给前端）
     const rateLimit = await loginRateLimiter.check(`user-login:${username}`);
     if (!rateLimit.success) {
       return {
@@ -84,17 +35,19 @@ export async function userLogin(
       };
     }
 
-    const account = await accountStore.verifyPassword(username, password);
+    // 调用 next-auth 的 signIn（credentials provider）
+    // redirect: false → 不抛 NEXT_REDIRECT，返回错误对象
+    await signIn('credentials', {
+      username,
+      password,
+      redirect: false,
+    });
 
+    // signIn 成功 → 查 account 返回用户信息
+    const account = await accountStore.getByUsername(username);
     if (!account) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.random() * 100 + 50)
-      );
-      return { success: false, error: 'Invalid username or password' };
+      return { success: false, error: 'Login failed, please try again' };
     }
-
-    const sessionId = crypto.randomUUID();
-    await createUserSession(account.id, account.username, sessionId);
 
     return {
       success: true,
@@ -102,6 +55,10 @@ export async function userLogin(
       user: { id: account.id, username: account.username },
     };
   } catch (error) {
+    if (error instanceof AuthError) {
+      // CredentialsSignin = authorize 返回 null
+      return { success: false, error: 'Invalid username or password' };
+    }
     logger.error('Login failed', error, {
       username,
       action: 'userLogin',
@@ -147,8 +104,12 @@ export async function userRegister(
 
     const account = await accountStore.create({ username, password });
 
-    const sessionId = crypto.randomUUID();
-    await createUserSession(account.id, account.username, sessionId);
+    // 注册成功后自动登录
+    await signIn('credentials', {
+      username,
+      password,
+      redirect: false,
+    });
 
     return {
       success: true,
@@ -168,28 +129,25 @@ export async function userRegister(
 }
 
 export async function userLogout() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(USER_SESSION_COOKIE)?.value;
-
-  if (token) {
-    sessionStore.delete(token);
-  }
-
-  cookieStore.delete(USER_SESSION_COOKIE);
-
+  await signOut({ redirect: false });
   return { success: true };
 }
 
 export async function checkUserLogin() {
-  const authCheck = await verifyUserAuth();
-  if (!authCheck.success) {
+  const user = await getCurrentUser();
+  if (!user) {
     return { success: false, error: 'Not logged in' };
   }
   return {
     success: true,
-    user: {
-      id: authCheck.userId,
-      username: authCheck.username,
-    },
+    user: { id: user.id, username: user.username },
   };
+}
+
+/**
+ * Google OAuth 登录（Server Action，供 signin 页的按钮调用）。
+ * signIn('google') 会抛 NEXT_REDIRECT，由 Next.js server action runtime 处理。
+ */
+export async function userLoginWithGoogle(redirectTo: string = '/chat') {
+  await signIn('google', { redirectTo });
 }

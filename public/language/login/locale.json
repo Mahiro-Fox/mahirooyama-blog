@@ -35,6 +35,8 @@
     "signin.no_account": "Don't have an account?",
     "signin.create_account": "Create one",
     "signin.or_register": "Sign in with your account",
+    "signin.or": "or",
+    "signin.google": "Sign in with Google",
 
     "signup.page_title": "Create Account",
     "signup.page_description": "Register to use AI chat with DeepSeek",
@@ -93,6 +95,8 @@
     "signin.no_account": "还没有账号？",
     "signin.create_account": "立即注册",
     "signin.or_register": "使用账号登录",
+    "signin.or": "或",
+    "signin.google": "使用 Google 登录",
 
     "signup.page_title": "注册账号",
     "signup.page_description": "注册后即可使用 DeepSeek AI 聊天",

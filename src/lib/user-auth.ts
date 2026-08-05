@@ -1,98 +1,59 @@
 'use server';
 
+import { auth } from '@/auth';
 import { accountStore } from '@/store/account-store';
-import { sessionStore } from '@/store/session-store';
-import { jwtVerify, type JWTPayload } from 'jose';
-import { cookies } from 'next/headers';
-import { JWT_SECRET, USER_SESSION_COOKIE } from '@/constant/auth';
-
-type UserSessionPayload = JWTPayload & {
-  userId?: string;
-  username?: string;
-  sessionId?: string;
-};
 
 export type CurrentUser = {
   id: string;
   username: string;
+  email?: string | null;
 };
 
+/**
+ * 在 Server Components / Server Actions 中获取当前登录用户。
+ * 使用 next-auth 的 auth() 读取 session，替代原读 user-session cookie + jose jwtVerify 的实现。
+ */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   try {
-    const cookieStore = await cookies();
-    const tokenCookie = cookieStore.get(USER_SESSION_COOKIE);
-    if (!tokenCookie?.value) return null;
+    const session = await auth();
+    if (!session?.user?.id) return null;
 
-    const payload = await verifyJwtToken(tokenCookie.value);
-    if (!payload) return null;
-
-    if (!payload.userId || !payload.username) return null;
-
-    const account = await accountStore.getById(String(payload.userId));
+    // 二次校验：account.json 仍存在（防止账号被删后 session 仍有效）
+    const account = await accountStore.getById(String(session.user.id));
     if (!account) return null;
 
     return {
       id: String(account.id),
       username: String(account.username),
+      email: account.email,
     };
   } catch {
     return null;
   }
 }
 
+/**
+ * 在 API Routes 中校验鉴权。
+ * 返回值兼容原签名（去掉 sessionId，下游无人使用）。
+ */
 export async function verifyUserAuth() {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(USER_SESSION_COOKIE);
-
-    if (!token) {
-      return { success: false, error: 'Not logged in' };
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false as const, error: 'Not logged in' };
     }
 
-    const payload = await verifyJwtToken(token.value);
-    if (!payload) {
-      return { success: false, error: 'Session expired' };
-    }
-
-    if (!sessionStore.exists(token.value)) {
-      if (payload.userId && payload.sessionId) {
-        sessionStore.create(token.value, {
-          userId: String(payload.userId),
-          sessionId: String(payload.sessionId),
-        });
-      } else {
-        return {
-          success: false,
-          error: 'Session invalidated',
-        };
-      }
-    }
-
-    sessionStore.update(token.value);
-
-    const account = await accountStore.getById(String(payload.userId));
+    const account = await accountStore.getById(String(session.user.id));
     if (!account) {
-      return { success: false, error: 'Account not found' };
+      return { success: false as const, error: 'Account not found' };
     }
 
     return {
-      success: true,
-      userId: payload.userId,
+      success: true as const,
+      userId: String(account.id),
       username: account.username,
-      sessionId: payload.sessionId,
     };
   } catch {
-    return { success: false, error: 'Session expired' };
-  }
-}
-
-async function verifyJwtToken(
-  token: string
-): Promise<UserSessionPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as UserSessionPayload;
-  } catch {
-    return null;
+    return { success: false as const, error: 'Session expired' };
   }
 }

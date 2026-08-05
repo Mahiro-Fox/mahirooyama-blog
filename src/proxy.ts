@@ -1,14 +1,12 @@
-import { jwtVerify, SignJWT } from 'jose';
+import NextAuth from 'next-auth';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { authConfig } from '@/auth.config';
 import { pageRoutesConfig } from '@/config/common';
-import {
-  JWT_SECRET,
-  SESSION_EXPIRY,
-  SESSION_REFRESH_THRESHOLD,
-  USER_SESSION_COOKIE,
-} from '@/constant/auth';
 import { i18nConfig } from '@/i18n/i18n.config';
+
+// 用 edge-safe 的 authConfig 创建 proxy 用的 auth
+const { auth } = NextAuth(authConfig);
 
 // 获取需要保护的路由
 function getProtectedRoutes() {
@@ -49,14 +47,14 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
 
 const protectedRoutes = getProtectedRoutes();
 
-export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export default auth(async (req: NextRequest) => {
+  const { pathname } = req.nextUrl;
   // 默认语言
   const defaultLang = i18nConfig.defaultLang;
   // 支持的语言列表
   const locales = i18nConfig.locales;
   // 从cookie中获取语言设置，setCookie的操作在site-header.tsx的<SwitchLanguage>组件中
-  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value || defaultLang;
+  const cookieLocale = req.cookies.get('NEXT_LOCALE')?.value || defaultLang;
 
   const pathSegments = pathname.split('/').filter(Boolean);
   // 第一个路径段，即语言前缀
@@ -68,7 +66,7 @@ export async function proxy(request: NextRequest) {
   // 例如：/en/xxx -> /xxx
   if (hasLocaleInPath && firstSegment === defaultLang) {
     const newPath = `/${pathSegments.slice(1).join('/')}`;
-    const url = request.nextUrl.clone();
+    const url = req.nextUrl.clone();
     url.pathname = newPath || '/';
     return NextResponse.redirect(url);
   }
@@ -86,17 +84,17 @@ export async function proxy(request: NextRequest) {
       locales.includes(cookieLocale) &&
       cookieLocale !== defaultLang
     ) {
-      const url = request.nextUrl.clone();
+      const url = req.nextUrl.clone();
       url.pathname = `/${cookieLocale}${pathname === '/' ? '' : pathname}`;
       return NextResponse.redirect(url);
     }
     // 情况 B-2 ：路径不包含语言前缀，无cookies，或cookies中语言是默认语言，设置重定向url到默认语言前缀路径
     const newPath = `/${defaultLang}${pathname === '/' ? '' : pathname}`;
-    rewriteUrl = request.nextUrl.clone();
+    rewriteUrl = req.nextUrl.clone();
     rewriteUrl.pathname = newPath;
   }
 
-  const requestHeaders = new Headers(request.headers);
+  const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-pathname', pathname);
 
   // 无语言前缀后的真实路径，用于比对protectedRoutes中的需要保护的路由
@@ -109,63 +107,26 @@ export async function proxy(request: NextRequest) {
     pathnameWithoutLocale.startsWith(route)
   );
 
-  // 如果是需要保护的路由，检查是否登录
+  // 如果是需要保护的路由，检查是否登录（使用 next-auth session）
   if (isProtectedRoute) {
-    const token = request.cookies.get(USER_SESSION_COOKIE)?.value;
+    const isLoggedIn = !!(req as any).auth;
     // 登录路径
     const loginPath = `${visibleLocalePrefix}/signin`;
-    // 未登录则重定向到登录页
-    if (!token) {
-      const loginUrl = new URL(loginPath, request.url);
+
+    if (!isLoggedIn) {
+      const loginUrl = new URL(loginPath, req.url);
       loginUrl.searchParams.set('redirect', pathname);
       const response = NextResponse.redirect(loginUrl);
       return addSecurityHeaders(response);
     }
 
-    // 如果已登录，尝试验证会话token，检查是否过期
-    try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
-      const now = Math.floor(Date.now() / 1000);
-      const exp = payload.exp || 0;
-
-      const response = rewriteUrl
-        ? NextResponse.rewrite(rewriteUrl, {
-            request: { headers: requestHeaders },
-          })
-        : NextResponse.next({ request: { headers: requestHeaders } });
-
-      // 如果会话过期时间小于阈值，刷新会话token
-      if (exp - now < SESSION_REFRESH_THRESHOLD) {
-        const newToken = await new SignJWT({
-          userId: payload.userId,
-          username: payload.username,
-          role: payload.role,
-          loggedInAt: new Date().toISOString(),
-          sessionId: payload.sessionId || crypto.randomUUID(),
+    // 已登录：next-auth JWT 自动滚动，不需要手动刷新
+    const response = rewriteUrl
+      ? NextResponse.rewrite(rewriteUrl, {
+          request: { headers: requestHeaders },
         })
-          .setProtectedHeader({ alg: 'HS256' })
-          .setIssuedAt()
-          .setExpirationTime(`${SESSION_EXPIRY}s`)
-          .sign(JWT_SECRET);
-
-        response.cookies.set(USER_SESSION_COOKIE, newToken, {
-          httpOnly: true,
-          sameSite: 'strict',
-          maxAge: SESSION_EXPIRY,
-          path: '/',
-        });
-      }
-
-      return addSecurityHeaders(response);
-    } catch {
-      // 会话验证失败，重定向到登录页
-      console.error('会话验证失败');
-      const loginUrl = new URL(loginPath, request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      const response = NextResponse.redirect(loginUrl);
-      response.cookies.delete(USER_SESSION_COOKIE);
-      return addSecurityHeaders(response);
-    }
+      : NextResponse.next({ request: { headers: requestHeaders } });
+    return addSecurityHeaders(response);
   }
 
   // 其他路由，直接返回响应
@@ -173,7 +134,7 @@ export async function proxy(request: NextRequest) {
     ? NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })
     : NextResponse.next({ request: { headers: requestHeaders } });
   return addSecurityHeaders(response);
-}
+});
 
 // 限制中间件运行的路径，排除静态文件和 API
 export const config = {

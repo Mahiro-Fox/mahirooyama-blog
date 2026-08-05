@@ -1,6 +1,6 @@
-import { BackToTop } from '@/components/layout/back-to-top';
-import { BugReportTrigger } from '@/components/layout/bug-report-trigger';
-import { ChatBubble } from '@/components/layout/chat-bubble';
+import { BackToTop } from '@/components/layout/float-actions/back-to-top';
+import { BugReportTrigger } from '@/components/layout/float-actions/bug-report-trigger';
+import { ChatBubble } from '@/components/layout/float-actions/chat-bubble';
 
 export function FloatActions() {
   return (
