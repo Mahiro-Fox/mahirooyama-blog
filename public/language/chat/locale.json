@@ -1,0 +1,26 @@
+{
+  "en": {
+    "chat.title": "mahiro's chat bot~",
+    "chat.description": "this is a chat bot that you can chat free for any purpose",
+    "chat.keyword": ["ai", "chat", "mahirooyama"],
+    "chat.start_title": "Start Chat",
+    "chat.start_desc": "start chat by typing content below and pressing enter",
+    "chat.input_placeholder": "say something...",
+    "chat.provider": "Provider Type",
+    "chat.retry": "Retry",
+    "chat.error": "Request failed, please try again later",
+    "chat.stop": "Stop"
+  },
+  "cn": {
+    "chat.title": "mahiro 的聊天机器人",
+    "chat.description": "这是一个免费的聊天机器人，你可以用它来聊天",
+    "chat.keyword": ["ai", "聊天", "绪山真寻"],
+    "chat.start_title": "开始聊天",
+    "chat.start_desc": "在下方输入内容即可开始聊天，按下 enter 键即可发送",
+    "chat.input_placeholder": "说点什么...",
+    "chat.provider": "接入方式",
+    "chat.retry": "重试",
+    "chat.error": "请求失败了，可能是接口异常或网络问题",
+    "chat.stop": "停止"
+  }
+}
