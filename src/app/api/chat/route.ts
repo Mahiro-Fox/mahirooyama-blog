@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import { conversationStore } from '@/store/conversation-store';
 import { deepseek } from '@ai-sdk/deepseek';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import {
@@ -8,7 +10,10 @@ import {
   toUIMessageStream,
   UIMessage,
 } from 'ai';
+import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { verifyUserAuth } from '@/lib/user-auth';
+
+export const runtime = 'nodejs';
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -35,14 +40,34 @@ function getModel(provider?: string): LanguageModel {
 }
 
 export async function POST(req: Request) {
-  const { messages, provider }: { messages: UIMessage[]; provider?: string } =
-    await req.json();
+  const body = (await req.json()) as {
+    messages: UIMessage[];
+    provider?: string;
+    conversationId?: string;
+  };
+  const { messages, conversationId } = body;
 
   const selectedProvider: Provider = ALLOWED_PROVIDERS.includes(
-    provider as Provider
+    body.provider as Provider
   )
-    ? (provider as Provider)
+    ? (body.provider as Provider)
     : 'openrouter';
+
+  // === Token 校验（后端兜底） ===
+  const estimatedTokens = estimateTokens(messages);
+  if (estimatedTokens > MAX_CONTEXT_TOKENS) {
+    return Response.json(
+      {
+        error: 'Context limit exceeded',
+        estimatedTokens,
+        limit: MAX_CONTEXT_TOKENS,
+      },
+      { status: 413 }
+    );
+  }
+
+  // === 鉴权 ===
+  let userId: string | null = null;
 
   if (selectedProvider === 'deepseek') {
     const auth = await verifyUserAuth();
@@ -52,14 +77,62 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+    userId = auth.userId as string;
+  } else {
+    const auth = await verifyUserAuth();
+    if (auth.success) {
+      userId = auth.userId as string;
+    }
   }
 
+  // === 对话创建/加载 ===
+  let activeConversationId: string;
+
+  if (userId) {
+    if (conversationId) {
+      const existing = await conversationStore.get(userId, conversationId);
+      if (existing) {
+        activeConversationId = existing.id;
+      } else {
+        const conv = await conversationStore.create(userId);
+        activeConversationId = conv.id;
+      }
+    } else {
+      const conv = await conversationStore.create(userId);
+      activeConversationId = conv.id;
+    }
+  } else {
+    activeConversationId = conversationId || crypto.randomUUID();
+  }
+
+  // === 调用模型 ===
   const result = streamText({
-    model: getModel(provider),
+    model: getModel(body.provider),
     messages: await convertToModelMessages(messages),
   });
 
-  return createUIMessageStreamResponse({
-    stream: toUIMessageStream({ stream: result.stream }),
+  // === 包装流，注入 conversationId metadata + 持久化 ===
+  const stream = toUIMessageStream({
+    stream: result.stream,
+    messageMetadata: () => ({
+      conversationId: activeConversationId,
+    }),
+    onEnd: async ({ messages: finalMessages, isAborted }) => {
+      if (isAborted) return;
+
+      if (userId) {
+        try {
+          await conversationStore.saveMessages(
+            userId!,
+            activeConversationId,
+            finalMessages
+          );
+        } catch {
+          // 持久化失败不影响响应
+        }
+      }
+    },
   });
+
+  return createUIMessageStreamResponse({ stream });
 }

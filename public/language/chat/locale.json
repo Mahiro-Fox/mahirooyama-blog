@@ -12,7 +12,18 @@
     "chat.stop": "Stop",
     "chat.deepseek_locked": "Sign in to use DeepSeek",
     "chat.deepseek_login": "Sign In",
-    "chat.deepseek_desc": "Paid AI model, login required"
+    "chat.deepseek_desc": "Paid AI model, login required",
+    "chat.context_limit_exceeded": "Current conversation exceeds context limit ({current}/{max} tokens)",
+    "chat.context_limit_hint": "Please start a new conversation",
+    "chat.new_conversation": "New Conversation",
+    "chat.history": "History",
+    "chat.loading": "Loading...",
+    "chat.no_history": "No conversations yet",
+    "chat.untitled_conversation": "Untitled",
+    "chat.load_conversation_failed": "Failed to load conversation",
+    "chat.delete_conversation": "Delete conversation",
+    "chat.conversation_deleted": "Conversation deleted",
+    "chat.delete_conversation_failed": "Failed to delete conversation"
   },
   "cn": {
     "chat.title": "mahiro 的聊天机器人",
@@ -27,6 +38,17 @@
     "chat.stop": "停止",
     "chat.deepseek_locked": "登录后可用 DeepSeek",
     "chat.deepseek_login": "立即登录",
-    "chat.deepseek_desc": "付费 AI 模型，需登录后使用"
+    "chat.deepseek_desc": "付费 AI 模型，需登录后使用",
+    "chat.context_limit_exceeded": "当前对话已超出上下文限制（{current}/{max} tokens）",
+    "chat.context_limit_hint": "请新建对话继续",
+    "chat.new_conversation": "新建对话",
+    "chat.history": "历史记录",
+    "chat.loading": "加载中...",
+    "chat.no_history": "暂无对话记录",
+    "chat.untitled_conversation": "未命名对话",
+    "chat.load_conversation_failed": "加载对话失败",
+    "chat.delete_conversation": "删除对话",
+    "chat.conversation_deleted": "对话已删除",
+    "chat.delete_conversation_failed": "删除对话失败"
   }
 }
