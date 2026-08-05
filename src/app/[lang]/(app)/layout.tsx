@@ -1,8 +1,6 @@
 import { MusicProvider } from '@/context/music-provider';
 import { getPublicMusic } from '@/actions/admin/music-actions';
-import { BackToTop } from '@/components/layout/back-to-top';
-import { BugReportTrigger } from '@/components/layout/bug-report-trigger';
-import { ChatBubble } from '@/components/layout/chat-bubble';
+import { FloatActions } from '@/components/layout/float-actions';
 import { GlobalMusicPlayer } from '@/components/layout/global-music-player';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
@@ -94,14 +92,10 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
           <SiteHeader initialIsAuth={!!adminUser} />
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />
-          {/* 聊天气泡组件 */}
-          <ChatBubble />
           {/* 自动埋点组件 */}
           <PageTracker />
-          {/* 回到顶部组件 */}
-          <BackToTop />
-          {/* 问题反馈组件 */}
-          <BugReportTrigger />
+          {/* 浮动操作组件 */}
+          <FloatActions />
           {/* 全局音乐播放器组件 */}
           <GlobalMusicPlayer />
         </MusicProvider>

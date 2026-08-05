@@ -64,6 +64,9 @@
     "image_compressor_nav_label": "Image Converter & Compressor",
     "image_compressor_nav_description": "Online image compression and format conversion tool",
 
+    "ai_chat_nav_label": "AI Chat",
+    "ai_chat_nav_description": "Chat with AI models",
+
     "about_nav_label": "About Me",
     "about_nav_description": "Personal introduction about me",
 
@@ -159,6 +162,9 @@
 
     "image_compressor_nav_label": "图片转换压缩工具",
     "image_compressor_nav_description": "在线图片压缩与格式转换工具",
+
+    "ai_chat_nav_label": "AI 聊天",
+    "ai_chat_nav_description": "与 AI 模型聊天",
 
     "about_nav_label": "关于我",
     "about_nav_description": "关于我的个人介绍",

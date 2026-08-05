@@ -11,6 +11,7 @@ import {
   ImageIcon,
   Lock,
   LucideIcon,
+  MessageCircleMore,
   MessageSquare,
   Music,
   Shield,
@@ -19,8 +20,6 @@ import {
   User,
   Video,
 } from 'lucide-react';
-
-// 配置选项常量
 
 // 图片压缩配置
 export const COMPRESSION_CONFIG = {
@@ -187,6 +186,14 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     navHref: '/image-compressor',
     navLabel: 'image_compressor_nav_label',
     navDescription: 'image_compressor_nav_description',
+  },
+  {
+    name: 'ai_chat',
+    icon: MessageCircleMore,
+    category: 'tools',
+    navHref: '/chat',
+    navLabel: 'ai_chat_nav_label',
+    navDescription: 'ai_chat_nav_description',
   },
   {
     name: 'about',
