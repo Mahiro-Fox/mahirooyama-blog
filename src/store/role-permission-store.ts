@@ -6,7 +6,11 @@ import {
 } from '@/constant';
 import type { UserRole } from '@/store/user-store';
 import { DATA_DIR, ROLE_PERMISSIONS_FILE } from '@/constant/dir';
-import { ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
+import {
+  ensureDirectory,
+  ensureFileInitialized,
+  writeFileAtomic,
+} from '@/utils/file-utils';
 
 /**
  * 角色权限配置存储
@@ -52,9 +56,10 @@ async function writeRolePermissions(
   permissions: Record<UserRole, Permission[]>
 ): Promise<void> {
   await ensureDataFile();
-  await fs.writeFile(
+  await writeFileAtomic(
     ROLE_PERMISSIONS_FILE,
-    JSON.stringify(permissions, null, 2)
+    JSON.stringify(permissions, null, 2),
+    { encoding: 'utf-8' }
   );
 
   // 更新缓存

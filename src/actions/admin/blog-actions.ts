@@ -17,6 +17,7 @@ import {
   checkFileConflict,
   fileExists,
   validateSlug,
+  writeFileAtomic,
 } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
@@ -159,14 +160,14 @@ export async function adminCreateBlog({
         };
       }
 
-      const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+      const filePath = path.join(BLOG_DIR, `${cleanSlug}.mdx`);
 
       const conflictCheck = await checkFileConflict(filePath);
       if (conflictCheck) {
         return { success: false, error: conflictCheck.error || '文件已存在' };
       }
 
-      await fs.writeFile(filePath, content, 'utf-8');
+      await writeFileAtomic(filePath, content, { encoding: 'utf-8' });
       logger.info('创建 MDX 文件成功', { slug, userId: user.id });
       return { success: true, data: undefined };
     } catch (error) {
@@ -193,8 +194,12 @@ export async function adminUpdateBlog(
     }
 
     try {
+      const nameCheck = validateSlug(slug);
+      if (nameCheck) {
+        return { success: false, error: nameCheck.error };
+      }
       const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
-      await fs.writeFile(filePath, content, 'utf-8');
+      await writeFileAtomic(filePath, content, { encoding: 'utf-8' });
       logger.info('更新 MDX 文件成功', { slug, userId: user.id });
       return { success: true, data: undefined };
     } catch (error) {
@@ -272,6 +277,10 @@ export async function adminDeleteBlogFile(
     }
 
     try {
+      const nameCheck = validateSlug(slug);
+      if (nameCheck) {
+        return { success: false, error: nameCheck.error };
+      }
       const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
       await fs.unlink(filePath);
       logger.info('删除 MDX 文件成功', { slug, userId: user.id });

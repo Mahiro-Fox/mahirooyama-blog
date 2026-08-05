@@ -1,8 +1,8 @@
 import fs from 'fs/promises';
-import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { BLOG_DIR } from '@/constant/dir';
 import { requirePermission } from '@/lib/permissions';
+import { resolveContentPath, writeFileAtomic } from '@/utils/file-utils';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -12,7 +12,10 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params;
-    const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+    const filePath = resolveContentPath(BLOG_DIR, slug, '.mdx');
+    if (!filePath) {
+      return NextResponse.json({ error: '无效的文件名' }, { status: 400 });
+    }
 
     const content = await fs.readFile(filePath, 'utf-8');
 
@@ -36,7 +39,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     const { slug } = await params;
-    const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+    const filePath = resolveContentPath(BLOG_DIR, slug, '.mdx');
+    if (!filePath) {
+      return NextResponse.json({ error: '无效的文件名' }, { status: 400 });
+    }
 
     await fs.unlink(filePath);
 
@@ -61,9 +67,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const { slug } = await params;
     const { content } = await request.json();
-    const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+    const filePath = resolveContentPath(BLOG_DIR, slug, '.mdx');
+    if (!filePath) {
+      return NextResponse.json({ error: '无效的文件名' }, { status: 400 });
+    }
 
-    await fs.writeFile(filePath, content, 'utf-8');
+    await writeFileAtomic(filePath, content, { encoding: 'utf-8' });
 
     return NextResponse.json({ message: '文件更新成功' });
   } catch (error) {

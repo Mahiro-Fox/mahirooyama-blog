@@ -1,91 +1,8 @@
-import { DEFAULT_ROLE_PERMISSIONS, type Permission } from '@/constant';
+import type { Permission } from '@/constant';
 import { rolePermissionStore } from '@/store/role-permission-store';
-import { PermissionChecker, userStore, type User } from '@/store/user-store';
+import { userStore, type User } from '@/store/user-store';
 import { NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/admin-auth';
-
-// 操作到权限的映射（向后兼容）
-export type ActionType = 'create' | 'read' | 'update' | 'delete';
-
-/**
- * 权限检查工具函数
- * 提供同步权限检查功能（使用默认配置）
- * 异步权限检查应直接使用 rolePermissionStore
- */
-export class RBACPermissionChecker {
-  /**
-   * 检查用户是否拥有指定权限（同步版本，使用默认配置）
-   * 注意：这是同步方法，仅使用默认配置，无法读取文件
-   * 异步版本应使用 rolePermissionStore.hasPermission
-   */
-  static hasPermission(user: User, permission: Permission): boolean {
-    // super_admin 拥有所有权限
-    if (user.role === 'super_admin') {
-      return true;
-    }
-
-    // 检查用户是否有特定权限（使用默认配置）
-    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[user.role] || [];
-    return rolePermissions.includes(permission);
-  }
-
-  /**
-   * 检查用户是否拥有多个权限中的任意一个（或关系）
-   */
-  static hasAnyPermission(user: User, permissions: Permission[]): boolean {
-    if (user.role === 'super_admin') {
-      return true;
-    }
-
-    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[user.role] || [];
-    return permissions.some((perm) => rolePermissions.includes(perm));
-  }
-
-  /**
-   * 检查用户是否拥有所有指定的权限（与关系）
-   */
-  static hasAllPermissions(user: User, permissions: Permission[]): boolean {
-    if (user.role === 'super_admin') {
-      return true;
-    }
-
-    const rolePermissions = DEFAULT_ROLE_PERMISSIONS[user.role] || [];
-    return permissions.every((perm) => rolePermissions.includes(perm));
-  }
-
-  /**
-   * 获取用户的所有权限列表（同步版本）
-   */
-  static getUserPermissions(user: User): Permission[] {
-    if (user.role === 'super_admin') {
-      return ['*'];
-    }
-
-    return DEFAULT_ROLE_PERMISSIONS[user.role] || [];
-  }
-
-  /**
-   * 向后兼容：检查用户是否有基础操作权限
-   * 将旧的操作类型映射到新的权限系统
-   */
-  static hasLegacyPermission(
-    user: User,
-    action: ActionType,
-    module?: string
-  ): boolean {
-    // 使用旧的PermissionChecker作为后备
-    if (!module) {
-      return PermissionChecker.hasPermission(user, action);
-    }
-
-    const modulePerms = moduleMap[module];
-    if (modulePerms) {
-      return this.hasPermission(user, modulePerms[action]);
-    }
-
-    return PermissionChecker.hasPermission(user, action);
-  }
-}
 
 /**
  * 权限检查结果接口
@@ -161,25 +78,3 @@ export async function validateAdmin(): Promise<User | null> {
 
   return user;
 }
-
-// 模块映射（用于向后兼容）
-const moduleMap: Record<string, Record<ActionType, Permission>> = {
-  blog: {
-    read: 'blog:read',
-    create: 'blog:create',
-    update: 'blog:update',
-    delete: 'blog:delete',
-  },
-  gallery: {
-    read: 'gallery:read',
-    create: 'gallery:create',
-    update: 'gallery:update',
-    delete: 'gallery:delete',
-  },
-  tag: {
-    read: 'tag:read',
-    create: 'tag:create',
-    update: 'tag:update',
-    delete: 'tag:delete',
-  },
-};

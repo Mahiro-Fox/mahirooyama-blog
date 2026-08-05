@@ -17,6 +17,7 @@ import {
   ensureDirectory,
   fileExists,
   validateSlug,
+  writeFileAtomic,
 } from '@/utils/file-utils';
 import { isPortraitImage } from '@/utils/image-utils';
 import { createLogger } from '@/utils/logger';
@@ -195,7 +196,7 @@ export async function adminCreateGallery(input: {
 
       // 格式化JSON并写入文件
       const formattedContent = JSON.stringify(parsed, null, 2);
-      await fs.writeFile(filePath, formattedContent, 'utf-8');
+      await writeFileAtomic(filePath, formattedContent, { encoding: 'utf-8' });
 
       logger.info('创建图库文件成功', { slug: input.slug, userId: user.id });
       return { success: true, data: undefined };
@@ -249,7 +250,7 @@ export async function adminUpdateGallery(
       parsed.isPortrait = isPortrait;
 
       const formattedContent = JSON.stringify(parsed, null, 2);
-      await fs.writeFile(filePath, formattedContent, 'utf-8');
+      await writeFileAtomic(filePath, formattedContent, { encoding: 'utf-8' });
       logger.info('更新图库文件成功', { slug, userId: user.id });
       return { success: true, data: undefined };
     } catch (error) {

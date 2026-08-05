@@ -2,7 +2,12 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import { DATA_DIR, USERS_FILE } from '@/constant';
 import bcrypt from 'bcryptjs';
-import { ensureDirectory, ensureFileInitialized } from '@/utils/file-utils';
+import { ADMIN_DEFAULT_PASSWORD } from '@/constant/auth';
+import {
+  ensureDirectory,
+  ensureFileInitialized,
+  writeFileAtomic,
+} from '@/utils/file-utils';
 
 // 用户角色类型
 export type UserRole = 'super_admin' | 'user';
@@ -22,6 +27,8 @@ export interface User {
     canUpdate?: boolean;
     canDelete?: boolean;
   };
+  // 首次登录是否必须修改密码（用于默认 admin 等初始账号）
+  mustChangePassword?: boolean;
 }
 
 // 创建用户请求接口
@@ -30,6 +37,7 @@ export interface CreateUserRequest {
   password: string;
   role: UserRole;
   permissions?: User['permissions'];
+  mustChangePassword?: boolean;
 }
 
 // 更新用户请求接口
@@ -39,6 +47,7 @@ export interface UpdateUserRequest {
   avatar?: string;
   role?: UserRole;
   permissions?: User['permissions'];
+  mustChangePassword?: boolean;
 }
 
 // 用户响应（不含密码）
@@ -49,54 +58,7 @@ export interface UserResponse {
   role: UserRole;
   lastUpdated: string;
   permissions?: User['permissions'];
-}
-
-// 权限检查工具
-export class PermissionChecker {
-  // 获取用户实际权限
-  static getUserPermissions(user: User): {
-    canCreate: boolean;
-    canRead: boolean;
-    canUpdate: boolean;
-    canDelete: boolean;
-  } {
-    // super_admin 拥有所有权限
-    if (user.role === 'super_admin') {
-      return {
-        canCreate: true,
-        canRead: true,
-        canUpdate: true,
-        canDelete: true,
-      };
-    }
-
-    // user 默认权限：可创建、可读，不可修改、不可删除
-    // 但可以被自定义权限覆盖
-    return {
-      canCreate: user.permissions?.canCreate ?? true,
-      canRead: user.permissions?.canRead ?? true,
-      canUpdate: user.permissions?.canUpdate ?? false,
-      canDelete: user.permissions?.canDelete ?? false,
-    };
-  }
-
-  // 检查用户是否有特定权限
-  static hasPermission(
-    user: User,
-    action: 'create' | 'read' | 'update' | 'delete'
-  ): boolean {
-    const perms = this.getUserPermissions(user);
-    switch (action) {
-      case 'create':
-        return perms.canCreate;
-      case 'read':
-        return perms.canRead;
-      case 'update':
-        return perms.canUpdate;
-      case 'delete':
-        return perms.canDelete;
-    }
-  }
+  mustChangePassword?: boolean;
 }
 
 // 确保数据目录和文件存在
@@ -108,9 +70,10 @@ async function ensureDataFile(): Promise<void> {
     id: crypto.randomUUID(),
     username: 'admin',
     avatar: '/uploads/images/avatar/default-avatar.webp',
-    passwordHash: await bcrypt.hash('admin123', 10),
+    passwordHash: await bcrypt.hash(ADMIN_DEFAULT_PASSWORD, 10),
     role: 'super_admin',
     lastUpdated: new Date().toISOString(),
+    mustChangePassword: true, // 默认账号首次登录必须改密
   };
   await ensureFileInitialized(
     USERS_FILE,
@@ -127,7 +90,9 @@ async function readUsers(): Promise<User[]> {
 
 // 写入所有用户
 async function writeUsers(users: User[]): Promise<void> {
-  await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2));
+  await writeFileAtomic(USERS_FILE, JSON.stringify(users, null, 2), {
+    encoding: 'utf-8',
+  });
 }
 
 // 转换为响应格式（移除密码）
@@ -185,6 +150,7 @@ export const userStore = {
       role: request.role,
       lastUpdated: new Date().toISOString(),
       permissions: request.permissions,
+      mustChangePassword: request.mustChangePassword ?? false,
     };
 
     users.push(newUser);
@@ -214,8 +180,10 @@ export const userStore = {
 
     // 更新字段
     if (request.username) user.username = request.username;
-    if (request.password)
+    if (request.password) {
       user.passwordHash = await bcrypt.hash(request.password, 10);
+      user.mustChangePassword = false; // 修改密码即满足强制改密要求
+    }
     if (request.avatar) user.avatar = request.avatar;
     if (request.role) user.role = request.role;
     if (request.permissions !== undefined)

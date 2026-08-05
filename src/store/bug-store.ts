@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { BUGS_FILE } from '@/constant';
-import { ensureFileInitialized } from '@/utils/file-utils';
+import { ensureFileInitialized, writeFileAtomic } from '@/utils/file-utils';
 
 export type BugStatus = 'pending' | 'resolved';
 
@@ -22,7 +22,9 @@ export const bugStore = {
   },
 
   async saveBugs(bugs: BugReport[]): Promise<void> {
-    await fs.writeFile(BUGS_FILE, JSON.stringify(bugs, null, 2), 'utf-8');
+    await writeFileAtomic(BUGS_FILE, JSON.stringify(bugs, null, 2), {
+      encoding: 'utf-8',
+    });
   },
 
   async getAll(): Promise<BugReport[]> {
