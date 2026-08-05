@@ -4,7 +4,7 @@ import { sessionStore } from '@/store/session-store';
 import { userStore } from '@/store/user-store';
 import { jwtVerify, type JWTPayload } from 'jose';
 import { cookies } from 'next/headers';
-import { JWT_SECRET } from '@/constant/auth';
+import { ADMIN_SESSION_COOKIE, JWT_SECRET } from '@/constant/auth';
 
 type AdminSessionPayload = JWTPayload & {
   userId?: string;
@@ -24,7 +24,7 @@ export type CurrentAdminUser = {
 export async function getCurrentAdminUser(): Promise<CurrentAdminUser | null> {
   try {
     const cookieStore = await cookies();
-    const tokenCookie = cookieStore.get('admin-session');
+    const tokenCookie = cookieStore.get(ADMIN_SESSION_COOKIE);
     if (!tokenCookie?.value) return null;
 
     const payload = await verifyJwtToken(tokenCookie.value);
@@ -59,7 +59,7 @@ export async function getCurrentAdminUser(): Promise<CurrentAdminUser | null> {
 export async function verifyAuth() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('admin-session');
+    const token = cookieStore.get(ADMIN_SESSION_COOKIE);
 
     if (!token) {
       return { success: false, error: '未登录' };

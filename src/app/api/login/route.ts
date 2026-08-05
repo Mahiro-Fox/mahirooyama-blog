@@ -3,7 +3,11 @@ import { userStore } from '@/store/user-store';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { JWT_SECRET, SESSION_EXPIRY } from '@/constant/auth';
+import {
+  ADMIN_SESSION_COOKIE,
+  JWT_SECRET,
+  SESSION_EXPIRY,
+} from '@/constant/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,7 +76,7 @@ export async function POST(request: NextRequest) {
         process.env.NODE_ENV === 'production');
     // 设置 cookie
     const cookieStore = await cookies();
-    cookieStore.set('admin-session', token, {
+    cookieStore.set(ADMIN_SESSION_COOKIE, token, {
       httpOnly: true,
       secure: isSecure,
       sameSite: 'strict',

@@ -9,7 +9,10 @@
     "chat.provider": "Provider Type",
     "chat.retry": "Retry",
     "chat.error": "Request failed, please try again later",
-    "chat.stop": "Stop"
+    "chat.stop": "Stop",
+    "chat.deepseek_locked": "Sign in to use DeepSeek",
+    "chat.deepseek_login": "Sign In",
+    "chat.deepseek_desc": "Paid AI model, login required"
   },
   "cn": {
     "chat.title": "mahiro 的聊天机器人",
@@ -21,6 +24,9 @@
     "chat.provider": "接入方式",
     "chat.retry": "重试",
     "chat.error": "请求失败了，可能是接口异常或网络问题",
-    "chat.stop": "停止"
+    "chat.stop": "停止",
+    "chat.deepseek_locked": "登录后可用 DeepSeek",
+    "chat.deepseek_login": "立即登录",
+    "chat.deepseek_desc": "付费 AI 模型，需登录后使用"
   }
 }

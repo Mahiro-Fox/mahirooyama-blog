@@ -3,7 +3,6 @@ import {
   Bug,
   Camera,
   ChevronLeft,
-  ChevronRight,
   Clapperboard,
   FileText,
   FolderOpen,
@@ -56,19 +55,22 @@ export interface PageRouteConfig {
   adminHref?: string;
   adminTitle?: string;
   adminDescription?: string;
+  /**
+   * 是否需要用户前台登录
+   */
   needAuth?: boolean;
 }
 
 export const pageRoutesConfig: PageRouteConfig[] = [
-  {
-    name: 'admin',
-    icon: ChevronRight,
-    category: 'admin',
-    navHref: '/admin',
-    navLabel: 'admin_nav_label',
-    navDescription: 'admin_nav_description',
-    needAuth: true,
-  },
+  // {
+  //   name: 'admin',
+  //   icon: ChevronRight,
+  //   category: 'admin',
+  //   navHref: '/admin',
+  //   navLabel: 'admin_nav_label',
+  //   navDescription: 'admin_nav_description',
+  //   needAuth: true,
+  // },
   {
     name: 'frontpage',
     icon: ChevronLeft,

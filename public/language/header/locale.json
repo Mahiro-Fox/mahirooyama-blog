@@ -90,6 +90,11 @@
     "search_no_results": "No results found",
     "search_no_results_placeholder": "Search with keywords...",
 
+    "user_menu.profile": "Profile",
+    "user_menu.logout": "Logout",
+    "user_menu.signin": "Sign In",
+    "user_menu.welcome": "Hello",
+
     "global-music-player.playlist": "Playlist",
     "global-music-player.pause": "Pause",
     "global-music-player.play": "Play",
@@ -188,6 +193,11 @@
     "search_results": "搜索结果 ({{count}})",
     "search_no_results": "未找到相关结果",
     "search_no_results_placeholder": "输入关键词开始搜索...",
+
+    "user_menu.profile": "个人中心",
+    "user_menu.logout": "退出登录",
+    "user_menu.signin": "登录",
+    "user_menu.welcome": "你好",
 
     "global-music-player.playlist": "播放列表",
     "global-music-player.pause": "暂停",

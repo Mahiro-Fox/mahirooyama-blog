@@ -12,6 +12,7 @@ export const MUSIC_DIR = path.join(UPLOADS_DIR, 'music');
 export const TAGS_FILE = path.join(DATA_DIR, 'tags.json');
 export const BUGS_FILE = path.join(DATA_DIR, 'bugs.json');
 export const USERS_FILE = path.join(DATA_DIR, 'users.json');
+export const ACCOUNTS_FILE = path.join(DATA_DIR, 'accounts.json');
 export const MUSIC_FILE = path.join(DATA_DIR, 'music.json');
 export const MOVIES_FILE = path.join(DATA_DIR, 'movies.json');
 export const MOMENTS_FILE = path.join(DATA_DIR, 'moments.json');

@@ -20,13 +20,6 @@ export interface User {
   passwordHash: string;
   role: UserRole;
   lastUpdated: string;
-  // 用户自定义权限（可选，用于覆盖默认权限）
-  permissions?: {
-    canCreate?: boolean;
-    canRead?: boolean;
-    canUpdate?: boolean;
-    canDelete?: boolean;
-  };
   // 首次登录是否必须修改密码（用于默认 admin 等初始账号）
   mustChangePassword?: boolean;
 }
@@ -36,7 +29,6 @@ export interface CreateUserRequest {
   username: string;
   password: string;
   role: UserRole;
-  permissions?: User['permissions'];
   mustChangePassword?: boolean;
 }
 
@@ -46,7 +38,6 @@ export interface UpdateUserRequest {
   password?: string;
   avatar?: string;
   role?: UserRole;
-  permissions?: User['permissions'];
   mustChangePassword?: boolean;
 }
 
@@ -57,7 +48,6 @@ export interface UserResponse {
   avatar: string;
   role: UserRole;
   lastUpdated: string;
-  permissions?: User['permissions'];
   mustChangePassword?: boolean;
 }
 
@@ -149,7 +139,6 @@ export const userStore = {
       passwordHash: await bcrypt.hash(request.password, 10),
       role: request.role,
       lastUpdated: new Date().toISOString(),
-      permissions: request.permissions,
       mustChangePassword: request.mustChangePassword ?? false,
     };
 
@@ -186,8 +175,6 @@ export const userStore = {
     }
     if (request.avatar) user.avatar = request.avatar;
     if (request.role) user.role = request.role;
-    if (request.permissions !== undefined)
-      user.permissions = request.permissions;
     user.lastUpdated = new Date().toISOString();
 
     await writeUsers(users);

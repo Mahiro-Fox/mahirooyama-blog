@@ -8,6 +8,7 @@ import {
   toUIMessageStream,
   UIMessage,
 } from 'ai';
+import { verifyUserAuth } from '@/lib/user-auth';
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -36,6 +37,22 @@ function getModel(provider?: string): LanguageModel {
 export async function POST(req: Request) {
   const { messages, provider }: { messages: UIMessage[]; provider?: string } =
     await req.json();
+
+  const selectedProvider: Provider = ALLOWED_PROVIDERS.includes(
+    provider as Provider
+  )
+    ? (provider as Provider)
+    : 'openrouter';
+
+  if (selectedProvider === 'deepseek') {
+    const auth = await verifyUserAuth();
+    if (!auth.success) {
+      return Response.json(
+        { error: 'Authentication required to use DeepSeek' },
+        { status: 401 }
+      );
+    }
+  }
 
   const result = streamText({
     model: getModel(provider),

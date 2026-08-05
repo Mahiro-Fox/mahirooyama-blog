@@ -81,7 +81,6 @@ export async function PATCH(
       username,
       password,
       role,
-      permissions,
     });
 
     return NextResponse.json({

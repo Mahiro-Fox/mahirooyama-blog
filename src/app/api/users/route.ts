@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { username, password, role, permissions } = body;
+    const { username, password, role } = body;
 
     if (!username || !password || !role) {
       return NextResponse.json({ error: '缺少必要字段' }, { status: 400 });
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
       username,
       password,
       role,
-      permissions,
     });
 
     return NextResponse.json({

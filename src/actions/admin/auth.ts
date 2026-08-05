@@ -4,7 +4,11 @@ import { sessionStore } from '@/store/session-store';
 import { userStore } from '@/store/user-store';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
-import { JWT_SECRET, SESSION_EXPIRY } from '@/constant/auth';
+import {
+  ADMIN_SESSION_COOKIE,
+  JWT_SECRET,
+  SESSION_EXPIRY,
+} from '@/constant/auth';
 import { verifyAuth } from '@/lib/admin-auth';
 import { loginRateLimiter } from '@/lib/rate-limit';
 import { createLogger } from '@/utils/logger';
@@ -97,7 +101,7 @@ export async function login(
         process.env.NODE_ENV === 'production');
 
     const cookieStore = await cookies();
-    cookieStore.set('admin-session', token, {
+    cookieStore.set(ADMIN_SESSION_COOKIE, token, {
       httpOnly: true,
       secure: isSecure,
       sameSite: 'strict',

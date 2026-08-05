@@ -1,10 +1,12 @@
 'use client';
 
-import { Languages, Menu } from 'lucide-react';
+import { Languages, LogOut, Menu, User } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useCallback, useEffect, useState } from 'react';
 import { setLocale } from '@/actions/set-locale';
+import { userLogout } from '@/actions/user-auth';
 import { Search } from '@/components/layout/site-header/search';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -12,6 +14,8 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/shadcn-ui/dropdown-menu';
 import {
@@ -41,26 +45,47 @@ import { useT } from '@/i18n/dictionary-provider';
 import { i18nConfig } from '@/i18n/i18n.config';
 import { useLocale } from '@/i18n/use-locale';
 
-interface SiteHeaderProps {
-  initialIsAuth?: boolean;
+interface SiteHeaderUser {
+  id: string;
+  username: string;
 }
 
-export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
+interface SiteHeaderProps {
+  initialUserAuth?: SiteHeaderUser | null;
+}
+
+export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
   const t = useT();
   const pathname = usePathname();
+  const router = useRouter();
   const isActive = (href: string) => pathname === href;
   const { setTheme, resolvedTheme } = useTheme();
-  const [isAdminAuth, setIsAdminAuth] = useState(initialIsAuth);
+  const [currentUser, setCurrentUser] = useState<SiteHeaderUser | null>(
+    initialUserAuth
+  );
 
   const toggleTheme = useCallback(() => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   }, [resolvedTheme, setTheme]);
 
   useEffect(() => {
-    if (!initialIsAuth) {
-      setIsAdminAuth(false);
+    if (!initialUserAuth) {
+      setCurrentUser(null);
+    } else {
+      setCurrentUser(initialUserAuth);
     }
-  }, [initialIsAuth]);
+  }, [initialUserAuth]);
+
+  const handleLogout = async () => {
+    try {
+      await userLogout();
+      setCurrentUser(null);
+      toast.success('Logged out');
+      router.refresh();
+    } catch {
+      toast.error('Logout failed');
+    }
+  };
 
   return (
     <header className="bg-background sticky top-0 z-50 w-full">
@@ -83,9 +108,6 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
               <NavigationMenuList>
                 {Object.entries(groupedNavRoutes).map(
                   ([categoryName, items]) => {
-                    if (categoryName === 'admin' && !isAdminAuth) {
-                      return null;
-                    }
                     return (
                       <NavigationMenuItem key={categoryName}>
                         <NavigationMenuTrigger>
@@ -95,7 +117,7 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
                           {items.map(
                             (item) =>
                               // 如果需要认证且用户未认证，则不显示
-                              (!item.needAuth || isAdminAuth) && (
+                              (!item.needAuth || !!currentUser) && (
                                 <NavigationMenuLink key={item.navHref} asChild>
                                   <Link
                                     href={item.navHref!}
@@ -155,29 +177,31 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
                 <nav className="flex flex-col gap-2 overflow-auto">
                   {Object.entries(groupedNavRoutes).map(
                     ([categoryName, items]) => {
-                      if (categoryName === 'Admin' && !isAdminAuth) {
-                        return null;
-                      }
                       return (
                         <div key={categoryName}>
                           <div className="text-muted-foreground px-4 py-2 text-sm font-semibold">
                             {categoryName}
                           </div>
-                          {items.map((item) => (
-                            <SheetClose asChild key={item.navHref}>
-                              <Link
-                                href={item.navHref!}
-                                className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                                  isActive(item.navHref!)
-                                    ? 'bg-accent text-accent-foreground'
-                                    : 'hover:bg-muted'
-                                }`}
-                              >
-                                {item.icon && <item.icon className="h-4 w-4" />}
-                                {item.name}
-                              </Link>
-                            </SheetClose>
-                          ))}
+                          {items.map(
+                            (item) =>
+                              (!item.needAuth || !!currentUser) && (
+                                <SheetClose asChild key={item.navHref}>
+                                  <Link
+                                    href={item.navHref!}
+                                    className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+                                      isActive(item.navHref!)
+                                        ? 'bg-accent text-accent-foreground'
+                                        : 'hover:bg-muted'
+                                    }`}
+                                  >
+                                    {item.icon && (
+                                      <item.icon className="h-4 w-4" />
+                                    )}
+                                    {t(item.navLabel || '')}
+                                  </Link>
+                                </SheetClose>
+                              )
+                          )}
                         </div>
                       );
                     }
@@ -208,6 +232,44 @@ export function SiteHeader({ initialIsAuth = false }: SiteHeaderProps) {
             <SwitchLanguage />
             <Separator orientation="vertical" />
             <AnimatedThemeToggler onThemeChange={toggleTheme} />
+            <Separator orientation="vertical" />
+            {currentUser ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
+                    <User className="h-4 w-4" />
+                    <span className="hidden sm:inline">
+                      {currentUser.username}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-44" align="end">
+                  <DropdownMenuLabel>
+                    {t('user_menu.welcome')}, {currentUser.username}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('user_menu.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                asChild
+                size="sm"
+                variant="ghost"
+                className="h-8 shadow-none"
+              >
+                <Link href="/signin">
+                  <User className="mr-1 h-4 w-4" />
+                  {t('user_menu.signin')}
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { PageTracker } from '@/components/shared/tracker';
 import { siteConfig } from '@/config/common';
 import { getDictionary } from '@/i18n/dictionary';
 import { DictionaryProvider } from '@/i18n/dictionary-provider';
-import { getCurrentAdminUser } from '@/lib/admin-auth';
+import { getCurrentUser } from '@/lib/user-auth';
 
 export const generateMetadata = async (params: Promise<{ lang: string }>) => {
   const { lang } = await params;
@@ -70,14 +70,19 @@ interface AppLayoutProps {
 
 export default async function AppLayout({ children, params }: AppLayoutProps) {
   const { lang } = await params;
-  const [navDictionary, footerDictionary, homeDictionary, adminUser, musicRes] =
-    await Promise.all([
-      getDictionary(lang, 'header'),
-      getDictionary(lang, 'footer'),
-      getDictionary(lang, 'home'),
-      getCurrentAdminUser(),
-      getPublicMusic(),
-    ]);
+  const [
+    navDictionary,
+    footerDictionary,
+    homeDictionary,
+    frontendUser,
+    musicRes,
+  ] = await Promise.all([
+    getDictionary(lang, 'header'),
+    getDictionary(lang, 'footer'),
+    getDictionary(lang, 'home'),
+    getCurrentUser(),
+    getPublicMusic(),
+  ]);
   const songs = musicRes.success ? musicRes.data : [];
   return (
     <div className="bg-background relative z-10 flex min-h-svh flex-col">
@@ -89,7 +94,7 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
         }}
       >
         <MusicProvider playlist={songs}>
-          <SiteHeader initialIsAuth={!!adminUser} />
+          <SiteHeader initialUserAuth={frontendUser} />
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />
           {/* 自动埋点组件 */}

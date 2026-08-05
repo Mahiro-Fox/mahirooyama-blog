@@ -6,14 +6,13 @@ import {
   JWT_SECRET,
   SESSION_EXPIRY,
   SESSION_REFRESH_THRESHOLD,
+  USER_SESSION_COOKIE,
 } from '@/constant/auth';
 import { i18nConfig } from '@/i18n/i18n.config';
 
 // 获取需要保护的路由
 function getProtectedRoutes() {
   const routes = new Set<string>();
-  routes.add('/admin');
-  routes.add('/secret');
 
   pageRoutesConfig.forEach((route) => {
     if (route.needAuth) {
@@ -112,9 +111,9 @@ export async function proxy(request: NextRequest) {
 
   // 如果是需要保护的路由，检查是否登录
   if (isProtectedRoute) {
-    const token = request.cookies.get('admin-session')?.value;
+    const token = request.cookies.get(USER_SESSION_COOKIE)?.value;
     // 登录路径
-    const loginPath = `${visibleLocalePrefix}/login`;
+    const loginPath = `${visibleLocalePrefix}/signin`;
     // 未登录则重定向到登录页
     if (!token) {
       const loginUrl = new URL(loginPath, request.url);
@@ -123,6 +122,7 @@ export async function proxy(request: NextRequest) {
       return addSecurityHeaders(response);
     }
 
+    // 如果已登录，尝试验证会话token，检查是否过期
     try {
       const { payload } = await jwtVerify(token, JWT_SECRET);
       const now = Math.floor(Date.now() / 1000);
@@ -148,15 +148,8 @@ export async function proxy(request: NextRequest) {
           .setExpirationTime(`${SESSION_EXPIRY}s`)
           .sign(JWT_SECRET);
 
-        // 此时是为了兼容无证书的 http 环境，现在已经为 https 环境，注释掉
-        // const isSecure =
-        //   process.env.COOKIE_SECURE === 'true' ||
-        //   (process.env.COOKIE_SECURE !== 'false' &&
-        //     process.env.NODE_ENV === 'production');
-
-        response.cookies.set('admin-session', newToken, {
+        response.cookies.set(USER_SESSION_COOKIE, newToken, {
           httpOnly: true,
-          // secure: isSecure,
           sameSite: 'strict',
           maxAge: SESSION_EXPIRY,
           path: '/',
@@ -170,7 +163,7 @@ export async function proxy(request: NextRequest) {
       const loginUrl = new URL(loginPath, request.url);
       loginUrl.searchParams.set('redirect', pathname);
       const response = NextResponse.redirect(loginUrl);
-      response.cookies.delete('admin-session');
+      response.cookies.delete(USER_SESSION_COOKIE);
       return addSecurityHeaders(response);
     }
   }
