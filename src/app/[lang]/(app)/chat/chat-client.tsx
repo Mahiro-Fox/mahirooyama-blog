@@ -203,9 +203,9 @@ export function ChatClient({ isUserAuth }: ChatClientProps) {
   }, [setMessages]);
 
   return (
-    <div className="container flex flex-1 gap-4 p-4 md:p-0">
+    <div className="container flex max-h-[calc(100vh-50px)] flex-1 gap-4 p-4 md:max-h-[calc(100vh-160px)] md:p-0">
       <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <div className="flex items-center gap-2 py-2">
+        <div className="flex items-center gap-2 pt-6">
           {/* Mobile sidebar via Sheet */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
@@ -232,8 +232,8 @@ export function ChatClient({ isUserAuth }: ChatClientProps) {
           />
         </div>
 
-        <Conversation className="flex-1">
-          <ConversationContent>
+        <Conversation>
+          <ConversationContent className="pr-4">
             {messages.length === 0 ? (
               <ConversationEmptyState
                 title={t('chat.start_title')}
@@ -248,7 +248,18 @@ export function ChatClient({ isUserAuth }: ChatClientProps) {
                 >
                   <MessageContent>
                     {message.parts.map((part, i) =>
-                      part.type === 'text' ? (
+                      part.type === 'reasoning' ? (
+                        <div
+                          className="text-muted-foreground flex flex-col gap-1 text-sm"
+                          key={i}
+                        >
+                          {status === 'streaming' &&
+                            i === message.parts.length - 1 && (
+                              <p>{t('chat.thinking')}</p>
+                            )}
+                          <p>{part.text}</p>
+                        </div>
+                      ) : part.type === 'text' ? (
                         <MessageResponse key={i}>{part.text}</MessageResponse>
                       ) : null
                     )}

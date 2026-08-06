@@ -114,6 +114,8 @@ export async function POST(req: Request) {
   // === 包装流，注入 conversationId metadata + 持久化 ===
   const stream = toUIMessageStream({
     stream: result.stream,
+    // 默认不传时生成的 assistant 消息 id 为空字符串，会导致前端去重/刷新后丢失
+    generateMessageId: () => crypto.randomUUID(),
     messageMetadata: () => ({
       conversationId: activeConversationId,
     }),
@@ -122,10 +124,14 @@ export async function POST(req: Request) {
 
       if (userId) {
         try {
+          // messages 是请求传入的完整历史（含 user/assistant 的历史消息及当次 user 输入）
+          // finalMessages 是本次 streamText 生成的新 assistant 消息（通常是 1 条）
+          // 两者合并后才是完整的对话消息列表
+          const allMessages: UIMessage[] = [...messages, ...finalMessages];
           await conversationStore.saveMessages(
-            userId!,
+            userId,
             activeConversationId,
-            finalMessages
+            allMessages
           );
         } catch {
           // 持久化失败不影响响应
