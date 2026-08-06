@@ -2,11 +2,11 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Suspense, useEffect, useState, useTransition } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import {
   checkUserLogin,
   userLogin,
-  userLoginWithGoogle,
+  // userLoginWithGoogle,
 } from '@/actions/user-auth';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -30,7 +30,7 @@ function SignInForm() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rateLimitTime, setRateLimitTime] = useState<number | null>(null);
-  const [isGooglePending, startGoogleTransition] = useTransition();
+  // const [isGooglePending, startGoogleTransition] = useTransition();
 
   useEffect(() => {
     if (!rateLimitTime || rateLimitTime <= 0) return;
@@ -89,17 +89,17 @@ function SignInForm() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    const redirect = searchParams.get('redirect') || '/chat';
-    startGoogleTransition(async () => {
-      try {
-        await userLoginWithGoogle(redirect);
-      } catch {
-        // NEXT_REDIRECT 会被 Next.js 内部处理，不会到这里
-        toast.error(t('signin.login_failed_retry'));
-      }
-    });
-  };
+  // const handleGoogleLogin = () => {
+  //   const redirect = searchParams.get('redirect') || '/chat';
+  //   startGoogleTransition(async () => {
+  //     try {
+  //       await userLoginWithGoogle(redirect);
+  //     } catch {
+  //       // NEXT_REDIRECT 会被 Next.js 内部处理，不会到这里
+  //       toast.error(t('signin.login_failed_retry'));
+  //     }
+  //   });
+  // };
 
   return (
     <div className="bg-muted/50 flex min-h-screen items-center justify-center p-4">
@@ -157,7 +157,7 @@ function SignInForm() {
           </form>
 
           {/* 分隔线 + Google 登录 */}
-          <div className="relative my-4">
+          {/* <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -200,7 +200,7 @@ function SignInForm() {
                 {t('signin.google')}
               </>
             )}
-          </Button>
+          </Button> */}
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-muted-foreground text-sm">
