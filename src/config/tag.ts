@@ -1,11 +1,6 @@
-import { TAG_TYPES, type TagTypeConfig } from '@/constant';
+import { TAG_TYPES, type TagType, type TagTypeConfig } from '@/constant';
 
 // 获取标签类型配置
-export function getTagTypeConfig(type: 'blog' | 'gallery'): TagTypeConfig {
+export function getTagTypeConfig(type: TagType): TagTypeConfig {
   return TAG_TYPES.find((t) => t.id === type) || TAG_TYPES[0];
-}
-
-// 获取所有标签类型 ID
-export function getTagTypeIds(): ('blog' | 'gallery')[] {
-  return TAG_TYPES.map((t) => t.id);
 }

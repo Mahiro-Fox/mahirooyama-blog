@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import Masonry from '@/components/content/masonry';
-import { BlurFade } from '@/components/shadcn-ui/blur-fade';
+import { BlurFade } from '@/components/magicui/blur-fade';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { usePhotos } from '@/hooks/use-photos';
 import { useT } from '@/i18n/dictionary-provider';

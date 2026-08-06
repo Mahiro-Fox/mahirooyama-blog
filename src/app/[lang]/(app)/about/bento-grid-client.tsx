@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { TextAnimate } from '@/components/shadcn-ui/text-animate';
+import { TextAnimate } from '@/components/magicui/text-animate';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import {
   aboutConfig,

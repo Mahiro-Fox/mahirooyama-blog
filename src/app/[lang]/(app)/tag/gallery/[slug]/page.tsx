@@ -12,7 +12,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/shadcn-ui/breadcrumb';
-import { TextAnimate } from '@/components/shadcn-ui/text-animate';
+import { TextAnimate } from '@/components/magicui/text-animate';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
 import { siteConfig } from '@/config/common';

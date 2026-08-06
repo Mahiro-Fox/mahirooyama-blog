@@ -43,17 +43,6 @@ export function formatDateWithHMS(input: string | number): string {
 export function absoluteUrl(path: string): string {
   return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
 }
-/**
- * 截断文本，超过最大长度时添加省略号
- * @param inputText 输入文本
- * @param maxLength 最大长度
- * @returns 截断后的文本
- */
-export function truncateText(inputText: string, maxLength: number): string {
-  return inputText.length > maxLength
-    ? inputText.slice(0, maxLength) + '...'
-    : inputText;
-}
 
 /**
  * 防抖函数

@@ -16,7 +16,7 @@ import {
   type ActionResponse,
 } from '@/utils/action-response';
 import { checkFileConflict, ensureDirectory } from '@/utils/file-utils';
-import { processAndSaveImage } from '@/utils/image-utils';
+import { processAndSaveImage } from '@/lib/image-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('UploadActions');

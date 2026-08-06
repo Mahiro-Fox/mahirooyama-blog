@@ -36,67 +36,6 @@ export async function adminGetGuestbookEntries(): Promise<
   });
 }
 
-// POST - 创建留言（管理员创建）
-export async function adminCreateGuestbook(input: {
-  nickname: string;
-  bgColor: string;
-  contact?: string;
-  content: string;
-}): Promise<ActionResponse<void>> {
-  return withActionPermission('guestbook:create', async (user) => {
-    try {
-      const { nickname, bgColor, contact, content } = input;
-
-      if (!nickname || nickname.trim().length === 0) {
-        return { success: false, error: '昵称不能为空' };
-      }
-
-      if (!bgColor || bgColor.trim().length === 0) {
-        return { success: false, error: '背景颜色不能为空' };
-      }
-
-      if (!content || content.trim().length === 0) {
-        return { success: false, error: '留言内容不能为空' };
-      }
-
-      if (content.length > 300) {
-        return { success: false, error: '留言内容不能超过300字' };
-      }
-
-      // 读取现有数据
-      const entries = await getGuestbook();
-
-      // 生成唯一ID（使用时间戳）
-      const id = Date.now().toString();
-      const createdAt = new Date().toISOString();
-
-      const newEntry: Guestbook = {
-        id,
-        createdAt,
-        nickname: nickname.trim(),
-        bgColor: bgColor.trim(),
-        contact: contact?.trim() || undefined,
-        content: content.trim(),
-        isApproved: true, // 管理员创建的默认通过审核
-      };
-
-      entries.push(newEntry);
-
-      // 写入文件
-      await writeFileAtomic(
-        GUESTBOOK_FILE,
-        JSON.stringify(entries, null, 2),
-        { encoding: 'utf-8' }
-      );
-
-      logger.info('管理员创建留言成功', { entryId: id, adminId: user.id });
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('创建留言失败', error);
-      return { success: false, error: '创建失败，请稍后重试' };
-    }
-  });
-}
 
 // POST - 访客提交留言（无需登录）
 export async function submitGuestbook(input: {

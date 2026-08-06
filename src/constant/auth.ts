@@ -33,19 +33,9 @@ export const ADMIN_DEFAULT_PASSWORD = (() => {
 export const SESSION_EXPIRY = 24 * 60 * 60;
 
 /**
- * 会话刷新阈值 (4小时，单位：秒)
- */
-export const SESSION_REFRESH_THRESHOLD = 4 * 60 * 60;
-
-/**
  * 会话最大年龄 (24小时，单位：毫秒)
  */
 export const SESSION_MAX_AGE = 24 * 60 * 60 * 1000;
-
-/**
- * 前台用户会话 Cookie 名
- */
-export const USER_SESSION_COOKIE = 'user-session';
 
 /**
  * 后台用户会话 Cookie 名

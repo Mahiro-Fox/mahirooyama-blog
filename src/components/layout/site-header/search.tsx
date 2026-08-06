@@ -17,8 +17,9 @@ import {
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
 import { Link } from '@/components/shared/link';
-import { SearchResult, useSearch } from '@/hooks/use-search';
+import { useSearch } from '@/hooks/use-search';
 import { useT } from '@/i18n/dictionary-provider';
+import type { SearchResult } from '@/lib/search';
 import { trackEvent } from '@/utils/tracker';
 
 export function Search() {

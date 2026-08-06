@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { getPublicGallery } from '@/actions/admin/gallery-actions';
-import { BlurFade } from '@/components/shadcn-ui/blur-fade';
+import { BlurFade } from '@/components/magicui/blur-fade';
 import {
   Breadcrumb,
   BreadcrumbItem,

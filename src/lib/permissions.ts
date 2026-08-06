@@ -7,7 +7,7 @@ import { verifyAuth } from '@/lib/admin-auth';
 /**
  * 权限检查结果接口
  */
-export interface PermissionCheckResult {
+interface PermissionCheckResult {
   allowed: boolean;
   user?: User;
   response?: NextResponse;
@@ -65,16 +65,3 @@ export async function requirePermission(
   return { allowed: true, user };
 }
 
-/**
- * 验证管理员权限的辅助函数 (Next.js Middleware 或 Server Action 中使用)
- * 这是一个简化的包装，适用于大多数情况
- */
-export async function validateAdmin(): Promise<User | null> {
-  const payload = await verifyAuth();
-  if (!payload.success) return null;
-
-  const user = await userStore.getById(payload.userId as string);
-  if (!user) return null;
-
-  return user;
-}

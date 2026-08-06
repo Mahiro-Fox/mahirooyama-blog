@@ -4,7 +4,7 @@ import { Midi } from '@tonejs/midi';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MidiFile } from '@/lib/midi-files';
 
-export interface MidiPlayerState {
+interface MidiPlayerState {
   currentPlayingId: string | null;
   isPlaying: boolean;
   isLoading: boolean;
@@ -14,7 +14,7 @@ export interface MidiPlayerState {
   midiOutputs: string[];
 }
 
-export interface MidiPlayerActions {
+interface MidiPlayerActions {
   play: (file: MidiFile) => Promise<void>;
   stop: () => void;
   togglePlay: (file: MidiFile) => void;

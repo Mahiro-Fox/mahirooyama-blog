@@ -2,7 +2,7 @@
 
 import { siteConfig } from '@/config';
 import { ChevronRightIcon } from 'lucide-react';
-import { BlurFade } from '@/components/shadcn-ui/blur-fade';
+import { BlurFade } from '@/components/magicui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
 import { Link } from '@/components/shared/link';
 import { LinkCard } from '@/components/shared/link-card';

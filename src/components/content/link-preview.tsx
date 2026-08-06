@@ -42,7 +42,7 @@ function getSlugFromUrl(url: string): string {
   }
 }
 
-export function LinkCard({
+function LinkCard({
   url,
   title,
   description,

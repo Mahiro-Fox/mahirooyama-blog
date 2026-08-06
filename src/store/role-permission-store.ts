@@ -67,13 +67,6 @@ async function writeRolePermissions(
 }
 
 /**
- * 清除缓存（用于强制重新加载）
- */
-export function clearRolePermissionsCache(): void {
-  cachedRolePermissions = null;
-}
-
-/**
  * 角色权限存储接口
  */
 export const rolePermissionStore = {

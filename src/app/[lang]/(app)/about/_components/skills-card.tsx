@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Marquee } from '@/components/shadcn-ui/marquee';
+import { Marquee } from '@/components/magicui/marquee';
 import { SkillsContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
 

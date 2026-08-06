@@ -14,47 +14,6 @@ type AdminSessionPayload = JWTPayload & {
   sessionId?: string;
 };
 
-export type CurrentAdminUser = {
-  id: string;
-  username: string;
-  avatar: string;
-  role: string;
-};
-
-export async function getCurrentAdminUser(): Promise<CurrentAdminUser | null> {
-  try {
-    const cookieStore = await cookies();
-    const tokenCookie = cookieStore.get(ADMIN_SESSION_COOKIE);
-    if (!tokenCookie?.value) return null;
-
-    const payload = await verifyJwtToken(tokenCookie.value);
-    if (!payload) return null;
-
-    if (!payload.userId || !payload.username) return null;
-
-    // Note: We don't check sessionStore.exists() here because
-    // in dev mode (pnpm dev), Server Components may run in different
-    // processes where the in-memory sessionStore is not shared.
-    // The JWT signature verification is sufficient for Server Components.
-    // Session validation (single-device login) is enforced in API Routes.
-
-    // JWT 仅作为身份凭证；头像/用户名/角色等展示信息以 userStore 中的最新数据为准，
-    // 避免 token 中的字段在用户更新后过期（例如头像上传后刷新页面回退到旧值）。
-    const freshUser = await userStore.getById(String(payload.userId));
-    if (!freshUser) return null;
-
-    return {
-      id: String(freshUser.id),
-      username: String(freshUser.username),
-      avatar: String(
-        freshUser.avatar || '/uploads/images/avatar/default-avatar.webp'
-      ),
-      role: String(freshUser.role || 'user'),
-    };
-  } catch {
-    return null;
-  }
-}
 
 export async function verifyAuth() {
   try {

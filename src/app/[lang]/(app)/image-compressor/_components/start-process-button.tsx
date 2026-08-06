@@ -2,7 +2,7 @@ import { UploadedFile } from '@/app/[lang]/(app)/image-compressor/_components/im
 import { ProcessedImageResult } from '@/app/[lang]/(app)/image-compressor/_components/process-status';
 import { Zap } from 'lucide-react';
 import React from 'react';
-import { Spinner } from '@/components/shadcn-ui/spinner';
+import { Spinner } from '@/components/shared/spinner';
 import { useT } from '@/i18n/dictionary-provider';
 
 interface StartProcessButtonProps {

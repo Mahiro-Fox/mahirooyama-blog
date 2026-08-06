@@ -58,7 +58,7 @@ import {
   InputGroupAddon,
   InputGroupButton,
   InputGroupTextarea,
-} from '@/components/shadcn-ui/input-group';
+} from '@/components/shared/input-group';
 import {
   Select,
   SelectContent,
@@ -66,7 +66,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/shadcn-ui/select';
-import { Spinner } from '@/components/shadcn-ui/spinner';
+import { Spinner } from '@/components/shared/spinner';
 import {
   Tooltip,
   TooltipContent,

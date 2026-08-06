@@ -19,7 +19,7 @@ import {
   validateSlug,
   writeFileAtomic,
 } from '@/utils/file-utils';
-import { isPortraitImage } from '@/utils/image-utils';
+import { isPortraitImage } from '@/lib/image-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('GalleryActions');

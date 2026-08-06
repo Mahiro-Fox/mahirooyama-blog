@@ -46,7 +46,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
-import { Spinner } from '@/components/shadcn-ui/spinner';
+import { Spinner } from '@/components/shared/spinner';
 import { Link } from '@/components/shared/link';
 import { useT } from '@/i18n/dictionary-provider';
 import { conversationLocalStorage } from '@/lib/conversation-local-storage';

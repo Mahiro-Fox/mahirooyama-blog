@@ -11,7 +11,7 @@ import type { ActionResponse } from '@/utils/action-response';
  * 页面只需提供 server actions 和表单渲染逻辑。
  */
 
-export interface UseCrudConfig<
+interface UseCrudConfig<
   T,
   CreateInput,
   UpdateInput = Partial<CreateInput>,
@@ -63,7 +63,7 @@ export interface UseCrudConfig<
   initialData?: T[];
 }
 
-export interface UseCrudReturn<
+interface UseCrudReturn<
   T,
   CreateInput,
   UpdateInput = Partial<CreateInput>,

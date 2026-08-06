@@ -1,4 +1,3 @@
-// app/actions/set-locale.ts
 'use server';
 
 import { cookies } from 'next/headers';

@@ -7,7 +7,7 @@ import { tagStore } from '@/store/tag-store';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getHomeBannerImages } from '@/actions/home-banner';
-import { BlurFade } from '@/components/shadcn-ui/blur-fade';
+import { BlurFade } from '@/components/magicui/blur-fade';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
 import { Gallery } from '@/lib/gallery';
 

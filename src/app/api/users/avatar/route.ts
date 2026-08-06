@@ -6,7 +6,7 @@ import { AVATAR_DIR } from '@/constant/dir';
 import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import { verifyAuth } from '@/lib/admin-auth';
 import { ensureDirectory } from '@/utils/file-utils';
-import { processAndSaveImage } from '@/utils/image-utils';
+import { processAndSaveImage } from '@/lib/image-utils';
 
 // POST /api/users/avatar - 上传用户头像
 export async function POST(request: NextRequest) {

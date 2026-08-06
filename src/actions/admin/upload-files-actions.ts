@@ -14,7 +14,7 @@ import {
   ensureDirectory,
   isPathSafe,
 } from '@/utils/file-utils';
-import { processAndSaveImage } from '@/utils/image-utils';
+import { processAndSaveImage } from '@/lib/image-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('UploadFilesActions');

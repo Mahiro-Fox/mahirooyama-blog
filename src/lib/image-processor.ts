@@ -260,41 +260,6 @@ export async function processImageBuffer(
   }
 }
 
-/**
- * 批量处理多张图片
- *
- * @param imageBuffers - 图片 Buffer 数组
- * @param options - 图片处理配置选项（所有图片使用相同配置）
- * @returns Promise<ImageProcessResult[]> - 处理结果数组
- */
-export async function processMultipleImages(
-  imageBuffers: Buffer[],
-  options: ImageProcessOptions
-): Promise<ImageProcessResult[]> {
-  const results: ImageProcessResult[] = [];
-
-  for (let i = 0; i < imageBuffers.length; i++) {
-    try {
-      const result = await processImageBuffer(imageBuffers[i], options);
-      results.push(result);
-    } catch {
-      // 单张图片处理失败不影响其他图片
-      // 将错误信息作为特殊结果返回
-      results.push({
-        buffer: Buffer.alloc(0),
-        metadata: {
-          width: 0,
-          height: 0,
-          format: 'error',
-          size: 0,
-          isAnimated: false,
-        },
-      });
-    }
-  }
-
-  return results;
-}
 
 /**
  * 批量处理多张图片（生成器模式，支持实时返回结果）

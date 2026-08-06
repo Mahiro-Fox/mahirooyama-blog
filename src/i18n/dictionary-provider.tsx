@@ -7,7 +7,7 @@ import { setDictionary } from './runtime';
 const DictionaryContext = createContext({});
 
 /**
- * 把当前页的字典注入 React 树（供 useT/useDictionary 使用），
+ * 把当前页的字典注入 React 树（供 useT 使用），
  * 同时同步到客户端 runtime 单例（供非 React 代码 t() 使用）。
  *
  * 服务端组件中按页取字典后包一层即可：
@@ -32,10 +32,6 @@ export function DictionaryProvider({
       {children}
     </DictionaryContext.Provider>
   );
-}
-
-export function useDictionary() {
-  return useContext(DictionaryContext);
 }
 
 type TransOptions = Record<string, string | number>;

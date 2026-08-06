@@ -2,18 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import { searchContent } from '@/actions/search';
+import type { SearchResult } from '@/lib/search';
 import { debounce } from '@/utils/utils';
-
-export type SearchResult = {
-  type: 'blog' | 'gallery';
-  title: string;
-  description: string;
-  slug: string;
-  thumbnail?: string;
-  tags?: string[];
-  lastUpdated: string;
-  matchScore: number;
-};
 
 /**
  * Search hook

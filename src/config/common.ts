@@ -20,14 +20,6 @@ import {
   Video,
 } from 'lucide-react';
 
-// 图片压缩配置
-export const COMPRESSION_CONFIG = {
-  quality: 80, // WebP 质量 0-100
-  maxWidth: 1920, // 最大宽度限制
-  maxHeight: 1920, // 最大高度限制
-  effort: 4, // 压缩 effort (0-6, 越高越慢但更小)
-};
-
 export const siteConfig = {
   name: 'Mahirooyama Blog',
   description: "this is mahirooyama's blog, welcome to visit!",
@@ -45,7 +37,7 @@ export const siteConfig = {
 
 type Category = 'content' | 'tools' | 'admin' | 'other';
 
-export interface PageRouteConfig {
+interface PageRouteConfig {
   name: string;
   icon: LucideIcon;
   category?: Category;

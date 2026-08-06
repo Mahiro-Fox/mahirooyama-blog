@@ -7,7 +7,6 @@ export const GALLERY_DIR = path.join(UPLOADS_DIR, 'content', 'gallery');
 export const AVATAR_DIR = path.join(UPLOADS_DIR, 'images', 'avatar');
 export const PHOTO_DIR = path.join(UPLOADS_DIR, 'images', 'gallery');
 export const MIDI_DIR = path.join(UPLOADS_DIR, 'midisongs');
-export const MUSIC_DIR = path.join(UPLOADS_DIR, 'music');
 
 export const TAGS_FILE = path.join(DATA_DIR, 'tags.json');
 export const BUGS_FILE = path.join(DATA_DIR, 'bugs.json');

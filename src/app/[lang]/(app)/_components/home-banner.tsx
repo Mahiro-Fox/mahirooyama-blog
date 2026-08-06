@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { AuroraText } from '@/components/shadcn-ui/aurora-text';
+import { AuroraText } from '@/components/magicui/aurora-text';
 import { FadeCarousel } from '@/components/shared/fade-carousel';
 import {
   imageSizes,

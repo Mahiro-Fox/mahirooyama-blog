@@ -21,7 +21,7 @@ import { Button } from '@/components/shadcn-ui/button';
 import {
   ButtonGroup,
   ButtonGroupText,
-} from '@/components/shadcn-ui/button-group';
+} from '@/components/shared/button-group';
 import {
   Tooltip,
   TooltipContent,
