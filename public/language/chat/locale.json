@@ -24,7 +24,13 @@
     "chat.load_conversation_failed": "Failed to load conversation",
     "chat.delete_conversation": "Delete conversation",
     "chat.conversation_deleted": "Conversation deleted",
-    "chat.delete_conversation_failed": "Failed to delete conversation"
+    "chat.delete_conversation_failed": "Failed to delete conversation",
+    "chat.delete_confirm_title": "Delete this conversation?",
+    "chat.delete": "Delete",
+    "chat.cancel": "Cancel",
+    "chat.deleting": "Deleting...",
+    "chat.rename_conversation": "Rename",
+    "chat.update_title_failed": "Failed to update title"
   },
   "cn": {
     "chat.title": "mahiro 的聊天机器人",
@@ -51,6 +57,12 @@
     "chat.load_conversation_failed": "加载对话失败",
     "chat.delete_conversation": "删除对话",
     "chat.conversation_deleted": "对话已删除",
-    "chat.delete_conversation_failed": "删除对话失败"
+    "chat.delete_conversation_failed": "删除对话失败",
+    "chat.delete_confirm_title": "确定要删除该对话吗？",
+    "chat.delete": "删除",
+    "chat.cancel": "取消",
+    "chat.deleting": "删除中...",
+    "chat.rename_conversation": "重命名",
+    "chat.update_title_failed": "更新标题失败"
   }
 }

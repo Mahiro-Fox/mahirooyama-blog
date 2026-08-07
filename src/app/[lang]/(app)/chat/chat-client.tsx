@@ -46,8 +46,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
-import { Spinner } from '@/components/shared/spinner';
 import { Link } from '@/components/shared/link';
+import { Spinner } from '@/components/shared/spinner';
 import { useT } from '@/i18n/dictionary-provider';
 import { conversationLocalStorage } from '@/lib/conversation-local-storage';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
@@ -113,8 +113,8 @@ export function ChatClient({ isUserAuth }: ChatClientProps) {
       if (!isUserAuth && newConvId) {
         try {
           conversationLocalStorage.saveMessages(newConvId, allMessages);
-        } catch {
-          // silent
+        } catch (err) {
+          console.error('Error saving conversation messages:', err);
         }
       }
     },

@@ -5,6 +5,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import {
   convertToModelMessages,
   createUIMessageStreamResponse,
+  generateText,
   LanguageModel,
   streamText,
   toUIMessageStream,
@@ -36,6 +37,34 @@ function getModel(provider?: string): LanguageModel {
       return openrouter(process.env.OPENROUTER_MODEL);
     case 'deepseek':
       return deepseek('deepseek-v4-flash');
+  }
+}
+
+export async function generateTitle(
+  firstUserMessage: string,
+  provider?: string
+): Promise<string> {
+  try {
+    const { text } = await generateText({
+      model: getModel(provider),
+      prompt: `Based on the following user message, generate a concise title (max 15 words, in the same language as the user's message) for a conversation. Only output the title, nothing else — no quotes, no prefixes, no line breaks.
+
+User message: "${firstUserMessage.slice(0, 300)}"
+
+Title:`,
+      temperature: 0.5,
+    });
+    const cleaned = text
+      .trim()
+      .replace(/^["'「『]|["'」』]$/g, '')
+      .trim();
+    return cleaned.length > 50
+      ? cleaned.slice(0, 50) + '...'
+      : cleaned || firstUserMessage.slice(0, 30) + '...';
+  } catch (error) {
+    console.error('Error generating title:', error);
+    // 生成失败时退回到截取原文
+    return firstUserMessage.slice(0, 30) + '...';
   }
 }
 
@@ -133,8 +162,37 @@ export async function POST(req: Request) {
             activeConversationId,
             allMessages
           );
-        } catch {
+
+          // 新建对话且首次 AI 回复后，用 AI 自动生成标题
+          const conv = await conversationStore.get(
+            userId,
+            activeConversationId
+          );
+          // 新建对话且首次 AI 回复后，用 AI 自动生成标题
+          if (conv && conv.messages.length === 2) {
+            const firstUserMsg = messages.find((m) => m.role === 'user');
+            const firstUserText =
+              firstUserMsg?.parts?.find((p) => p.type === 'text')?.text ?? '';
+
+            // 仅当用户输入非空时才生成标题
+            if (firstUserText) {
+              // 不 await，后台异步生成标题，不阻塞响应
+              generateTitle(firstUserText, body.provider)
+                .then((title) => {
+                  conversationStore.updateTitle(
+                    userId,
+                    activeConversationId,
+                    title
+                  );
+                })
+                .catch((error) => {
+                  console.error('Error updating title:', error);
+                });
+            }
+          }
+        } catch (error) {
           // 持久化失败不影响响应
+          console.error('Error saving messages:', error);
         }
       }
     },

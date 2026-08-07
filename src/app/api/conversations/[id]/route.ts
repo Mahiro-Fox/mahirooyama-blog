@@ -37,3 +37,32 @@ export async function DELETE(
 
   return NextResponse.json({ success: true });
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await verifyUserAuth();
+  if (!auth.success) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const body = (await request.json()) as { title?: string };
+
+  if (!body.title || typeof body.title !== 'string') {
+    return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+  }
+
+  const trimmed = body.title.trim();
+  if (trimmed.length === 0 || trimmed.length > 100) {
+    return NextResponse.json(
+      { error: 'Title must be 1-100 characters' },
+      { status: 400 }
+    );
+  }
+
+  await conversationStore.updateTitle(auth.userId as string, id, trimmed);
+
+  return NextResponse.json({ success: true, title: trimmed });
+}

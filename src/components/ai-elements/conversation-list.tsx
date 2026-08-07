@@ -1,10 +1,18 @@
 'use client';
 
 import { ConversationSummary } from '@/store/conversation-store';
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/shadcn-ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/shadcn-ui/dialog';
+import { Input } from '@/components/shadcn-ui/input';
 import { useT } from '@/i18n/dictionary-provider';
 import {
   conversationLocalStorage,
@@ -38,6 +46,12 @@ export function ConversationList({
   >([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // 编辑状态
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const editInputRef = useRef<HTMLInputElement>(null);
+  // 删除确认弹窗
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -65,6 +79,9 @@ export function ConversationList({
 
   const handleSelect = useCallback(
     async (id: string) => {
+      // 编辑中不触发选择
+      if (editingId) return;
+
       try {
         if (isUserAuth) {
           const res = await fetch(`/api/conversations/${id}`);
@@ -82,12 +99,76 @@ export function ConversationList({
         toast.error(t('chat.load_conversation_failed'));
       }
     },
-    [isUserAuth, onSelect, t]
+    [isUserAuth, onSelect, t, editingId]
   );
 
-  const handleDelete = useCallback(
-    async (id: string, e: React.MouseEvent) => {
+  // === 编辑标题 ===
+  const startEdit = useCallback(
+    (id: string, currentTitle: string, e: React.MouseEvent) => {
       e.stopPropagation();
+      setEditingId(id);
+      setEditValue(currentTitle);
+      // 等下一帧 input 挂载后聚焦
+      requestAnimationFrame(() => editInputRef.current?.focus());
+    },
+    []
+  );
+
+  const saveEdit = useCallback(async () => {
+    if (!editingId) return;
+    const trimmed = editValue.trim();
+    if (!trimmed) {
+      setEditingId(null);
+      return;
+    }
+
+    try {
+      if (isUserAuth) {
+        const res = await fetch(`/api/conversations/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: trimmed }),
+        });
+        if (res.ok) {
+          setSummaries((prev) =>
+            prev.map((s) => (s.id === editingId ? { ...s, title: trimmed } : s))
+          );
+        } else {
+          toast.error(t('chat.update_title_failed'));
+        }
+      } else {
+        conversationLocalStorage.updateTitle(editingId, trimmed);
+        setSummaries((prev) =>
+          prev.map((s) => (s.id === editingId ? { ...s, title: trimmed } : s))
+        );
+      }
+    } catch {
+      toast.error(t('chat.update_title_failed'));
+    } finally {
+      setEditingId(null);
+    }
+  }, [editingId, editValue, isUserAuth, t]);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+  }, []);
+
+  const handleEditKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveEdit();
+      } else if (e.key === 'Escape') {
+        cancelEdit();
+      }
+    },
+    [saveEdit, cancelEdit]
+  );
+
+  // === 删除 ===
+  const handleDelete = useCallback(
+    async (id: string) => {
+      setConfirmDeleteId(null);
       setDeletingId(id);
       const isCurrent = id === currentConversationId;
       try {
@@ -154,6 +235,9 @@ export function ConversationList({
           <ul className="space-y-0.5 p-2">
             {summaries.map((item) => {
               const isActive = item.id === currentConversationId;
+              const isEditing = item.id === editingId;
+              const isDeleting = deletingId === item.id;
+
               return (
                 <li key={item.id}>
                   <div
@@ -166,23 +250,63 @@ export function ConversationList({
                     )}
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium">
-                        {item.title || t('chat.untitled_conversation')}
-                      </div>
-                      <div className="text-muted-foreground text-xs">
-                        {formatTime(item.updatedAt)}
-                      </div>
+                      {isEditing ? (
+                        <Input
+                          ref={editInputRef}
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={saveEdit}
+                          onKeyDown={handleEditKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-7 text-sm"
+                          maxLength={100}
+                        />
+                      ) : (
+                        <>
+                          <div className="truncate font-medium">
+                            {item.title || t('chat.untitled_conversation')}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {isDeleting
+                              ? t('chat.deleting')
+                              : formatTime(item.updatedAt)}
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={(e) => handleDelete(item.id, e)}
-                      disabled={deletingId === item.id}
-                      className="text-muted-foreground hover:text-destructive opacity-0 transition-opacity group-hover:opacity-100 disabled:opacity-50"
-                      title={t('chat.delete_conversation')}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
+                    {!isEditing && (
+                      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={(e) =>
+                            startEdit(
+                              item.id,
+                              item.title || t('chat.untitled_conversation'),
+                              e
+                            )
+                          }
+                          disabled={isDeleting}
+                          className="text-muted-foreground hover:text-foreground h-6 w-6"
+                          title={t('chat.rename_conversation')}
+                        >
+                          <Pencil className="size-3" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteId(item.id);
+                          }}
+                          disabled={isDeleting}
+                          className="text-muted-foreground hover:text-destructive h-6 w-6"
+                          title={t('chat.delete_conversation')}
+                        >
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </li>
               );
@@ -190,6 +314,33 @@ export function ConversationList({
           </ul>
         )}
       </div>
+
+      {/* 删除确认弹窗 */}
+      <Dialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDeleteId(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('chat.delete_confirm_title')}</DialogTitle>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>
+              {t('chat.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (confirmDeleteId) handleDelete(confirmDeleteId);
+              }}
+            >
+              {t('chat.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

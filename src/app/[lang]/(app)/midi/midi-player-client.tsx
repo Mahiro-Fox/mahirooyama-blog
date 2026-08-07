@@ -54,6 +54,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
     [initialFiles]
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debounceSearch = useCallback(debounce(search, 300), [search]);
 
   const {

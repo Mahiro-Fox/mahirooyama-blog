@@ -133,4 +133,17 @@ export const conversationLocalStorage = {
     delete all[conversationId];
     writeAll(all);
   },
+
+  updateTitle(conversationId: string, title: string): void {
+    const all = readAll();
+    const existing = all[conversationId];
+    if (!existing) return;
+
+    all[conversationId] = {
+      ...existing,
+      title,
+      updatedAt: new Date().toISOString(),
+    };
+    writeAll(all);
+  },
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { Plus, SearchIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCallback, useState } from 'react';
 import {
@@ -28,7 +28,7 @@ import {
 import { Input } from '@/components/shadcn-ui/input';
 import { Link } from '@/components/shared/link';
 import { MidiAdminFile } from '@/lib/midi-files';
-import { formatDate, formatSize } from '@/utils/utils';
+import { debounce, formatDate, formatSize } from '@/utils/utils';
 
 // 表格列定义
 const columns: Column<MidiAdminFile>[] = [
@@ -62,7 +62,8 @@ interface MidiClientProps {
 }
 
 export default function MidiClient({ initialFiles }: MidiClientProps) {
-  const [files, setFiles] = useState<MidiAdminFile[]>(initialFiles);
+  const [filteredFiles, setFilteredFiles] =
+    useState<MidiAdminFile[]>(initialFiles);
   const [isUploading, setIsUploading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<MidiAdminFile | null>(null);
@@ -75,11 +76,30 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
   const refreshFiles = useCallback(async () => {
     const result = await adminGetMidiFiles();
     if (result.success) {
-      setFiles(result.data);
+      setFilteredFiles(result.data);
     } else {
       toast.error(result.error);
     }
   }, []);
+
+  const search = useCallback(
+    (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed) {
+        setFilteredFiles(initialFiles);
+        return;
+      }
+
+      const q = trimmed.toLowerCase();
+      setFilteredFiles(
+        initialFiles.filter((file) => file.name.toLowerCase().includes(q))
+      );
+    },
+    [initialFiles]
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debounceSearch = useCallback(debounce(search, 300), [search]);
 
   // 处理文件选择和上传（使用 FileUploadTrigger 组件）
   const handleFileSelect = async (files: FileList) => {
@@ -184,11 +204,34 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
     setRenameDialogOpen(true);
   };
 
+  // 创建搜索操作项
+  const createSearchAction = (search: (query: string) => void) => {
+    return {
+      label: '',
+      icon: (
+        <>
+          <input
+            className="border-none bg-transparent outline-none"
+            type="text"
+            onChange={(e) => search(e.target.value)}
+            placeholder="搜索文件名"
+          />
+          <SearchIcon className="ml-2 h-4 w-4" />
+        </>
+      ),
+      onClick: () => {},
+      variant: 'outline' as const,
+    };
+  };
+
   return (
     <AdminPageLayout
       title="MIDI 文件管理"
       description="管理 MIDI 音乐文件"
-      actions={[createRefreshAction(refreshFiles)]}
+      actions={[
+        createRefreshAction(refreshFiles),
+        createSearchAction(debounceSearch),
+      ]}
       primaryActions={[
         <FileUploadTrigger
           key="upload"
@@ -204,7 +247,7 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
       ]}
     >
       <DataTable
-        data={files}
+        data={filteredFiles}
         columns={columns}
         keyExtractor={(file) => file.slug}
         onDelete={openDeleteDialog}

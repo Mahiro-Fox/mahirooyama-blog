@@ -251,4 +251,24 @@ export const conversationStore = {
       }
     }
   },
+
+  async updateTitle(
+    userId: string,
+    conversationId: string,
+    title: string
+  ): Promise<void> {
+    validateIds(userId, conversationId);
+
+    const filePath = getConversationPath(userId, conversationId);
+
+    await withWriteLock(filePath, async () => {
+      const data = await fs.readFile(filePath, 'utf-8');
+      const conv = JSON.parse(data) as Conversation;
+      conv.title = title;
+      conv.updatedAt = new Date().toISOString();
+      await writeFileAtomic(filePath, JSON.stringify(conv, null, 2), {
+        encoding: 'utf-8',
+      });
+    });
+  },
 };
