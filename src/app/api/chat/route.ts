@@ -11,6 +11,7 @@ import {
   toUIMessageStream,
   UIMessage,
 } from 'ai';
+import { DEFAULT_PROVIDER, PROVIDERS, ProviderValue } from '@/config/providers';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { verifyUserAuth } from '@/lib/user-auth';
 
@@ -20,33 +21,28 @@ const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-const ALLOWED_PROVIDERS = ['deepseek', 'openrouter'] as const;
-type Provider = (typeof ALLOWED_PROVIDERS)[number];
-
-function getModel(provider?: string): LanguageModel {
+function getModel(provider: ProviderValue, model: string): LanguageModel {
   // 白名单校验，防止乱传字符串导致运行时报错，也避免以后被恶意 body 打穿
-  const selected: Provider = ALLOWED_PROVIDERS.includes(provider as Provider)
-    ? (provider as Provider)
-    : 'openrouter';
+  const selectedProvider = PROVIDERS.find((p) => p.value === provider)
+    ? provider
+    : DEFAULT_PROVIDER;
 
-  switch (selected) {
+  switch (selectedProvider) {
     case 'openrouter':
-      if (!process.env.OPENROUTER_MODEL) {
-        throw new Error('OPENROUTER_MODEL is not set');
-      }
-      return openrouter(process.env.OPENROUTER_MODEL);
+      return openrouter(model);
     case 'deepseek':
-      return deepseek('deepseek-v4-flash');
+      return deepseek(model);
   }
 }
 
 export async function generateTitle(
   firstUserMessage: string,
-  provider?: string
+  provider: ProviderValue,
+  model: string
 ): Promise<string> {
   try {
     const { text } = await generateText({
-      model: getModel(provider),
+      model: getModel(provider, model),
       prompt: `Based on the following user message, generate a concise title (max 15 words, in the same language as the user's message) for a conversation. Only output the title, nothing else — no quotes, no prefixes, no line breaks.
 
 User message: "${firstUserMessage.slice(0, 300)}"
@@ -71,16 +67,15 @@ Title:`,
 export async function POST(req: Request) {
   const body = (await req.json()) as {
     messages: UIMessage[];
-    provider?: string;
+    provider: ProviderValue;
+    model: string;
     conversationId?: string;
   };
   const { messages, conversationId } = body;
 
-  const selectedProvider: Provider = ALLOWED_PROVIDERS.includes(
-    body.provider as Provider
-  )
-    ? (body.provider as Provider)
-    : 'openrouter';
+  const selectedProvider = PROVIDERS.find((p) => p.value === body.provider)
+    ? body.provider
+    : DEFAULT_PROVIDER;
 
   // === Token 校验（后端兜底） ===
   const estimatedTokens = estimateTokens(messages);
@@ -136,7 +131,7 @@ export async function POST(req: Request) {
 
   // === 调用模型 ===
   const result = streamText({
-    model: getModel(body.provider),
+    model: getModel(body.provider, body.model),
     messages: await convertToModelMessages(messages),
   });
 
@@ -177,7 +172,7 @@ export async function POST(req: Request) {
             // 仅当用户输入非空时才生成标题
             if (firstUserText) {
               // 不 await，后台异步生成标题，不阻塞响应
-              generateTitle(firstUserText, body.provider)
+              generateTitle(firstUserText, body.provider, body.model)
                 .then((title) => {
                   conversationStore.updateTitle(
                     userId,

@@ -48,20 +48,10 @@ import {
 } from '@/components/shadcn-ui/sheet';
 import { Link } from '@/components/shared/link';
 import { Spinner } from '@/components/shared/spinner';
+import { DEFAULT_PROVIDER, PROVIDERS } from '@/config/providers';
 import { useT } from '@/i18n/dictionary-provider';
 import { conversationLocalStorage } from '@/lib/conversation-local-storage';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
-
-const PROVIDERS: {
-  label: string;
-  value: 'deepseek' | 'openrouter';
-  lockedWhenNoAuth?: boolean;
-}[] = [
-  { label: 'DeepSeek', value: 'deepseek', lockedWhenNoAuth: true },
-  { label: 'OpenRouter (Free)', value: 'openrouter' },
-];
-
-type Provider = 'deepseek' | 'openrouter';
 
 interface ChatClientProps {
   isUserAuth: boolean;
@@ -70,7 +60,10 @@ interface ChatClientProps {
 export function ChatClient({ isUserAuth }: ChatClientProps) {
   const t = useT();
   const [input, setInput] = useState('');
-  const [provider, setProvider] = useState<Provider>('openrouter');
+  const [provider, setProvider] = useState({
+    provider: DEFAULT_PROVIDER,
+    model: PROVIDERS.find((p) => p.value === DEFAULT_PROVIDER)?.models[0].value,
+  });
   const [conversationId, setConversationId] = useState<string | undefined>(
     undefined
   );
@@ -81,7 +74,11 @@ export function ChatClient({ isUserAuth }: ChatClientProps) {
     () =>
       new DefaultChatTransport({
         api: '/api/chat',
-        body: () => ({ provider, conversationId }),
+        body: () => ({
+          provider: provider.provider,
+          model: provider.model,
+          conversationId,
+        }),
       }),
     [provider, conversationId]
   );
@@ -323,38 +320,43 @@ export function ChatClient({ isUserAuth }: ChatClientProps) {
           </PromptInputBody>
           <PromptInputFooter>
             <Select
-              value={provider}
-              onValueChange={(value) => setProvider(value as Provider)}
+              value={JSON.stringify(provider)}
+              onValueChange={(value) => setProvider(JSON.parse(value))}
               disabled={isBusy}
             >
               <SelectTrigger className="cursor-pointer transition-opacity disabled:cursor-not-allowed disabled:opacity-50">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>{t('chat.provider')}</SelectLabel>
-                  {PROVIDERS.map((item) => {
-                    const isLocked = item.lockedWhenNoAuth && !isUserAuth;
-                    return (
-                      <SelectItem
-                        key={item.value}
-                        value={item.value}
-                        disabled={isLocked}
-                        className="cursor-pointer"
-                      >
-                        <span className="flex items-center gap-1">
-                          {isLocked && <Lock className="h-3 w-3" />}
-                          {item.label}
-                          {isLocked && (
-                            <span className="text-muted-foreground text-xs">
-                              ({t('chat.deepseek_locked')})
-                            </span>
-                          )}
-                        </span>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectGroup>
+                {PROVIDERS.map((provider) => {
+                  const isLocked = provider.lockedWhenNoAuth && !isUserAuth;
+                  return (
+                    <SelectGroup key={provider.value}>
+                      <SelectLabel>{provider.label}</SelectLabel>
+                      {provider.models.map((model) => (
+                        <SelectItem
+                          key={model.value}
+                          value={JSON.stringify({
+                            provider: provider.value,
+                            model: model.value,
+                          })}
+                          disabled={isLocked}
+                          className="cursor-pointer"
+                        >
+                          <span className="flex items-center gap-1">
+                            {isLocked && <Lock className="h-3 w-3" />}
+                            {model.label}
+                            {isLocked && (
+                              <span className="text-muted-foreground text-xs">
+                                ({t('chat.deepseek_locked')})
+                              </span>
+                            )}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  );
+                })}
               </SelectContent>
             </Select>
 
