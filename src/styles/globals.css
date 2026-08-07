@@ -105,6 +105,17 @@
       transform: rotate(360deg);
     }
   }
+  --animate-up-down: up-down 1s ease-in-out infinite alternate;
+  @keyframes up-down {
+    from {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+    to {
+      transform: translate(-50%, 100%);
+      opacity: 0.5;
+    }
+  }
 }
 
 /* 滚动条整体 */

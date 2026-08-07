@@ -4,6 +4,7 @@ import { HomeBanner } from '@/app/[lang]/(app)/_components/home-banner';
 import Posts from '@/app/[lang]/(app)/_components/posts';
 import Tags from '@/app/[lang]/(app)/_components/tags';
 import { tagStore } from '@/store/tag-store';
+import { ChevronDown } from 'lucide-react';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getHomeBannerImages } from '@/actions/home-banner';
@@ -25,9 +26,15 @@ export default async function IndexPage() {
   return (
     <div className="relative flex w-full flex-1 flex-col">
       {/* Hero Banner - 100vh */}
-      {bannerData && (
-        <HomeBanner images={bannerData} initialIndex={initialIndex} />
-      )}
+      <section className="relative h-[calc(100vh-48px)] w-full md:h-[calc(100vh-64px)]">
+        {bannerData && (
+          <HomeBanner images={bannerData} initialIndex={initialIndex} />
+        )}
+        <ChevronDown
+          strokeWidth={4}
+          className="animate-up-down absolute right-[50%] bottom-12 z-10"
+        />
+      </section>
       <section className="py-8">
         <HeroCarousel galleries={galleries} />
       </section>
