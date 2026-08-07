@@ -88,7 +88,7 @@ export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
   };
 
   return (
-    <header className="bg-background sticky top-0 z-10 w-full">
+    <header className="bg-background sticky top-0 z-50 w-full">
       <div className="container-wrapper px-6">
         <div className="container flex h-12 items-center justify-between gap-2 border-b **:data-[slot=separator]:!h-4 md:h-16">
           <div className="flex items-center gap-2 md:flex-1 md:justify-end">

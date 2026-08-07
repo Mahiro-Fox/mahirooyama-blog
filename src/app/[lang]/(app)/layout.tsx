@@ -19,46 +19,44 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
       .replace(/<\/a>/g, '');
   const metaData = {
     title: {
-      title: {
-        default: siteConfig.name,
-        template: `%s | ${siteConfig.name}`,
-      },
-      metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
-      description,
-      alternates: {
-        types: {
-          'application/rss+xml': [
-            {
-              url: '/rss.xml',
-              title: `${siteConfig.name} RSS Feed`,
-            },
-          ],
-        },
-      },
-      keywords: homeDictionary['home.keywords'],
-      openGraph: {
-        type: 'website',
-        locale: 'zh_CN',
-        url: process.env.NEXT_PUBLIC_APP_URL!,
-        title: siteConfig.name,
-        description,
-        siteName: siteConfig.name,
-        images: [siteConfig.ogImage],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: siteConfig.name,
-        description,
-        images: [siteConfig.ogImage],
-        creator: '@Mahiro___Oyama',
-      },
-      icons: {
-        icon: '/favicon.ico',
-        shortcut: '/favicon-16x16.webp',
-        apple: '/apple-touch-icon.webp',
-      },
-      manifest: `${process.env.NEXT_PUBLIC_APP_URL}/site.webmanifest`,
+      default: siteConfig.name,
+      template: `%s | ${siteConfig.name}`,
     },
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
+    description,
+    alternates: {
+      types: {
+        'application/rss+xml': [
+          {
+            url: '/rss.xml',
+            title: `${siteConfig.name} RSS Feed`,
+          },
+        ],
+      },
+    },
+    keywords: homeDictionary['home.keywords'],
+    openGraph: {
+      type: 'website',
+      locale: 'zh_CN',
+      url: process.env.NEXT_PUBLIC_APP_URL!,
+      title: siteConfig.name,
+      description,
+      siteName: siteConfig.name,
+      images: [siteConfig.ogImage],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: siteConfig.name,
+      description,
+      images: [siteConfig.ogImage],
+      creator: '@Mahiro___Oyama',
+    },
+    icons: {
+      icon: '/favicon.ico',
+      shortcut: '/favicon-16x16.webp',
+      apple: '/apple-touch-icon.webp',
+    },
+    manifest: `${process.env.NEXT_PUBLIC_APP_URL}/site.webmanifest`,
   };
   return metaData;
 };
