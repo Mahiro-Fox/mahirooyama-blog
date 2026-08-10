@@ -71,17 +71,17 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
   }, [movies, searchQuery, selectedTag]);
 
   return (
-    <div className="to-slate-90 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800">
+    <div className="bg-background min-h-screen">
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
               placeholder={t('movies.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="border-slate-700 bg-slate-800 pl-10 text-white placeholder:text-gray-500 focus:border-orange-500 focus:ring-orange-500"
+              className="pl-10"
             />
           </div>
 
@@ -91,8 +91,8 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
               className={cn(
                 'rounded-full px-4 py-2 text-sm font-medium transition-colors',
                 !selectedTag
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+                  : 'bg-secondary text-foreground hover:bg-accent'
               )}
             >
               {t('movies.all')}
@@ -104,8 +104,8 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
                 className={cn(
                   'rounded-full px-4 py-2 text-sm font-medium transition-colors',
                   selectedTag === tag
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                    ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+                    : 'bg-secondary text-foreground hover:bg-accent'
                 )}
               >
                 {tag}
@@ -116,7 +116,9 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
 
         {filteredMovies.length === 0 ? (
           <div className="py-20 text-center">
-            <p className="text-lg text-gray-500">{t('movies.no_results')}</p>
+            <p className="text-muted-foreground text-lg">
+              {t('movies.no_results')}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -135,10 +137,11 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
                     className="h-full w-full object-cover"
                   />
 
+                  {/* 海报上方悬浮的暗色遮罩 — 保留以衬托白色文字 */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <div className="flex h-16 w-16 scale-0 transform items-center justify-center rounded-full bg-orange-500/90 shadow-lg transition-transform duration-300 group-hover:scale-100">
+                    <div className="flex h-16 w-16 scale-0 transform items-center justify-center rounded-full bg-[var(--primary)]/90 shadow-lg transition-transform duration-300 group-hover:scale-100">
                       <Play
                         className="ml-1 h-8 w-8 text-white"
                         fill="currentColor"
@@ -170,7 +173,7 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
                       {movie.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
-                          className="rounded bg-black/30 px-2 py-0.5 text-xs text-gray-300"
+                          className="rounded bg-black/30 px-2 py-0.5 text-xs text-gray-200"
                         >
                           {tag}
                         </span>
@@ -179,7 +182,7 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
                   </div>
 
                   <div className="absolute top-3 right-3">
-                    <Badge className="bg-orange-500 text-white">
+                    <Badge className="bg-[var(--primary)] text-[var(--primary-foreground)]">
                       {movie.year}
                     </Badge>
                   </div>
@@ -191,7 +194,7 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
 
         {filteredMovies.length > 0 && (
           <div className="mt-12 text-center">
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               {t('movies.total_movies', { count: filteredMovies.length })}
             </p>
           </div>

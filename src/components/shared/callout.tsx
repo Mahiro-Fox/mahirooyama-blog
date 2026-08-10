@@ -28,34 +28,30 @@ const calloutStyles: Record<
   info: {
     icon: InfoIcon,
     title: 'Info',
-    containerClasses:
-      'border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30',
-    iconClasses: 'text-blue-600 dark:text-blue-400',
-    titleClasses: 'text-blue-800 dark:text-blue-300',
+    containerClasses: 'border-blue-300/60 bg-blue-50/40',
+    iconClasses: 'text-blue-700',
+    titleClasses: 'text-blue-900',
   },
   note: {
     icon: FileTextIcon,
     title: 'Note',
-    containerClasses:
-      'border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30',
-    iconClasses: 'text-slate-600 dark:text-slate-400',
-    titleClasses: 'text-slate-800 dark:text-slate-300',
+    containerClasses: 'border-[var(--border)] bg-surface/60',
+    iconClasses: 'text-[var(--muted-foreground)]',
+    titleClasses: 'text-foreground',
   },
   warning: {
     icon: AlertTriangleIcon,
     title: 'Warning',
-    containerClasses:
-      'border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/30',
-    iconClasses: 'text-amber-600 dark:text-amber-400',
-    titleClasses: 'text-amber-800 dark:text-amber-300',
+    containerClasses: 'border-amber-300/60 bg-amber-50/40',
+    iconClasses: 'text-amber-700',
+    titleClasses: 'text-amber-900',
   },
   danger: {
     icon: XCircleIcon,
     title: 'Danger',
-    containerClasses:
-      'border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/30',
-    iconClasses: 'text-red-600 dark:text-red-400',
-    titleClasses: 'text-red-800 dark:text-red-300',
+    containerClasses: 'border-red-300/60 bg-red-50/40',
+    iconClasses: 'text-red-700',
+    titleClasses: 'text-red-900',
   },
 };
 

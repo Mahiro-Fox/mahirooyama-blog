@@ -13,7 +13,11 @@ export function MarqueeCard({ content }: MarqueeCardProps) {
   const repeatCount = content.repeat || 3;
   return (
     <motion.div
-      className="relative flex h-full w-full items-center overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 shadow-lg"
+      className="relative flex h-full w-full items-center overflow-hidden rounded-2xl px-6 shadow-lg"
+      style={{
+        background:
+          'linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 80%, white 20%))',
+      }}
       whileHover={{ scale: 1.01 }}
     >
       <div className="flex">

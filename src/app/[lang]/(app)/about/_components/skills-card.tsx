@@ -27,14 +27,10 @@ export function SkillsCard({ content, title }: SkillsCardProps) {
   const groups = splitSkills(content.skills || []);
   return (
     <motion.div
-      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-6 shadow-lg transition-colors dark:from-gray-900 dark:to-gray-800"
+      className="bg-card border-border relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl border p-6 shadow-lg transition-colors"
       whileHover={{ scale: 1.02 }}
     >
-      {title && (
-        <h3 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
-          {t(title)}
-        </h3>
-      )}
+      {title && <h3 className="mb-4 text-xl font-bold">{t(title)}</h3>}
       {groups.map((group, index) => (
         <Marquee
           key={index}
@@ -44,10 +40,10 @@ export function SkillsCard({ content, title }: SkillsCardProps) {
           {group.map((skill, index) => (
             <div
               key={`${skill.name}-${index}`}
-              className="flex cursor-pointer flex-col items-center justify-center rounded-xl bg-white/80 p-3 transition-all hover:scale-110 hover:rotate-3 dark:bg-gray-800/80"
+              className="bg-surface hover:bg-accent border-border flex cursor-pointer flex-col items-center justify-center rounded-xl border p-3 transition-all hover:scale-110 hover:rotate-3"
             >
-              <skill.icon className="mb-1.5 h-7 w-7 text-blue-600 dark:text-blue-400" />
-              <span className="text-center text-xs font-medium text-gray-700 dark:text-gray-300">
+              <skill.icon className="mb-1.5 h-7 w-7 text-[var(--primary)]" />
+              <span className="text-foreground text-center text-xs font-medium">
                 {t(skill.name)}
               </span>
             </div>

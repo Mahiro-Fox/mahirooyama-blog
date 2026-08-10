@@ -16,7 +16,8 @@ export default function Posts({ posts }: { posts: Blog[] }) {
     <section className="container-wrapper">
       <section className="container border-b py-6">
         <div className="flex flex-col gap-1 pb-6">
-          <h2 className="text-2xl font-medium tracking-tight">
+          <h2 className="flex items-center gap-3 text-2xl font-medium tracking-tight">
+            <span className="block h-5 w-1 rounded-full bg-[var(--primary)]" />
             {t('home.posts')}
           </h2>
         </div>
@@ -40,7 +41,7 @@ export default function Posts({ posts }: { posts: Blog[] }) {
           <Button asChild variant="ghost" className="h-9 px-2">
             <Link
               href="/page/blog/1"
-              className="group inline-flex items-center gap-2"
+              className="group inline-flex items-center gap-2 transition-colors hover:text-[var(--primary)]"
             >
               <span>{t('home.see_more_posts')}</span>
               <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />

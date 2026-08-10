@@ -1,10 +1,22 @@
 {
   "en": {
     "common.load_failed": "Failed to load content",
-    "common.retry": "Retry"
+    "common.retry": "Retry",
+    "theme.switcher_label": "Theme",
+    "theme.warm_paper": "Warm Paper",
+    "theme.celadon": "Celadon",
+    "theme.inkstone": "Inkstone",
+    "theme.forest": "Forest",
+    "theme.dusk": "Dusk"
   },
   "cn": {
     "common.load_failed": "加载失败",
-    "common.retry": "重试"
+    "common.retry": "重试",
+    "theme.switcher_label": "主题",
+    "theme.warm_paper": "暖纸",
+    "theme.celadon": "青瓷",
+    "theme.inkstone": "墨砚",
+    "theme.forest": "森林",
+    "theme.dusk": "暮霞"
   }
 }

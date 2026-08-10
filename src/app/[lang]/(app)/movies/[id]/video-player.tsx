@@ -252,12 +252,12 @@ export function VideoPlayer({
   }, [movieId, sources, currentSourceIndex, sourcesStatus]);
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-2xl">
+    <div className="bg-card relative aspect-video w-full overflow-hidden rounded-lg border border-border shadow-2xl">
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/80">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
           <div className="flex flex-col items-center">
-            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
-            <span className="text-sm text-gray-400">正在加载视频资源...</span>
+            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[var(--primary)] border-t-transparent" />
+            <span className="text-sm text-white/80">正在加载视频资源...</span>
           </div>
         </div>
       )}

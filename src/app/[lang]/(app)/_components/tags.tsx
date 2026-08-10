@@ -11,7 +11,8 @@ export default function Tags({ tags }: { tags: TagsData }) {
   return (
     <section className="flex flex-1 flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-medium tracking-tight">
+        <h2 className="flex items-center gap-3 text-2xl font-medium tracking-tight">
+          <span className="block h-5 w-1 rounded-full bg-[var(--primary)]" />
           {t('home.tags')}
         </h2>
       </div>
@@ -24,7 +25,7 @@ export default function Tags({ tags }: { tags: TagsData }) {
               <Link
                 key={tag.id}
                 href={`/tag/${key}/${tag.id}`}
-                className="hover:bg-muted flex cursor-pointer items-center justify-center gap-2 rounded-lg border p-2 transition-colors"
+                className="hover:bg-accent flex cursor-pointer items-center justify-center gap-2 rounded-lg border p-2 transition-colors hover:border-[var(--primary)]/40"
               >
                 <IconComponent className="size-4" />
                 {tag.name}

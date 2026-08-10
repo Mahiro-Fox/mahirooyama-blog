@@ -7,7 +7,9 @@ import { Trans } from '@/i18n/Trans';
 export function AboutCta() {
   const t = useT();
   return (
-    <div className="bg-surface text-surface-foreground flex flex-col gap-2 rounded-lg p-6 text-sm">
+    <div className="bg-surface text-surface-foreground relative flex flex-col gap-2 rounded-lg p-6 text-sm">
+      {/* 左侧朱色竖线 */}
+      <div className="absolute inset-y-4 left-0 w-0.5 rounded-full bg-[var(--primary)]/60" />
       <div className="text-base leading-tight font-semibold">
         {t('home.title')}
       </div>
@@ -20,7 +22,7 @@ export function AboutCta() {
                 href={siteConfig.links.vrchat}
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium underline underline-offset-4"
+                className="font-medium underline underline-offset-4 transition-colors hover:text-[var(--primary)]"
               >
                 {props.children}
               </a>
@@ -38,7 +40,7 @@ export function AboutCta() {
                 href={siteConfig.links.github}
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium underline underline-offset-4"
+                className="font-medium underline underline-offset-4 transition-colors hover:text-[var(--primary)]"
               >
                 {props.children}
               </a>

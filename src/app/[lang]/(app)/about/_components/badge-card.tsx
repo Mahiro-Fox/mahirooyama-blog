@@ -14,7 +14,11 @@ export function BadgeCard({ content, title }: BadgeCardProps) {
 
   return (
     <motion.div
-      className="relative flex h-full w-full items-center overflow-hidden rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-red-500 p-6 shadow-lg"
+      className="relative flex h-full w-full items-center overflow-hidden rounded-2xl p-6 shadow-lg"
+      style={{
+        background:
+          'linear-gradient(135deg, color-mix(in oklch, var(--primary) 80%, white 20%), color-mix(in oklch, var(--primary) 75%, black 25%))',
+      }}
       whileHover={{ scale: 1.02 }}
     >
       <div className="flex w-full items-center justify-between">

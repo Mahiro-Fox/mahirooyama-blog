@@ -2,10 +2,9 @@
 
 import type { UserRole } from '@/store/user-store';
 import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { adminLogout } from '@/actions/admin/logout';
 import { adminRevalidateAll } from '@/actions/admin/revalidate-all';
 import {
@@ -34,7 +33,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
-import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
 import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { adminRoutesConfig } from '@/config/common';
@@ -82,11 +80,6 @@ export default function AdminShell({
   const [forceConfirmPassword, setForceConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  const { setTheme, resolvedTheme } = useTheme();
-
-  const toggleTheme = useCallback(() => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-  }, [resolvedTheme, setTheme]);
   // 手动刷新缓存
   const handleRevalidate = async () => {
     setIsRevalidating(true);
@@ -460,10 +453,6 @@ export default function AdminShell({
               )}
             </div>
             <SwitchLanguage />
-            <AnimatedThemeToggler
-              onThemeChange={toggleTheme}
-              className="ml-auto"
-            />
           </div>
         </header>
         <main className="p-4 lg:p-6">{children}</main>

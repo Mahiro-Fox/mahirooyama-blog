@@ -26,7 +26,7 @@ export function LinkCard({
   isPortrait = false,
 }: LinkCardProps) {
   const renderVertical = () => (
-    <div className="group py-2 transition-colors duration-100 hover:text-blue-400">
+    <div className="group py-2 transition-colors duration-100 hover:text-[var(--primary)]">
       <Link href={link} aria-label={`Read more: ${title}`}>
         <div className="space-y-2">
           <LinkCardImage
@@ -50,7 +50,7 @@ export function LinkCard({
   );
 
   const renderHorizontalDesktop = () => (
-    <div className="hidden gap-4 transition-colors duration-100 hover:text-blue-400 md:flex">
+    <div className="hidden gap-4 transition-colors duration-100 hover:text-[var(--primary)] md:flex">
       <div className="relative w-[30%]">
         <LinkCardImage
           imageUrl={imageUrl}
@@ -101,7 +101,7 @@ export function LinkCard({
   );
 
   const renderHorizontal = () => (
-    <div className="group py-2 transition-colors duration-100 hover:text-blue-400">
+    <div className="group py-2 transition-colors duration-100 hover:text-[var(--primary)]">
       <Link href={link} aria-label={`Read more: ${title}`}>
         <div>
           {renderHorizontalDesktop()}
@@ -118,7 +118,7 @@ export function LinkCard({
   );
 
   const renderCompact = () => (
-    <div className="group px-1 py-0 transition-colors duration-100 hover:text-blue-400">
+    <div className="group px-1 py-0 transition-colors duration-100 hover:text-[var(--primary)]">
       <Link href={link} aria-label={`Read more: ${title}`}>
         {renderCompactLayout(
           'flex gap-2',

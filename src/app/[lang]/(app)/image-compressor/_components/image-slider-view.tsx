@@ -130,16 +130,16 @@ export default function ImageSliderView({
             onClick={(e) => e.stopPropagation()}
           >
             {/* 头部 */}
-            <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900/50 p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between border-b border-white/10 bg-black/40 p-4 backdrop-blur-sm">
               <div className="flex items-center gap-4">
                 <h3 className="text-lg font-semibold text-white">
                   {result.originalName}
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <span className="rounded bg-gray-800 px-2 py-1">
+                <div className="flex items-center gap-2 text-sm text-white/60">
+                  <span className="rounded bg-white/10 px-2 py-1">
                     {result.metadata?.width} × {result.metadata?.height}
                   </span>
-                  <span className="rounded bg-gray-800 px-2 py-1">
+                  <span className="rounded bg-white/10 px-2 py-1">
                     {result.metadata?.format.toUpperCase()}
                   </span>
                 </div>
@@ -151,7 +151,7 @@ export default function ImageSliderView({
                   <button
                     onClick={onPrevious}
                     disabled={!hasPrevious}
-                    className="rounded-lg bg-gray-800 p-2 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
@@ -160,7 +160,7 @@ export default function ImageSliderView({
                   <button
                     onClick={onNext}
                     disabled={!hasNext}
-                    className="rounded-lg bg-gray-800 p-2 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowRight className="h-5 w-5" />
                   </button>
@@ -168,7 +168,7 @@ export default function ImageSliderView({
 
                 <button
                   onClick={onClose}
-                  className="rounded-lg bg-gray-800 p-2 text-white transition-colors hover:bg-gray-700"
+                  className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -176,7 +176,7 @@ export default function ImageSliderView({
             </div>
 
             {/* 图片对比区域 */}
-            <div className="relative flex-1 overflow-hidden bg-gray-950">
+            <div className="relative flex-1 overflow-hidden bg-black">
               <div className="relative flex h-full w-full items-center justify-center">
                 <ImageCompare
                   width={result.metadata?.width || 0}
@@ -188,18 +188,18 @@ export default function ImageSliderView({
             </div>
 
             {/* 底部信息 */}
-            <div className="flex items-center justify-between border-t border-gray-800 bg-gray-900/50 p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between border-t border-white/10 bg-black/40 p-4 backdrop-blur-sm">
               <div className="flex items-center gap-6">
-                <div className="text-sm text-gray-400">
-                  <span className="text-gray-600">
+                <div className="text-sm text-white/60">
+                  <span className="text-white/40">
                     {t('image-compressor.compare_original')}:
                   </span>{' '}
                   <span className="font-medium text-white">
                     {formatFileSize(result.originalSize)}
                   </span>
                 </div>
-                <div className="text-sm text-gray-400">
-                  <span className="text-gray-600">
+                <div className="text-sm text-white/60">
+                  <span className="text-white/40">
                     {t('image-compressor.compare_processed')}:
                   </span>{' '}
                   <span className="font-medium text-white">
@@ -208,7 +208,7 @@ export default function ImageSliderView({
                 </div>
                 {savings > 0 && (
                   <div className="text-sm">
-                    <span className="font-semibold text-green-400">
+                    <span className="font-semibold text-[var(--primary)]">
                       {t('image-compressor.saved', {
                         percent: savings,
                       })}
@@ -217,7 +217,7 @@ export default function ImageSliderView({
                 )}
               </div>
 
-              <div className="text-xs text-gray-500">
+              <div className="text-white/40 text-xs">
                 {t('image-compressor.compare_operate_hint')}
               </div>
             </div>

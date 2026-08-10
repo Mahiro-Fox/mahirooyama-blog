@@ -107,7 +107,7 @@ export default function ProcessStatus({
   }
 
   return (
-    <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <div className="bg-card space-y-6 rounded-2xl border border-border p-6">
       {/* 处理进度 */}
       {isProcessing && (
         <motion.div
@@ -117,19 +117,19 @@ export default function ProcessStatus({
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-              <span className="font-medium text-gray-700 dark:text-gray-300">
+              <Loader2 className="text-[var(--primary)] h-5 w-5 animate-spin" />
+              <span className="text-foreground font-medium">
                 {t('image-compressor.processing_images')}
               </span>
             </div>
-            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+            <span className="text-[var(--primary)] text-sm font-semibold">
               {progress}%
             </span>
           </div>
 
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
             <motion.div
-              className="h-full rounded-full bg-blue-500"
+              className="bg-[var(--primary)] h-full rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
@@ -145,39 +145,39 @@ export default function ProcessStatus({
           animate={{ opacity: 1, y: 0 }}
           className="grid grid-cols-2 gap-4 sm:grid-cols-4"
         >
-          <div className="rounded-xl bg-blue-50 p-4 dark:bg-blue-950/30">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <div className="bg-[var(--primary)]/8 rounded-xl p-4">
+            <div className="text-[var(--primary)] text-2xl font-bold">
               {results.length}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
+            <div className="text-muted-foreground text-xs">
               {t('image-compressor.total_count')}
             </div>
           </div>
 
-          <div className="rounded-xl bg-green-50 p-4 dark:bg-green-950/30">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <div className="bg-green-500/10 rounded-xl p-4">
+            <div className="text-green-600 text-2xl font-bold">
               {successCount}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
+            <div className="text-muted-foreground text-xs">
               {t('image-compressor.success')}
             </div>
           </div>
 
-          <div className="rounded-xl bg-red-50 p-4 dark:bg-red-950/30">
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+          <div className="bg-destructive/10 rounded-xl p-4">
+            <div className="text-destructive text-2xl font-bold">
               {failureCount}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">
+            <div className="text-muted-foreground text-xs">
               {t('image-compressor.failed')}
             </div>
           </div>
 
           {totalSavings > 0 && (
-            <div className="rounded-xl bg-purple-50 p-4 dark:bg-purple-950/30">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <div className="bg-[var(--primary)]/8 rounded-xl p-4">
+              <div className="text-[var(--primary)] text-2xl font-bold">
                 {formatFileSize(totalSavings)}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">
+              <div className="text-muted-foreground text-xs">
                 {t('image-compressor.total_saved')}
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function ProcessStatus({
         >
           <button
             onClick={onDownloadAll}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-blue-500 to-blue-600 py-4 font-medium text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:from-blue-600 hover:to-blue-700 hover:shadow-blue-500/40"
+            className="bg-[var(--primary)] flex w-full items-center justify-center gap-2 rounded-xl py-4 font-medium text-[var(--primary-foreground)] shadow-lg shadow-[var(--primary)]/25 transition-all duration-200 hover:bg-[var(--primary)]/90 hover:shadow-[var(--primary)]/40"
           >
             <Package className="h-5 w-5" />
             {t('image-compressor.batch_download', { count: successCount })}
@@ -211,7 +211,7 @@ export default function ProcessStatus({
             exit={{ opacity: 0 }}
             className="space-y-3"
           >
-            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div className="text-foreground text-sm font-medium">
               {t('image-compressor.process_results')}
             </div>
 
@@ -224,13 +224,13 @@ export default function ProcessStatus({
                   transition={{ delay: index * 0.05 }}
                   className={`rounded-xl border p-4 transition-all duration-200 ${
                     result.success
-                      ? 'border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600'
-                      : 'border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-950/20'
+                      ? 'border-border bg-surface hover:border-[var(--primary)]/40'
+                      : 'border-destructive/30 bg-destructive/5'
                   } `}
                 >
                   <div className="flex items-start gap-4">
                     {/* 缩略图 */}
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
+                    <div className="bg-muted h-16 w-16 shrink-0 overflow-hidden rounded-lg">
                       <img
                         src={result.originalPreview}
                         alt={result.originalName}
@@ -241,40 +241,40 @@ export default function ProcessStatus({
                     {/* 信息 */}
                     <div className="min-w-0 flex-1 shrink-0 space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <p className="text-foreground truncate text-sm font-medium">
                           {result.originalName}
                         </p>
                         {result.success ? (
-                          <CheckCircle className="h-5 w-5 shrink-0 text-green-500" />
+                          <CheckCircle className="text-green-500 h-5 w-5 shrink-0" />
                         ) : (
-                          <XCircle className="h-5 w-5 shrink-0 text-red-500" />
+                          <XCircle className="text-destructive h-5 w-5 shrink-0" />
                         )}
                       </div>
 
                       {result.success && result.metadata ? (
                         <div className="space-y-1">
-                          <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+                          <div className="text-muted-foreground flex items-center gap-4 text-xs">
                             <span>
                               {result.metadata.width} × {result.metadata.height}
                             </span>
-                            <span className="rounded bg-gray-200 px-2 py-0.5 dark:bg-gray-700">
+                            <span className="bg-muted rounded px-2 py-0.5">
                               {result.metadata.format.toUpperCase()}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <span className="text-muted-foreground text-xs">
                               {formatFileSize(result.originalSize)}
                             </span>
-                            <span className="text-gray-400 dark:text-gray-600">
+                            <span className="text-muted-foreground opacity-50">
                               →
                             </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <span className="text-muted-foreground text-xs">
                               {formatFileSize(result.metadata.size)}
                             </span>
 
                             {result.metadata.size < result.originalSize && (
-                              <span className="text-xs font-semibold text-green-600 dark:text-green-400">
+                              <span className="text-green-600 text-xs font-semibold">
                                 {t('image-compressor.saved', {
                                   percent: calculateSavings(
                                     result.originalSize,
@@ -286,7 +286,7 @@ export default function ProcessStatus({
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-xs text-red-600 dark:text-red-400">
+                        <div className="text-destructive flex items-center gap-2 text-xs">
                           <AlertCircle className="h-4 w-4" />
                           <span>
                             {result.error ||
@@ -301,17 +301,17 @@ export default function ProcessStatus({
                       <div className="flex shrink-0 items-center gap-2">
                         <button
                           onClick={() => onViewComparison(result)}
-                          className="rounded-lg bg-gray-200 p-2 transition-colors duration-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                          className="bg-muted hover:bg-accent rounded-lg p-2 transition-colors duration-200"
                           title={t('image-compressor.view_compare')}
                         >
-                          <Eye className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          <Eye className="text-muted-foreground h-4 w-4" />
                         </button>
                         <button
                           onClick={() => onDownload(result)}
-                          className="rounded-lg bg-blue-100 p-2 transition-colors duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
+                          className="bg-[var(--primary)]/10 hover:bg-[var(--primary)]/20 rounded-lg p-2 transition-colors duration-200"
                           title={t('image-compressor.download_single')}
                         >
-                          <Download className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <Download className="text-[var(--primary)] h-4 w-4" />
                         </button>
                       </div>
                     )}

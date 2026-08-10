@@ -15,7 +15,8 @@ export default function Galleries({ galleries }: { galleries: Gallery[] }) {
   return (
     <section className="flex-2">
       <div className="flex flex-col gap-1 pb-6">
-        <h2 className="text-2xl font-medium tracking-tight">
+        <h2 className="flex items-center gap-3 text-2xl font-medium tracking-tight">
+          <span className="block h-5 w-1 rounded-full bg-[var(--primary)]" />
           {t('home.galleries')}
         </h2>
       </div>
@@ -39,7 +40,7 @@ export default function Galleries({ galleries }: { galleries: Gallery[] }) {
         <Button asChild variant="ghost" className="h-9 px-2">
           <Link
             href="/page/gallery/1"
-            className="group inline-flex items-center gap-2"
+            className="group inline-flex items-center gap-2 transition-colors hover:text-[var(--primary)]"
           >
             <span>{t('home.see_more_galleries')}</span>
             <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />

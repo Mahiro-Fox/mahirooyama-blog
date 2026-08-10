@@ -10,6 +10,7 @@ import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getHomeBannerImages } from '@/actions/home-banner';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
+import { VermilionThread } from '@/components/shared/vermilion-thread';
 import { Gallery } from '@/lib/gallery';
 
 export default async function IndexPage() {
@@ -23,39 +24,53 @@ export default async function IndexPage() {
   const initialIndex = bannerData
     ? Math.floor(Math.random() * bannerData.length)
     : 0;
+
   return (
     <div className="relative flex w-full flex-1 flex-col">
-      {/* Hero Banner - 100vh */}
+      {/* ── Hero Banner ── */}
       <section className="relative h-[calc(100vh-48px)] w-full md:h-[calc(100vh-64px)]">
         {bannerData && (
           <HomeBanner images={bannerData} initialIndex={initialIndex} />
         )}
+        {/* 底部渐变遮罩 — 从透明过渡到墨色背景 */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-[var(--background)] to-transparent" />
         <ChevronDown
-          strokeWidth={4}
-          className="animate-up-down absolute right-[50%] bottom-12 z-10"
+          strokeWidth={3}
+          className="animate-up-down absolute right-[50%] bottom-10 z-10 text-[var(--primary)]/70"
         />
       </section>
-      <section className="py-8">
+
+      {/* ── Gallery Carousel ── */}
+      <section className="pt-12 pb-4">
         <HeroCarousel galleries={galleries} />
       </section>
-      {/* About Section */}
+
+      <VermilionThread className="py-4" />
+
+      {/* ── About Section ── */}
       <BlurFade inView duration={0.6}>
-        <div className="container-wrapper">
-          <div className="container py-12">
+        <section className="container-wrapper py-8">
+          <div className="container">
             <AboutCta />
           </div>
-        </div>
+        </section>
       </BlurFade>
-      <div className="container-wrapper py-8">
-        <div className="container flex flex-col gap-8 lg:flex-row">
-          {/* Gallery */}
+
+      <VermilionThread className="py-4" />
+
+      {/* ── Galleries & Tags ── */}
+      <section className="container-wrapper py-8">
+        <div className="container flex flex-col gap-10 lg:flex-row">
           <Galleries galleries={galleries} />
-          {/* Tags */}
           <Tags tags={tags} />
         </div>
-      </div>
-      {/* Posts */}
+      </section>
+
+      <VermilionThread className="py-4" />
+
+      {/* ── Posts ── */}
       <Posts posts={allPosts} />
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -71,6 +86,7 @@ export default async function IndexPage() {
     </div>
   );
 }
+
 async function HeroCarousel({ galleries }: { galleries: Gallery[] }) {
   const carouselItems = galleries.slice(0, 5).map((image) => ({
     title: image.title,

@@ -13,12 +13,16 @@ export function PursuitCard({ content }: PursuitCardProps) {
   const t = useT();
   return (
     <motion.div
-      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-400 via-cyan-300 to-cyan-500 p-6 text-white shadow-lg transition-all hover:shadow-xl"
+      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl p-6 text-white shadow-lg transition-all hover:shadow-xl"
+      style={{
+        background:
+          'linear-gradient(135deg, color-mix(in oklch, var(--primary) 85%, white 15%), var(--primary))',
+      }}
       whileHover={{ scale: 1.02 }}
     >
       {/* Decorative elements */}
       <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-      <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-indigo-500/20 blur-2xl" />
+      <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
 
       {/* Greeting with sparkle */}
       <div className="relative z-10 flex items-center gap-2 text-2xl font-semibold">

@@ -30,13 +30,14 @@ export default async function MoviesLayout({
 
   return (
     <DictionaryProvider dictionary={moviesDictionary}>
-      <div className="to-slate-90 min-h-screen bg-gradient-to-br from-slate-900 via-slate-800">
+      <div className="bg-background min-h-screen">
         <div className="mx-auto max-w-7xl px-4 py-8">
           <div className="mb-12 text-center">
-            <h1 className="mb-4 text-4xl font-bold text-white">
+            <h1 className="mb-4 flex items-center justify-center gap-3 text-4xl font-bold">
+              <span className="block h-7 w-1.5 rounded-full bg-[var(--primary)]" />
               {moviesDictionary['movies.title']}
             </h1>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               {moviesDictionary['movies.description']}
             </p>
           </div>

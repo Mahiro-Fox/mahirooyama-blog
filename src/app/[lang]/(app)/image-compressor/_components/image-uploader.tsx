@@ -224,8 +224,8 @@ export default function ImageUploader({
               onDrop={handleDrop}
               className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-300 ease-out ${
                 isDragging
-                  ? 'scale-[1.02] border-blue-500 bg-blue-50 dark:bg-blue-950/20'
-                  : 'border-gray-300 bg-gray-50 hover:border-gray-400 dark:border-gray-700 dark:bg-gray-900/50 dark:hover:border-gray-600'
+                  ? 'scale-[1.02] border-[var(--primary)] bg-[var(--primary)]/8'
+                  : 'border-border bg-card hover:border-[var(--primary)]/50'
               } ${disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : ''} `}
             >
               <input
@@ -245,26 +245,26 @@ export default function ImageUploader({
                 className="flex flex-col items-center gap-4"
               >
                 <div
-                  className={`flex h-20 w-20 items-center justify-center rounded-full ${isDragging ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-800'} transition-colors duration-300`}
+                  className={`flex h-20 w-20 items-center justify-center rounded-full ${isDragging ? 'bg-[var(--primary)]' : 'bg-muted'} transition-colors duration-300`}
                 >
                   <Upload
-                    className={`h-10 w-10 ${isDragging ? 'text-white' : 'text-gray-500 dark:text-gray-400'} `}
+                    className={`h-10 w-10 ${isDragging ? 'text-[var(--primary-foreground)]' : 'text-muted-foreground'} `}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  <p className="text-foreground text-lg font-semibold">
                     {isDragging
                       ? t('image-compressor.drag_to_upload')
                       : t('image-compressor.drop_or_click')}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-muted-foreground text-sm">
                     {t('image-compressor.supported_formats')}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                  <p className="text-muted-foreground text-xs opacity-70">
                     {t('image-compressor.max_size')}
                   </p>
-                  <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                  <div className="text-muted-foreground flex items-center justify-center gap-2 text-xs opacity-70">
                     <Copy className="h-4 w-4" />
                     <span>{t('image-compressor.paste_supported')}</span>
                   </div>
@@ -283,8 +283,8 @@ export default function ImageUploader({
             {/* 文件列表头部 */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ImageIcon className="h-5 w-5 text-blue-500" />
-                <span className="font-semibold text-gray-700 dark:text-gray-300">
+                <ImageIcon className="h-5 w-5 text-[var(--primary)]" />
+                <span className="text-foreground font-semibold">
                   {t('image-compressor.selected_count', {
                     count: files.length,
                     size: formatSize(files.reduce((sum, f) => sum + f.size, 0)),
@@ -296,8 +296,8 @@ export default function ImageUploader({
                 disabled={disabled}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
                   disabled
-                    ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                    : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50'
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                    : 'bg-destructive/10 text-destructive hover:bg-destructive/20'
                 } `}
               >
                 {t('image-compressor.clear_all')}
@@ -316,7 +316,7 @@ export default function ImageUploader({
                     transition={{ duration: 0.2, delay: index * 0.05 }}
                     className="group relative"
                   >
-                    <div className="aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
+                    <div className="border-border bg-muted aspect-square overflow-hidden rounded-xl border">
                       <div className="relative h-full w-full">
                         <Image
                           src={file.preview}
@@ -332,7 +332,7 @@ export default function ImageUploader({
                               onFileRemove(file.id);
                             }}
                             disabled={disabled}
-                            className={`cursor-pointer rounded-full bg-red-500 p-2 text-white transition-colors duration-200 hover:bg-red-600 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
+                            className={`bg-destructive hover:bg-destructive/90 cursor-pointer rounded-full p-2 text-white transition-colors duration-200 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                           >
                             <Trash className="h-5 w-5" />
                           </button>
@@ -342,10 +342,10 @@ export default function ImageUploader({
 
                     {/* 文件信息 */}
                     <div className="mt-2">
-                      <p className="truncate text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <p className="text-foreground truncate text-xs font-medium">
                         {file.name}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-muted-foreground text-xs">
                         {formatFileSize(file.size)}
                       </p>
                     </div>
@@ -360,8 +360,8 @@ export default function ImageUploader({
               disabled={disabled}
               className={`w-full rounded-xl border-2 border-dashed py-4 transition-all duration-300 ${
                 disabled
-                  ? 'cursor-not-allowed border-gray-300 text-gray-400'
-                  : 'border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:bg-gray-900/50'
+                  ? 'border-border text-muted-foreground cursor-not-allowed'
+                  : 'border-border text-foreground hover:bg-accent hover:border-[var(--primary)]/50'
               } `}
             >
               <div className="flex items-center justify-center gap-2">

@@ -131,13 +131,13 @@ export default function ConfigPanel({
   ];
 
   return (
-    <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <div className="bg-card space-y-6 rounded-2xl border border-border p-6">
       {/* Title */}
       <div className="flex items-center gap-3">
-        <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
-          <Settings className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        <div className="bg-[var(--primary)]/10 rounded-lg p-2">
+          <Settings className="text-[var(--primary)] h-5 w-5" />
         </div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-semibold">
           {t('image-compressor.config_title')}
         </h2>
         <Button
@@ -152,7 +152,7 @@ export default function ConfigPanel({
 
       {/* 格式选择 */}
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="text-foreground block text-sm font-medium">
           {t('image-compressor.target_format')}
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -165,21 +165,21 @@ export default function ConfigPanel({
               disabled={disabled}
               className={`relative rounded-xl border-2 p-4 transition-all duration-200 ${
                 config.targetFormat === option.value
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                  : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                  ? 'border-[var(--primary)] bg-[var(--primary)]/8'
+                  : 'border-border hover:border-[var(--primary)]/50'
               } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} `}
             >
               <div className="space-y-1 text-center">
                 <div
                   className={`text-sm font-semibold ${
                     config.targetFormat === option.value
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : 'text-gray-700 dark:text-gray-300'
+                      ? 'text-[var(--primary)]'
+                      : 'text-foreground'
                   } `}
                 >
                   {option.label}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="text-muted-foreground text-xs">
                   {option.description}
                 </div>
               </div>
@@ -187,7 +187,7 @@ export default function ConfigPanel({
               {config.targetFormat === option.value && (
                 <motion.div
                   layoutId="activeFormat"
-                  className="pointer-events-none absolute inset-0 rounded-xl border-2 border-blue-500"
+                  className="pointer-events-none absolute inset-0 rounded-xl border-2 border-[var(--primary)]"
                   initial={false}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
@@ -200,10 +200,10 @@ export default function ConfigPanel({
       {/* Quality slider */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="text-foreground block text-sm font-medium">
             {t('image-compressor.quality')}
           </label>
-          <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+          <span className="text-[var(--primary)] text-sm font-semibold">
             {config.quality}%
           </span>
         </div>
@@ -216,31 +216,31 @@ export default function ConfigPanel({
             !disabled && updateConfig({ quality: parseInt(e.target.value) })
           }
           disabled={disabled}
-          className={`h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
+          className={`h-2 w-full cursor-pointer appearance-none rounded-lg ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
           style={{
-            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(config.quality / 95) * 100}%, #e5e7eb ${(config.quality / 95) * 100}%, #e5e7eb 100%)`,
+            background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${(config.quality / 95) * 100}%, var(--border) ${(config.quality / 95) * 100}%, var(--border) 100%)`,
           }}
         />
-        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-muted-foreground flex justify-between text-xs">
           <span>{t('image-compressor.min_size')}</span>
           <span>{t('image-compressor.best_quality')}</span>
         </div>
       </div>
 
       {/* 高级选项 */}
-      <div className="border-t border-gray-200 pt-4 dark:border-gray-800">
+      <div className="border-border border-t pt-4">
         <button
           onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
           disabled={disabled}
-          className={`flex w-full items-center justify-between rounded-lg p-3 transition-colors duration-200 ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'} `}
+          className={`flex w-full items-center justify-between rounded-lg p-3 transition-colors duration-200 ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-accent'} `}
         >
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-foreground text-sm font-medium">
             {t('image-compressor.advanced')}
           </span>
           {isAdvancedOpen ? (
-            <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <ChevronUp className="text-muted-foreground h-5 w-5" />
           ) : (
-            <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <ChevronDown className="text-muted-foreground h-5 w-5" />
           )}
         </button>
 
@@ -255,16 +255,16 @@ export default function ConfigPanel({
             >
               <div className="space-y-4 pt-4">
                 {/* 元数据处理 */}
-                <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                <div className="bg-surface flex items-center justify-between rounded-xl p-4">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/30">
-                      <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    <div className="bg-[var(--primary)]/10 rounded-lg p-2">
+                      <Shield className="text-[var(--primary)] h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <div className="text-foreground text-sm font-medium">
                         {t('image-compressor.strip_metadata')}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="text-muted-foreground text-xs">
                         {t('image-compressor.strip_metadata_desc')}
                       </div>
                     </div>
@@ -277,8 +277,8 @@ export default function ConfigPanel({
                     disabled={disabled}
                     className={`relative h-7 w-14 rounded-full transition-colors duration-200 ${
                       !config.keepMetadata
-                        ? 'bg-blue-500'
-                        : 'bg-gray-300 dark:bg-gray-600'
+                        ? 'bg-[var(--primary)]'
+                        : 'bg-muted'
                     } ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                   >
                     <motion.div
@@ -294,16 +294,16 @@ export default function ConfigPanel({
                 </div>
 
                 {/* 动图转换 */}
-                <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                <div className="bg-surface flex items-center justify-between rounded-xl p-4">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
-                      <Film className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <div className="bg-[var(--primary)]/10 rounded-lg p-2">
+                      <Film className="text-[var(--primary)] h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <div className="text-foreground text-sm font-medium">
                         {t('image-compressor.convert_animation')}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="text-muted-foreground text-xs">
                         {t('image-compressor.convert_animation_desc')}
                       </div>
                     </div>
@@ -318,8 +318,8 @@ export default function ConfigPanel({
                     disabled={disabled}
                     className={`relative h-7 w-14 rounded-full transition-colors duration-200 ${
                       config.convertAnimation
-                        ? 'bg-blue-500'
-                        : 'bg-gray-300 dark:bg-gray-600'
+                        ? 'bg-[var(--primary)]'
+                        : 'bg-muted'
                     } ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                   >
                     <motion.div
@@ -335,16 +335,16 @@ export default function ConfigPanel({
                 </div>
 
                 {/* 调整尺寸 */}
-                <div className="space-y-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                <div className="bg-surface space-y-4 rounded-xl p-4">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/30">
-                      <Maximize2 className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    <div className="bg-[var(--primary)]/10 rounded-lg p-2">
+                      <Maximize2 className="text-[var(--primary)] h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <div className="text-foreground text-sm font-medium">
                         {t('image-compressor.resize')}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="text-muted-foreground text-xs">
                         {t('image-compressor.resize_desc')}
                       </div>
                     </div>
@@ -352,7 +352,7 @@ export default function ConfigPanel({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
+                      <label className="text-muted-foreground block text-xs font-medium">
                         {t('image-compressor.width')}
                       </label>
                       <input
@@ -368,11 +368,11 @@ export default function ConfigPanel({
                         }}
                         disabled={disabled}
                         placeholder={t('image-compressor.auto')}
-                        className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
+                        className={`focus:ring-[var(--primary)] bg-background text-foreground focus:border-[var(--primary)] w-full rounded-lg border border-border px-3 py-2 text-sm focus:ring-2 focus:outline-none ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
+                      <label className="text-muted-foreground block text-xs font-medium">
                         {t('image-compressor.height')}
                       </label>
                       <input
@@ -388,13 +388,13 @@ export default function ConfigPanel({
                         }}
                         disabled={disabled}
                         placeholder={t('image-compressor.auto')}
-                        className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
+                        className={`focus:ring-[var(--primary)] bg-background text-foreground focus:border-[var(--primary)] w-full rounded-lg border border-border px-3 py-2 text-sm focus:ring-2 focus:outline-none ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    <label className="text-muted-foreground block text-xs font-medium">
                       {t('image-compressor.fit_mode')}
                     </label>
                     <div className="flex gap-2">
@@ -407,8 +407,8 @@ export default function ConfigPanel({
                           disabled={disabled}
                           className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                             config.resize?.fit === option.value
-                              ? 'bg-blue-500 text-white'
-                              : 'border border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-500'
+                              ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
+                              : 'border border-border bg-background text-foreground hover:border-[var(--primary)]/50'
                           } ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                         >
                           {option.label}

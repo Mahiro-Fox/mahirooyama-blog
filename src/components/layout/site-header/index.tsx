@@ -1,10 +1,9 @@
 'use client';
 
 import { Languages, LogOut, Menu, User } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { setLocale } from '@/actions/set-locale';
 import { userLogout } from '@/actions/user-auth';
 import { Search } from '@/components/layout/site-header/search';
@@ -36,10 +35,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
-import { AnimatedThemeToggler } from '@/components/shared/animated-theme-toggler';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { Link } from '@/components/shared/link';
 import { SiteLogo } from '@/components/shared/site-logo';
+import { ThemeSwitcher } from '@/components/shared/theme-switcher';
 import { groupedNavRoutes, siteConfig } from '@/config/common';
 import { useT } from '@/i18n/dictionary-provider';
 import { i18nConfig } from '@/i18n/i18n.config';
@@ -59,14 +58,9 @@ export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isActive = (href: string) => pathname === href;
-  const { setTheme, resolvedTheme } = useTheme();
   const [currentUser, setCurrentUser] = useState<SiteHeaderUser | null>(
     initialUserAuth
   );
-
-  const toggleTheme = useCallback(() => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-  }, [resolvedTheme, setTheme]);
 
   useEffect(() => {
     if (!initialUserAuth) {
@@ -229,9 +223,8 @@ export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
                 <span className="sr-only">{t('github_repository')}</span>
               </Link>
             </Button>
+            <ThemeSwitcher />
             <SwitchLanguage />
-            <Separator orientation="vertical" />
-            <AnimatedThemeToggler onThemeChange={toggleTheme} />
             <Separator orientation="vertical" />
             {currentUser ? (
               <DropdownMenu>

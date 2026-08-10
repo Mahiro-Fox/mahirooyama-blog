@@ -346,20 +346,20 @@ export default function ImageCompressorClient() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+    <div className="bg-background min-h-screen">
       {/* 头部 */}
-      <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/80">
+      <div className="border-border bg-card/60 border-b backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-500 p-2">
-                <Zap className="h-6 w-6 text-white" />
+              <div className="bg-[var(--primary)] rounded-lg p-2">
+                <Zap className="text-[var(--primary-foreground)] h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                <h1 className="text-xl font-bold">
                   {t('image-compressor.page_title')}
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-muted-foreground text-sm">
                   {t('image-compressor.subtitle')}
                 </p>
               </div>
@@ -431,9 +431,9 @@ export default function ImageCompressorClient() {
       />
 
       {/* Footer */}
-      <div className="mt-16 border-t border-gray-200 bg-white/50 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/50">
+      <div className="border-border bg-card/40 mt-16 border-t backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-muted-foreground flex items-center justify-between text-sm">
             <p>{t('image-compressor.privacy_notice')}</p>
             <p>{t('image-compressor.built_with')}</p>
           </div>
