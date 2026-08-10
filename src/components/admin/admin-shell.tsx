@@ -11,7 +11,6 @@ import {
   adminUpdateUserPassword,
   adminUploadAvatar,
 } from '@/actions/admin/user-actions';
-import { SwitchLanguage } from '@/components/layout/site-header';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -33,8 +32,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
+import { LanguageSwitcher } from '@/components/shared/language-switcher';
 import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
+import { ThemeSwitcher } from '@/components/shared/theme-switcher';
 import { adminRoutesConfig } from '@/config/common';
 import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import { useT } from '@/i18n/dictionary-provider';
@@ -452,7 +453,8 @@ export default function AdminShell({
                 </>
               )}
             </div>
-            <SwitchLanguage />
+            <ThemeSwitcher />
+            <LanguageSwitcher />
           </div>
         </header>
         <main className="p-4 lg:p-6">{children}</main>

@@ -109,7 +109,7 @@ export function GlobalMusicPlayer() {
         </button>
       ) : (
         <div
-          className="flex w-full flex-col items-center gap-3"
+          className="flex w-full max-w-[250px] flex-col items-center gap-3"
           ref={playerRef}
         >
           <div className="relative w-full overflow-hidden">

@@ -15,9 +15,11 @@ import {
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
 import { Field, FieldLabel } from '@/components/shared/field';
+import { useT } from '@/i18n/dictionary-provider';
 import { trackEvent } from '@/utils/tracker';
 
 export function BugReportTrigger() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [content, setContent] = useState('');
@@ -27,7 +29,7 @@ export function BugReportTrigger() {
     e.preventDefault();
     trackEvent('bug_report_submit');
     if (!content.trim()) {
-      toast.error('请输入 BUG 描述');
+      toast.error(t('bug_report.error_empty'));
       return;
     }
 
@@ -41,15 +43,15 @@ export function BugReportTrigger() {
       });
 
       if (res.success) {
-        toast.success('感谢反馈！mahiro会尽快处理的喵！');
+        toast.success(t('bug_report.success'));
         setOpen(false);
         setContent('');
         setContact('');
       } else {
-        toast.error(res.error || '提交失败');
+        toast.error(res.error || t('bug_report.error_failed'));
       }
     } catch {
-      toast.error('网络错误，请稍后再试');
+      toast.error(t('bug_report.error_network'));
     } finally {
       setIsSubmitting(false);
     }
@@ -66,11 +68,11 @@ export function BugReportTrigger() {
         variant="outline"
         size="icon"
         className="h-8 w-8 cursor-pointer rounded-full p-2 shadow-lg transition-transform hover:scale-110"
-        title="提交 BUG"
+        title={t('bug_report.button_title')}
         onClick={handleClick}
       >
         <Bug className="h-4 w-4" />
-        <span className="sr-only">提交 BUG</span>
+        <span className="sr-only">{t('bug_report.button_title')}</span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -79,20 +81,21 @@ export function BugReportTrigger() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Bug className="text-destructive h-5 w-5" />
-                提交 BUG 报告
+                {t('bug_report.dialog_title')}
               </DialogTitle>
               <DialogDescription>
-                发现网站 BUG？请在下方描述问题，mahiro会尽快修复的喵！
+                {t('bug_report.description')}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <Field>
                 <FieldLabel>
-                  问题描述 <span className="text-destructive">*</span>
+                  {t('bug_report.content_label')}{' '}
+                  <span className="text-destructive">*</span>
                 </FieldLabel>
                 <textarea
                   className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[100px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="请详细描述您遇到的问题..."
+                  placeholder={t('bug_report.content_placeholder')}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   disabled={isSubmitting}
@@ -100,9 +103,9 @@ export function BugReportTrigger() {
                 />
               </Field>
               <Field>
-                <FieldLabel>联系方式 (可选)</FieldLabel>
+                <FieldLabel>{t('bug_report.contact_label')}</FieldLabel>
                 <Input
-                  placeholder="邮箱或社交账号，方便我们联系您"
+                  placeholder={t('bug_report.contact_placeholder')}
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
                   disabled={isSubmitting}
@@ -111,7 +114,9 @@ export function BugReportTrigger() {
             </div>
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? '提交中...' : '提交报告'}
+                {isSubmitting
+                  ? t('bug_report.submitting')
+                  : t('bug_report.submit')}
                 {!isSubmitting && <Send className="ml-2 h-4 w-4" />}
               </Button>
             </DialogFooter>

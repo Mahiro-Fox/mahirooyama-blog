@@ -1,17 +1,15 @@
 'use client';
 
-import { Languages, LogOut, Menu, User } from 'lucide-react';
+import { LogOut, Menu, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
-import { setLocale } from '@/actions/set-locale';
 import { userLogout } from '@/actions/user-auth';
 import { Search } from '@/components/layout/site-header/search';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -36,13 +34,12 @@ import {
   SheetTrigger,
 } from '@/components/shadcn-ui/sheet';
 import { BrandIcons } from '@/components/shared/brand-icons';
+import { LanguageSwitcher } from '@/components/shared/language-switcher';
 import { Link } from '@/components/shared/link';
 import { SiteLogo } from '@/components/shared/site-logo';
 import { ThemeSwitcher } from '@/components/shared/theme-switcher';
 import { groupedNavRoutes, siteConfig } from '@/config/common';
 import { useT } from '@/i18n/dictionary-provider';
-import { i18nConfig } from '@/i18n/i18n.config';
-import { useLocale } from '@/i18n/use-locale';
 
 interface SiteHeaderUser {
   id: string;
@@ -224,7 +221,7 @@ export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
               </Link>
             </Button>
             <ThemeSwitcher />
-            <SwitchLanguage />
+            <LanguageSwitcher />
             <Separator orientation="vertical" />
             {currentUser ? (
               <DropdownMenu>
@@ -267,59 +264,5 @@ export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
         </div>
       </div>
     </header>
-  );
-}
-
-function switchLocaleHref(pathname: string, targetLocale: string): string {
-  const segments = pathname.split('/').filter(Boolean);
-  if (i18nConfig.locales.includes(segments[0])) segments.shift(); // 去掉当前语言前缀（如果有）
-
-  const rest = segments.length ? `/${segments.join('/')}` : '';
-  return targetLocale === i18nConfig.defaultLang
-    ? rest || '/'
-    : `/${targetLocale}${rest}`;
-}
-
-export function SwitchLanguage() {
-  const pathname = usePathname();
-  const currentLocale = useLocale();
-  const [isPending, setIsPending] = useState(false);
-
-  const handleSwitch = async (targetLocale: string) => {
-    setIsPending(true);
-    try {
-      // 1. 先调用 Server Action 设置 Cookie 并等待返回
-      await setLocale(targetLocale);
-
-      // 2. 计算目标路径
-      const targetHref = switchLocaleHref(pathname, targetLocale);
-
-      // 3. 页面刷新/跳转 (Next.js 中使用 router.refresh() 配合 push 或直接 location 刷新)
-      window.location.href = targetHref;
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Languages className="h-8" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-20" align="start">
-        <DropdownMenuGroup>
-          {i18nConfig.languageOptions.map((item) => (
-            <DropdownMenuItem
-              disabled={isPending || item.value === currentLocale}
-              className="cursor-pointer"
-              key={item.value}
-              onClick={() => handleSwitch(item.value)}
-            >
-              {item.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

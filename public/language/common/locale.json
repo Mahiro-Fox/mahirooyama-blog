@@ -13,7 +13,20 @@
     "theme.ocean": "Ocean",
     "theme.coffee": "Coffee",
     "theme.midnight": "Midnight",
-    "theme.sakura_ink": "Sakura Ink"
+    "theme.sakura_ink": "Sakura Ink",
+    "bug_report.button_title": "Report Bug",
+    "bug_report.dialog_title": "Submit Bug Report",
+    "bug_report.description": "Found a bug? Please describe the issue below, mahiro will fix it as soon as possible meow!",
+    "bug_report.content_label": "Issue Description",
+    "bug_report.content_placeholder": "Please describe the problem in detail...",
+    "bug_report.contact_label": "Contact (Optional)",
+    "bug_report.contact_placeholder": "Email or social account, so we can reach you",
+    "bug_report.submit": "Submit Report",
+    "bug_report.submitting": "Submitting...",
+    "bug_report.error_empty": "Please enter the bug description",
+    "bug_report.success": "Thanks for the feedback! mahiro will handle it soon meow!",
+    "bug_report.error_failed": "Submission failed",
+    "bug_report.error_network": "Network error, please try again later"
   },
   "cn": {
     "common.load_failed": "加载失败",
@@ -29,6 +42,19 @@
     "theme.ocean": "海盐蓝",
     "theme.coffee": "咖啡馆",
     "theme.midnight": "午夜蓝",
-    "theme.sakura_ink": "樱花墨"
+    "theme.sakura_ink": "樱花墨",
+    "bug_report.button_title": "提交 BUG",
+    "bug_report.dialog_title": "提交 BUG 报告",
+    "bug_report.description": "发现网站 BUG？请在下方描述问题，mahiro会尽快修复的喵！",
+    "bug_report.content_label": "问题描述",
+    "bug_report.content_placeholder": "请详细描述您遇到的问题...",
+    "bug_report.contact_label": "联系方式 (可选)",
+    "bug_report.contact_placeholder": "邮箱或社交账号，方便我们联系您",
+    "bug_report.submit": "提交报告",
+    "bug_report.submitting": "提交中...",
+    "bug_report.error_empty": "请输入 BUG 描述",
+    "bug_report.success": "感谢反馈！mahiro会尽快处理的喵！",
+    "bug_report.error_failed": "提交失败",
+    "bug_report.error_network": "网络错误，请稍后再试"
   }
 }

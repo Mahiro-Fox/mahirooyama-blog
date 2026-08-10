@@ -62,7 +62,6 @@ interface MusicProviderProps {
 }
 
 const STORAGE_KEY_VOLUME = 'music_player_volume';
-const STORAGE_KEY_EXPANDED = 'music_player_expanded';
 
 export function MusicProvider({ playlist, children }: MusicProviderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -81,8 +80,6 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
       localStorage.getItem(STORAGE_KEY_VOLUME) || '0.7'
     );
     setVolume(savedVolume);
-    const savedExpanded = localStorage.getItem(STORAGE_KEY_EXPANDED);
-    setIsCollapsed(savedExpanded === 'true');
 
     const audio = new Audio();
     audio.preload = 'metadata';
@@ -106,11 +103,6 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
       audioRef.current.volume = volume;
     }
   }, [volume]);
-
-  // 展开状态变化时，更新本地存储
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_EXPANDED, isCollapsed.toString());
-  }, [isCollapsed]);
 
   // 监听pause事件，处理其他程序导致的暂停播放, 并更新播放状态。
   useEffect(() => {
