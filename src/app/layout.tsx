@@ -4,6 +4,7 @@ import { TailwindIndicator } from '@/components/shared/tailwind-indicator';
 import { fontVariables } from '@/lib/fonts';
 import { cn } from '@/utils/utils';
 import '@/styles/globals.css';
+import '@/styles/theme.css';
 import { WebVitals } from '@/components/shared/web-vitals';
 import { defaultTheme, THEME_STORAGE_KEY, themes } from '@/config/themes';
 

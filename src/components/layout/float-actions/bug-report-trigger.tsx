@@ -13,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/shadcn-ui/dialog';
-import { Field, FieldLabel } from '@/components/shared/field';
 import { Input } from '@/components/shadcn-ui/input';
+import { Field, FieldLabel } from '@/components/shared/field';
 import { trackEvent } from '@/utils/tracker';
 
 export function BugReportTrigger() {

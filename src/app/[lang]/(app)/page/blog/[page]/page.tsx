@@ -51,11 +51,6 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
   return (
     <div className="flex flex-1 flex-col">
       <div className="container-wrapper">
-        <div className="container py-6">
-          <AboutCta />
-        </div>
-      </div>
-      <div className="container-wrapper">
         <div className="container flex flex-col gap-1">
           <section className="container border-b py-6">
             <PageTitle tKey="page.posts_page_title" />

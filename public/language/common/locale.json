@@ -3,20 +3,32 @@
     "common.load_failed": "Failed to load content",
     "common.retry": "Retry",
     "theme.switcher_label": "Theme",
+    "theme.switcher_label_light": "Light",
+    "theme.switcher_label_dark": "Dark",
     "theme.warm_paper": "Warm Paper",
     "theme.celadon": "Celadon",
     "theme.inkstone": "Inkstone",
     "theme.forest": "Forest",
-    "theme.dusk": "Dusk"
+    "theme.dusk": "Dusk",
+    "theme.ocean": "Ocean",
+    "theme.coffee": "Coffee",
+    "theme.midnight": "Midnight",
+    "theme.sakura_ink": "Sakura Ink"
   },
   "cn": {
     "common.load_failed": "加载失败",
     "common.retry": "重试",
     "theme.switcher_label": "主题",
+    "theme.switcher_label_light": "亮色",
+    "theme.switcher_label_dark": "暗色",
     "theme.warm_paper": "暖纸",
     "theme.celadon": "青瓷",
     "theme.inkstone": "墨砚",
     "theme.forest": "森林",
-    "theme.dusk": "暮霞"
+    "theme.dusk": "暮霞",
+    "theme.ocean": "海盐蓝",
+    "theme.coffee": "咖啡馆",
+    "theme.midnight": "午夜蓝",
+    "theme.sakura_ink": "樱花墨"
   }
 }
