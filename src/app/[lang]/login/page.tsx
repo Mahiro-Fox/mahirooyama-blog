@@ -32,7 +32,6 @@ function LoginForm() {
     const timer = setInterval(() => {
       setRateLimitTime((prev) => {
         if (prev === null || prev <= 1) {
-          clearInterval(timer);
           return null;
         }
         return prev - 1;

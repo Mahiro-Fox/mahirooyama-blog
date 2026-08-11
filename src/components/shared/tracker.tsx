@@ -2,7 +2,7 @@
 
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect } from 'react';
-import { trackEvent, trackPageView } from '@/utils/tracker';
+import { trackPageView } from '@/utils/tracker';
 
 /**
  * 全局页面访问埋点组件
@@ -27,20 +27,3 @@ export function PageTracker() {
   );
 }
 
-/**
- * 服务端组件专用的事件埋点“像素”组件
- * 用于在 Server Component 渲染时，在客户端触发一次特定事件
- */
-export function EventTracker({
-  eventName,
-  properties = {},
-}: {
-  eventName: string;
-  properties?: Record<string, any>;
-}) {
-  useEffect(() => {
-    trackEvent(eventName, properties);
-  }, [eventName, properties]);
-
-  return null;
-}

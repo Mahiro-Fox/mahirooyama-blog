@@ -43,6 +43,8 @@ export function VideoPlayer({
   // }, []);
 
   useEffect(() => {
+    // 取消标记：effect 重跑或组件卸载后丢弃过期结果（竞态防护）
+    let cancelled = false;
     const checkAllSources = async () => {
       const checkSourceAvailability = async (url: string) => {
         try {
@@ -64,10 +66,15 @@ export function VideoPlayer({
           available: await checkSourceAvailability(source.url),
         }))
       );
-      setSourcesStatus(statuses);
+      if (!cancelled) {
+        setSourcesStatus(statuses);
+      }
     };
 
     checkAllSources();
+    return () => {
+      cancelled = true;
+    };
   }, [sources]);
 
   useEffect(() => {

@@ -53,8 +53,5 @@ export function createLogger(context: string = 'App') {
   };
 }
 
-// 导出默认 Logger 实例
-export const logger = createLogger('App');
-
 // 导出 Logger 类型，方便其他地方引用
 export type Logger = ReturnType<typeof createLogger>;

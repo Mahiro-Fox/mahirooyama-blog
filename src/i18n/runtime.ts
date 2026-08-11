@@ -31,29 +31,3 @@ export function setDictionary(dict: Dictionary | null | undefined): void {
   });
 }
 
-export function getRuntimeDictionary(): Dictionary {
-  return currentDict;
-}
-
-/**
- * 读取当前页面字典中的某个 key
- * @param key
- * @param fallback 缺失时返回的兜底值，默认空串
- */
-export function t(key: string, fallback = ''): string | string[] {
-  if (isServer) return fallback;
-  const value = currentDict[key];
-  return value == null ? fallback : value;
-}
-
-/**
- * 订阅当前字典变更（极少使用，主要给非 React 的持久化对象用）
- * @param fn
- * @returns 取消订阅
- */
-export function subscribe(fn: DictionaryListener): () => void {
-  listeners.add(fn);
-  return () => {
-    listeners.delete(fn);
-  };
-}

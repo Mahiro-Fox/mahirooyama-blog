@@ -33,6 +33,243 @@ type MomentCreateInput = {
   location?: string;
 };
 
+const getRealImageHeight = (moment: Moment) => {
+  const scaleRatio = Math.round(
+    moment.image?.width ? moment.image.width / 320 : 1
+  );
+  return Math.round(
+    moment.image?.height ? moment.image.height / scaleRatio : 0
+  );
+};
+
+/**
+ * 碎碎念列表
+ */
+function MomentsList({
+  moments,
+  loading,
+  onEdit,
+  onDelete,
+}: {
+  moments: Moment[];
+  loading: boolean;
+  onEdit: (moment: Moment) => void;
+  onDelete: (moment: Moment) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="text-muted-foreground py-8 text-center">加载中...</div>
+    );
+  }
+
+  if (moments.length === 0) {
+    return (
+      <div className="text-muted-foreground py-8 text-center">
+        暂无碎碎念，点击"发布碎碎念"开始记录生活
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {moments.map((moment) => (
+        <div
+          key={moment.id}
+          className="hover:bg-accent/50 space-y-3 rounded-lg border p-4 transition-colors"
+        >
+          <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
+            <div className="flex-1 space-y-2">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                <span>{formatDate(moment.createdAt)}</span>
+                {moment.moodEmoji && (
+                  <span className="flex items-center gap-1">
+                    <Smile className="h-3 w-3" />
+                    {moment.moodEmoji}
+                  </span>
+                )}
+                {moment.location && (
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {moment.location}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm">{moment.content}</p>
+              {moment.image && (
+                <div className="relative inline-block">
+                  <OptimizedImage
+                    fill={process.env.NODE_ENV === 'development' ? true : false}
+                    previewable
+                    src={moment.image.url}
+                    alt="配图"
+                    priority={
+                      Math.max(
+                        getRealImageHeight(moments[0]),
+                        getRealImageHeight(moments[1])
+                      ) === getRealImageHeight(moment)
+                        ? true
+                        : false
+                    }
+                    className="max-h-48 max-w-xs rounded-lg object-cover"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => onEdit(moment)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(moment)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * 发布/编辑对话框表单字段
+ */
+function MomentFormFields({
+  content,
+  onContentChange,
+  image,
+  onImageChange,
+  moodEmoji,
+  onMoodEmojiClick,
+  location,
+  onLocationChange,
+  onImageUpload,
+  onGetLocation,
+}: {
+  content: string;
+  onContentChange: (value: string) => void;
+  image: MomentImage | null;
+  onImageChange: (image: MomentImage | null) => void;
+  moodEmoji: string;
+  onMoodEmojiClick: (emoji: string) => void;
+  location: string;
+  onLocationChange: (value: string) => void;
+  onImageUpload: (files: FileList) => void;
+  onGetLocation: () => void;
+}) {
+  return (
+    <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
+      <div>
+        <label
+          htmlFor="moment-content"
+          className="mb-2 block text-sm font-medium"
+        >
+          内容
+        </label>
+        <textarea
+          id="moment-content"
+          value={content}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            onContentChange(e.target.value)
+          }
+          placeholder="说点什么吧...（最多200字）"
+          maxLength={200}
+          rows={3}
+          className="focus:ring-primary w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+        />
+        <div className="text-muted-foreground mt-1 text-xs">
+          {content.length}/200
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="moment-image-url"
+          className="mb-2 block text-sm font-medium"
+        >
+          配图
+        </label>
+        <div className="flex gap-2">
+          <Input
+            id="moment-image-url"
+            value={image?.url || ''}
+            onChange={(e) =>
+              onImageChange(
+                e.target.value
+                  ? {
+                      url: e.target.value,
+                      width: 0,
+                      height: 0,
+                      ratio: 0,
+                    }
+                  : null
+              )
+            }
+            placeholder="图片URL"
+          />
+          <FileUploadTrigger
+            id="moment-image"
+            accept="image/*"
+            onFileSelect={onImageUpload}
+          >
+            <ImageIcon className="h-4 w-4" />
+          </FileUploadTrigger>
+        </div>
+      </div>
+
+      <div>
+        <span className="mb-2 block text-sm font-medium">心情</span>
+        <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
+          {MOOD_OPTIONS.map((option) => (
+            <button
+              key={option.emoji}
+              type="button"
+              onClick={() => onMoodEmojiClick(option.emoji)}
+              className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                moodEmoji === option.emoji
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-background hover:bg-accent'
+              }`}
+            >
+              {option.emoji} {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="moment-location"
+          className="mb-2 block text-sm font-medium"
+        >
+          位置
+        </label>
+        <div className="flex gap-2">
+          <Input
+            id="moment-location"
+            value={location}
+            onChange={(e) => onLocationChange(e.target.value)}
+            placeholder="📍 在哪里..."
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={onGetLocation}
+            className="h-9 w-9"
+            title="获取当前位置"
+          >
+            <MapPin className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MomentsClient({
   initialMoments,
 }: {
@@ -87,15 +324,18 @@ export default function MomentsClient({
     }
   }, [isEditDialogOpen, selectedMoment]);
 
-  // 打开创建时清空表单
-  useEffect(() => {
-    if (isCreateDialogOpen) {
-      setContent('');
-      setImage(null);
-      setMoodEmoji('');
-      setLocation('');
-    }
-  }, [isCreateDialogOpen]);
+  // 打开创建时清空表单（render 期守卫：打开瞬间同步重置，避免用户先看到旧值）
+  const [prevCreateOpen, setPrevCreateOpen] = useState(false);
+  if (isCreateDialogOpen && !prevCreateOpen) {
+    setPrevCreateOpen(true);
+    setContent('');
+    setImage(null);
+    setMoodEmoji('');
+    setLocation('');
+  }
+  if (!isCreateDialogOpen && prevCreateOpen) {
+    setPrevCreateOpen(false);
+  }
 
   // 合并 create/edit 对话框
   const isFormDialogOpen = isCreateDialogOpen || isEditDialogOpen;
@@ -218,15 +458,6 @@ export default function MomentsClient({
     }
   };
 
-  const getRealImageHeight = (moment: Moment) => {
-    const scaleRatio = Math.round(
-      moment.image?.width ? moment.image.width / 320 : 1
-    );
-    return Math.round(
-      moment.image?.height ? moment.image.height / scaleRatio : 0
-    );
-  };
-
   return (
     <>
       <AdminPageLayout
@@ -237,85 +468,12 @@ export default function MomentsClient({
           createAddAction(openCreateDialog, '发布碎碎念'),
         ]}
       >
-        {/* 碎碎念列表 */}
-        <div className="space-y-4">
-          {loading ? (
-            <div className="text-muted-foreground py-8 text-center">
-              加载中...
-            </div>
-          ) : moments.length === 0 ? (
-            <div className="text-muted-foreground py-8 text-center">
-              暂无碎碎念，点击"发布碎碎念"开始记录生活
-            </div>
-          ) : (
-            moments.map((moment) => (
-              <div
-                key={moment.id}
-                className="hover:bg-accent/50 space-y-3 rounded-lg border p-4 transition-colors"
-              >
-                <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
-                  <div className="flex-1 space-y-2">
-                    <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                      <span>{formatDate(moment.createdAt)}</span>
-                      {moment.moodEmoji && (
-                        <span className="flex items-center gap-1">
-                          <Smile className="h-3 w-3" />
-                          {moment.moodEmoji}
-                        </span>
-                      )}
-                      {moment.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {moment.location}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm">{moment.content}</p>
-                    {moment.image && (
-                      <div className="relative inline-block">
-                        <OptimizedImage
-                          fill={
-                            process.env.NODE_ENV === 'development'
-                              ? true
-                              : false
-                          }
-                          previewable
-                          src={moment.image.url}
-                          alt="配图"
-                          priority={
-                            Math.max(
-                              getRealImageHeight(moments[0]),
-                              getRealImageHeight(moments[1])
-                            ) === getRealImageHeight(moment)
-                              ? true
-                              : false
-                          }
-                          className="max-h-48 max-w-xs rounded-lg object-cover"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEditDialog(moment)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openDeleteDialog(moment)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        <MomentsList
+          moments={moments}
+          loading={loading}
+          onEdit={openEditDialog}
+          onDelete={openDeleteDialog}
+        />
       </AdminPageLayout>
 
       {/* 表单对话框 */}
@@ -328,94 +486,18 @@ export default function MomentsClient({
         isSubmitting={isSubmitting}
         submitLabel={editMode === 'create' ? '发布' : '保存'}
       >
-        <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
-          <div>
-            <label className="mb-2 block text-sm font-medium">内容</label>
-            <textarea
-              value={content}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setContent(e.target.value)
-              }
-              placeholder="说点什么吧...（最多200字）"
-              maxLength={200}
-              rows={3}
-              className="focus:ring-primary w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-            />
-            <div className="text-muted-foreground mt-1 text-xs">
-              {content.length}/200
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">配图</label>
-            <div className="flex gap-2">
-              <Input
-                value={image?.url || ''}
-                onChange={(e) =>
-                  setImage(
-                    e.target.value
-                      ? {
-                          url: e.target.value,
-                          width: 0,
-                          height: 0,
-                          ratio: 0,
-                        }
-                      : null
-                  )
-                }
-                placeholder="图片URL"
-              />
-              <FileUploadTrigger
-                id="moment-image"
-                accept="image/*"
-                onFileSelect={handleImageUpload}
-              >
-                <ImageIcon className="h-4 w-4" />
-              </FileUploadTrigger>
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">心情</label>
-            <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
-              {MOOD_OPTIONS.map((option) => (
-                <button
-                  key={option.emoji}
-                  type="button"
-                  onClick={() => handleMoodEmojiClick(option.emoji)}
-                  className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                    moodEmoji === option.emoji
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background hover:bg-accent'
-                  }`}
-                >
-                  {option.emoji} {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">位置</label>
-            <div className="flex gap-2">
-              <Input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="📍 在哪里..."
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={handleGetLocation}
-                className="h-9 w-9"
-                title="获取当前位置"
-              >
-                <MapPin className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <MomentFormFields
+          content={content}
+          onContentChange={setContent}
+          image={image}
+          onImageChange={setImage}
+          moodEmoji={moodEmoji}
+          onMoodEmojiClick={handleMoodEmojiClick}
+          location={location}
+          onLocationChange={setLocation}
+          onImageUpload={handleImageUpload}
+          onGetLocation={handleGetLocation}
+        />
       </CrudFormDialog>
 
       {/* 删除确认对话框 */}

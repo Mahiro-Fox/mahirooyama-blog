@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { MarqueeContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
 
@@ -12,7 +12,7 @@ export function MarqueeCard({ content }: MarqueeCardProps) {
   const t = useT();
   const repeatCount = content.repeat || 3;
   return (
-    <motion.div
+    <m.div
       className="relative flex h-full w-full items-center overflow-hidden rounded-2xl px-6 shadow-lg"
       style={{
         background:
@@ -21,7 +21,7 @@ export function MarqueeCard({ content }: MarqueeCardProps) {
       whileHover={{ scale: 1.01 }}
     >
       <div className="flex">
-        <motion.div
+        <m.div
           className="flex whitespace-nowrap"
           animate={{
             x: [0, -1000],
@@ -40,8 +40,8 @@ export function MarqueeCard({ content }: MarqueeCardProps) {
               {t(content.text)}
             </span>
           ))}
-        </motion.div>
-        <motion.div
+        </m.div>
+        <m.div
           className="flex whitespace-nowrap"
           animate={{
             x: [0, -1000],
@@ -60,8 +60,8 @@ export function MarqueeCard({ content }: MarqueeCardProps) {
               {t(content.text)}
             </span>
           ))}
-        </motion.div>
+        </m.div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

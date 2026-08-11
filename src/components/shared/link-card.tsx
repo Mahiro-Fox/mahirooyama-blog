@@ -1,8 +1,6 @@
+import { imageSizes } from '@/components/shared/image-sizes';
 import { Link } from '@/components/shared/link';
-import {
-  imageSizes,
-  OptimizedImage,
-} from '@/components/shared/optimized-image';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface LinkCardProps {
   title: string;

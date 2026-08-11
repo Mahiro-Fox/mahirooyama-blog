@@ -93,11 +93,12 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                       </h4>
                       <div className="space-y-2">
                         {movie.sources.map((source, index) => (
-                          <div
-                            key={index}
+                          <button
+                            key={source.name}
+                            type="button"
                             onClick={() => changeSource(index)}
                             className={cn(
-                              'hover:bg-accent flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 transition-colors',
+                              'hover:bg-accent flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left transition-colors',
                               index === currentSourceIndex && 'bg-accent'
                             )}
                           >
@@ -108,7 +109,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                                 <Check className="h-4 w-4" />
                               )}
                             </span>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>

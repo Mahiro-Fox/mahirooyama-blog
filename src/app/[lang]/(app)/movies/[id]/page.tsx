@@ -10,10 +10,12 @@ export const generateMetadata = async ({
   params: Promise<{ id: string; lang: string }>;
 }) => {
   const { id, lang } = await params;
-  const result = await getPublicMovies();
+  const [result, moviesDictionary] = await Promise.all([
+    getPublicMovies(),
+    getDictionary(lang, 'movies'),
+  ]);
   const movies = result.success ? result.data : [];
   const movie = movies.find((m: Movie) => m.id === id);
-  const moviesDictionary = await getDictionary(lang, 'movies');
 
   return {
     title: movie
@@ -32,8 +34,7 @@ export default async function MoviePlayPage({
 }: {
   params: Promise<{ id: string; lang: string }>;
 }) {
-  const { id } = await params;
-  const result = await getPublicMovies();
+  const [{ id }, result] = await Promise.all([params, getPublicMovies()]);
   const movies = result.success ? result.data : [];
   const movie = movies.find((m: Movie) => m.id === id);
 

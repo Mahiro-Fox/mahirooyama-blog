@@ -92,7 +92,8 @@ const columns: Column<AnalyticsLog>[] = [
           ? '-'
           : JSON.stringify(log.properties);
       return (
-        <span
+        <button
+          type="button"
           className="text-sm"
           title={data}
           onClick={() => {
@@ -101,7 +102,7 @@ const columns: Column<AnalyticsLog>[] = [
           }}
         >
           {data}
-        </span>
+        </button>
       );
     },
   },

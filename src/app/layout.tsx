@@ -1,3 +1,4 @@
+import { domAnimation, LazyMotion, MotionConfig } from 'framer-motion';
 import { ImagePreviewProvider } from '@/context/image-preview-provider';
 import { Toaster } from '@/components/shadcn-ui/sonner';
 import { TailwindIndicator } from '@/components/shared/tailwind-indicator';
@@ -43,12 +44,18 @@ export default function RootLayout({ children }: RootLayoutProps) {
           fontVariables
         )}
       >
-        <ImagePreviewProvider>
-          {children}
-          <WebVitals />
-          <TailwindIndicator />
-          <Toaster position="top-center" />
-        </ImagePreviewProvider>
+        {/* 尊重 prefers-reduced-motion：动画降级为静态/局部透明过渡（WCAG 2.3.3） */}
+        {/* LazyMotion + m.*：按需加载动画特性，避免打包完整 motion 的 ~30kb（use-lazy-motion） */}
+        <MotionConfig reducedMotion="user">
+          <LazyMotion features={domAnimation}>
+            <ImagePreviewProvider>
+              {children}
+              <WebVitals />
+              <TailwindIndicator />
+              <Toaster position="top-center" />
+            </ImagePreviewProvider>
+          </LazyMotion>
+        </MotionConfig>
       </body>
     </html>
   );

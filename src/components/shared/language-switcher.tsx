@@ -14,20 +14,20 @@ import {
 import { i18nConfig } from '@/i18n/i18n.config';
 import { useLocale } from '@/i18n/use-locale';
 
+function switchLocaleHref(pathname: string, targetLocale: string): string {
+  const segments = pathname.split('/').filter(Boolean);
+  if (i18nConfig.locales.includes(segments[0])) segments.shift(); // 去掉当前语言前缀（如果有）
+
+  const rest = segments.length ? `/${segments.join('/')}` : '';
+  return targetLocale === i18nConfig.defaultLang
+    ? rest || '/'
+    : `/${targetLocale}${rest}`;
+}
+
 export function LanguageSwitcher() {
   const pathname = usePathname();
   const currentLocale = useLocale();
   const [isPending, setIsPending] = useState(false);
-
-  function switchLocaleHref(pathname: string, targetLocale: string): string {
-    const segments = pathname.split('/').filter(Boolean);
-    if (i18nConfig.locales.includes(segments[0])) segments.shift(); // 去掉当前语言前缀（如果有）
-
-    const rest = segments.length ? `/${segments.join('/')}` : '';
-    return targetLocale === i18nConfig.defaultLang
-      ? rest || '/'
-      : `/${targetLocale}${rest}`;
-  }
 
   const handleSwitch = async (targetLocale: string) => {
     setIsPending(true);

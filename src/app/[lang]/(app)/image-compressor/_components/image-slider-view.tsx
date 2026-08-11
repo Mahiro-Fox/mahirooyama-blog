@@ -1,8 +1,8 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useEffectEvent } from 'react';
 import { useT } from '@/i18n/dictionary-provider';
 import ImageCompare from './image-compare';
 
@@ -83,23 +83,24 @@ export default function ImageSliderView({
 
   /**
    * 键盘事件处理
+   * 监听器只注册一次；回调通过 useEffectEvent 读取最新 props，避免随其重建订阅
    */
+  const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
+    if (!isOpen) return;
+
+    if (e.key === 'Escape') {
+      onClose();
+    } else if (e.key === 'ArrowLeft' && onPrevious && hasPrevious) {
+      onPrevious();
+    } else if (e.key === 'ArrowRight' && onNext && hasNext) {
+      onNext();
+    }
+  });
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isOpen) return;
-
-      if (e.key === 'Escape') {
-        onClose();
-      } else if (e.key === 'ArrowLeft' && onPrevious && hasPrevious) {
-        onPrevious();
-      } else if (e.key === 'ArrowRight' && onNext && hasNext) {
-        onNext();
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, onPrevious, onNext, hasPrevious, hasNext]);
+  }, []);
 
   if (!result || !result.success || !result.base64) {
     return null;
@@ -113,7 +114,7 @@ export default function ImageSliderView({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -121,7 +122,7 @@ export default function ImageSliderView({
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -151,6 +152,7 @@ export default function ImageSliderView({
                   <button
                     onClick={onPrevious}
                     disabled={!hasPrevious}
+                    aria-label={t('image-compressor.previous')}
                     className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowLeft className="h-5 w-5" />
@@ -160,6 +162,7 @@ export default function ImageSliderView({
                   <button
                     onClick={onNext}
                     disabled={!hasNext}
+                    aria-label={t('image-compressor.next')}
                     className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowRight className="h-5 w-5" />
@@ -168,6 +171,7 @@ export default function ImageSliderView({
 
                 <button
                   onClick={onClose}
+                  aria-label={t('image-compressor.close')}
                   className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
                 >
                   <X className="h-5 w-5" />
@@ -217,12 +221,12 @@ export default function ImageSliderView({
                 )}
               </div>
 
-              <div className="text-white/40 text-xs">
+              <div className="text-xs text-white/40">
                 {t('image-compressor.compare_operate_hint')}
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

@@ -17,12 +17,22 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
     `${homeDictionary['home.description_1']}${homeDictionary['home.description_2']}${homeDictionary['home.description_3']}`
       .replace(/<a>/g, '')
       .replace(/<\/a>/g, '');
+  // 解析 base URL，配置缺失或非法时退回 undefined（Next.js 会按请求推断）
+  const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+  let metadataBase: URL | undefined;
+  if (rawAppUrl) {
+    try {
+      metadataBase = new URL(rawAppUrl);
+    } catch {
+      metadataBase = undefined;
+    }
+  }
   const metaData = {
     title: {
       default: siteConfig.name,
       template: `%s | ${siteConfig.name}`,
     },
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL!),
+    metadataBase,
     description,
     alternates: {
       types: {

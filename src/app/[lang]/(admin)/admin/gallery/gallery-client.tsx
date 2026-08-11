@@ -105,6 +105,167 @@ type GalleryCreateInput = { slug: string; content: string };
 // updateInput 中 content 是必填，newSlug 只有发生变化时才传
 type GalleryUpdateInput = { content: string; newSlug?: string };
 
+// === 表单对话框（编辑/新增） ===
+function GalleryFormDialog({
+  open,
+  onOpenChange,
+  editMode,
+  selectedFile,
+  isSaving,
+  editFileName,
+  setEditFileName,
+  editTitle,
+  setEditTitle,
+  editDescription,
+  setEditDescription,
+  editThumbnail,
+  setEditThumbnail,
+  editTags,
+  setEditTags,
+  onSubmit,
+  onThumbnailUpload,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editMode: 'create' | 'edit';
+  selectedFile: AdminGallery | null;
+  isSaving: boolean;
+  editFileName: string;
+  setEditFileName: (value: string) => void;
+  editTitle: string;
+  setEditTitle: (value: string) => void;
+  editDescription: string;
+  setEditDescription: (value: string) => void;
+  editThumbnail: string;
+  setEditThumbnail: (value: string) => void;
+  editTags: string[];
+  setEditTags: (value: string[]) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onThumbnailUpload: (list: FileList) => void;
+}) {
+  return (
+    <CrudFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        editMode === 'create'
+          ? '新增 JSON 文件'
+          : `编辑: ${selectedFile?.title}`
+      }
+      description={
+        editMode === 'create'
+          ? '创建新的 Gallery 配置文件'
+          : selectedFile?.fileName
+      }
+      onSubmit={onSubmit}
+      isSubmitting={isSaving}
+      submitLabel={
+        isSaving
+          ? editMode === 'create'
+            ? '创建中...'
+            : '保存中...'
+          : editMode === 'create'
+            ? '创建'
+            : '保存'
+      }
+    >
+      <div className="space-y-4">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="file-name">文件名</Label>
+          <Input
+            id="file-name"
+            value={editFileName}
+            onChange={(e) => setEditFileName(e.target.value)}
+            placeholder="请输入文件名"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="title">标题</Label>
+          <Input
+            id="title"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            placeholder="请输入标题"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="description">描述</Label>
+          <textarea
+            id="description"
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+            placeholder="请输入描述"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="thumbnail">缩略图</Label>
+          <div className="flex gap-2">
+            <Input
+              id="thumbnail"
+              value={editThumbnail}
+              onChange={(e) => setEditThumbnail(e.target.value)}
+              placeholder="图片URL"
+            />
+            <FileUploadTrigger
+              id="gallery-thumbnail"
+              accept="image/*"
+              onFileSelect={onThumbnailUpload}
+            >
+              <ImageIcon className="h-4 w-4" />
+            </FileUploadTrigger>
+          </div>
+          {editThumbnail && (
+            <OptimizedImage
+              fill={process.env.NODE_ENV === 'development' ? true : false}
+              previewable
+              src={editThumbnail}
+              alt="配图"
+              containerClassName="self-start"
+              className="max-h-48 max-w-xs rounded-lg object-cover"
+            />
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="tags">标签</Label>
+          <TagPicker value={editTags} onChange={setEditTags} type="gallery" />
+        </div>
+      </div>
+    </CrudFormDialog>
+  );
+}
+
+// === 删除确认对话框 ===
+function GalleryDeleteDialog({
+  open,
+  onOpenChange,
+  selectedFile,
+  onConfirm,
+  isDeleting,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedFile: AdminGallery | null;
+  onConfirm: () => void;
+  isDeleting: boolean;
+}) {
+  return (
+    <DeleteConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="确认删除"
+      description={
+        <>
+          确定要删除图片 <strong>{selectedFile?.title}</strong>{' '}
+          吗？此操作不可恢复。
+        </>
+      }
+      onConfirm={onConfirm}
+      isDeleting={isDeleting}
+    />
+  );
+}
+
 export default function GalleryClient({
   initialFiles,
 }: {
@@ -165,16 +326,19 @@ export default function GalleryClient({
   const [editThumbnail, setEditThumbnail] = useState('');
   const [editTags, setEditTags] = useState<string[]>([]);
 
-  // 创建模式下清空表单
-  useEffect(() => {
-    if (isCreateDialogOpen) {
-      setEditFileName('');
-      setEditTitle('');
-      setEditDescription('');
-      setEditThumbnail('');
-      setEditTags([]);
-    }
-  }, [isCreateDialogOpen]);
+  // 创建模式下清空表单（渲染期间重置，避免打开时闪现旧值）
+  const [prevCreateOpen, setPrevCreateOpen] = useState(isCreateDialogOpen);
+  if (isCreateDialogOpen && !prevCreateOpen) {
+    setPrevCreateOpen(true);
+    setEditFileName('');
+    setEditTitle('');
+    setEditDescription('');
+    setEditThumbnail('');
+    setEditTags([]);
+  }
+  if (!isCreateDialogOpen && prevCreateOpen) {
+    setPrevCreateOpen(false);
+  }
 
   // 编辑模式下：openEditDialog 已经调了 getDetail 并把 detail 放进 selectedItem
   // 这里把 selectedItem 中的 Gallery detail 拆到表单字段
@@ -327,106 +491,31 @@ export default function GalleryClient({
       </AdminPageLayout>
 
       {/* 编辑/新增对话框 */}
-      <CrudFormDialog
+      <GalleryFormDialog
         open={isFormDialogOpen}
         onOpenChange={handleFormDialogOpenChange}
-        title={
-          editMode === 'create'
-            ? '新增 JSON 文件'
-            : `编辑: ${selectedFile?.title}`
-        }
-        description={
-          editMode === 'create'
-            ? '创建新的 Gallery 配置文件'
-            : selectedFile?.fileName
-        }
+        editMode={editMode}
+        selectedFile={selectedFile}
+        isSaving={isSaving}
+        editFileName={editFileName}
+        setEditFileName={setEditFileName}
+        editTitle={editTitle}
+        setEditTitle={setEditTitle}
+        editDescription={editDescription}
+        setEditDescription={setEditDescription}
+        editThumbnail={editThumbnail}
+        setEditThumbnail={setEditThumbnail}
+        editTags={editTags}
+        setEditTags={setEditTags}
         onSubmit={handleSave}
-        isSubmitting={isSaving}
-        submitLabel={
-          isSaving
-            ? editMode === 'create'
-              ? '创建中...'
-              : '保存中...'
-            : editMode === 'create'
-              ? '创建'
-              : '保存'
-        }
-      >
-        <div className="space-y-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="file-name">文件名</Label>
-            <Input
-              id="file-name"
-              value={editFileName}
-              onChange={(e) => setEditFileName(e.target.value)}
-              placeholder="请输入文件名"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="title">标题</Label>
-            <Input
-              id="title"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              placeholder="请输入标题"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="description">描述</Label>
-            <textarea
-              id="description"
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder="请输入描述"
-              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="thumbnail">缩略图</Label>
-            <div className="flex gap-2">
-              <Input
-                id="thumbnail"
-                value={editThumbnail}
-                onChange={(e) => setEditThumbnail(e.target.value)}
-                placeholder="图片URL"
-              />
-              <FileUploadTrigger
-                id="gallery-thumbnail"
-                accept="image/*"
-                onFileSelect={handleThumbnailUpload}
-              >
-                <ImageIcon className="h-4 w-4" />
-              </FileUploadTrigger>
-            </div>
-            {editThumbnail && (
-              <OptimizedImage
-                fill={process.env.NODE_ENV === 'development' ? true : false}
-                previewable
-                src={editThumbnail}
-                alt="配图"
-                containerClassName="self-start"
-                className="max-h-48 max-w-xs rounded-lg object-cover"
-              />
-            )}
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="tags">标签</Label>
-            <TagPicker value={editTags} onChange={setEditTags} type="gallery" />
-          </div>
-        </div>
-      </CrudFormDialog>
+        onThumbnailUpload={handleThumbnailUpload}
+      />
 
       {/* 删除确认对话框 */}
-      <DeleteConfirmDialog
+      <GalleryDeleteDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="确认删除"
-        description={
-          <>
-            确定要删除图片 <strong>{selectedFile?.title}</strong>{' '}
-            吗？此操作不可恢复。
-          </>
-        }
+        selectedFile={selectedFile}
         onConfirm={deleteItem}
         isDeleting={isSaving}
       />

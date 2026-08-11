@@ -1,7 +1,7 @@
 'use client';
 
 import { MapPin, Smile } from 'lucide-react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { Moment } from '@/lib/moments';
@@ -11,15 +11,16 @@ interface MomentsTimelineProps {
   moments: Moment[];
 }
 
+const getRealImageHeight = (moment: Moment) => {
+  const scaleRatio = Math.round(
+    moment.image?.width ? moment.image.width / 320 : 1
+  );
+  return Math.round(
+    moment.image?.height ? moment.image.height / scaleRatio : 0
+  );
+};
+
 export function MomentsTimeline({ moments }: MomentsTimelineProps) {
-  const getRealImageHeight = (moment: Moment) => {
-    const scaleRatio = Math.round(
-      moment.image?.width ? moment.image.width / 320 : 1
-    );
-    return Math.round(
-      moment.image?.height ? moment.image.height / scaleRatio : 0
-    );
-  };
   return (
     <div className="relative">
       {/* 时间轴线 */}
@@ -28,7 +29,7 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
       {/* 碎碎念列表 */}
       <div className="space-y-8">
         {moments.map((moment, index) => (
-          <motion.div
+          <m.div
             key={moment.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -86,7 +87,7 @@ export function MomentsTimeline({ moments }: MomentsTimelineProps) {
                 )}
               </div>
             </BlurFade>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </div>

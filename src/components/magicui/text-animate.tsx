@@ -2,7 +2,7 @@
 
 import {
   AnimatePresence,
-  motion,
+  m,
   Variants,
   type DOMMotionComponents,
   type MotionProps,
@@ -24,18 +24,18 @@ type AnimationVariant =
   | 'scaleDown';
 
 const motionElements = {
-  article: motion.article,
-  div: motion.div,
-  h1: motion.h1,
-  h2: motion.h2,
-  h3: motion.h3,
-  h4: motion.h4,
-  h5: motion.h5,
-  h6: motion.h6,
-  li: motion.li,
-  p: motion.p,
-  section: motion.section,
-  span: motion.span,
+  article: m.article,
+  div: m.div,
+  h1: m.h1,
+  h2: m.h2,
+  h3: m.h3,
+  h4: m.h4,
+  h5: m.h5,
+  h6: m.h6,
+  li: m.li,
+  p: m.p,
+  section: m.section,
+  span: m.span,
 } as const;
 
 type MotionElementType = Extract<
@@ -421,7 +421,7 @@ const TextAnimateBase = ({
       >
         {accessible && <span className="sr-only">{children}</span>}
         {segments.map((segment, i) => (
-          <motion.span
+          <m.span
             key={`${by}-${segment}-${i}`}
             variants={finalVariants.item}
             custom={i * staggerTimings[by]}
@@ -433,7 +433,7 @@ const TextAnimateBase = ({
             aria-hidden={accessible ? true : undefined}
           >
             {segment}
-          </motion.span>
+          </m.span>
         ))}
       </MotionComponent>
     </AnimatePresence>

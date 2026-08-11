@@ -40,7 +40,10 @@ export function useSearch(limit = 10) {
     [limit]
   );
 
-  const debouncedSearch = useCallback(debounce(search, 300), [search]);
+  const debouncedSearch = useCallback(
+    (query: string) => debounce(search, 300)(query),
+    [search]
+  );
 
   const handleKeywordChange = useCallback(
     (value: string) => {

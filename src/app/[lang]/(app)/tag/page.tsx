@@ -19,7 +19,7 @@ function TagCard({ tag, type }: { tag: TagType; type: 'blog' | 'gallery' }) {
 
   return (
     <Link href={href}>
-      <Card className="group cursor-pointer transition-all hover:shadow-md">
+      <Card className="group cursor-pointer transition-shadow hover:shadow-md">
         <CardContent className="flex items-center gap-3 p-4">
           <div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg transition-colors">
             <IconComponent className="h-5 w-5" />

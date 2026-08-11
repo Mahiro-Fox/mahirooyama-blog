@@ -18,6 +18,10 @@ export const getOGData = cache(
         },
       });
 
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${url}: ${response.status}`);
+      }
+
       const html = await response.text();
 
       const getMetaContent = (property: string): string | undefined => {

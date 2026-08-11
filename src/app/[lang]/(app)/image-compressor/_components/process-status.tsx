@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import {
   AlertCircle,
   CheckCircle,
@@ -107,46 +107,46 @@ export default function ProcessStatus({
   }
 
   return (
-    <div className="bg-card space-y-6 rounded-2xl border border-border p-6">
+    <div className="bg-card border-border space-y-6 rounded-2xl border p-6">
       {/* 处理进度 */}
       {isProcessing && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Loader2 className="text-[var(--primary)] h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin text-[var(--primary)]" />
               <span className="text-foreground font-medium">
                 {t('image-compressor.processing_images')}
               </span>
             </div>
-            <span className="text-[var(--primary)] text-sm font-semibold">
+            <span className="text-sm font-semibold text-[var(--primary)]">
               {progress}%
             </span>
           </div>
 
           <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-            <motion.div
-              className="bg-[var(--primary)] h-full rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
+            <m.div
+              className="h-full origin-left rounded-full bg-[var(--primary)]"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: progress / 100 }}
               transition={{ duration: 0.3 }}
             />
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* 处理完成统计 */}
       {!isProcessing && results.length > 0 && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="grid grid-cols-2 gap-4 sm:grid-cols-4"
         >
-          <div className="bg-[var(--primary)]/8 rounded-xl p-4">
-            <div className="text-[var(--primary)] text-2xl font-bold">
+          <div className="rounded-xl bg-[var(--primary)]/8 p-4">
+            <div className="text-2xl font-bold text-[var(--primary)]">
               {results.length}
             </div>
             <div className="text-muted-foreground text-xs">
@@ -154,8 +154,8 @@ export default function ProcessStatus({
             </div>
           </div>
 
-          <div className="bg-green-500/10 rounded-xl p-4">
-            <div className="text-green-600 text-2xl font-bold">
+          <div className="rounded-xl bg-green-500/10 p-4">
+            <div className="text-2xl font-bold text-green-600">
               {successCount}
             </div>
             <div className="text-muted-foreground text-xs">
@@ -173,8 +173,8 @@ export default function ProcessStatus({
           </div>
 
           {totalSavings > 0 && (
-            <div className="bg-[var(--primary)]/8 rounded-xl p-4">
-              <div className="text-[var(--primary)] text-2xl font-bold">
+            <div className="rounded-xl bg-[var(--primary)]/8 p-4">
+              <div className="text-2xl font-bold text-[var(--primary)]">
                 {formatFileSize(totalSavings)}
               </div>
               <div className="text-muted-foreground text-xs">
@@ -182,30 +182,30 @@ export default function ProcessStatus({
               </div>
             </div>
           )}
-        </motion.div>
+        </m.div>
       )}
 
       {/* 下载全部按钮 */}
       {!isProcessing && successCount > 0 && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <button
             onClick={onDownloadAll}
-            className="bg-[var(--primary)] flex w-full items-center justify-center gap-2 rounded-xl py-4 font-medium text-[var(--primary-foreground)] shadow-lg shadow-[var(--primary)]/25 transition-all duration-200 hover:bg-[var(--primary)]/90 hover:shadow-[var(--primary)]/40"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--primary)] py-4 font-medium text-[var(--primary-foreground)] shadow-[var(--primary)]/25 shadow-lg transition-[background-color,box-shadow] duration-200 hover:bg-[var(--primary)]/90 hover:shadow-[var(--primary)]/40"
           >
             <Package className="h-5 w-5" />
             {t('image-compressor.batch_download', { count: successCount })}
           </button>
-        </motion.div>
+        </m.div>
       )}
 
       {/* 结果列表 */}
       <AnimatePresence>
         {results.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -217,7 +217,7 @@ export default function ProcessStatus({
 
             <div className="max-h-96 space-y-3 overflow-y-auto pr-2">
               {validResults.map((result, index) => (
-                <motion.div
+                <m.div
                   key={result.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -245,7 +245,7 @@ export default function ProcessStatus({
                           {result.originalName}
                         </p>
                         {result.success ? (
-                          <CheckCircle className="text-green-500 h-5 w-5 shrink-0" />
+                          <CheckCircle className="h-5 w-5 shrink-0 text-green-500" />
                         ) : (
                           <XCircle className="text-destructive h-5 w-5 shrink-0" />
                         )}
@@ -274,7 +274,7 @@ export default function ProcessStatus({
                             </span>
 
                             {result.metadata.size < result.originalSize && (
-                              <span className="text-green-600 text-xs font-semibold">
+                              <span className="text-xs font-semibold text-green-600">
                                 {t('image-compressor.saved', {
                                   percent: calculateSavings(
                                     result.originalSize,
@@ -308,18 +308,18 @@ export default function ProcessStatus({
                         </button>
                         <button
                           onClick={() => onDownload(result)}
-                          className="bg-[var(--primary)]/10 hover:bg-[var(--primary)]/20 rounded-lg p-2 transition-colors duration-200"
+                          className="rounded-lg bg-[var(--primary)]/10 p-2 transition-colors duration-200 hover:bg-[var(--primary)]/20"
                           title={t('image-compressor.download_single')}
                         >
-                          <Download className="text-[var(--primary)] h-4 w-4" />
+                          <Download className="h-4 w-4 text-[var(--primary)]" />
                         </button>
                       </div>
                     )}
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

@@ -183,7 +183,7 @@ export default function AnalyticsCharts({ logs }: AnalyticsChartsProps) {
             >
               {deviceTypeData.map((entry, index) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={`cell-${entry.name}`}
                   fill={COLORS[index % COLORS.length]}
                 />
               ))}
@@ -212,7 +212,7 @@ export default function AnalyticsCharts({ logs }: AnalyticsChartsProps) {
             >
               {osData.map((entry, index) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={`cell-${entry.name}`}
                   fill={COLORS[index % COLORS.length]}
                 />
               ))}
@@ -241,7 +241,7 @@ export default function AnalyticsCharts({ logs }: AnalyticsChartsProps) {
             >
               {browserData.map((entry, index) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={`cell-${entry.name}`}
                   fill={COLORS[index % COLORS.length]}
                 />
               ))}
@@ -270,7 +270,7 @@ export default function AnalyticsCharts({ logs }: AnalyticsChartsProps) {
             >
               {eventData.map((entry, index) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={`cell-${entry.name}`}
                   fill={COLORS[index % COLORS.length]}
                 />
               ))}

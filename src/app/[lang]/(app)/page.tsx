@@ -14,12 +14,14 @@ import { VermilionThread } from '@/components/shared/vermilion-thread';
 import { Gallery } from '@/lib/gallery';
 
 export default async function IndexPage() {
-  const blogResult = await getPublicBlogs({ all: true });
+  const [blogResult, galleryResult, bannerData, tags] = await Promise.all([
+    getPublicBlogs({ all: true }),
+    getPublicGalleries(),
+    getHomeBannerImages(),
+    tagStore.getAll(),
+  ]);
   const allPosts = blogResult.success ? blogResult.data.items : [];
-  const galleryResult = await getPublicGalleries();
   const galleries = galleryResult.success ? galleryResult.data.items : [];
-  const bannerData = await getHomeBannerImages();
-  const tags = await tagStore.getAll();
 
   const initialIndex = bannerData
     ? Math.floor(Math.random() * bannerData.length)

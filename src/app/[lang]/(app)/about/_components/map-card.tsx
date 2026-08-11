@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Heart, MapPin } from 'lucide-react';
 import { MapContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
@@ -12,7 +12,7 @@ interface MapCardProps {
 export function MapCard({ content }: MapCardProps) {
   const t = useT();
   return (
-    <motion.div
+    <m.div
       className="relative flex h-full w-full items-center overflow-hidden rounded-2xl shadow-lg"
       style={{
         background:
@@ -26,7 +26,7 @@ export function MapCard({ content }: MapCardProps) {
 
       {/* Map pin with ripple effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <motion.div
+        <m.div
           animate={{ scale: [1, 1.2, 1] }}
           transition={{
             duration: 2,
@@ -38,10 +38,10 @@ export function MapCard({ content }: MapCardProps) {
             <div className="absolute inset-0 rounded-full bg-white/30 blur-md" />
             <MapPin className="relative h-14 w-14 text-white drop-shadow-lg" />
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Ripple rings */}
-        <motion.div
+        <m.div
           className="absolute top-1/2 left-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/30"
           animate={{
             scale: [1, 1.5],
@@ -56,7 +56,7 @@ export function MapCard({ content }: MapCardProps) {
       </div>
 
       {/* Location info with glassmorphism */}
-      <motion.div
+      <m.div
         className="absolute right-4 bottom-4 left-4 rounded-xl border border-white/10 bg-black/30 p-3 backdrop-blur-md"
         whileHover={{ scale: 1.02 }}
       >
@@ -69,7 +69,7 @@ export function MapCard({ content }: MapCardProps) {
             </span>
           </p>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

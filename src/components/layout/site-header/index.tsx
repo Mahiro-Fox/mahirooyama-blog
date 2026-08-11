@@ -3,7 +3,7 @@
 import { LogOut, Menu, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { userLogout } from '@/actions/user-auth';
 import { Search } from '@/components/layout/site-header/search';
 import { Button } from '@/components/shadcn-ui/button';
@@ -58,14 +58,13 @@ export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
   const [currentUser, setCurrentUser] = useState<SiteHeaderUser | null>(
     initialUserAuth
   );
-
-  useEffect(() => {
-    if (!initialUserAuth) {
-      setCurrentUser(null);
-    } else {
-      setCurrentUser(initialUserAuth);
-    }
-  }, [initialUserAuth]);
+  const [prevAuth, setPrevAuth] = useState<SiteHeaderUser | null>(
+    initialUserAuth
+  );
+  if (initialUserAuth !== prevAuth) {
+    setPrevAuth(initialUserAuth);
+    setCurrentUser(initialUserAuth);
+  }
 
   const handleLogout = async () => {
     try {

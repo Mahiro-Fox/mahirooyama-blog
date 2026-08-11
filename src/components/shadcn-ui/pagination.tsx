@@ -4,7 +4,8 @@ import {
   MoreHorizontalIcon,
 } from 'lucide-react';
 import * as React from 'react';
-import { Button, buttonVariants } from '@/components/shadcn-ui/button';
+import { Button } from '@/components/shadcn-ui/button';
+import { buttonVariants } from '@/components/shadcn-ui/button-variants';
 import { Link } from '@/components/shared/link';
 import { cn } from '@/utils/utils';
 

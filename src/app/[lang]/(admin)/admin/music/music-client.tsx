@@ -86,15 +86,18 @@ export default function MusicClient({
     }
   }, [isEditDialogOpen, selectedSong]);
 
-  // 打开创建模式时，清空表单
-  useEffect(() => {
-    if (isCreateDialogOpen) {
-      setName('');
-      setArtist('');
-      setUrl('');
-      setCover('');
-    }
-  }, [isCreateDialogOpen]);
+  // 打开创建模式时，清空表单（render 期守卫：打开瞬间同步重置，避免用户先看到旧值）
+  const [prevCreateOpen, setPrevCreateOpen] = useState(false);
+  if (isCreateDialogOpen && !prevCreateOpen) {
+    setPrevCreateOpen(true);
+    setName('');
+    setArtist('');
+    setUrl('');
+    setCover('');
+  }
+  if (!isCreateDialogOpen && prevCreateOpen) {
+    setPrevCreateOpen(false);
+  }
 
   // 合并 create/edit 对话框（原页面共用一个 CrudFormDialog）
   const isFormDialogOpen = isCreateDialogOpen || isEditDialogOpen;
@@ -219,8 +222,14 @@ export default function MusicClient({
         >
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium">歌曲名称</label>
+              <label
+                htmlFor="music-name"
+                className="mb-2 block text-sm font-medium"
+              >
+                歌曲名称
+              </label>
               <Input
+                id="music-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="请输入歌曲名称"
@@ -229,8 +238,14 @@ export default function MusicClient({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">歌手名称</label>
+              <label
+                htmlFor="music-artist"
+                className="mb-2 block text-sm font-medium"
+              >
+                歌手名称
+              </label>
               <Input
+                id="music-artist"
                 value={artist}
                 onChange={(e) => setArtist(e.target.value)}
                 placeholder="请输入歌手名称"
@@ -239,9 +254,15 @@ export default function MusicClient({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">歌曲链接</label>
+              <label
+                htmlFor="music-url"
+                className="mb-2 block text-sm font-medium"
+              >
+                歌曲链接
+              </label>
               <div className="flex gap-2">
                 <Input
+                  id="music-url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="请输入歌曲URL"
@@ -258,10 +279,14 @@ export default function MusicClient({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label
+                htmlFor="music-cover"
+                className="mb-2 block text-sm font-medium"
+              >
                 封面图片链接
               </label>
               <Input
+                id="music-cover"
                 value={cover}
                 onChange={(e) => setCover(e.target.value)}
                 placeholder="请输入封面图片URL（可选）"

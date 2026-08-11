@@ -32,6 +32,171 @@ interface ConversationListProps {
   className?: string;
 }
 
+const formatTime = (iso: string) => {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const oneDay = 24 * 60 * 60 * 1000;
+
+  if (diff < oneDay) {
+    return d.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  return d.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+};
+
+interface ConversationListItemProps {
+  item: ConversationSummary | StoredConversationSummary;
+  isActive: boolean;
+  isEditing: boolean;
+  isDeleting: boolean;
+  editValue: string;
+  editInputRef: React.RefObject<HTMLInputElement | null>;
+  onSelect: (id: string) => void;
+  onStartEdit: (id: string, currentTitle: string, e: React.MouseEvent) => void;
+  onEditChange: (value: string) => void;
+  onEditBlur: () => void;
+  onEditKeyDown: (e: React.KeyboardEvent) => void;
+  onDeleteClick: (id: string) => void;
+}
+
+function ConversationListItem({
+  item,
+  isActive,
+  isEditing,
+  isDeleting,
+  editValue,
+  editInputRef,
+  onSelect,
+  onStartEdit,
+  onEditChange,
+  onEditBlur,
+  onEditKeyDown,
+  onDeleteClick,
+}: ConversationListItemProps) {
+  const t = useT();
+  return (
+    <li key={item.id}>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onSelect(item.id)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect(item.id);
+          }
+        }}
+        className={cn(
+          'group flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors',
+          isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'
+        )}
+      >
+        <div className="min-w-0 flex-1">
+          {isEditing ? (
+            <Input
+              ref={editInputRef}
+              value={editValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              onBlur={onEditBlur}
+              onKeyDown={onEditKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              className="h-7 text-sm"
+              maxLength={100}
+            />
+          ) : (
+            <>
+              <div className="truncate font-medium">
+                {item.title || t('chat.untitled_conversation')}
+              </div>
+              <div className="text-muted-foreground text-xs">
+                {isDeleting ? t('chat.deleting') : formatTime(item.updatedAt)}
+              </div>
+            </>
+          )}
+        </div>
+        {!isEditing && (
+          <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={(e) =>
+                onStartEdit(
+                  item.id,
+                  item.title || t('chat.untitled_conversation'),
+                  e
+                )
+              }
+              disabled={isDeleting}
+              className="text-muted-foreground hover:text-foreground h-6 w-6"
+              title={t('chat.rename_conversation')}
+            >
+              <Pencil className="size-3" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteClick(item.id);
+              }}
+              disabled={isDeleting}
+              className="text-muted-foreground hover:text-destructive h-6 w-6"
+              title={t('chat.delete_conversation')}
+            >
+              <Trash2 className="size-3" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </li>
+  );
+}
+
+interface DeleteConfirmDialogProps {
+  confirmDeleteId: string | null;
+  onClose: () => void;
+  onConfirm: (id: string) => void;
+}
+
+/** 删除确认弹窗 */
+function DeleteConfirmDialog({
+  confirmDeleteId,
+  onClose,
+  onConfirm,
+}: DeleteConfirmDialogProps) {
+  const t = useT();
+  return (
+    <Dialog
+      open={confirmDeleteId !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t('chat.delete_confirm_title')}</DialogTitle>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            {t('chat.cancel')}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              if (confirmDeleteId) onConfirm(confirmDeleteId);
+            }}
+          >
+            {t('chat.delete')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function ConversationList({
   isUserAuth,
   currentConversationId,
@@ -205,21 +370,6 @@ export function ConversationList({
     ]
   );
 
-  const formatTime = (iso: string) => {
-    const d = new Date(iso);
-    const now = new Date();
-    const diff = now.getTime() - d.getTime();
-    const oneDay = 24 * 60 * 60 * 1000;
-
-    if (diff < oneDay) {
-      return d.toLocaleTimeString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    }
-    return d.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
-  };
-
   return (
     <div className={cn('flex h-full flex-col', className)}>
       <div className="flex-1 overflow-y-auto">
@@ -239,76 +389,21 @@ export function ConversationList({
               const isDeleting = deletingId === item.id;
 
               return (
-                <li key={item.id}>
-                  <div
-                    onClick={() => handleSelect(item.id)}
-                    className={cn(
-                      'group flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors',
-                      isActive
-                        ? 'bg-accent text-accent-foreground'
-                        : 'hover:bg-muted'
-                    )}
-                  >
-                    <div className="min-w-0 flex-1">
-                      {isEditing ? (
-                        <Input
-                          ref={editInputRef}
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={saveEdit}
-                          onKeyDown={handleEditKeyDown}
-                          onClick={(e) => e.stopPropagation()}
-                          className="h-7 text-sm"
-                          maxLength={100}
-                        />
-                      ) : (
-                        <>
-                          <div className="truncate font-medium">
-                            {item.title || t('chat.untitled_conversation')}
-                          </div>
-                          <div className="text-muted-foreground text-xs">
-                            {isDeleting
-                              ? t('chat.deleting')
-                              : formatTime(item.updatedAt)}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    {!isEditing && (
-                      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={(e) =>
-                            startEdit(
-                              item.id,
-                              item.title || t('chat.untitled_conversation'),
-                              e
-                            )
-                          }
-                          disabled={isDeleting}
-                          className="text-muted-foreground hover:text-foreground h-6 w-6"
-                          title={t('chat.rename_conversation')}
-                        >
-                          <Pencil className="size-3" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConfirmDeleteId(item.id);
-                          }}
-                          disabled={isDeleting}
-                          className="text-muted-foreground hover:text-destructive h-6 w-6"
-                          title={t('chat.delete_conversation')}
-                        >
-                          <Trash2 className="size-3" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </li>
+                <ConversationListItem
+                  key={item.id}
+                  item={item}
+                  isActive={isActive}
+                  isEditing={isEditing}
+                  isDeleting={isDeleting}
+                  editValue={editValue}
+                  editInputRef={editInputRef}
+                  onSelect={handleSelect}
+                  onStartEdit={startEdit}
+                  onEditChange={setEditValue}
+                  onEditBlur={saveEdit}
+                  onEditKeyDown={handleEditKeyDown}
+                  onDeleteClick={(id) => setConfirmDeleteId(id)}
+                />
               );
             })}
           </ul>
@@ -316,31 +411,11 @@ export function ConversationList({
       </div>
 
       {/* 删除确认弹窗 */}
-      <Dialog
-        open={confirmDeleteId !== null}
-        onOpenChange={(open) => {
-          if (!open) setConfirmDeleteId(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('chat.delete_confirm_title')}</DialogTitle>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>
-              {t('chat.cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (confirmDeleteId) handleDelete(confirmDeleteId);
-              }}
-            >
-              {t('chat.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        confirmDeleteId={confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

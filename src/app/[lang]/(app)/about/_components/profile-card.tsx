@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { ProfileContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
@@ -12,8 +12,8 @@ interface ProfileCardProps {
 export function ProfileCard({ content }: ProfileCardProps) {
   const t = useT();
   return (
-    <motion.div
-      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl p-6 text-white shadow-lg transition-all hover:shadow-xl"
+    <m.div
+      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl p-6 text-white shadow-lg transition-shadow hover:shadow-xl"
       style={{
         background:
           'linear-gradient(135deg, var(--primary), color-mix(in oklch, var(--primary) 70%, black 30%))',
@@ -37,7 +37,7 @@ export function ProfileCard({ content }: ProfileCardProps) {
       </div>
 
       {/* Animated background pattern */}
-      <motion.div
+      <m.div
         className="absolute -right-20 -bottom-20 h-60 w-60 rounded-full border-4 border-white/5"
         // animate={{
         //   rotate: [0, 360],
@@ -48,6 +48,6 @@ export function ProfileCard({ content }: ProfileCardProps) {
         //   ease: 'linear',
         // }}
       />
-    </motion.div>
+    </m.div>
   );
 }

@@ -92,10 +92,11 @@ export function GuestbookWallDialog() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label htmlFor="guestbook-nickname" className="mb-2 block text-sm font-medium">
                 {t('guestbook.form.label.nickname')}
               </label>
               <Input
+                id="guestbook-nickname"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder={t('guestbook.form.placeholder.nickname')}
@@ -104,9 +105,9 @@ export function GuestbookWallDialog() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <span className="mb-2 block text-sm font-medium">
                 {t('guestbook.form.label.bg_color')}
-              </label>
+              </span>
               <div className="flex flex-wrap gap-2">
                 {COLOR_OPTIONS.map((color) => (
                   <button
@@ -126,11 +127,12 @@ export function GuestbookWallDialog() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label htmlFor="guestbook-contact" className="mb-2 block text-sm font-medium">
                 {t('guestbook.form.label.contact')}
               </label>
               <div className="flex flex-col gap-2">
                 <Input
+                  id="guestbook-contact"
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
                   placeholder={t('guestbook.form.placeholder.contact')}
@@ -168,10 +170,11 @@ export function GuestbookWallDialog() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label htmlFor="guestbook-content" className="mb-2 block text-sm font-medium">
                 {t('guestbook.form.label.content')}
               </label>
               <textarea
+                id="guestbook-content"
                 value={content}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   setContent(e.target.value)

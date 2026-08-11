@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Marquee } from '@/components/magicui/marquee';
 import { SkillsContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
@@ -26,21 +26,21 @@ export function SkillsCard({ content, title }: SkillsCardProps) {
   const t = useT();
   const groups = splitSkills(content.skills || []);
   return (
-    <motion.div
+    <m.div
       className="bg-card border-border relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl border p-6 shadow-lg transition-colors"
       whileHover={{ scale: 1.02 }}
     >
       {title && <h3 className="mb-4 text-xl font-bold">{t(title)}</h3>}
       {groups.map((group, index) => (
         <Marquee
-          key={index}
+          key={group[0]?.name ?? 'empty'}
           reverse={index % 2 === 1}
           duration={group.length * 3}
         >
-          {group.map((skill, index) => (
+          {group.map((skill) => (
             <div
-              key={`${skill.name}-${index}`}
-              className="bg-surface hover:bg-accent border-border flex cursor-pointer flex-col items-center justify-center rounded-xl border p-3 transition-all hover:scale-110 hover:rotate-3"
+              key={skill.name}
+              className="bg-surface hover:bg-accent border-border flex cursor-pointer flex-col items-center justify-center rounded-xl border p-3 transition-[transform,background-color] hover:scale-110 hover:rotate-3"
             >
               <skill.icon className="mb-1.5 h-7 w-7 text-[var(--primary)]" />
               <span className="text-foreground text-center text-xs font-medium">
@@ -50,6 +50,6 @@ export function SkillsCard({ content, title }: SkillsCardProps) {
           ))}
         </Marquee>
       ))}
-    </motion.div>
+    </m.div>
   );
 }

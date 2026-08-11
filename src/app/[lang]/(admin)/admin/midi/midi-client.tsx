@@ -61,6 +61,27 @@ interface MidiClientProps {
   initialFiles: MidiAdminFile[];
 }
 
+// 创建搜索操作项
+const createSearchAction = (search: (query: string) => void) => {
+  return {
+    label: '',
+    icon: (
+      <>
+        <input
+          className="border-none bg-transparent outline-none"
+          type="text"
+          onChange={(e) => search(e.target.value)}
+          placeholder="搜索文件名"
+          aria-label="搜索文件名"
+        />
+        <SearchIcon className="ml-2 h-4 w-4" />
+      </>
+    ),
+    onClick: () => {},
+    variant: 'outline' as const,
+  };
+};
+
 export default function MidiClient({ initialFiles }: MidiClientProps) {
   const [filteredFiles, setFilteredFiles] =
     useState<MidiAdminFile[]>(initialFiles);
@@ -202,26 +223,6 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
     setFileToRename(file);
     setNewName(file.name);
     setRenameDialogOpen(true);
-  };
-
-  // 创建搜索操作项
-  const createSearchAction = (search: (query: string) => void) => {
-    return {
-      label: '',
-      icon: (
-        <>
-          <input
-            className="border-none bg-transparent outline-none"
-            type="text"
-            onChange={(e) => search(e.target.value)}
-            placeholder="搜索文件名"
-          />
-          <SearchIcon className="ml-2 h-4 w-4" />
-        </>
-      ),
-      onClick: () => {},
-      variant: 'outline' as const,
-    };
   };
 
   return (

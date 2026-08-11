@@ -1,8 +1,5 @@
 // UI 和布局常量
 
-// 移动端断点 (1024px)
-export const MOBILE_BREAKPOINT = 1024;
-
 // 莫兰迪色系颜色选项 (留言板使用)
 export const COLOR_OPTIONS = [
   { name: '淡粉', value: '#FADADD' },

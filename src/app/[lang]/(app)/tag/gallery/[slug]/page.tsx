@@ -103,7 +103,7 @@ export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 {breadcrumbItems.map((item, index) => (
-                  <React.Fragment key={`breadcrumb_items_${index}`}>
+                  <React.Fragment key={item.link || item.label}>
                     <BreadcrumbItem className={item.link && 'hover:underline'}>
                       {item.link ? (
                         <BreadcrumbLink href={item.link}>

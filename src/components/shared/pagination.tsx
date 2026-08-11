@@ -109,10 +109,10 @@ export function Pagination({
             </PaginationLink>
           </PaginationItem>
         )}
-        {paginationItems.targetPages.map((targetPage, index) => {
+        {paginationItems.targetPages.map((targetPage) => {
           const isCurrent = targetPage.disabled;
           return (
-            <PaginationItem key={index}>
+            <PaginationItem key={targetPage.pageNumber}>
               <PaginationLink
                 isActive={isCurrent}
                 href={isCurrent ? '#' : `${basePath}/${targetPage.pageNumber}`}

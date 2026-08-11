@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useInView, Variants } from 'framer-motion';
+import { m, useInView, Variants } from 'framer-motion';
 import { useRef } from 'react';
 
 interface BlurFadeProps {
@@ -66,7 +66,7 @@ export function BlurFade({
   const combinedVariants = variant || defaultVariants;
 
   return (
-    <motion.div
+    <m.div
       ref={ref}
       initial="hidden"
       animate={isInView || !inView ? 'visible' : 'hidden'}
@@ -79,6 +79,6 @@ export function BlurFade({
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

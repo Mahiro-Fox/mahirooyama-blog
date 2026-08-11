@@ -121,6 +121,9 @@ export function useMidiPlayer(): MidiPlayerState & MidiPlayerActions {
       try {
         // Fetch and parse MIDI file
         const response = await fetch(file.path);
+        if (!response.ok) {
+          throw new Error(`Failed to load MIDI file: ${response.status}`);
+        }
         const arrayBuffer = await response.arrayBuffer();
         const parsedMidi = new Midi(arrayBuffer);
 

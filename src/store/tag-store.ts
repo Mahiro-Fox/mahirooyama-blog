@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import {
   DATA_DIR,
-  DEFAULT_TAGS,
+  getDefaultTags,
   TAGS_FILE,
   type Tag,
   type TagsData,
@@ -21,12 +21,12 @@ async function readTags(): Promise<TagsData> {
   } catch (error) {
     if (isFileNotFoundError(error)) {
       // 文件确实不存在：用默认值初始化
-      await writeTags(DEFAULT_TAGS);
-      return DEFAULT_TAGS;
+      await writeTags(getDefaultTags());
+      return getDefaultTags();
     }
     // 其他错误（JSON 损坏、权限等）：不覆盖磁盘数据，返回默认值保证页面可用
     console.error('读取标签失败，保留现有数据', error);
-    return DEFAULT_TAGS;
+    return getDefaultTags();
   }
 }
 
@@ -99,8 +99,8 @@ export const tagStore = {
 
   // 重置为默认标签
   async resetToDefault(): Promise<TagsData> {
-    await writeTags(DEFAULT_TAGS);
-    return DEFAULT_TAGS;
+    await writeTags(getDefaultTags());
+    return getDefaultTags();
   },
 
   // 检查标签是否存在
@@ -111,6 +111,6 @@ export const tagStore = {
 
   // 获取默认标签（用于类型定义等）
   getDefaultTags(): TagsData {
-    return DEFAULT_TAGS;
+    return getDefaultTags();
   },
 };

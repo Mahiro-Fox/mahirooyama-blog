@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { PlaneTakeoff } from 'lucide-react';
 import { PursuitContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
@@ -12,8 +12,8 @@ interface PursuitCardProps {
 export function PursuitCard({ content }: PursuitCardProps) {
   const t = useT();
   return (
-    <motion.div
-      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl p-6 text-white shadow-lg transition-all hover:shadow-xl"
+    <m.div
+      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-2xl p-6 text-white shadow-lg transition-shadow hover:shadow-xl"
       style={{
         background:
           'linear-gradient(135deg, color-mix(in oklch, var(--primary) 85%, white 15%), var(--primary))',
@@ -36,6 +36,6 @@ export function PursuitCard({ content }: PursuitCardProps) {
           {t(content.emphasis || '')}
         </h2>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

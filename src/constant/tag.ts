@@ -26,8 +26,9 @@ export interface TagTypeConfig {
 /**
  * 默认标签数据
  */
-export const DEFAULT_TAGS: TagsData = {
-  blog: {
+export function getDefaultTags(): TagsData {
+  return {
+    blog: {
     mdx: {
       id: 'mdx',
       name: 'MDX',
@@ -121,7 +122,8 @@ export const DEFAULT_TAGS: TagsData = {
       lastUpdated: new Date().toISOString(),
     },
   },
-};
+  };
+}
 
 /**
  * 标签类型配置

@@ -1,7 +1,7 @@
 'use client';
 
 import { MessageSquare } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { Guestbook } from '@/lib/guestbook';
 import { formatDateWithHMS } from '@/utils/utils';
 
@@ -9,17 +9,17 @@ interface GuestbookWallProps {
   entries: Guestbook[];
 }
 
-export function GuestbookWall({ entries }: GuestbookWallProps) {
-  // 生成随机旋转角度
-  const getRandomRotation = () => {
-    return Math.random() * 6 - 3; // -3度到+3度
-  };
+// 生成随机旋转角度
+const getRandomRotation = () => {
+  return Math.random() * 6 - 3; // -3度到+3度
+};
 
+export function GuestbookWall({ entries }: GuestbookWallProps) {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <AnimatePresence>
         {entries.map((entry, index) => (
-          <motion.div
+          <m.div
             key={entry.id}
             initial={{ opacity: 0, y: -50, rotate: 0 }}
             animate={{
@@ -81,7 +81,7 @@ export function GuestbookWall({ entries }: GuestbookWallProps) {
 
             {/* 胶带效果 */}
             <div className="absolute -top-3 left-1/2 h-6 w-16 -translate-x-1/2 rotate-[-2deg] bg-yellow-100/80 shadow-sm" />
-          </motion.div>
+          </m.div>
         ))}
       </AnimatePresence>
     </div>

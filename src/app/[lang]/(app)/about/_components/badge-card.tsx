@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { BadgeContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
 
@@ -13,7 +13,7 @@ export function BadgeCard({ content, title }: BadgeCardProps) {
   const t = useT();
 
   return (
-    <motion.div
+    <m.div
       className="relative flex h-full w-full items-center overflow-hidden rounded-2xl p-6 shadow-lg"
       style={{
         background:
@@ -40,7 +40,7 @@ export function BadgeCard({ content, title }: BadgeCardProps) {
         </div>
 
         {/* Animated avatar with breathing effect */}
-        <motion.div
+        <m.div
           className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white/20 shadow-inner backdrop-blur-sm"
           animate={{
             x: [0, 8, 0],
@@ -52,7 +52,7 @@ export function BadgeCard({ content, title }: BadgeCardProps) {
             ease: 'easeInOut',
           }}
         >
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-full bg-white/10"
             animate={{
               scale: [1, 1.1, 1],
@@ -67,8 +67,8 @@ export function BadgeCard({ content, title }: BadgeCardProps) {
           <span className="text-3xl font-bold text-white">
             {content.type.split('-')[0]}
           </span>
-        </motion.div>
+        </m.div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

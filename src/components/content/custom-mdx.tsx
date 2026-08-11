@@ -2,26 +2,17 @@ import { evaluate, type EvaluateOptions } from '@mdx-js/mdx';
 import * as runtime from 'react/jsx-runtime';
 import rehypePrettyCode from 'rehype-pretty-code';
 import remarkGfm from 'remark-gfm';
-import type { ShikiTransformer } from 'shiki';
 import * as React from 'react';
-import { mdxComponents } from '@/components/content/mdx-components';
+import { mdxComponents } from '@/components/content/mdx-components-map';
+import { transformers } from './mdx-transformers';
+
+export { transformers } from './mdx-transformers';
 
 interface CustomMDXProps {
   source: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additionalComponents?: Record<string, React.ComponentType<any>>;
 }
-
-export const transformers = [
-  {
-    code(node) {
-      if (node.tagName === 'code') {
-        const raw = this.source;
-        node.properties['__raw__'] = raw;
-      }
-    },
-  },
-] as ShikiTransformer[];
 
 const rehypePrettyCodeOptions = {
   theme: {

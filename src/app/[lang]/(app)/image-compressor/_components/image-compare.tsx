@@ -51,9 +51,11 @@ const ImageConvert: React.FC<Props> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // 捕获当前容器节点：effect 重跑时容器可能已换节点，清理应只针对本次捕获的节点
+    const container = containerRef.current;
     const handleMouseMove = (e: MouseEvent) => {
       // 获取容器相对于视口的位置
-      const rect = containerRef.current?.getBoundingClientRect();
+      const rect = container?.getBoundingClientRect();
       if (rect) {
         // 计算鼠标相对于容器左侧的位置
         const x = e.clientX - rect.left;
@@ -63,10 +65,10 @@ const ImageConvert: React.FC<Props> = ({
         setLeftValue(percentage);
       }
     };
-    if (interactive) {
-      containerRef.current?.addEventListener('mousemove', handleMouseMove);
+    if (interactive && container) {
+      container.addEventListener('mousemove', handleMouseMove);
       return () => {
-        containerRef.current?.removeEventListener('mousemove', handleMouseMove);
+        container.removeEventListener('mousemove', handleMouseMove);
       };
     }
   }, [interactive]);

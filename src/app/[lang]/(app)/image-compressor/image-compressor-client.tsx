@@ -15,10 +15,102 @@ import ProcessStatus, {
 import StartProcessButton from './_components/start-process-button';
 
 /**
- * 图片压缩工具客户端组件
- * 管理全局状态和组件集成
+ * 下载单个文件
  */
-export default function ImageCompressorClient() {
+const handleDownload = (result: ProcessedImageResult) => {
+  trackEvent('download_image_file', {
+    fileName: result.originalName,
+  });
+  if (!result.base64) return;
+
+  const link = document.createElement('a');
+  link.href = result.base64;
+
+  // 生成文件名
+  const originalName = result.originalName;
+  const nameWithoutExt = originalName.substring(
+    0,
+    originalName.lastIndexOf('.')
+  );
+  const ext = result.metadata?.format || 'webp';
+  link.download = `${nameWithoutExt}_converted.${ext}`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+interface ImageCompressorHeaderProps {
+  uploadedFiles: UploadedFile[];
+  isProcessing: boolean;
+  progress: number;
+  results: Array<ProcessedImageResult | null>;
+  onStart: () => void;
+}
+
+/**
+ * 页面头部：标题 + 开始处理按钮
+ */
+function ImageCompressorHeader({
+  uploadedFiles,
+  isProcessing,
+  progress,
+  results,
+  onStart,
+}: ImageCompressorHeaderProps) {
+  const t = useT();
+  return (
+    <div className="border-border bg-card/60 border-b backdrop-blur-sm">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-[var(--primary)] p-2">
+              <Zap className="h-6 w-6 text-[var(--primary-foreground)]" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">
+                {t('image-compressor.page_title')}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {t('image-compressor.subtitle')}
+              </p>
+            </div>
+          </div>
+
+          <StartProcessButton
+            uploadedFiles={uploadedFiles}
+            isProcessing={isProcessing}
+            progress={progress}
+            results={results}
+            handleStartProcess={onStart}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 页面底部
+ */
+function ImageCompressorFooter() {
+  const t = useT();
+  return (
+    <div className="border-border bg-card/40 mt-16 border-t backdrop-blur-sm">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="text-muted-foreground flex items-center justify-between text-sm">
+          <p>{t('image-compressor.privacy_notice')}</p>
+          <p>{t('image-compressor.built_with')}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 图片压缩工具全局状态与处理逻辑
+ */
+function useImageCompressor() {
   const t = useT();
   const resultsSectionRef = useRef<HTMLDivElement>(null);
   // 上传的文件列表
@@ -31,19 +123,6 @@ export default function ImageCompressorClient() {
     keepMetadata: false,
     convertAnimation: false,
   });
-
-  /**
-   * 重置配置
-   */
-  const resetConfig = () => {
-    setConfig({
-      targetFormat: 'webp',
-      quality: 80,
-      keepMetadata: false,
-      convertAnimation: false,
-    });
-    trackEvent('reset_image_config');
-  };
 
   // 处理结果列表
   const [results, setResults] = useState<Array<ProcessedImageResult | null>>(
@@ -61,6 +140,19 @@ export default function ImageCompressorClient() {
   const [comparisonResult, setComparisonResult] =
     useState<ProcessedImageResult | null>(null);
   const [comparisonIndex, setComparisonIndex] = useState(0);
+
+  /**
+   * 重置配置
+   */
+  const resetConfig = () => {
+    setConfig({
+      targetFormat: 'webp',
+      quality: 80,
+      keepMetadata: false,
+      convertAnimation: false,
+    });
+    trackEvent('reset_image_config');
+  };
 
   /**
    * 添加文件
@@ -109,6 +201,13 @@ export default function ImageCompressorClient() {
   const handleClearAll = () => {
     setUploadedFiles([]);
     setResults([]);
+  };
+
+  /**
+   * 滚动到结果区域
+   */
+  const scrollToResults = () => {
+    resultsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   /**
@@ -222,38 +321,6 @@ export default function ImageCompressorClient() {
   };
 
   /**
-   * 滚动到结果区域
-   */
-  const scrollToResults = () => {
-    resultsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-  /**
-   * 下载单个文件
-   */
-  const handleDownload = (result: ProcessedImageResult) => {
-    trackEvent('download_image_file', {
-      fileName: result.originalName,
-    });
-    if (!result.base64) return;
-
-    const link = document.createElement('a');
-    link.href = result.base64;
-
-    // 生成文件名
-    const originalName = result.originalName;
-    const nameWithoutExt = originalName.substring(
-      0,
-      originalName.lastIndexOf('.')
-    );
-    const ext = result.metadata?.format || 'webp';
-    link.download = `${nameWithoutExt}_converted.${ext}`;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  /**
    * 下载全部文件
    */
   const handleDownloadAll = async () => {
@@ -297,8 +364,9 @@ export default function ImageCompressorClient() {
         numFiles: successResults.length,
       });
       // 创建下载链接
+      const zipUrl = URL.createObjectURL(zipBlob);
       const link = document.createElement('a');
-      link.href = URL.createObjectURL(zipBlob);
+      link.href = zipUrl;
       link.download = `compressed_images_${Date.now()}.zip`;
 
       document.body.appendChild(link);
@@ -306,7 +374,7 @@ export default function ImageCompressorClient() {
       document.body.removeChild(link);
 
       // 释放 URL 对象
-      URL.revokeObjectURL(link.href);
+      URL.revokeObjectURL(zipUrl);
     } catch (error) {
       console.error('Bundle download failed:', error);
       alert(t('image-compressor.bundle_download_failed'));
@@ -345,36 +413,68 @@ export default function ImageCompressorClient() {
     }
   };
 
+  return {
+    uploadedFiles,
+    config,
+    setConfig,
+    results,
+    isProcessing,
+    progress,
+    comparisonOpen,
+    setComparisonOpen,
+    comparisonResult,
+    comparisonIndex,
+    resultsSectionRef,
+    resetConfig,
+    handleFilesAdd,
+    handleFileRemove,
+    handleClearAll,
+    handleStartProcess,
+    handleDownloadAll,
+    handleViewComparison,
+    handlePreviousComparison,
+    handleNextComparison,
+  };
+}
+
+/**
+ * 图片压缩工具客户端组件
+ * 管理全局状态和组件集成
+ */
+export default function ImageCompressorClient() {
+  const {
+    uploadedFiles,
+    config,
+    setConfig,
+    results,
+    isProcessing,
+    progress,
+    comparisonOpen,
+    setComparisonOpen,
+    comparisonResult,
+    comparisonIndex,
+    resultsSectionRef,
+    resetConfig,
+    handleFilesAdd,
+    handleFileRemove,
+    handleClearAll,
+    handleStartProcess,
+    handleDownloadAll,
+    handleViewComparison,
+    handlePreviousComparison,
+    handleNextComparison,
+  } = useImageCompressor();
+
   return (
     <div className="bg-background min-h-screen">
       {/* 头部 */}
-      <div className="border-border bg-card/60 border-b backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-3">
-              <div className="bg-[var(--primary)] rounded-lg p-2">
-                <Zap className="text-[var(--primary-foreground)] h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">
-                  {t('image-compressor.page_title')}
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  {t('image-compressor.subtitle')}
-                </p>
-              </div>
-            </div>
-
-            <StartProcessButton
-              uploadedFiles={uploadedFiles}
-              isProcessing={isProcessing}
-              progress={progress}
-              results={results}
-              handleStartProcess={handleStartProcess}
-            />
-          </div>
-        </div>
-      </div>
+      <ImageCompressorHeader
+        uploadedFiles={uploadedFiles}
+        isProcessing={isProcessing}
+        progress={progress}
+        results={results}
+        onStart={handleStartProcess}
+      />
 
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -431,14 +531,7 @@ export default function ImageCompressorClient() {
       />
 
       {/* Footer */}
-      <div className="border-border bg-card/40 mt-16 border-t backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="text-muted-foreground flex items-center justify-between text-sm">
-            <p>{t('image-compressor.privacy_notice')}</p>
-            <p>{t('image-compressor.built_with')}</p>
-          </div>
-        </div>
-      </div>
+      <ImageCompressorFooter />
     </div>
   );
 }

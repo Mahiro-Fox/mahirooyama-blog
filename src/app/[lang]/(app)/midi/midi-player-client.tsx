@@ -229,6 +229,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
                         <a
                           href={file.path}
                           download
+                          aria-label={t('midi.download')}
                           onClick={() =>
                             trackEvent('download_midi_file', {
                               fileName: file.name,
@@ -269,7 +270,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
                     <div className="mt-2">
                       <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                         <div
-                          className="bg-primary h-full transition-all duration-100 ease-linear"
+                          className="bg-primary h-full transition-[width] duration-100 ease-linear"
                           style={{ width: `${Math.min(progress, 100)}%` }}
                         />
                       </div>

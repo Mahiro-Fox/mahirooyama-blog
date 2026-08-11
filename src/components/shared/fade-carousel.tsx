@@ -169,7 +169,7 @@ export function FadeCarousel<T extends CarouselItem>({
 
         return (
           <div
-            key={item.id || index}
+            key={item.id}
             className={`absolute inset-0 transition-opacity duration-2000 ease-in-out ${
               isCurrent ? 'z-10 opacity-100' : 'z-0 opacity-0'
             }`}
@@ -193,13 +193,17 @@ export function FadeCarousel<T extends CarouselItem>({
       {arrow && items.length > 1 && (
         <>
           <button
+            type="button"
             onClick={prevSlide}
+            aria-label="上一张"
             className="absolute top-1/2 left-5 z-20 hidden -translate-y-1/2 rounded-full bg-white/30 p-2 text-white transition group-hover:block hover:bg-white/50"
           >
             <ChevronLeft size={30} />
           </button>
           <button
+            type="button"
             onClick={nextSlide}
+            aria-label="下一张"
             className="absolute top-1/2 right-5 z-20 hidden -translate-y-1/2 rounded-full bg-white/30 p-2 text-white transition group-hover:block hover:bg-white/50"
           >
             <ChevronRight size={30} />
@@ -210,10 +214,12 @@ export function FadeCarousel<T extends CarouselItem>({
       {/* 指示器 */}
       {indicator && items.length > 1 && (
         <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 space-x-2">
-          {items.map((_, index) => (
+          {items.map((item, index) => (
             <button
-              key={index}
+              key={item.id}
+              type="button"
               onClick={() => changeSlide(index)}
+              aria-label={`转到第 ${index + 1} 张`}
               className={`h-3 w-3 rounded-full transition-all ${
                 index === currentIndex ? 'w-8 bg-white' : 'bg-white/50'
               }`}

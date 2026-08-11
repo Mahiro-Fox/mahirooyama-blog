@@ -1,6 +1,6 @@
 import { MailIcon, RssIcon } from 'lucide-react';
 import NextLink from 'next/link';
-import { buttonVariants } from '@/components/shadcn-ui/button';
+import { buttonVariants } from '@/components/shadcn-ui/button-variants';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { Link } from '@/components/shared/link';
 import { siteConfig } from '@/config/common';

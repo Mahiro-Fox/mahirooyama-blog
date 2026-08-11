@@ -1,9 +1,9 @@
 'use client';
 
-import { Tag, TAG_TYPES, TagsData, TagType } from '@/constant';
+import { Tag, TAG_TYPES, TagsData, TagType, TagTypeConfig } from '@/constant';
 import { Tag as LucideTag, RefreshCwIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   adminCreateTag,
   adminDeleteTag,
@@ -90,6 +90,135 @@ const INITIAL_FORM_DATA = {
   description: '',
 };
 
+// === 标签表单对话框 ===
+function TagsFormDialog({
+  open,
+  onOpenChange,
+  isEditing,
+  activeConfig,
+  isSubmitting,
+  formData,
+  setFormData,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isEditing: boolean;
+  activeConfig: TagTypeConfig;
+  isSubmitting: boolean;
+  formData: typeof INITIAL_FORM_DATA;
+  setFormData: (value: typeof INITIAL_FORM_DATA) => void;
+  onSubmit: (e: React.FormEvent) => void;
+}) {
+  return (
+    <CrudFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEditing ? '编辑标签' : `创建${activeConfig.name}标签`}
+      description={
+        isEditing ? '修改标签信息' : `创建一个新的${activeConfig.description}`
+      }
+      onSubmit={onSubmit}
+      isSubmitting={isSubmitting}
+      submitLabel={isEditing ? '保存' : '创建'}
+    >
+      <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
+        <Label htmlFor="tag-id">标签 ID</Label>
+        <Input
+          id="tag-id"
+          value={formData.id}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+            })
+          }
+          placeholder="如: typescript"
+          disabled={isEditing}
+          required
+        />
+        {!isEditing && (
+          <p className="text-muted-foreground text-xs">
+            只能使用小写字母、数字和连字符
+          </p>
+        )}
+
+        <div className="space-y-2">
+          <Label htmlFor="tag-name">标签名称</Label>
+          <Input
+            id="tag-name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="如: TypeScript"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>图标</Label>
+          <IconPicker
+            value={formData.icon}
+            onChange={(value) => setFormData({ ...formData, icon: value })}
+            placeholder="选择图标"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="tag-description">描述（可选）</Label>
+          <Input
+            id="tag-description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            placeholder="简短描述这个标签"
+          />
+        </div>
+      </div>
+    </CrudFormDialog>
+  );
+}
+
+// === 删除确认对话框 ===
+function TagsDeleteDialog({
+  open,
+  onOpenChange,
+  deletingTag,
+  isSubmitting,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  deletingTag: Tag | null;
+  isSubmitting: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <DeleteConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="确认删除"
+      description={
+        <>
+          确定要删除标签{' '}
+          <strong>
+            {
+              // 删除时 id 被拼成 "type::tagId"，为了显示名还原显示
+              deletingTag?.name ||
+                (deletingTag?.id.includes('::')
+                  ? deletingTag.id.split('::')[1]
+                  : deletingTag?.id)
+            }
+          </strong>{' '}
+          吗？此操作不可恢复。
+        </>
+      }
+      onConfirm={onConfirm}
+      isDeleting={isSubmitting}
+    />
+  );
+}
+
 export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   // Tags 的 items 结构 { blog: Tag[], gallery: Tag[] } 过于特殊，
   // 不用 useCrud 的 setItems 管理，仅复用：
@@ -133,7 +262,8 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TagType>('blog');
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
-  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  // editingTag 只在 handler/effect 中读写、从不渲染，用 ref 避免多余重渲染
+  const editingTagRef = useRef<Tag | null>(null);
 
   const activeConfig = getTagTypeConfig(activeTab);
 
@@ -143,7 +273,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
       closeDialogs();
-      setEditingTag(null);
+      editingTagRef.current = null;
     }
   };
 
@@ -164,13 +294,13 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   // === openCreateDialog（hook 的 openCreateDialog + 清空 formData）===
   const openCreateDialog = () => {
     setFormData(INITIAL_FORM_DATA);
-    setEditingTag(null);
+    editingTagRef.current = null;
     crud.openCreateDialog();
   };
 
   // === openEditDialog（填充 formData + 打开编辑对话框）===
   const openEditDialog = (tag: Tag) => {
-    setEditingTag(tag);
+    editingTagRef.current = tag;
     setFormData({
       id: tag.id,
       name: tag.name,
@@ -191,11 +321,11 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
 
   // 打开编辑对话框时也要同步回填（因为我们用 editingTag 填充了 formData）
   useEffect(() => {
-    if (isEditDialogOpen && selectedItem && !editingTag) {
+    if (isEditDialogOpen && selectedItem && !editingTagRef.current) {
       // fallback: 如果是通过 openEditDialog 以外的路径打开
-      setEditingTag(selectedItem);
+      editingTagRef.current = selectedItem;
     }
-  }, [isEditDialogOpen, selectedItem, editingTag]);
+  }, [isEditDialogOpen, selectedItem]);
 
   // === 创建标签 ===
   const handleCreate = async (e: React.FormEvent) => {
@@ -222,11 +352,11 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
   // === 更新标签 ===
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingTag) return;
+    if (!editingTagRef.current) return;
     setSubmitting(true);
     try {
       const result = await adminUpdateTag({
-        id: editingTag.id,
+        id: editingTagRef.current.id,
         type: activeTab,
         name: formData.name,
         icon: formData.icon,
@@ -235,7 +365,7 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       if (!result.success) throw new Error(result.error || '更新标签失败');
       toast.success('标签更新成功');
       closeDialogs();
-      setEditingTag(null);
+      editingTagRef.current = null;
       await fetchTags();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '更新标签失败');
@@ -328,96 +458,24 @@ export default function TagsClient({ initialTags }: { initialTags: TagsData }) {
       </AdminPageLayout>
 
       {/* 标签表单对话框 */}
-      <CrudFormDialog
+      <TagsFormDialog
         open={dialogOpen}
         onOpenChange={handleDialogOpenChange}
-        title={isEditing ? '编辑标签' : `创建${activeConfig.name}标签`}
-        description={
-          isEditing ? '修改标签信息' : `创建一个新的${activeConfig.description}`
-        }
-        onSubmit={isEditing ? handleUpdate : handleCreate}
+        isEditing={isEditing}
+        activeConfig={activeConfig}
         isSubmitting={isSubmitting}
-        submitLabel={isEditing ? '保存' : '创建'}
-      >
-        <div className="max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto">
-          <Label htmlFor="tag-id">标签 ID</Label>
-          <Input
-            id="tag-id"
-            value={formData.id}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
-              })
-            }
-            placeholder="如: typescript"
-            disabled={isEditing}
-            required
-          />
-          {!isEditing && (
-            <p className="text-muted-foreground text-xs">
-              只能使用小写字母、数字和连字符
-            </p>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="tag-name">标签名称</Label>
-            <Input
-              id="tag-name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="如: TypeScript"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>图标</Label>
-            <IconPicker
-              value={formData.icon}
-              onChange={(value) => setFormData({ ...formData, icon: value })}
-              placeholder="选择图标"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="tag-description">描述（可选）</Label>
-            <Input
-              id="tag-description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="简短描述这个标签"
-            />
-          </div>
-        </div>
-      </CrudFormDialog>
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={isEditing ? handleUpdate : handleCreate}
+      />
 
       {/* 删除确认对话框 */}
-      <DeleteConfirmDialog
+      <TagsDeleteDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="确认删除"
-        description={
-          <>
-            确定要删除标签{' '}
-            <strong>
-              {
-                // 删除时 id 被拼成 "type::tagId"，为了显示名还原显示
-                deletingTag?.name ||
-                  (deletingTag?.id.includes('::')
-                    ? deletingTag.id.split('::')[1]
-                    : deletingTag?.id)
-              }
-            </strong>{' '}
-            吗？此操作不可恢复。
-          </>
-        }
+        deletingTag={deletingTag}
+        isSubmitting={isSubmitting}
         onConfirm={handleDelete}
-        isDeleting={isSubmitting}
       />
     </>
   );

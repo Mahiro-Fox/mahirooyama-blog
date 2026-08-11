@@ -1,0 +1,8 @@
+# 供应链加固（react-doctor require-pnpm-hardening）
+# minimumReleaseAge: 7 天内新发布的版本不安装，防止"发布后被下架"的恶意包
+# blockExoticSubdeps: 禁止从 git/file/tarball 拉取传递依赖
+# trustPolicy.no-downgrade: 拒绝来源/签名可信度变弱的包
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
+trustPolicy:
+  no-downgrade: true

@@ -1,8 +1,6 @@
 import { AspectRatio } from '@/components/shadcn-ui/aspect-ratio';
-import {
-  imageSizes,
-  OptimizedImage,
-} from '@/components/shared/optimized-image';
+import { imageSizes } from '@/components/shared/image-sizes';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 
 interface BlurredHeroImageProps {
   imageUrl: string;

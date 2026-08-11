@@ -57,6 +57,385 @@ const GuestbookBadge = ({ count }: { count: number }) => {
   );
 };
 
+const getRoleDisplay = (role: string) => {
+  return role === 'super_admin' ? '超级管理员' : '普通用户';
+};
+
+const RevalidateButton = ({
+  isRevalidating,
+  onRevalidate,
+}: {
+  isRevalidating: boolean;
+  onRevalidate: () => void;
+}) => {
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onRevalidate}
+      disabled={isRevalidating}
+    >
+      {isRevalidating ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        <RefreshCw className="mr-2 h-4 w-4" />
+      )}
+      {isRevalidating ? '刷新中...' : '全量刷新缓存'}
+    </Button>
+  );
+};
+
+interface SidebarProps {
+  currentUser: CurrentUser;
+  isRevalidating: boolean;
+  onRevalidate: () => void;
+  isActive: (href: string) => boolean;
+}
+
+/** PC 端侧边导航栏 */
+const Sidebar = ({
+  currentUser,
+  isRevalidating,
+  onRevalidate,
+  isActive,
+}: SidebarProps) => {
+  const t = useT();
+  return (
+    <aside className="bg-background fixed top-0 left-0 z-40 hidden h-screen w-64 flex-col border-r lg:flex">
+      {/* Logo */}
+      <div className="border-b p-4">
+        <Link href="/admin" className="flex items-center gap-2 font-bold">
+          <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded">
+            <Shield className="h-4 w-4" />
+          </div>
+          <span>管理后台</span>
+        </Link>
+      </div>
+
+      {/* 导航 */}
+      <nav className="flex-1 overflow-auto p-4">
+        <div className="space-y-1">
+          {adminRoutesConfig.map((item) =>
+            item.adminHref === '/' ? (
+              <Link
+                key={item.adminHref}
+                href={item.adminHref!}
+                className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
+              >
+                {item.icon && <item.icon className="h-4 w-4" />}
+                {t(item.adminTitle || '')}
+              </Link>
+            ) : (
+              <Link
+                key={item.adminHref}
+                href={item.adminHref!}
+                onClick={(e) => isActive(item.adminHref!) && e.preventDefault()}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                  isActive(item.adminHref!)
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-muted text-foreground'
+                }`}
+              >
+                {item.icon && <item.icon className="h-4 w-4" />}
+                {t(item.adminTitle || '')}
+              </Link>
+            )
+          )}
+        </div>
+        <RevalidateButton
+          isRevalidating={isRevalidating}
+          onRevalidate={onRevalidate}
+        />
+      </nav>
+
+      {/* 用户信息 - 侧边栏底部 */}
+      <div className="border-t p-4">
+        <div className="flex items-center gap-3">
+          <OptimizedImage
+            src={currentUser.avatar}
+            alt={currentUser.username}
+            className="h-10 w-10 rounded-full object-cover"
+            width={40}
+            height={40}
+          />
+          <div className="flex-1 overflow-hidden">
+            <p className="truncate text-sm font-medium">
+              {currentUser.username}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              {getRoleDisplay(currentUser.role)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+interface MobileNavSheetProps {
+  currentUser: CurrentUser;
+  isRevalidating: boolean;
+  onRevalidate: () => void;
+  onLogout: () => void;
+  isActive: (href: string) => boolean;
+}
+
+/** 移动端导航抽屉 */
+const MobileNavSheet = ({
+  currentUser,
+  isRevalidating,
+  onRevalidate,
+  onLogout,
+  isActive,
+}: MobileNavSheetProps) => {
+  const t = useT();
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Menu className="h-5 w-5 lg:hidden" aria-label="打开菜单" />
+      </SheetTrigger>
+      <SheetContent side="left" className="w-64 p-0">
+        <SheetHeader>
+          <SheetClose asChild>
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="flex size-10"
+            >
+              <Link href="/admin">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded">
+                  <Shield className="h-4 w-4" />
+                </div>
+              </Link>
+            </Button>
+          </SheetClose>
+          <SheetTitle>管理后台</SheetTitle>
+        </SheetHeader>
+        {/* 导航 */}
+        <nav className="flex-1 overflow-auto p-4">
+          <div className="space-y-1">
+            {adminRoutesConfig.map((item) =>
+              item.adminHref === '/' ? (
+                <Link
+                  key={item.adminHref}
+                  href={item.adminHref!}
+                  className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
+                >
+                  {item.icon && <item.icon className="h-4 w-4" />}
+                  {t(item.adminTitle || '')}
+                </Link>
+              ) : (
+                <SheetClose asChild key={item.adminHref}>
+                  <Link
+                    href={item.adminHref!}
+                    onClick={(e) =>
+                      isActive(item.adminHref!) && e.preventDefault()
+                    }
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                      isActive(item.adminHref!)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    {item.icon && <item.icon className="h-4 w-4" />}
+                    {t(item.adminTitle || '')}
+                  </Link>
+                </SheetClose>
+              )
+            )}
+          </div>
+          <RevalidateButton
+            isRevalidating={isRevalidating}
+            onRevalidate={onRevalidate}
+          />
+        </nav>
+
+        {/* 用户信息 */}
+        <SheetFooter className="border-t p-4">
+          <div className="mb-3 flex items-center gap-3">
+            <OptimizedImage
+              src={currentUser.avatar}
+              alt={currentUser.username}
+              className="h-10 w-10 rounded-full object-cover"
+              width={40}
+              height={40}
+            />
+            <div className="flex-1 overflow-hidden">
+              <p className="truncate text-sm font-medium">
+                {currentUser.username}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {getRoleDisplay(currentUser.role)}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={onLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            登出
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+interface AvatarMenuProps {
+  currentUser: CurrentUser;
+  isUploadingAvatar: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onLogout: () => void;
+}
+
+/** 用户头像下拉菜单 */
+const AvatarMenu = ({
+  currentUser,
+  isUploadingAvatar,
+  isOpen,
+  onToggle,
+  onClose,
+  onAvatarChange,
+  onLogout,
+}: AvatarMenuProps) => {
+  return (
+    <div className="relative hidden lg:block">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="hover:bg-muted flex cursor-pointer items-center gap-3 rounded-lg transition-colors"
+      >
+        <OptimizedImage
+          src={currentUser.avatar}
+          alt={currentUser.username}
+          className="h-8 w-8 rounded-full object-cover"
+          width={32}
+          height={32}
+        />
+        <span className="text-sm font-medium">{currentUser.username}</span>
+      </button>
+      {/* 下拉菜单 */}
+      {isOpen && (
+        <>
+          {/* 点击外部关闭 */}
+          <button
+            type="button"
+            aria-label="关闭菜单"
+            tabIndex={-1}
+            className="fixed inset-0 z-10"
+            onClick={onClose}
+          />
+          <div className="bg-background absolute right-0 z-20 mt-2 w-48 rounded-lg border py-1 shadow-lg">
+            <div className="border-b px-4 py-2">
+              <p className="text-sm font-medium">{currentUser.username}</p>
+              <p className="text-muted-foreground text-xs">
+                {getRoleDisplay(currentUser.role)}
+              </p>
+            </div>
+
+            {/* 修改头像选项 */}
+            <label className="hover:bg-muted flex cursor-pointer items-center gap-2 px-4 py-2 text-sm transition-colors">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={onAvatarChange}
+                disabled={isUploadingAvatar}
+                className="hidden"
+              />
+              <Upload className="h-4 w-4" />
+              {isUploadingAvatar ? '上传中...' : '修改头像'}
+            </label>
+
+            {/* 登出选项 */}
+            <button
+              onClick={() => {
+                onClose();
+                onLogout();
+              }}
+              className="hover:bg-muted flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              登出
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+interface ForcePasswordDialogProps {
+  open: boolean;
+  password: string;
+  confirmPassword: string;
+  isChanging: boolean;
+  onPasswordChange: (value: string) => void;
+  onConfirmPasswordChange: (value: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+/** 首次登录强制修改密码弹窗 */
+const ForcePasswordDialog = ({
+  open,
+  password,
+  confirmPassword,
+  isChanging,
+  onPasswordChange,
+  onConfirmPasswordChange,
+  onSubmit,
+}: ForcePasswordDialogProps) => {
+  return (
+    <Dialog open={open}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>首次登录请修改密码</DialogTitle>
+          <DialogDescription>
+            出于安全考虑，请为账号设置一个新密码后才能继续使用管理后台。
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="force-password">新密码</Label>
+            <Input
+              id="force-password"
+              type="password"
+              value={password}
+              onChange={(e) => onPasswordChange(e.target.value)}
+              placeholder="至少 8 位"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="force-confirm-password">确认新密码</Label>
+            <Input
+              id="force-confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => onConfirmPasswordChange(e.target.value)}
+              placeholder="再次输入新密码"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={isChanging}>
+              {isChanging ? '提交中...' : '确认修改密码'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function AdminShell({
   children,
   currentUser: initialUser,
@@ -193,266 +572,42 @@ export default function AdminShell({
     return pathname.startsWith(href);
   };
 
-  const getRoleDisplay = (role: string) => {
-    return role === 'super_admin' ? '超级管理员' : '普通用户';
-  };
-
   return (
     <div className="bg-muted/30 flex min-h-screen">
       {/* 侧边导航栏 - PC */}
-      <aside className="bg-background fixed top-0 left-0 z-40 hidden h-screen w-64 flex-col border-r lg:flex">
-        {/* Logo */}
-        <div className="border-b p-4">
-          <Link href="/admin" className="flex items-center gap-2 font-bold">
-            <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded">
-              <Shield className="h-4 w-4" />
-            </div>
-            <span>管理后台</span>
-          </Link>
-        </div>
-
-        {/* 导航 */}
-        <nav className="flex-1 overflow-auto p-4">
-          <div className="space-y-1">
-            {adminRoutesConfig.map((item) =>
-              item.adminHref === '/' ? (
-                <Link
-                  key={item.adminHref}
-                  href={item.adminHref!}
-                  className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
-                >
-                  {item.icon && <item.icon className="h-4 w-4" />}
-                  {t(item.adminTitle || '')}
-                </Link>
-              ) : (
-                <Link
-                  key={item.adminHref}
-                  href={item.adminHref!}
-                  onClick={(e) =>
-                    isActive(item.adminHref!) && e.preventDefault()
-                  }
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                    isActive(item.adminHref!)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-foreground'
-                  }`}
-                >
-                  {item.icon && <item.icon className="h-4 w-4" />}
-                  {t(item.adminTitle || '')}
-                </Link>
-              )
-            )}
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRevalidate}
-            disabled={isRevalidating}
-          >
-            {isRevalidating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            {isRevalidating ? '刷新中...' : '全量刷新缓存'}
-          </Button>
-        </nav>
-
-        {/* 用户信息 - 侧边栏底部 */}
-        <div className="border-t p-4">
-          <div className="flex items-center gap-3">
-            <OptimizedImage
-              src={currentUser.avatar}
-              alt={currentUser.username}
-              className="h-10 w-10 rounded-full object-cover"
-              width={40}
-              height={40}
-            />
-            <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-medium">
-                {currentUser.username}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {getRoleDisplay(currentUser.role)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <Sidebar
+        currentUser={currentUser}
+        isRevalidating={isRevalidating}
+        onRevalidate={handleRevalidate}
+        isActive={isActive}
+      />
 
       {/* 主内容区域 */}
       <div className="flex-1 lg:ml-64">
         <header className="bg-background sticky top-0 z-20 flex w-full items-center justify-between gap-3 border-b p-4">
           <div className="flex items-center gap-3">
             {/* 导航菜单 - 移动端 */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Menu className="h-5 w-5 lg:hidden" aria-label="打开菜单" />
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0">
-                <SheetHeader>
-                  <SheetClose asChild>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="icon"
-                      className="flex size-10"
-                    >
-                      <Link href="/admin">
-                        <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded">
-                          <Shield className="h-4 w-4" />
-                        </div>
-                      </Link>
-                    </Button>
-                  </SheetClose>
-                  <SheetTitle>管理后台</SheetTitle>
-                </SheetHeader>
-                {/* 导航 */}
-                <nav className="flex-1 overflow-auto p-4">
-                  <div className="space-y-1">
-                    {adminRoutesConfig.map((item) =>
-                      item.adminHref === '/' ? (
-                        <Link
-                          key={item.adminHref}
-                          href={item.adminHref!}
-                          className="hover:bg-muted text-foregroun flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
-                        >
-                          {item.icon && <item.icon className="h-4 w-4" />}
-                          {t(item.adminTitle || '')}
-                        </Link>
-                      ) : (
-                        <SheetClose asChild key={item.adminHref}>
-                          <Link
-                            href={item.adminHref!}
-                            onClick={(e) =>
-                              isActive(item.adminHref!) && e.preventDefault()
-                            }
-                            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                              isActive(item.adminHref!)
-                                ? 'bg-primary text-primary-foreground'
-                                : 'hover:bg-muted text-foreground'
-                            }`}
-                          >
-                            {item.icon && <item.icon className="h-4 w-4" />}
-                            {t(item.adminTitle || '')}
-                          </Link>
-                        </SheetClose>
-                      )
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRevalidate}
-                    disabled={isRevalidating}
-                  >
-                    {isRevalidating ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                    )}
-                    {isRevalidating ? '刷新中...' : '全量刷新缓存'}
-                  </Button>
-                </nav>
-
-                {/* 用户信息 */}
-                <SheetFooter className="border-t p-4">
-                  <div className="mb-3 flex items-center gap-3">
-                    <OptimizedImage
-                      src={currentUser.avatar}
-                      alt={currentUser.username}
-                      className="h-10 w-10 rounded-full object-cover"
-                      width={40}
-                      height={40}
-                    />
-                    <div className="flex-1 overflow-hidden">
-                      <p className="truncate text-sm font-medium">
-                        {currentUser.username}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {getRoleDisplay(currentUser.role)}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    登出
-                  </Button>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>
+            <MobileNavSheet
+              currentUser={currentUser}
+              isRevalidating={isRevalidating}
+              onRevalidate={handleRevalidate}
+              onLogout={handleLogout}
+              isActive={isActive}
+            />
             <span className="font-semibold">{getCurrentPageTitle()}</span>
           </div>
           <div className="flex items-center gap-3">
             <GuestbookBadge count={guestbookPendingCount} />
             {/* 用户头像下拉菜单 */}
-            <div className="relative hidden lg:block">
-              <div
-                onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
-                className="hover:bg-muted flex cursor-pointer items-center gap-3 rounded-lg transition-colors"
-              >
-                <OptimizedImage
-                  src={currentUser.avatar}
-                  alt={currentUser.username}
-                  className="h-8 w-8 rounded-full object-cover"
-                  width={32}
-                  height={32}
-                />
-                <span className="text-sm font-medium">
-                  {currentUser.username}
-                </span>
-              </div>
-              {/* 下拉菜单 */}
-              {avatarMenuOpen && (
-                <>
-                  {/* 点击外部关闭 */}
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setAvatarMenuOpen(false)}
-                  />
-                  <div className="bg-background absolute right-0 z-20 mt-2 w-48 rounded-lg border py-1 shadow-lg">
-                    <div className="border-b px-4 py-2">
-                      <p className="text-sm font-medium">
-                        {currentUser.username}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {getRoleDisplay(currentUser.role)}
-                      </p>
-                    </div>
-
-                    {/* 修改头像选项 */}
-                    <label className="hover:bg-muted flex cursor-pointer items-center gap-2 px-4 py-2 text-sm transition-colors">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        disabled={isUploadingAvatar}
-                        className="hidden"
-                      />
-                      <Upload className="h-4 w-4" />
-                      {isUploadingAvatar ? '上传中...' : '修改头像'}
-                    </label>
-
-                    {/* 登出选项 */}
-                    <button
-                      onClick={() => {
-                        setAvatarMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="hover:bg-muted flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 transition-colors"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      登出
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            <AvatarMenu
+              currentUser={currentUser}
+              isUploadingAvatar={isUploadingAvatar}
+              isOpen={avatarMenuOpen}
+              onToggle={() => setAvatarMenuOpen(!avatarMenuOpen)}
+              onClose={() => setAvatarMenuOpen(false)}
+              onAvatarChange={handleAvatarChange}
+              onLogout={handleLogout}
+            />
             <ThemeSwitcher />
             <LanguageSwitcher />
           </div>
@@ -461,47 +616,15 @@ export default function AdminShell({
       </div>
 
       {/* 首次登录强制修改密码 */}
-      <Dialog open={mustChangePassword}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>首次登录请修改密码</DialogTitle>
-            <DialogDescription>
-              出于安全考虑，请为账号设置一个新密码后才能继续使用管理后台。
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleForceChangePassword} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="force-password">新密码</Label>
-              <Input
-                id="force-password"
-                type="password"
-                value={forcePassword}
-                onChange={(e) => setForcePassword(e.target.value)}
-                placeholder="至少 8 位"
-                autoComplete="new-password"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="force-confirm-password">确认新密码</Label>
-              <Input
-                id="force-confirm-password"
-                type="password"
-                value={forceConfirmPassword}
-                onChange={(e) => setForceConfirmPassword(e.target.value)}
-                placeholder="再次输入新密码"
-                autoComplete="new-password"
-                required
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit" disabled={isChangingPassword}>
-                {isChangingPassword ? '提交中...' : '确认修改密码'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <ForcePasswordDialog
+        open={mustChangePassword}
+        password={forcePassword}
+        confirmPassword={forceConfirmPassword}
+        isChanging={isChangingPassword}
+        onPasswordChange={setForcePassword}
+        onConfirmPasswordChange={setForceConfirmPassword}
+        onSubmit={handleForceChangePassword}
+      />
     </div>
   );
 }

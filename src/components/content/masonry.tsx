@@ -90,7 +90,7 @@ const Masonry = <T extends { [key: string]: any }>({
         >
           {colItems.map((item, index) => (
             <div
-              key={item.template_id || `${colIndex}-${index}`}
+              key={item.template_id || item.src}
               className="w-full"
             >
               {itemRender({ data: item, index })}

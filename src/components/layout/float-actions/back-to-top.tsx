@@ -4,14 +4,15 @@ import { ArrowUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/utils/utils';
 
+const handleClick = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  });
+};
+
 export function BackToTop() {
   const [show, setShow] = useState(false);
-  const handleClick = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
   useEffect(() => {
     const handleScroll = () => setShow(window.scrollY > 100);
     window.addEventListener('scroll', handleScroll);

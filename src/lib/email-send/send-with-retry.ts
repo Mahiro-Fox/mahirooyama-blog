@@ -51,8 +51,10 @@ export async function sendEmailWithRetry(
   let lastError = '';
 
   // 提前渲染好 html 和纯文本版本，避免每次重试都重复渲染
-  const html = await render(params.react);
-  const text = await render(params.react, { plainText: true });
+  const [html, text] = await Promise.all([
+    render(params.react),
+    render(params.react, { plainText: true }),
+  ]);
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {

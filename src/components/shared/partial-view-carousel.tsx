@@ -15,11 +15,9 @@ import {
   CarouselItem as UICarouselItem,
   type CarouselApi,
 } from '@/components/shadcn-ui/carousel';
+import { imageSizes } from '@/components/shared/image-sizes';
 import { Link } from '@/components/shared/link';
-import {
-  imageSizes,
-  OptimizedImage,
-} from '@/components/shared/optimized-image';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 import { cn } from '@/utils/utils';
 
 interface CarouselItem {
@@ -121,9 +119,9 @@ export function PartialViewCarousel({
         onMouseLeave={plugin.current.reset}
       >
         <CarouselContent className="-ml-2 md:-ml-4">
-          {items.map((item, index) => (
+          {items.map((item) => (
             <UICarouselItem
-              key={index}
+              key={item.href}
               className={cn('pl-2 md:pl-4', getItemSize())}
             >
               <Link href={item.href}>
@@ -158,7 +156,7 @@ export function PartialViewCarousel({
           onClick={scrollPrev}
           variant="outline"
           size="icon"
-          className="size-12 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+          className="size-12 rounded-2xl shadow-lg backdrop-blur-sm transition-transform duration-200 hover:scale-105 active:scale-95"
           aria-label="Slide to Prev Item"
         >
           <ChevronLeftIcon className="size-6" />
@@ -167,7 +165,7 @@ export function PartialViewCarousel({
           onClick={toggleAutoplay}
           variant="outline"
           size="icon"
-          className="size-12 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+          className="size-12 rounded-2xl shadow-lg backdrop-blur-sm transition-transform duration-200 hover:scale-105 active:scale-95"
           aria-label={isPlaying ? 'Pause Slide' : 'Play Slide'}
         >
           {isPlaying ? (
@@ -180,7 +178,7 @@ export function PartialViewCarousel({
           onClick={scrollNext}
           variant="outline"
           size="icon"
-          className="size-12 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+          className="size-12 rounded-2xl shadow-lg backdrop-blur-sm transition-transform duration-200 hover:scale-105 active:scale-95"
           aria-label="Slide to Next Item"
         >
           <ChevronRightIcon className="size-6" />

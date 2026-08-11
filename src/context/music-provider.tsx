@@ -238,8 +238,8 @@ export function MusicProvider({
         // 顺序播放
         newIndex = prev === playlist.length - 1 ? 0 : prev + 1;
       } else if (playMode === 'random') {
-        // 随机播放
-        newIndex = getRandomIndex(currentIndex, playlist.length);
+        // 随机播放（用 updater 的 prev 而非闭包捕获的 currentIndex，避免陈旧值）
+        newIndex = getRandomIndex(prev, playlist.length);
       } else {
         // 循环
         newIndex = prev;
@@ -249,7 +249,9 @@ export function MusicProvider({
     setIsPlaying(true);
   }, [playlist.length, playMode]);
 
-  nextRef.current = next;
+  useEffect(() => {
+    nextRef.current = next;
+  }, [next]);
 
   // 跳转到指定时间点
   const seek = useCallback((time: number) => {

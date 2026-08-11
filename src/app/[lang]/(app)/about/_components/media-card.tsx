@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { MediaContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
@@ -12,7 +12,7 @@ interface MediaCardProps {
 export function MediaCard({ content }: MediaCardProps) {
   const t = useT();
   return (
-    <motion.div
+    <m.div
       className="relative flex h-full w-full overflow-hidden rounded-2xl shadow-lg"
       whileHover={{ scale: 1.02 }}
     >
@@ -42,6 +42,6 @@ export function MediaCard({ content }: MediaCardProps) {
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, Plus, RefreshCw } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ReactNode } from 'react';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -10,15 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/shadcn-ui/card';
+import { type PageAction } from './admin-page-layout-actions';
 
-interface PageAction {
-  label: string;
-  icon?: React.ReactNode;
-  onClick: () => void;
-  variant?: 'default' | 'outline' | 'ghost';
-  disabled?: boolean;
-  loading?: boolean;
-}
+export {
+  createAddAction,
+  createRefreshAction,
+} from './admin-page-layout-actions';
 
 interface AdminPageLayoutProps {
   title: ReactNode | string;
@@ -92,25 +89,3 @@ export function AdminPageLayout({
     </Card>
   );
 }
-
-// 预设的常用操作按钮
-export const createRefreshAction = (
-  onRefresh: () => void,
-  loading?: boolean
-): PageAction => ({
-  label: '刷新',
-  icon: <RefreshCw className="mr-2 h-4 w-4" />,
-  onClick: onRefresh,
-  variant: 'outline',
-  loading,
-});
-
-export const createAddAction = (
-  onAdd: () => void,
-  label = '创建'
-): PageAction => ({
-  label,
-  icon: <Plus className="mr-2 h-4 w-4" />,
-  onClick: onAdd,
-  variant: 'default',
-});

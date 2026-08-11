@@ -14,7 +14,10 @@ function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
+      <button
+        type="button"
+        aria-label="关闭"
+        tabIndex={-1}
         className="fixed inset-0 bg-black/50"
         onClick={() => onOpenChange?.(false)}
       />
