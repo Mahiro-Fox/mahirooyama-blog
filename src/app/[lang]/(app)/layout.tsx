@@ -49,7 +49,7 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
       title: siteConfig.name,
       description,
       images: [siteConfig.ogImage],
-      creator: '@Mahiro___Oyama',
+      creator: '@MahiroFox',
     },
     icons: {
       icon: '/favicon.ico',

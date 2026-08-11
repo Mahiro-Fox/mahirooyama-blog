@@ -59,7 +59,7 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
               rel="noreferrer"
               className={buttonVariants({ variant: 'outline', size: 'icon' })}
               aria-label="Twitter"
-              title="Twitter (Mahiro___Oyama)"
+              title="Twitter (MahiroFox)"
             >
               <BrandIcons.x className="size-4" />
             </Link>
