@@ -1,12 +1,16 @@
 'use client';
 
-import { useMusic } from '@/context/music-provider';
+import { PlayMode, useMusic } from '@/context/music-provider';
 import {
   ListMusic,
+  LucideProps,
   Minimize2,
   Music,
   Pause,
   Play,
+  Repeat,
+  RotateCw,
+  Shuffle,
   SkipBack,
   SkipForward,
   Volume2,
@@ -29,12 +33,14 @@ export function GlobalMusicPlayer() {
     volume,
     playlist,
     isCollapsed,
+    playMode,
     togglePlay,
     play,
     prev,
     next,
     seek,
     setVolume,
+    setPlayMode,
     toggleExpand,
   } = useMusic();
   const t = useT();
@@ -67,9 +73,32 @@ export function GlobalMusicPlayer() {
     trackEvent('switch_song', { song });
   };
 
-  // const toggleView = () => {
-  //   setCurrentView((prev) => (prev === 'player' ? 'playlist' : 'player'));
-  // };
+  const mapPlayMode: Record<
+    PlayMode,
+    {
+      nextMode: PlayMode;
+      playButtonText: string;
+      PlayModeIcon: React.ForwardRefExoticComponent<
+        Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>
+      >;
+    }
+  > = {
+    sequential: {
+      nextMode: 'random',
+      playButtonText: t('global-music-player.sequential'),
+      PlayModeIcon: RotateCw,
+    },
+    random: {
+      nextMode: 'loop',
+      playButtonText: t('global-music-player.random'),
+      PlayModeIcon: Shuffle,
+    },
+    loop: {
+      nextMode: 'sequential',
+      playButtonText: t('global-music-player.loop'),
+      PlayModeIcon: Repeat,
+    },
+  };
 
   if (!currentSong) {
     return null;
@@ -77,9 +106,12 @@ export function GlobalMusicPlayer() {
 
   const animationPlayState = isPlaying ? 'running' : 'paused';
   const Icon = isPlaying ? Pause : Play;
-  const text = isPlaying
+  const playButtonText = isPlaying
     ? t('global-music-player.pause')
     : t('global-music-player.play');
+  const playModeText = mapPlayMode[playMode].playButtonText;
+  const PlayModeIcon = mapPlayMode[playMode].PlayModeIcon;
+
   return (
     <div
       className={cn(
@@ -154,7 +186,7 @@ export function GlobalMusicPlayer() {
                     <button
                       onClick={togglePlay}
                       className="bg-primary text-primary-foreground cursor-pointer rounded-full p-2 transition-opacity hover:opacity-80"
-                      title={text}
+                      title={playButtonText}
                     >
                       <Icon className="ml-0.5 h-4 w-4" />
                     </button>
@@ -273,6 +305,14 @@ export function GlobalMusicPlayer() {
                 title={t('global-music-player.playlist')}
               >
                 <ListMusic className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setPlayMode(mapPlayMode[playMode].nextMode)}
+                className="hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded-full border-1 border-transparent p-1.5 transition-colors"
+                title={playModeText}
+              >
+                <PlayModeIcon className="h-4 w-4" />
+                <span className="text-foreground text-xs">{playModeText}</span>
               </button>
             </div>
             <button

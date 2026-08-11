@@ -11,6 +11,7 @@ import React, {
 import { Song } from '@/lib/music';
 import { throttle } from '@/utils/utils';
 
+export type PlayMode = 'sequential' | 'random' | 'loop';
 interface MusicContextValue {
   /** 当前播放的歌曲，null 表示没有歌曲 */
   currentSong: Song | null;
@@ -26,6 +27,8 @@ interface MusicContextValue {
   isCollapsed: boolean;
   /** 歌曲列表 */
   playlist: Song[];
+  /** 播放模式 */
+  playMode: PlayMode;
   /** 当前播放的歌曲索引 */
   currentIndex: number;
   /** 播放指定索引的歌曲 */
@@ -42,6 +45,8 @@ interface MusicContextValue {
   seek: (time: number) => void;
   /** 设置音量 */
   setVolume: (volume: number) => void;
+  /** 设置播放模式 */
+  setPlayMode: (mode: PlayMode) => void;
   /** 切换展开状态 */
   toggleExpand: () => void;
 }
@@ -58,14 +63,20 @@ export function useMusic() {
 
 interface MusicProviderProps {
   playlist: Song[];
+  initialIndex?: number;
   children: React.ReactNode;
 }
 
 const STORAGE_KEY_VOLUME = 'music_player_volume';
 
-export function MusicProvider({ playlist, children }: MusicProviderProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export function MusicProvider({
+  playlist,
+  initialIndex = 0,
+  children,
+}: MusicProviderProps) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playMode, setPlayMode] = useState<PlayMode>('sequential');
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
@@ -74,6 +85,15 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextRef = useRef<() => void>(() => {});
 
+  // 2. 辅助函数：生成不重复的随机数
+  const getRandomIndex = useCallback((current: number, total: number) => {
+    if (total <= 1) return 0;
+    let index = Math.floor(Math.random() * total);
+    while (index === current) {
+      index = Math.floor(Math.random() * total);
+    }
+    return index;
+  }, []);
   // 初始化音频元素，从本地存储获取音量和展开状态
   useEffect(() => {
     const savedVolume = parseFloat(
@@ -212,9 +232,22 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
 
   // 播放下一首歌曲
   const next = useCallback(() => {
-    setCurrentIndex((prev) => (prev === playlist.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => {
+      let newIndex;
+      if (playMode === 'sequential') {
+        // 顺序播放
+        newIndex = prev === playlist.length - 1 ? 0 : prev + 1;
+      } else if (playMode === 'random') {
+        // 随机播放
+        newIndex = getRandomIndex(currentIndex, playlist.length);
+      } else {
+        // 循环
+        newIndex = prev;
+      }
+      return newIndex;
+    });
     setIsPlaying(true);
-  }, [playlist.length]);
+  }, [playlist.length, playMode]);
 
   nextRef.current = next;
 
@@ -242,6 +275,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
         isCollapsed,
         playlist,
         currentIndex,
+        playMode,
         play,
         pause,
         togglePlay,
@@ -249,6 +283,7 @@ export function MusicProvider({ playlist, children }: MusicProviderProps) {
         next,
         seek,
         setVolume,
+        setPlayMode,
         toggleExpand,
       }}
     >

@@ -82,6 +82,7 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
     getPublicMusic(),
   ]);
   const songs = musicRes.success ? musicRes.data : [];
+  const randomIndex = Math.floor(Math.random() * songs.length); // 随机音乐索引
   return (
     <div className="bg-background relative z-10 flex min-h-svh flex-col">
       <DictionaryProvider
@@ -91,7 +92,7 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
           ...homeDictionary,
         }}
       >
-        <MusicProvider playlist={songs}>
+        <MusicProvider playlist={songs} initialIndex={randomIndex}>
           <SiteHeader initialUserAuth={frontendUser} />
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />
