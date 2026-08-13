@@ -33,13 +33,12 @@ type MomentCreateInput = {
   location?: string;
 };
 
-const getRealImageHeight = (moment: Moment) => {
-  const scaleRatio = Math.round(
-    moment.image?.width ? moment.image.width / 320 : 1
-  );
-  return Math.round(
-    moment.image?.height ? moment.image.height / scaleRatio : 0
-  );
+const getRealImageHeight = (image: Moment['image']) => {
+  if (!image) {
+    return 0;
+  }
+  const scaleRatio = Math.round(image?.width ? image.width / 320 : 1);
+  return Math.round(image?.height ? image.height / scaleRatio : 0);
 };
 
 /**
@@ -104,9 +103,9 @@ function MomentsList({
                     alt="配图"
                     priority={
                       Math.max(
-                        getRealImageHeight(moments[0]),
-                        getRealImageHeight(moments[1])
-                      ) === getRealImageHeight(moment)
+                        getRealImageHeight(moments[0].image),
+                        moments[1] ? getRealImageHeight(moments[1].image) : 0
+                      ) === getRealImageHeight(moment.image)
                         ? true
                         : false
                     }
