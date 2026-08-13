@@ -11,19 +11,7 @@ interface GalleryListPageProps {
   params: Promise<{ page: string }>;
 }
 
-export async function generateStaticParams() {
-  const result = await getPublicGalleries({ page: 1 });
-  const totalPages = result.success ? result.data.totalPages : 1;
-
-  return await Promise.all(
-    i18nConfig.locales.flatMap((locale) =>
-      Array.from({ length: totalPages }, (_, i) => ({
-        page: String(i + 1),
-        lang: locale,
-      }))
-    )
-  );
-}
+export const dynamic = 'force-dynamic';
 
 export default async function GalleryListPage({
   params,

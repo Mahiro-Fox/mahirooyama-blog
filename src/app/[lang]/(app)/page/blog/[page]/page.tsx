@@ -15,19 +15,7 @@ interface BlogListPageProps {
   params: Promise<{ page: string }>;
 }
 
-export async function generateStaticParams() {
-  const all = await getBlogs();
-  const { totalPages } = paginateItems(all, 1, DEFAULT_BLOG_LIST_LIMIT);
-
-  return await Promise.all(
-    i18nConfig.locales.flatMap((locale) =>
-      Array.from({ length: totalPages }, (_, i) => ({
-        page: String(i + 1),
-        lang: locale,
-      }))
-    )
-  );
-}
+export const dynamic = 'force-dynamic';
 
 export default async function BlogListPage({ params }: BlogListPageProps) {
   const { page } = await params;
