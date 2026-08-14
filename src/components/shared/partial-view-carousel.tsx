@@ -22,6 +22,7 @@ import { cn } from '@/utils/utils';
 
 interface CarouselItem {
   title: string;
+  description: string;
   imageUrl: string;
   href: string;
 }
@@ -116,7 +117,7 @@ export function PartialViewCarousel({
         }}
         className="w-full"
         onMouseEnter={plugin.current.stop}
-        onMouseLeave={plugin.current.reset}
+        onMouseLeave={() => plugin.current.play()}
       >
         <CarouselContent className="-ml-2 md:-ml-4">
           {items.map((item) => (
@@ -127,7 +128,7 @@ export function PartialViewCarousel({
               <Link href={item.href}>
                 <div className="flex h-full flex-col gap-6 overflow-hidden rounded-xl border">
                   <div className="relative">
-                    <div className="relative aspect-[16/9] w-full overflow-hidden">
+                    <div className="group relative aspect-[16/9] w-full overflow-hidden">
                       <OptimizedImage
                         src={item.imageUrl || '/placeholder.svg'}
                         alt={`${item.title} thumbnail image`}
@@ -136,11 +137,12 @@ export function PartialViewCarousel({
                         sizes={imageSizes.hero}
                         className="transition-transform duration-300 hover:scale-105"
                       />
-                    </div>
-                    <div className="px-4 py-3">
-                      <p className="line-clamp-2 text-sm font-semibold tracking-widest sm:text-base">
-                        {item.title}
-                      </p>
+                      <div className="bg-card/90 absolute right-0 bottom-0 left-0 translate-y-[100%] transform px-4 py-3 transition-transform duration-300 group-hover:translate-y-0">
+                        <p className="line-clamp-2 text-sm font-semibold tracking-widest sm:text-base">
+                          {item.title}
+                        </p>
+                        <p className="mt-2 text-sm">{item.description || ''}</p>
+                      </div>
                     </div>
                   </div>
                 </div>

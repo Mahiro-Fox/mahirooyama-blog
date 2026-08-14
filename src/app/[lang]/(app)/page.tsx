@@ -92,6 +92,7 @@ export default async function IndexPage() {
 async function HeroCarousel({ galleries }: { galleries: Gallery[] }) {
   const carouselItems = galleries.slice(0, 5).map((image) => ({
     title: image.title,
+    description: image.description || '',
     href: `/gallery/${image.slug}`,
     imageUrl: image.thumbnail,
   }));
