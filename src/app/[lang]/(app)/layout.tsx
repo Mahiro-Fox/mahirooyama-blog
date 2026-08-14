@@ -4,6 +4,7 @@ import { FloatActions } from '@/components/layout/float-actions';
 import { GlobalMusicPlayer } from '@/components/layout/global-music-player';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
+import { ScrollProgress } from '@/components/shared/scroll-progress';
 import { PageTracker } from '@/components/shared/tracker';
 import { siteConfig } from '@/config/common';
 import { getDictionary } from '@/i18n/dictionary';
@@ -103,6 +104,8 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
         }}
       >
         <MusicProvider playlist={songs} initialIndex={randomIndex}>
+          {/* ── 顶部滚动进度条 ── */}
+          <ScrollProgress />
           <SiteHeader initialUserAuth={frontendUser} />
           <main className="flex flex-1 flex-col">{children}</main>
           <SiteFooter />

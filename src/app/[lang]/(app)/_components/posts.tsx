@@ -6,6 +6,8 @@ import { BlurFade } from '@/components/magicui/blur-fade';
 import { Button } from '@/components/shadcn-ui/button';
 import { Link } from '@/components/shared/link';
 import { LinkCard } from '@/components/shared/link-card';
+import { MagneticButton } from '@/components/shared/magnetic-button';
+import { SpotlightCard } from '@/components/shared/spotlight-card';
 import { useT } from '@/i18n/dictionary-provider';
 import { Blog } from '@/lib/blog';
 import { formatDate } from '@/utils/utils';
@@ -24,29 +26,33 @@ export default function Posts({ posts }: { posts: Blog[] }) {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {posts.slice(0, 6).map((post, index) => (
             <BlurFade inView key={post.slug}>
-              <LinkCard
-                key={post.slug}
-                title={post.title}
-                imageUrl={post.thumbnail || siteConfig.ogImage}
-                link={`/blog/${post.slug}`}
-                badgeText={formatDate(post.lastUpdated)}
-                description={post.description}
-                priority={index === 0}
-                isPortrait={post.isPortrait}
-              />
+              <SpotlightCard>
+                <LinkCard
+                  key={post.slug}
+                  title={post.title}
+                  imageUrl={post.thumbnail || siteConfig.ogImage}
+                  link={`/blog/${post.slug}`}
+                  badgeText={formatDate(post.lastUpdated)}
+                  description={post.description}
+                  priority={index === 0}
+                  isPortrait={post.isPortrait}
+                />
+              </SpotlightCard>
             </BlurFade>
           ))}
         </div>
         <div className="mt-10 text-end">
-          <Button asChild variant="ghost" className="h-9 px-2">
-            <Link
-              href="/page/blog/1"
-              className="group inline-flex items-center gap-2 transition-colors hover:text-[var(--primary)]"
-            >
-              <span>{t('home.see_more_posts')}</span>
-              <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Button>
+          <MagneticButton>
+            <Button asChild variant="ghost" className="h-9 px-2">
+              <Link
+                href="/page/blog/1"
+                className="group inline-flex items-center gap-2 transition-colors hover:text-[var(--primary)]"
+              >
+                <span>{t('home.see_more_posts')}</span>
+                <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+          </MagneticButton>
         </div>
       </section>
     </section>

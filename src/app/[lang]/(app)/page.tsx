@@ -10,6 +10,7 @@ import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getHomeBannerImages } from '@/actions/home-banner';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
+import { ScrollProgress } from '@/components/shared/scroll-progress';
 import { VermilionThread } from '@/components/shared/vermilion-thread';
 import { Gallery } from '@/lib/gallery';
 

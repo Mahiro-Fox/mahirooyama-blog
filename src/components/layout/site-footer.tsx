@@ -3,6 +3,7 @@ import NextLink from 'next/link';
 import { buttonVariants } from '@/components/shadcn-ui/button-variants';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { Link } from '@/components/shared/link';
+import { MagneticButton } from '@/components/shared/magnetic-button';
 import { siteConfig } from '@/config/common';
 import { cn } from '@/utils/utils';
 
@@ -17,61 +18,71 @@ export function SiteFooter({ className }: React.HTMLAttributes<HTMLElement>) {
         </div>
         <div className="flex items-center space-x-4">
           {siteConfig.links.vrchat && (
-            <Link
-              href={siteConfig.links.vrchat}
-              target="_blank"
-              rel="noreferrer"
-              className={buttonVariants({ variant: 'outline', size: 'icon' })}
-              aria-label="VRChat"
-              title="VRChat (mahirooyama)"
-            >
-              <BrandIcons.vrchat className="size-4" />
-            </Link>
+            <MagneticButton>
+              <Link
+                href={siteConfig.links.vrchat}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({ variant: 'outline', size: 'icon' })}
+                aria-label="VRChat"
+                title="VRChat (mahirooyama)"
+              >
+                <BrandIcons.vrchat className="size-4" />
+              </Link>
+            </MagneticButton>
           )}
           {siteConfig.email && (
-            <Link
-              href={`mailto:${siteConfig.email}`}
-              className={buttonVariants({ variant: 'outline', size: 'icon' })}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Email"
-              title="Email (mahirooyama)"
-            >
-              <MailIcon className="size-4" />
-            </Link>
+            <MagneticButton>
+              <Link
+                href={`mailto:${siteConfig.email}`}
+                className={buttonVariants({ variant: 'outline', size: 'icon' })}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Email"
+                title="Email (mahirooyama)"
+              >
+                <MailIcon className="size-4" />
+              </Link>
+            </MagneticButton>
           )}
           {siteConfig.links.github && (
-            <Link
-              href={siteConfig.links.github}
-              className={buttonVariants({ variant: 'outline', size: 'icon' })}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="GitHub"
-              title="GitHub (mahirooyama-blog github repository)"
-            >
-              <BrandIcons.gitHub className="size-4" />
-            </Link>
+            <MagneticButton>
+              <Link
+                href={siteConfig.links.github}
+                className={buttonVariants({ variant: 'outline', size: 'icon' })}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="GitHub"
+                title="GitHub (mahirooyama-blog github repository)"
+              >
+                <BrandIcons.gitHub className="size-4" />
+              </Link>
+            </MagneticButton>
           )}
           {siteConfig.links.twitter && (
-            <Link
-              href={siteConfig.links.twitter}
-              target="_blank"
-              rel="noreferrer"
-              className={buttonVariants({ variant: 'outline', size: 'icon' })}
-              aria-label="Twitter"
-              title="Twitter (MahiroFox)"
-            >
-              <BrandIcons.x className="size-4" />
-            </Link>
+            <MagneticButton>
+              <Link
+                href={siteConfig.links.twitter}
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({ variant: 'outline', size: 'icon' })}
+                aria-label="Twitter"
+                title="Twitter (MahiroFox)"
+              >
+                <BrandIcons.x className="size-4" />
+              </Link>
+            </MagneticButton>
           )}
-          <NextLink
-            href="/rss.xml"
-            className={buttonVariants({ variant: 'outline', size: 'icon' })}
-            aria-label="RSS"
-            title="RSS Feed (mahirooyama-blog)"
-          >
-            <RssIcon className="size-4" />
-          </NextLink>
+          <MagneticButton>
+            <NextLink
+              href="/rss.xml"
+              className={buttonVariants({ variant: 'outline', size: 'icon' })}
+              aria-label="RSS"
+              title="RSS Feed (mahirooyama-blog)"
+            >
+              <RssIcon className="size-4" />
+            </NextLink>
+          </MagneticButton>
         </div>
       </div>
     </footer>

@@ -4,6 +4,7 @@ import { TagsData } from '@/constant';
 import { TagIcon } from 'lucide-react';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { Link } from '@/components/shared/link';
+import { MagneticButton } from '@/components/shared/magnetic-button';
 import { useT } from '@/i18n/dictionary-provider';
 
 export default function Tags({ tags }: { tags: TagsData }) {
@@ -22,14 +23,15 @@ export default function Tags({ tags }: { tags: TagsData }) {
             const IconComponent =
               BrandIcons[tag.icon as keyof typeof BrandIcons] || TagIcon;
             return (
-              <Link
-                key={tag.id}
-                href={`/tag/${key}/${tag.id}`}
-                className="hover:bg-accent flex cursor-pointer items-center justify-center gap-2 rounded-lg border p-2 transition-colors hover:border-[var(--primary)]/40"
-              >
-                <IconComponent className="size-4" />
-                {tag.name}
-              </Link>
+              <MagneticButton key={tag.id}>
+                <Link
+                  href={`/tag/${key}/${tag.id}`}
+                  className="hover:bg-accent flex cursor-pointer items-center justify-center gap-2 rounded-lg border p-2 transition-colors hover:border-[var(--primary)]/40"
+                >
+                  <IconComponent className="size-4" />
+                  {tag.name}
+                </Link>
+              </MagneticButton>
             );
           })}
         </div>
