@@ -75,6 +75,10 @@ export const PROVIDERS: Provider[] = [
         label: 'DeepSeek V4 Flash',
         value: 'deepseek-v4-flash',
       },
+      {
+        label: 'DeepSeek V4 Pro',
+        value: 'deepseek-v4-pro',
+      },
     ],
     lockedWhenNoAuth: true,
   },
