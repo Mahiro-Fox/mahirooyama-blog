@@ -182,7 +182,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
               {/* Article Content */}
               <div className="mb-10">
-                <CustomMDX source={post.rawContent} />
+                <CustomMDX source={post.renderContent} />
               </div>
 
               {/* Share Buttons */}

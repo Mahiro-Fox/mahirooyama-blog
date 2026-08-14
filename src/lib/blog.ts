@@ -12,7 +12,8 @@ export type Blog = {
   isPortrait: boolean;
   lastUpdated: string;
   tags?: string[];
-  rawContent: string;
+  rawContent: string; // 原始内容
+  renderContent: string; // 需要渲染的内容
 };
 
 export type AdminBlog = Blog & {
@@ -37,7 +38,7 @@ export async function getBlogs(
     mdxFiles.map(async (filePath) => {
       const fullPath = path.join(BLOG_DIR, filePath);
       const rawContent = await fs.readFile(fullPath, 'utf-8');
-      const { data } = matter(rawContent);
+      const { data, content } = matter(rawContent);
       const slug = path.basename(fullPath, path.extname(fullPath));
 
       const base: Blog = {
@@ -49,6 +50,7 @@ export async function getBlogs(
         isPortrait: data.isPortrait,
         lastUpdated: data.lastUpdated,
         tags: data.tags,
+        renderContent: content,
       };
 
       if (isAdmin) {
