@@ -76,9 +76,13 @@ services:
     # 绑定到 127.0.0.1，仅宿主机 nginx 可访问，不对外暴露
     ports:
       - '127.0.0.1:3000:3000'
-    # 挂载 uploads 目录：getPublicMidis 读取 MIDI 文件解析时长；其他 CRUD 已迁到 Go
+    # 挂载 uploads 和 data 目录
+    # uploads: getPublicMidis 读取 MIDI 文件解析时长；其他 CRUD 已迁到 Go
+    # data: 大部分 JSON 已迁到 Go，只读即可；conversations 需动态写入单独挂载
     volumes:
       - ./uploads:/app/uploads
+      - ./data:/app/data:ro
+      - ./data/conversations:/app/data/conversations
     depends_on:
       - backend-go
     logging:
