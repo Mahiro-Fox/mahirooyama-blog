@@ -230,10 +230,10 @@ func migrateMusic(ctx context.Context, db *gorm.DB, path string) (int, error) {
 // ---------- moments ----------
 
 type legacyMomentImage struct {
-	URL    string `json:"url"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-	Ratio  int    `json:"ratio"`
+	URL    string  `json:"url"`
+	Width  int     `json:"width"`
+	Height int     `json:"height"`
+	Ratio  float64 `json:"ratio"`
 }
 
 type legacyMoment struct {
