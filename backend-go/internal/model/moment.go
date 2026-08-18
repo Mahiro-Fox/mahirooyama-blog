@@ -10,10 +10,10 @@ import (
 
 // MomentImage 碎碎念图片信息（jsonb 字段）
 type MomentImage struct {
-	URL    string `json:"url"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-	Ratio  int    `json:"ratio"`
+	URL    string  `json:"url"`
+	Width  int     `json:"width"`
+	Height int     `json:"height"`
+	Ratio  float64 `json:"ratio"`
 }
 
 // Moment 碎碎念模型
