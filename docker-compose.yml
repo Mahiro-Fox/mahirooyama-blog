@@ -82,6 +82,7 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./data:/app/data:ro
+      - ./data/analytics:/app/data/analytics
       - ./data/conversations:/app/data/conversations
     depends_on:
       - backend-go
