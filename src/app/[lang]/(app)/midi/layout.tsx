@@ -44,7 +44,7 @@ export default async function MidiLayout({
             <p className="text-muted-foreground">
               {midiDictionary['midi.intro']}{' '}
               <a
-                href="/blog/how-to-set-up-your-loopMIDI-to-play-piano-in-vrchat"
+                href="/blog/how-to-set-up-your-loopmidi-to-play-piano-in-vrchat"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
