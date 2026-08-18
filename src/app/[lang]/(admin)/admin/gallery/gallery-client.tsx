@@ -10,6 +10,7 @@ import {
   adminGetGallery,
   adminRenameGalleryFile,
   adminUpdateGallery,
+  adminUploadGalleryFile,
   adminUploadGalleryThumbnail,
 } from '@/actions/admin/gallery-actions';
 import {
@@ -435,11 +436,8 @@ export default function GalleryClient({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await fetch('/api/gallery-files', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!response.ok) throw new Error('上传失败');
+      const result = await adminUploadGalleryFile(formData);
+      if (!result.success) throw new Error(result.error || '上传失败');
       toast.success('文件上传成功');
       await fetchItems();
     } catch (error) {

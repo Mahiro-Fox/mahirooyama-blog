@@ -58,4 +58,36 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, internalSecret, uploadsDir strin
 		readWrite.DELETE("", handler.DeleteFileHandler(uploadsDir))
 		readWrite.POST("/folder", handler.CreateFolderHandler(uploadsDir))
 	}
+
+	// blog-files 路由（博客 MDX 文件管理）
+	// BLOG_DIR = UPLOADS_DIR/content/blog
+	blogDir := filepath.Join(uploadsDir, "content", "blog")
+	blogFiles := api.Group("/blog-files")
+	{
+		read := blogFiles.Group("", middleware.RequireInternalSecret(internalSecret))
+		read.GET("", handler.ListBlogFilesHandler(blogDir))
+		read.GET("/:slug", handler.GetBlogFileHandler(blogDir))
+		write := blogFiles.Group("", middleware.RequireInternalSecret(internalSecret))
+		write.POST("", handler.CreateBlogFileHandler(blogDir))
+		write.POST("/upload", handler.UploadBlogFileHandler(blogDir))
+		write.PUT("/:slug", handler.UpdateBlogFileHandler(blogDir))
+		write.PATCH("/:slug", handler.RenameBlogFileHandler(blogDir))
+		write.DELETE("/:slug", handler.DeleteBlogFileHandler(blogDir))
+	}
+
+	// gallery-files 路由（图库 JSON 文件管理）
+	// GALLERY_DIR = UPLOADS_DIR/content/gallery
+	galleryDir := filepath.Join(uploadsDir, "content", "gallery")
+	galleryFiles := api.Group("/gallery-files")
+	{
+		read := galleryFiles.Group("", middleware.RequireInternalSecret(internalSecret))
+		read.GET("", handler.ListGalleryFilesHandler(galleryDir))
+		read.GET("/:slug", handler.GetGalleryFileHandler(galleryDir))
+		write := galleryFiles.Group("", middleware.RequireInternalSecret(internalSecret))
+		write.POST("", handler.CreateGalleryFileHandler(galleryDir))
+		write.POST("/upload", handler.UploadGalleryFileHandler(galleryDir))
+		write.PUT("/:slug", handler.UpdateGalleryFileHandler(galleryDir))
+		write.PATCH("/:slug", handler.RenameGalleryFileHandler(galleryDir))
+		write.DELETE("/:slug", handler.DeleteGalleryFileHandler(galleryDir))
+	}
 }

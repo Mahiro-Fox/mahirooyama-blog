@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -71,6 +72,34 @@ func SanitizeFileName(name string) string {
 		}
 	}
 	return b.String()
+}
+
+// ResolveUploadPath 解析相对 uploads 的完整路径，并做安全校验
+// relativePath 是相对 uploads 目录的路径（可能带前导 / 或 uploads/ 前缀）
+// 返回完整路径；如果路径不安全返回空字符串和错误
+// ValidateSlug 验证 slug 是否合法
+// 对应 src/utils/file-utils.ts 的 validateSlug
+func ValidateSlug(slug string) error {
+	if slug == "" {
+		return fmt.Errorf("slug 不能为空")
+	}
+	if len(slug) > 100 {
+		return fmt.Errorf("slug 长度不能超过 100")
+	}
+	if slug != strings.ToLower(slug) {
+		return fmt.Errorf("slug 只能包含小写字母")
+	}
+	matched, _ := regexp.MatchString(`^[a-z0-9-]+$`, slug)
+	if !matched {
+		return fmt.Errorf("slug 只能包含小写字母、数字和连接符(-)")
+	}
+	if strings.HasPrefix(slug, "-") || strings.HasSuffix(slug, "-") {
+		return fmt.Errorf("slug 不能以分隔符开头或结尾")
+	}
+	if strings.Contains(slug, "--") {
+		return fmt.Errorf("slug 不能包含连续的 --")
+	}
+	return nil
 }
 
 // ResolveUploadPath 解析相对 uploads 的完整路径，并做安全校验

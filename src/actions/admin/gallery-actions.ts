@@ -1,28 +1,22 @@
 'use server';
 
-import fs from 'fs/promises';
-import path from 'path';
 import { DEFAULT_GALLERY_LIST_LIMIT } from '@/config/limit';
-import { GALLERY_DIR } from '@/constant/dir';
-import { AdminGallery, Gallery, getGalleries } from '@/lib/gallery';
+import { AdminGallery, Gallery } from '@/lib/gallery';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { goFetch } from '@/lib/server/api-client';
 import { createUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import {
-  checkFileConflict,
-  ensureDirectory,
-  fileExists,
-  validateSlug,
-  writeFileAtomic,
-} from '@/utils/file-utils';
-import { isPortraitImage } from '@/lib/image-utils';
+import { validateSlug } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('GalleryActions');
+
+const INTERNAL_SECRET = process.env.GO_API_SHARED_SECRET ?? '';
+const BASE_URL = process.env.GO_API_INTERNAL_URL ?? 'http://localhost:8080';
 
 export interface GetPublicGalleriesOptions {
   page?: number;
@@ -39,11 +33,26 @@ export async function getPublicGalleries(
 ): Promise<ActionResponse<PaginationResult<Gallery>>> {
   try {
     const { page, pageSize = DEFAULT_GALLERY_LIST_LIMIT, tagSlug } = options;
-    const all = await getGalleries();
+
+    const result = await goFetch<{ items: AdminGallery[] }>(
+      '/api/gallery-files'
+    );
+    const all = result.items;
+
+    // 转换为 Gallery 类型
+    const galleries: Gallery[] = all.map((item) => ({
+      slug: item.slug,
+      title: item.title,
+      description: item.description,
+      thumbnail: item.thumbnail,
+      isPortrait: item.isPortrait,
+      lastUpdated: item.lastUpdated,
+      tags: item.tags,
+    }));
 
     const filtered = tagSlug
-      ? all.filter((item) => item.tags?.includes(tagSlug))
-      : all;
+      ? galleries.filter((item) => item.tags?.includes(tagSlug))
+      : galleries;
 
     if (options.all)
       return {
@@ -70,11 +79,10 @@ export async function getPublicGallery(
   slug: string
 ): Promise<ActionResponse<Gallery>> {
   try {
-    // 使用 .json 扩展名
-    const filePath = path.join(GALLERY_DIR, `${slug}.json`);
-
-    const content = await fs.readFile(filePath, 'utf-8');
-    return { success: true, data: JSON.parse(content) as Gallery };
+    const result = await goFetch<{ data: Gallery }>(
+      `/api/gallery-files/${slug}`
+    );
+    return { success: true, data: { ...result.data, slug } };
   } catch (error) {
     logger.error('获取图库详情失败', error, { slug });
     return { success: false, error: '获取图库详情失败' };
@@ -86,9 +94,11 @@ export async function adminGetGalleries(): Promise<
 > {
   return withActionPermission('gallery:read', async () => {
     try {
-      const images = (await getGalleries(true)) as AdminGallery[];
+      const result = await goFetch<{ items: AdminGallery[] }>(
+        '/api/gallery-files'
+      );
+      const images = result.items;
 
-      // 按更新时间排序
       images.sort(
         (a, b) =>
           new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
@@ -102,22 +112,17 @@ export async function adminGetGalleries(): Promise<
   });
 }
 
-// GET - 获取单个文件内容
 export async function adminGetGallery(
   slug: string
 ): Promise<ActionResponse<AdminGallery>> {
   return withActionPermission('gallery:read', async () => {
     try {
-      // 使用 .json 扩展名
-      const filePath = path.join(GALLERY_DIR, `${slug}.json`);
-
-      const content = await fs.readFile(filePath, 'utf-8');
+      const result = await goFetch<{ data: AdminGallery }>(
+        `/api/gallery-files/${slug}`
+      );
       return {
         success: true,
-        data: {
-          ...JSON.parse(content),
-          slug,
-        } as AdminGallery,
+        data: { ...result.data, slug } as AdminGallery,
       };
     } catch (error) {
       logger.error('获取图库文件失败', error, { slug });
@@ -126,13 +131,11 @@ export async function adminGetGallery(
   });
 }
 
-// POST - 创建文件（JSON 格式）
 export async function adminCreateGallery(input: {
   slug: string;
   content: string;
 }): Promise<ActionResponse<void>> {
   return withActionPermission('gallery:create', async (user) => {
-    // 速率限制检查
     if (user.id) {
       const rateLimit = await serverActionRateLimiter.check(
         `gallery:${user.id}`
@@ -148,72 +151,36 @@ export async function adminCreateGallery(input: {
 
     try {
       const { slug, content } = input;
-
       if (!slug || !content) {
         return { success: false, error: '缺少必需字段 (slug, content)' };
       }
 
-      // 检查文件名是否合法
       const cleanSlug = slug.trim().toLowerCase();
       const nameCheck = validateSlug(cleanSlug);
       if (nameCheck) {
         return { success: false, error: nameCheck.error };
       }
 
-      // 验证 JSON 格式
-      let parsed: AdminGallery;
-      try {
-        parsed = JSON.parse(content);
-      } catch {
-        return {
-          success: false,
-          error: 'JSON 格式无效',
-        };
-      }
+      await goFetch('/api/gallery-files', {
+        method: 'POST',
+        body: JSON.stringify({ slug: cleanSlug, content }),
+      });
 
-      if (!parsed.title || !parsed.thumbnail) {
-        return {
-          success: false,
-          error: 'JSON 内容缺少必需的字段 (title, thumbnail)',
-        };
-      }
-
-      // 计算图片是否为竖屏
-      const isPortrait = await isPortraitImage(parsed.thumbnail);
-      parsed.isPortrait = isPortrait;
-
-      const fileName = `${cleanSlug}.json`;
-      const filePath = path.join(GALLERY_DIR, fileName);
-
-      // 检查文件是否已存在
-      const conflict = await checkFileConflict(filePath);
-      if (conflict) {
-        return { success: false, error: conflict.error };
-      }
-
-      // 确保目录存在
-      await ensureDirectory(GALLERY_DIR);
-
-      // 格式化JSON并写入文件
-      const formattedContent = JSON.stringify(parsed, null, 2);
-      await writeFileAtomic(filePath, formattedContent, { encoding: 'utf-8' });
-
-      logger.info('创建图库文件成功', { slug: input.slug, userId: user.id });
+      logger.info('创建图库文件成功', { slug: cleanSlug, userId: user.id });
       return { success: true, data: undefined };
     } catch (error) {
       logger.error('创建图库文件失败', error, { slug: input.slug });
-      return { success: false, error: '创建失败，请稍后重试' };
+      const message = error instanceof Error ? error.message : '创建失败';
+      return { success: false, error: message };
     }
   });
 }
 
-// PUT - 更新文件内容
 export async function adminUpdateGallery(
   slug: string,
   content: string
 ): Promise<ActionResponse<void>> {
   return withActionPermission('gallery:update', async (user) => {
-    // 速率限制检查
     if (user.id) {
       const rateLimit = await serverActionRateLimiter.check(
         `gallery:${user.id}`
@@ -228,45 +195,26 @@ export async function adminUpdateGallery(
     }
 
     try {
-      // 使用 .json 扩展名
-      const filePath = path.join(GALLERY_DIR, `${slug}.json`);
+      await goFetch(`/api/gallery-files/${slug}`, {
+        method: 'PUT',
+        body: JSON.stringify({ content }),
+      });
 
-      // 验证JSON格式并格式化
-      let parsed;
-      try {
-        parsed = JSON.parse(content);
-      } catch {
-        return { success: false, error: 'JSON 格式无效' };
-      }
-
-      if (!parsed.title || !parsed.thumbnail) {
-        return {
-          success: false,
-          error: 'JSON 内容缺少必需的字段 (title, thumbnail)',
-        };
-      }
-      // 计算图片是否为竖屏
-      const isPortrait = await isPortraitImage(parsed.thumbnail);
-      parsed.isPortrait = isPortrait;
-
-      const formattedContent = JSON.stringify(parsed, null, 2);
-      await writeFileAtomic(filePath, formattedContent, { encoding: 'utf-8' });
       logger.info('更新图库文件成功', { slug, userId: user.id });
       return { success: true, data: undefined };
     } catch (error) {
       logger.error('更新图库文件失败', error, { slug });
-      return { success: false, error: '更新失败' };
+      const message = error instanceof Error ? error.message : '更新失败';
+      return { success: false, error: message };
     }
   });
 }
 
-// PATCH - 重命名文件
 export async function adminRenameGalleryFile(
   slug: string,
   newSlug: string
 ): Promise<ActionResponse<void>> {
   return withActionPermission('gallery:update', async (user) => {
-    // 速率限制检查
     if (user.id) {
       const rateLimit = await serverActionRateLimiter.check(
         `gallery:${user.id}`
@@ -281,48 +229,35 @@ export async function adminRenameGalleryFile(
     }
 
     try {
-      // 检查新文件名是否合法
       const cleanNewSlug = newSlug.trim().toLowerCase();
       const nameCheck = validateSlug(cleanNewSlug);
       if (nameCheck) {
         return { success: false, error: nameCheck.error };
       }
 
-      // 使用 .json 扩展名
-      const oldFilePath = path.join(GALLERY_DIR, `${slug}.json`);
-      const newFilePath = path.join(GALLERY_DIR, `${cleanNewSlug}.json`);
+      await goFetch(`/api/gallery-files/${slug}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ newSlug: cleanNewSlug }),
+      });
 
-      // 检查原文件是否存在
-      const exists = await fileExists(oldFilePath);
-
-      if (!exists) {
-        return { success: false, error: '原文件不存在' };
-      }
-
-      // 检查新文件名是否已存在
-      const conflictCheck = await checkFileConflict(newFilePath);
-      if (conflictCheck) {
-        return { success: false, error: conflictCheck.error || '文件已存在' };
-      }
-
-      // 重命名文件
-      await fs.rename(oldFilePath, newFilePath);
-
-      logger.info('重命名图库文件成功', { slug, newSlug, userId: user.id });
+      logger.info('重命名图库文件成功', {
+        slug,
+        newSlug: cleanNewSlug,
+        userId: user.id,
+      });
       return { success: true, data: undefined };
     } catch (error) {
       logger.error('重命名图库文件失败', error, { slug, newSlug });
-      return { success: false, error: '重命名失败' };
+      const message = error instanceof Error ? error.message : '重命名失败';
+      return { success: false, error: message };
     }
   });
 }
 
-// DELETE - 删除文件
 export async function adminDeleteGalleryFile(
   slug: string
 ): Promise<ActionResponse<void>> {
   return withActionPermission('gallery:delete', async (user) => {
-    // 速率限制检查
     if (user.id) {
       const rateLimit = await serverActionRateLimiter.check(
         `gallery:${user.id}`
@@ -337,15 +272,79 @@ export async function adminDeleteGalleryFile(
     }
 
     try {
-      // 使用 .json 扩展名
-      const filePath = path.join(GALLERY_DIR, `${slug}.json`);
+      const nameCheck = validateSlug(slug);
+      if (nameCheck) {
+        return { success: false, error: nameCheck.error };
+      }
 
-      await fs.unlink(filePath);
+      await goFetch(`/api/gallery-files/${slug}`, {
+        method: 'DELETE',
+      });
+
       logger.info('删除图库文件成功', { slug, userId: user.id });
       return { success: true, data: undefined };
     } catch (error) {
       logger.error('删除图库文件失败', error, { slug });
-      return { success: false, error: '删除失败' };
+      const message = error instanceof Error ? error.message : '删除失败';
+      return { success: false, error: message };
+    }
+  });
+}
+
+// 上传图库 JSON 文件（multipart）- 由 gallery-client.tsx 的上传按钮调用
+export async function adminUploadGalleryFile(
+  formData: FormData
+): Promise<
+  ActionResponse<{ message: string; fileName: string; slug: string }>
+> {
+  return withActionPermission('gallery:create', async (user) => {
+    if (user.id) {
+      const rateLimit = await serverActionRateLimiter.check(
+        `gallery:${user.id}`
+      );
+      if (!rateLimit.success) {
+        return {
+          success: false,
+          error: '操作过于频繁，请稍后再试',
+          resetTime: rateLimit.resetTime,
+        };
+      }
+    }
+
+    try {
+      const goFormData = new FormData();
+      const file = formData.get('file');
+      const slug = formData.get('slug');
+      if (file instanceof File) {
+        goFormData.append('file', file);
+      }
+      if (slug) {
+        goFormData.append('slug', slug as string);
+      }
+
+      const res = await fetch(`${BASE_URL}/api/gallery-files/upload`, {
+        method: 'POST',
+        headers: {
+          'X-Internal-Secret': INTERNAL_SECRET,
+        },
+        body: goFormData,
+        cache: 'no-store',
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        logger.error('上传图库文件失败', {
+          status: res.status,
+          userId: user.id,
+        });
+        return { success: false, error: data.error || '上传失败' };
+      }
+
+      logger.info('上传图库文件成功', { userId: user.id });
+      return { success: true, data };
+    } catch (error) {
+      logger.error('转发上传图库请求失败', error);
+      return { success: false, error: '上传失败' };
     }
   });
 }
