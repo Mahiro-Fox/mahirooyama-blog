@@ -46,3 +46,6 @@ next-env.d.ts
 /.agents/
 /.pnpm-store/
 /.trae/
+
+#docker-compose
+docker-compose.override.yml
