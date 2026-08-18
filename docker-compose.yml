@@ -66,10 +66,14 @@ services:
       NODE_ENV: production
       GO_API_INTERNAL_URL: http://backend-go:8080
       GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET:-dev_secret_change_me}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://example.com}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://mahirooyama.cn}
       # next-auth 相关（与 .env 保持一致）
       JWT_SECRET: ${JWT_SECRET}
-      AUTH_URL: ${NEXT_PUBLIC_APP_URL:-https://example.com}
+      AUTH_URL: ${NEXT_PUBLIC_APP_URL:-https://mahirooyama.cn}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST:-true}
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET}
       ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD}
       # uploads 目录：getPublicMidis 等仍需在 Next.js 端读取 MIDI 文件做解析
       UPLOADS_DIR: /app/uploads

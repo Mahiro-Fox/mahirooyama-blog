@@ -1,7 +1,7 @@
+import { authConfig } from '@/auth.config';
 import NextAuth from 'next-auth';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { authConfig } from '@/auth.config';
 import { pageRoutesConfig } from '@/config/common';
 import { i18nConfig } from '@/i18n/i18n.config';
 
@@ -48,6 +48,10 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
 const protectedRoutes = getProtectedRoutes();
 
 export default auth(async (req: NextRequest) => {
+  // ★ 新增：如果是中间件自己 rewrite 出来的内部请求，直接放行，避免二次处理死循环
+  if (req.headers.get('x-i18n-rewritten')) {
+    return addSecurityHeaders(NextResponse.next());
+  }
   const { pathname } = req.nextUrl;
   // 默认语言
   const defaultLang = i18nConfig.defaultLang;
@@ -96,6 +100,7 @@ export default auth(async (req: NextRequest) => {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-pathname', pathname);
+  requestHeaders.set('x-i18n-rewritten', '1'); // ★ 新增
 
   // 无语言前缀后的真实路径，用于比对protectedRoutes中的需要保护的路由
   const pathnameWithoutLocale = hasLocaleInPath
