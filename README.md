@@ -10,10 +10,10 @@ docker-compose run --rm backend-go ./migrator
 
 pnpm dev
 
-# 访问 http://localhost:8888/cn/movies
+# 访问 http://localhost:3000/cn/movies
 
 # 或全栈容器化
 
 docker-compose up -d --build
 
-# 前端 http://localhost:8888，后端 http://localhost:8080，pgAdmin http://localhost:5050
+# 前端 http://localhost:3000，后端 http://localhost:8080，pgAdmin http://localhost:5050

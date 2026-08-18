@@ -1,0 +1,30 @@
+# 开发环境覆盖配置（docker-compose 自动加载，生产部署时删除此文件或用 -f 指定基础文件）
+# 作用：暴露所有端口方便本机调试，pgadmin 也启用
+
+services:
+  postgres:
+    ports:
+      - '5432:5432'
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: mahiro-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend-go:
+    ports:
+      - '8080:8080'
+
+  next-frontend:
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development

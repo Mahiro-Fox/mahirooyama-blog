@@ -7,9 +7,9 @@
     "url": "https://mahirooyama.cn"
   },
   "scripts": {
-    "dev": "next dev --turbopack --port 8888",
+    "dev": "next dev --turbopack --port",
     "build": "next build",
-    "start": "next start --port 8888",
+    "start": "next start --port",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",

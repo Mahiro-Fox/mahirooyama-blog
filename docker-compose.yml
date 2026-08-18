@@ -1,64 +1,82 @@
+# 生产环境配置（也兼容开发环境基础需求）
+# 开发时暴露额外端口用 docker-compose.override.yml（自动加载）
+# 生产部署时只用本文件，端口仅对内暴露由 nginx 反代
+
 services:
   postgres:
     image: postgres:16-alpine
     container_name: mahiro-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: mahiro
-      POSTGRES_USER: mahiro
-      POSTGRES_PASSWORD: mahiro_dev_pwd
-    ports:
-      - '5432:5432'
+      POSTGRES_DB: ${DB_NAME:-mahiro}
+      POSTGRES_USER: ${DB_USER:-mahiro}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mahiro_dev_pwd}
+    # 生产不对外暴露 5432，仅在容器网络内可达
+    # 如需本机调试，临时加端口映射或用 ssh 隧道
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U mahiro']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-mahiro}']
       interval: 5s
       timeout: 3s
       retries: 5
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: mahiro-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@local.dev
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - '5050:80'
-    depends_on:
-      postgres:
-        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
 
   backend-go:
     build: ./backend-go
     container_name: mahiro-backend-go
+    restart: unless-stopped
     environment:
       HTTP_PORT: 8080
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: mahiro
-      DB_PASSWORD: mahiro_dev_pwd
-      DB_NAME: mahiro
+      DB_USER: ${DB_USER:-mahiro}
+      DB_PASSWORD: ${DB_PASSWORD:-mahiro_dev_pwd}
+      DB_NAME: ${DB_NAME:-mahiro}
       GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET:-dev_secret_change_me}
+    # 绑定到 127.0.0.1，仅宿主机 nginx 可访问，不对外暴露
     ports:
-      - '8080:8080'
-    # 迁移脚本可复用此服务的镜像，挂载 data 目录后运行
+      - '127.0.0.1:8080:8080'
     volumes:
       - ./data:/data:ro
     depends_on:
       postgres:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
 
   next-frontend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: mahiro-next-frontend
+    restart: unless-stopped
     environment:
+      NODE_ENV: production
       GO_API_INTERNAL_URL: http://backend-go:8080
       GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET:-dev_secret_change_me}
-      NEXT_PUBLIC_APP_URL: http://localhost:8888
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://example.com}
+      # next-auth 相关（与 .env 保持一致）
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_URL: ${NEXT_PUBLIC_APP_URL:-https://example.com}
+      ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD}
+    # 绑定到 127.0.0.1，仅宿主机 nginx 可访问，不对外暴露
     ports:
-      - '8888:3000'
+      - '127.0.0.1:3000:3000'
     depends_on:
       - backend-go
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
 
 volumes:
   pgdata:
