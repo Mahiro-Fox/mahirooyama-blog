@@ -66,17 +66,36 @@ func main() {
 	log.Println("服务已退出")
 }
 
-// autoMigrate 自动建表 + 补充 GIN 索引
+// autoMigrate 自动建表 + 补充索引
 func autoMigrate(db *gorm.DB) error {
-	if err := db.AutoMigrate(&model.Movie{}); err != nil {
+	// 一次性迁移所有模型
+	models := []any{
+		&model.Movie{},
+		&model.Song{},
+		&model.Moment{},
+		&model.GuestbookEntry{},
+		&model.BugReport{},
+		&model.Account{},
+		&model.AdminUser{},
+		&model.RolePermission{},
+		&model.Tag{},
+	}
+	if err := db.AutoMigrate(models...); err != nil {
 		return fmt.Errorf("auto migrate: %w", err)
 	}
-	// GIN 索引 AutoMigrate 不支持，需手动创建
-	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_movies_created_at ON movies (created_at DESC)").Error; err != nil {
-		return fmt.Errorf("create created_at index: %w", err)
+	// 补充 GIN 索引
+	indexes := []string{
+		"CREATE INDEX IF NOT EXISTS idx_movies_created_at ON movies (created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_movies_tags_gin ON movies USING gin (tags)",
+		"CREATE INDEX IF NOT EXISTS idx_moments_created_at ON moments (created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_guestbook_created_at ON guestbook_entries (created_at DESC)",
+		"CREATE INDEX IF NOT EXISTS idx_guestbook_approved ON guestbook_entries (is_approved)",
+		"CREATE INDEX IF NOT EXISTS idx_bugs_created_at ON bug_reports (created_at DESC)",
 	}
-	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_movies_tags_gin ON movies USING gin (tags)").Error; err != nil {
-		return fmt.Errorf("create tags index: %w", err)
+	for _, sql := range indexes {
+		if err := db.Exec(sql).Error; err != nil {
+			return fmt.Errorf("create index: %w", err)
+		}
 	}
 	return nil
 }
