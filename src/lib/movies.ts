@@ -19,7 +19,8 @@ export interface Movie {
   year: string;
   tags: string[];
   summary: string;
-  lastUpdated: string;
+  created_at: string;
+  updated_at: string;
   sources: MovieSource[];
 }
 // GET - 获取公开的电影列表（用于前端展示）

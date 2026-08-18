@@ -1,0 +1,64 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mahiro-postgres
+    environment:
+      POSTGRES_DB: mahiro
+      POSTGRES_USER: mahiro
+      POSTGRES_PASSWORD: mahiro_dev_pwd
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mahiro']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: mahiro-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend-go:
+    build: ./backend-go
+    container_name: mahiro-backend-go
+    environment:
+      HTTP_PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: mahiro
+      DB_PASSWORD: mahiro_dev_pwd
+      DB_NAME: mahiro
+      GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET:-dev_secret_change_me}
+    ports:
+      - '8080:8080'
+    # 迁移脚本可复用此服务的镜像，挂载 data 目录后运行
+    volumes:
+      - ./data:/data:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  next-frontend:
+    build: .
+    container_name: mahiro-next-frontend
+    environment:
+      GO_API_INTERNAL_URL: http://backend-go:8080
+      GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET:-dev_secret_change_me}
+      NEXT_PUBLIC_APP_URL: http://localhost:8888
+    ports:
+      - '8888:3000'
+    depends_on:
+      - backend-go
+
+volumes:
+  pgdata:

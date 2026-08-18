@@ -1,0 +1,27 @@
+node_modules
+.next
+.git
+.gitignore
+.dockerignore
+docker-compose.yml
+Dockerfile
+README.md
+.env*.local
+.env
+
+# 后端项目独立构建
+backend-go
+
+# IDE / 工具目录
+.vscode
+.trae
+.claude
+.codegraph
+.kiro
+.agents
+.pnpm-store
+
+# 数据与上传（迁移期挂载，不进镜像）
+data
+uploads
+coverage

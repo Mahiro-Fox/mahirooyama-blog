@@ -23,8 +23,10 @@ import { useCrud } from '@/hooks/use-crud';
 import { Movie, MovieSource } from '@/lib/movies';
 import { formatDate } from '@/utils/utils';
 
-type MovieCreateInput = Omit<Movie, 'lastUpdated'>;
-type MovieUpdateInput = Partial<Omit<Movie, 'id' | 'lastUpdated'>>;
+type MovieCreateInput = Omit<Movie, 'created_at' | 'updated_at'>;
+type MovieUpdateInput = Partial<
+  Omit<Movie, 'id' | 'created_at' | 'updated_at'>
+>;
 
 type SourceDraft = MovieSource & { _key: string };
 const createSourceDraft = (): SourceDraft => ({
@@ -87,7 +89,7 @@ function MoviesList({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-xs">
-                  添加于 {formatDate(movie.lastUpdated)}
+                  添加于 {formatDate(movie.created_at)}
                 </span>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm">

@@ -50,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 电影页
   const moviePages: MetadataRoute.Sitemap = movieItems.map((movie) => ({
     url: `${baseUrl}/movie/${movie.id}`,
-    lastModified: movie.lastUpdated,
+    lastModified: movie.updated_at,
     priority: 0.7,
     changeFrequency: 'weekly',
   }));

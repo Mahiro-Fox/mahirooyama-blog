@@ -133,7 +133,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                     <div className="border-border border-t pt-4">
                       <p className="text-muted-foreground text-xs">
                         {t('movies.added_on')}{' '}
-                        {new Date(movie.lastUpdated).toLocaleDateString(
+                        {new Date(movie.created_at).toLocaleDateString(
                           'zh-CN'
                         )}
                       </p>

@@ -1,0 +1,7 @@
+.git
+*.md
+.env
+.env.local
+.env.example
+server
+migrator
