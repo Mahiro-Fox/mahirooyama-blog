@@ -24,15 +24,17 @@ interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  const allPosts = await getBlogs();
-  return i18nConfig.locales.flatMap((locale) =>
-    allPosts.map((post) => ({
-      slug: post.slug,
-      lang: locale,
-    }))
-  );
-}
+export const dynamic = 'force-dynamic';
+
+// export async function generateStaticParams() {
+//   const allPosts = await getBlogs();
+//   return i18nConfig.locales.flatMap((locale) =>
+//     allPosts.map((post) => ({
+//       slug: post.slug,
+//       lang: locale,
+//     }))
+//   );
+// }
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;

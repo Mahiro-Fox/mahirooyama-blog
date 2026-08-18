@@ -23,16 +23,16 @@ interface GalleryImagePageProps {
     slug: string;
   }>;
 }
-
-export async function generateStaticParams() {
-  const images = await getGalleries();
-  return i18nConfig.locales.flatMap((locale) =>
-    images.map((image) => ({
-      slug: image.slug,
-      lang: locale,
-    }))
-  );
-}
+export const dynamic = 'force-dynamic';
+// export async function generateStaticParams() {
+//   const images = await getGalleries();
+//   return i18nConfig.locales.flatMap((locale) =>
+//     images.map((image) => ({
+//       slug: image.slug,
+//       lang: locale,
+//     }))
+//   );
+// }
 
 export async function generateMetadata({
   params,
