@@ -82,7 +82,9 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./data:/app/data:ro
+      # analytics 目录：目前在next端读取，后续可迁移到go
       - ./data/analytics:/app/data/analytics
+      # conversations 目录：目前在next端读取，后续可迁移到go
       - ./data/conversations:/app/data/conversations
     depends_on:
       - backend-go
