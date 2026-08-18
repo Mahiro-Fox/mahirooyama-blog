@@ -1,14 +1,17 @@
 'use server';
 
 import { pathCacheStore } from '@/store/path-cache-store';
+import { goFetch } from '@/lib/server/api-client';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
 import { createLogger } from '@/utils/logger';
-import { goFetch } from '@/lib/server/api-client';
 
 const logger = createLogger('UploadFilesActions');
+
+const INTERNAL_SECRET = process.env.GO_API_SHARED_SECRET ?? '';
+const BASE_URL = process.env.GO_API_INTERNAL_URL ?? 'http://localhost:8080';
 
 export interface FileItem {
   name: string;
@@ -23,6 +26,69 @@ export interface FileListResponse {
   items: FileItem[];
   currentPath: string;
   breadcrumb: string[];
+}
+
+// POST - 上传文件（转发 multipart 到 Go POST /api/upload-files）
+// 由 Server Action 带 X-Internal-Secret 调用，浏览器不直接暴露密钥
+export async function adminUploadFiles(formData: FormData): Promise<
+  ActionResponse<{
+    message: string;
+    results: {
+      name: string;
+      path: string;
+      success: boolean;
+      converted?: boolean;
+      webpPath?: string;
+      error?: string;
+    }[];
+  }>
+> {
+  return withActionPermission('files:upload', async (user) => {
+    try {
+      // 解析 path 参数
+      const pathValue = formData.get('path') as string | null;
+      const relativePath = pathValue ?? '';
+
+      // 构建新的 FormData 转发给 Go（只保留 files 字段）
+      const goFormData = new FormData();
+      const files = formData.getAll('files');
+      for (const f of files) {
+        goFormData.append('files', f);
+      }
+
+      const res = await fetch(
+        `${BASE_URL}/api/upload-files?path=${encodeURIComponent(relativePath)}`,
+        {
+          method: 'POST',
+          headers: {
+            'X-Internal-Secret': INTERNAL_SECRET,
+          },
+          body: goFormData,
+          cache: 'no-store',
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        logger.error('上传文件失败', { status: res.status, userId: user.id });
+        return {
+          success: false,
+          error: data.error || '上传失败',
+          details: data.details,
+        };
+      }
+
+      logger.info('上传文件成功', {
+        count: files.length,
+        relativePath,
+        userId: user.id,
+      });
+      return { success: true, data };
+    } catch (error) {
+      logger.error('转发上传请求失败', error);
+      return { success: false, error: '上传失败' };
+    }
+  });
 }
 
 // GET - 获取文件列表（转发到 Go GET /api/upload-files）
@@ -43,9 +109,7 @@ export async function adminGetUploadFiles(
       const query = finalRelativePath
         ? `?path=${encodeURIComponent(finalRelativePath)}`
         : '';
-      const data = await goFetch<FileListResponse>(
-        `/api/upload-files${query}`
-      );
+      const data = await goFetch<FileListResponse>(`/api/upload-files${query}`);
       return { success: true, data };
     } catch (error) {
       logger.error('获取文件列表失败', error, { relativePath });
@@ -72,7 +136,11 @@ export async function createFolder(
           body: JSON.stringify({ relativePath, folderName: folderName.trim() }),
         }
       );
-      logger.info('创建文件夹成功', { relativePath, folderName, userId: user.id });
+      logger.info('创建文件夹成功', {
+        relativePath,
+        folderName,
+        userId: user.id,
+      });
       return { success: true, data };
     } catch (error) {
       logger.error('创建文件夹失败', error, { relativePath, folderName });

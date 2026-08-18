@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   adminGetUploadFiles,
+  adminUploadFiles,
   cacheUploadPath,
   convertImages,
   createFolder,
@@ -158,47 +159,36 @@ const validateUploadSelection = (files: FileList): boolean => {
   return true;
 };
 
-// 执行上传并处理结果提示
+// 执行上传并处理结果提示（改为调用 Server Action，由 Next.js 内部带密钥转发给 Go）
 const uploadFiles = async (path: string, files: FileList) => {
   const formData = new FormData();
+  formData.append('path', path);
   for (let i = 0; i < files.length; i++) {
     formData.append('files', files[i]);
   }
 
-  const response = await fetch(
-    `/api/upload-files?path=${encodeURIComponent(path)}`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  );
+  const result = await adminUploadFiles(formData);
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    if (result.details) {
-      toast(result.error, {
-        description: result.details?.join('\n') || '',
-      });
-    } else {
-      toast.error(result.error || '上传失败');
-    }
+  if (!result.success) {
+    toast.error(result.error || '上传失败');
     return;
   }
 
-  const successCount = result.results.filter(
+  const data = result.data;
+  const results = data?.results || [];
+  const successCount = results.filter(
     (r: { success: boolean }) => r.success
   ).length;
-  const failCount = result.results.length - successCount;
+  const failCount = results.length - successCount;
 
   if (failCount === 0) {
     toast.success(`成功上传 ${successCount} 个文件`);
   } else {
     toast.warning(`${successCount} 成功, ${failCount} 失败`);
-    result.results
+    results
       .filter((r: { success: boolean }) => !r.success)
-      .forEach((r: { name: string; error: string }) => {
-        toast.error(`${r.name}: ${r.error}`);
+      .forEach((r: { name: string; error?: string }) => {
+        toast.error(`${r.name}: ${r.error ?? '未知错误'}`);
       });
   }
 };
