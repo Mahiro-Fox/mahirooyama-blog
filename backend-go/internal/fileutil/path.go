@@ -21,11 +21,12 @@ func IsPathSafe(targetPath, allowedBase string) bool {
 		return false
 	}
 	// 确保目标路径在基础目录下（或就是基础目录本身）
+	// filepath.Rel(base, target) 返回 "." 表示两者相同，属于合法情况
 	rel, err := filepath.Rel(resolvedBase, resolvedTarget)
 	if err != nil {
 		return false
 	}
-	return !strings.HasPrefix(rel, "..") && rel != "."
+	return !strings.HasPrefix(rel, "..")
 }
 
 // EnsureDirectory 确保目录存在，不存在则递归创建
