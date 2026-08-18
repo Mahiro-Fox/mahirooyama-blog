@@ -90,4 +90,113 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, internalSecret, uploadsDir strin
 		write.PATCH("/:slug", handler.RenameGalleryFileHandler(galleryDir))
 		write.DELETE("/:slug", handler.DeleteGalleryFileHandler(galleryDir))
 	}
+
+	// music 路由（音乐管理）
+	music := api.Group("/music")
+	{
+		music.GET("", handler.ListSongsHandler(db))
+		music.GET("/:id", handler.GetSongHandler(db))
+		write := music.Group("", middleware.RequireInternalSecret(internalSecret))
+		write.POST("", handler.CreateSongHandler(db))
+		write.PUT("/:id", handler.UpdateSongHandler(db))
+		write.DELETE("/:id", handler.DeleteSongHandler(db))
+	}
+
+	// moments 路由（碎碎念）
+	moments := api.Group("/moments")
+	{
+		moments.GET("", handler.ListMomentsHandler(db))
+		moments.GET("/:id", handler.GetMomentHandler(db))
+		write := moments.Group("", middleware.RequireInternalSecret(internalSecret))
+		write.POST("", handler.CreateMomentHandler(db))
+		write.PUT("/:id", handler.UpdateMomentHandler(db))
+		write.DELETE("/:id", handler.DeleteMomentHandler(db))
+	}
+
+	// guestbook 路由（留言板）
+	// 访客提交和查看已审核留言公开；管理操作需内部密钥
+	guestbook := api.Group("/guestbook")
+	{
+		guestbook.GET("", handler.ListApprovedGuestbookHandler(db))
+		guestbook.GET("/:id", handler.GetGuestbookHandler(db))
+		// 访客提交留言（不需要内部密钥）
+		guestbook.POST("", handler.CreateGuestbookHandler(db))
+	}
+	guestbookAdmin := api.Group("/admin/guestbook", middleware.RequireInternalSecret(internalSecret))
+	{
+		guestbookAdmin.GET("", handler.ListAllGuestbookHandler(db))
+		guestbookAdmin.GET("/:id", handler.GetGuestbookHandler(db))
+		guestbookAdmin.PUT("/:id", handler.UpdateGuestbookHandler(db))
+		guestbookAdmin.PATCH("/:id/approve", handler.ApproveGuestbookHandler(db))
+		guestbookAdmin.POST("/:id/reply", handler.ReplyGuestbookHandler(db))
+		guestbookAdmin.DELETE("/:id", handler.DeleteGuestbookHandler(db))
+	}
+
+	// bugs 路由（Bug 报告）
+	// 前端用户提交公开；管理操作需内部密钥
+	bugs := api.Group("/bugs")
+	{
+		bugs.POST("", handler.CreateBugHandler(db))
+	}
+	bugsAdmin := api.Group("/admin/bugs", middleware.RequireInternalSecret(internalSecret))
+	{
+		bugsAdmin.GET("", handler.ListBugsHandler(db))
+		bugsAdmin.GET("/:id", handler.GetBugHandler(db))
+		bugsAdmin.PATCH("/:id/status", handler.UpdateBugStatusHandler(db))
+		bugsAdmin.DELETE("/:id", handler.DeleteBugHandler(db))
+	}
+
+	// accounts 路由（前台账户）
+	// 注册、登录公开；管理操作需内部密钥
+	accounts := api.Group("/accounts")
+	{
+		accounts.POST("", handler.CreateAccountHandler(db))
+		accounts.POST("/login", handler.LoginAccountHandler(db))
+	}
+	accountsAdmin := api.Group("/admin/accounts", middleware.RequireInternalSecret(internalSecret))
+	{
+		accountsAdmin.GET("", handler.ListAccountsHandler(db))
+		accountsAdmin.GET("/:id", handler.GetAccountHandler(db))
+		accountsAdmin.PUT("/:id/password", handler.UpdateAccountPasswordHandler(db))
+		accountsAdmin.DELETE("/:id", handler.DeleteAccountHandler(db))
+	}
+
+	// admin-users 路由（后台管理员用户）
+	// 登录公开；其他操作需内部密钥
+	usersLogin := api.Group("/admin/users")
+	{
+		usersLogin.POST("/login", handler.LoginAdminUserHandler(db))
+	}
+	usersAdmin := api.Group("/admin/users", middleware.RequireInternalSecret(internalSecret))
+	{
+		usersAdmin.GET("", handler.ListAdminUsersHandler(db))
+		usersAdmin.GET("/:id", handler.GetAdminUserHandler(db))
+		usersAdmin.POST("", handler.CreateAdminUserHandler(db))
+		usersAdmin.PUT("/:id", handler.UpdateAdminUserHandler(db))
+		usersAdmin.PUT("/:id/password", handler.UpdateAdminUserPasswordHandler(db))
+		usersAdmin.DELETE("/:id", handler.DeleteAdminUserHandler(db))
+	}
+
+	// role-permissions 路由（角色权限管理）
+	rolePerms := api.Group("/admin/role-permissions", middleware.RequireInternalSecret(internalSecret))
+	{
+		rolePerms.GET("", handler.ListRolePermissionsHandler(db))
+		rolePerms.GET("/:role", handler.GetRolePermissionsHandler(db))
+		rolePerms.PUT("", handler.UpdateRolePermissionsHandler(db))
+		rolePerms.DELETE("/:role", handler.DeleteRolePermissionsHandler(db))
+	}
+
+	// tags 路由（标签管理）
+	// 公开查询：按 type 过滤；管理操作需内部密钥
+	tags := api.Group("/tags")
+	{
+		tags.GET("", handler.ListTagsHandler(db))
+		tags.GET("/:type/:id", handler.GetTagHandler(db))
+	}
+	tagsAdmin := api.Group("/admin/tags", middleware.RequireInternalSecret(internalSecret))
+	{
+		tagsAdmin.POST("", handler.CreateTagHandler(db))
+		tagsAdmin.PUT("/:type/:id", handler.UpdateTagHandler(db))
+		tagsAdmin.DELETE("/:type/:id", handler.DeleteTagHandler(db))
+	}
 }

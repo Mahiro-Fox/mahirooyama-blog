@@ -1,22 +1,21 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { MUSIC_FILE } from '@/constant/dir';
-import { getMusics, Song } from '@/lib/music';
+import { Song } from '@/lib/music';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { goFetch } from '@/lib/server/api-client';
 import { createUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { writeFileAtomic } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MusicActions');
 
 export async function getPublicMusic(): Promise<ActionResponse<Song[]>> {
   try {
-    const songs = await getMusics();
+    const songs = await goFetch<Song[]>('/api/music');
     return { success: true, data: songs };
   } catch (error) {
     logger.error('获取音乐列表失败', error);
@@ -27,7 +26,7 @@ export async function getPublicMusic(): Promise<ActionResponse<Song[]>> {
 export async function adminGetMusic(): Promise<ActionResponse<Song[]>> {
   return withActionPermission('music:read', async () => {
     try {
-      const songs = await getMusics();
+      const songs = await goFetch<Song[]>('/api/music');
       return { success: true, data: songs };
     } catch (error) {
       logger.error('获取音乐列表失败', error);
@@ -60,34 +59,24 @@ export async function adminCreateMusic(input: {
       if (!name || name.trim().length === 0) {
         return { success: false, error: '歌曲名称不能为空' };
       }
-
       if (!artist || artist.trim().length === 0) {
         return { success: false, error: '歌手名称不能为空' };
       }
-
       if (!url || url.trim().length === 0) {
         return { success: false, error: '歌曲链接不能为空' };
       }
 
-      const songs = await getMusics();
-
-      const id = Date.now().toString();
-
-      const newSong: Song = {
-        id,
-        name: name.trim(),
-        artist: artist.trim(),
-        url: url.trim(),
-        cover: cover.trim() || '',
-      };
-
-      songs.push(newSong);
-
-      await writeFileAtomic(MUSIC_FILE, JSON.stringify(songs, null, 2), {
-        encoding: 'utf-8',
+      await goFetch('/api/music', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: name.trim(),
+          artist: artist.trim(),
+          url: url.trim(),
+          cover: cover.trim() || '',
+        }),
       });
 
-      logger.info('创建音乐成功', { songId: id, userId: user.id });
+      logger.info('创建音乐成功', { userId: user.id });
       revalidatePath('/', 'layout');
       return { success: true, data: undefined };
     } catch (error) {
@@ -114,42 +103,32 @@ export async function adminUpdateMusic(
     }
 
     try {
-      const { name, artist, url, cover } = input;
-
-      const songs = await getMusics();
-
-      const index = songs.findIndex((s) => s.id === id);
-      if (index === -1) {
-        return { success: false, error: '音乐不存在' };
-      }
-
-      if (name !== undefined) {
-        if (name.trim().length === 0) {
+      const body: Record<string, string> = {};
+      if (input.name !== undefined) {
+        if (input.name.trim().length === 0) {
           return { success: false, error: '歌曲名称不能为空' };
         }
-        songs[index].name = name.trim();
+        body.name = input.name.trim();
       }
-
-      if (artist !== undefined) {
-        if (artist.trim().length === 0) {
+      if (input.artist !== undefined) {
+        if (input.artist.trim().length === 0) {
           return { success: false, error: '歌手名称不能为空' };
         }
-        songs[index].artist = artist.trim();
+        body.artist = input.artist.trim();
       }
-
-      if (url !== undefined) {
-        if (url.trim().length === 0) {
+      if (input.url !== undefined) {
+        if (input.url.trim().length === 0) {
           return { success: false, error: '歌曲链接不能为空' };
         }
-        songs[index].url = url.trim();
+        body.url = input.url.trim();
+      }
+      if (input.cover !== undefined) {
+        body.cover = input.cover.trim() || '';
       }
 
-      if (cover !== undefined) {
-        songs[index].cover = cover.trim() || '';
-      }
-
-      await writeFileAtomic(MUSIC_FILE, JSON.stringify(songs, null, 2), {
-        encoding: 'utf-8',
+      await goFetch(`/api/music/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(body),
       });
 
       logger.info('更新音乐成功', { songId: id, userId: user.id });
@@ -178,19 +157,10 @@ export async function adminDeleteMusic(
     }
 
     try {
-      const songs = await getMusics();
-
-      const filtered = songs.filter((s) => s.id !== id);
-
-      if (filtered.length === songs.length) {
-        return { success: false, error: '音乐不存在' };
-      }
-
-      await writeFileAtomic(
-        MUSIC_FILE,
-        JSON.stringify(filtered, null, 2),
-        { encoding: 'utf-8' }
-      );
+      await goFetch(`/api/music/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        parseJson: false,
+      });
 
       logger.info('删除音乐成功', { songId: id, userId: user.id });
       revalidatePath('/', 'layout');

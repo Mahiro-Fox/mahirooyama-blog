@@ -1,43 +1,64 @@
-import fs from 'fs/promises';
 import {
-  DATA_DIR,
   getDefaultTags,
-  TAGS_FILE,
   type Tag,
   type TagsData,
   type TagType,
 } from '@/constant';
-import {
-  ensureDirectory,
-  isFileNotFoundError,
-  writeFileAtomic,
-} from '@/utils/file-utils';
+import { goFetch } from '@/lib/server/api-client';
+
+/**
+ * 标签存储
+ * 数据持久化由 Go 后端管理，本地仅做缓存与类型转换。
+ */
+
+interface GoTagRow {
+  id: string;
+  name: string;
+  icon: string;
+  type: TagType;
+  description?: string;
+  lastUpdated: string;
+}
+
+// 内存缓存
+let cachedTags: TagsData | null = null;
+
+// 将扁平的 Go 行数组转为嵌套的 TagsData 结构
+function rowsToTagsData(rows: GoTagRow[]): TagsData {
+  const data: TagsData = { blog: {}, gallery: {} };
+  for (const row of rows) {
+    const tag: Tag = {
+      id: row.id,
+      name: row.name,
+      icon: row.icon,
+      type: row.type,
+      description: row.description,
+      lastUpdated: row.lastUpdated,
+    };
+    if (row.type === 'blog') data.blog[row.id] = tag;
+    else if (row.type === 'gallery') data.gallery[row.id] = tag;
+  }
+  return data;
+}
+
+async function loadFromGo(): Promise<TagsData> {
+  const rows = await goFetch<GoTagRow[]>('/api/tags');
+  return rowsToTagsData(rows);
+}
 
 async function readTags(): Promise<TagsData> {
-  await ensureDirectory(DATA_DIR);
-  try {
-    const data = await fs.readFile(TAGS_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    if (isFileNotFoundError(error)) {
-      // 文件确实不存在：用默认值初始化
-      await writeTags(getDefaultTags());
-      return getDefaultTags();
-    }
-    // 其他错误（JSON 损坏、权限等）：不覆盖磁盘数据，返回默认值保证页面可用
-    console.error('读取标签失败，保留现有数据', error);
-    return getDefaultTags();
+  if (cachedTags) {
+    return cachedTags;
   }
+  try {
+    cachedTags = await loadFromGo();
+  } catch {
+    // Go 后端不可用时回退默认值
+    cachedTags = getDefaultTags();
+  }
+  return cachedTags;
 }
 
-async function writeTags(tags: TagsData): Promise<void> {
-  await ensureDirectory(DATA_DIR);
-  await writeFileAtomic(TAGS_FILE, JSON.stringify(tags, null, 2), {
-    encoding: 'utf-8',
-  });
-}
-
-// 标签存储操作
 export const tagStore = {
   // 获取所有标签
   async getAll(): Promise<TagsData> {
@@ -58,14 +79,21 @@ export const tagStore = {
 
   // 创建标签
   async create(tag: Omit<Tag, 'lastUpdated'>): Promise<Tag> {
-    const tags = await readTags();
-    const newTag: Tag = {
+    await goFetch('/api/admin/tags', {
+      method: 'POST',
+      body: JSON.stringify({
+        id: tag.id,
+        name: tag.name,
+        icon: tag.icon || 'default',
+        type: tag.type,
+        description: tag.description || '',
+      }),
+    });
+    cachedTags = null;
+    return {
       ...tag,
       lastUpdated: new Date().toISOString(),
     };
-    tags[tag.type][tag.id] = newTag;
-    await writeTags(tags);
-    return newTag;
   },
 
   // 更新标签
@@ -74,33 +102,81 @@ export const tagStore = {
     type: TagType,
     updates: Partial<Omit<Tag, 'id' | 'type' | 'lastUpdated'>>
   ): Promise<Tag | null> {
-    const tags = await readTags();
-    const tag = tags[type][id];
-    if (!tag) return null;
+    const body: Record<string, string> = {};
+    if (updates.name !== undefined) body.name = updates.name;
+    if (updates.icon !== undefined) body.icon = updates.icon;
+    if (updates.description !== undefined)
+      body.description = updates.description;
 
-    const updatedTag: Tag = {
-      ...tag,
-      ...updates,
-      lastUpdated: new Date().toISOString(),
-    };
-    tags[type][id] = updatedTag;
-    await writeTags(tags);
-    return updatedTag;
+    try {
+      const row = await goFetch<GoTagRow>(
+        `/api/admin/tags/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(body),
+        }
+      );
+      cachedTags = null;
+      return {
+        id: row.id,
+        name: row.name,
+        icon: row.icon,
+        type: row.type,
+        description: row.description,
+        lastUpdated: row.lastUpdated,
+      };
+    } catch {
+      return null;
+    }
   },
 
   // 删除标签
   async delete(id: string, type: TagType): Promise<boolean> {
-    const tags = await readTags();
-    if (!tags[type][id]) return false;
-    delete tags[type][id];
-    await writeTags(tags);
-    return true;
+    try {
+      await goFetch(
+        `/api/admin/tags/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,
+        {
+          method: 'DELETE',
+          parseJson: false,
+        }
+      );
+      cachedTags = null;
+      return true;
+    } catch {
+      return false;
+    }
   },
 
-  // 重置为默认标签
+  // 重置为默认标签（逐个写入默认值，再刷新缓存）
   async resetToDefault(): Promise<TagsData> {
-    await writeTags(getDefaultTags());
-    return getDefaultTags();
+    const defaults = getDefaultTags();
+    // 先删除现有的全部
+    const current = await readTags();
+    for (const type of ['blog', 'gallery'] as TagType[]) {
+      for (const id of Object.keys(current[type])) {
+        await goFetch(
+          `/api/admin/tags/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,
+          { method: 'DELETE', parseJson: false }
+        );
+      }
+    }
+    // 再创建默认值
+    for (const type of ['blog', 'gallery'] as TagType[]) {
+      for (const tag of Object.values(defaults[type])) {
+        await goFetch('/api/admin/tags', {
+          method: 'POST',
+          body: JSON.stringify({
+            id: tag.id,
+            name: tag.name,
+            icon: tag.icon,
+            type: tag.type,
+            description: tag.description || '',
+          }),
+        });
+      }
+    }
+    cachedTags = null;
+    return readTags();
   },
 
   // 检查标签是否存在

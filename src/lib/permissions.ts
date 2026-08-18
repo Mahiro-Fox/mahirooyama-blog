@@ -1,6 +1,6 @@
 import type { Permission } from '@/constant';
 import { rolePermissionStore } from '@/store/role-permission-store';
-import { userStore, type User } from '@/store/user-store';
+import { userStore, type UserResponse } from '@/store/user-store';
 import { NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/admin-auth';
 
@@ -9,7 +9,7 @@ import { verifyAuth } from '@/lib/admin-auth';
  */
 interface PermissionCheckResult {
   allowed: boolean;
-  user?: User;
+  user?: UserResponse;
   response?: NextResponse;
 }
 

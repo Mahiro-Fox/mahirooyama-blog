@@ -1,69 +1,59 @@
-import fs from 'fs/promises';
 import {
   ALL_PERMISSIONS,
   DEFAULT_ROLE_PERMISSIONS,
   type Permission,
 } from '@/constant';
 import type { UserRole } from '@/store/user-store';
-import { DATA_DIR, ROLE_PERMISSIONS_FILE } from '@/constant/dir';
-import {
-  ensureDirectory,
-  ensureFileInitialized,
-  writeFileAtomic,
-} from '@/utils/file-utils';
+import { goFetch } from '@/lib/server/api-client';
 
 /**
  * 角色权限配置存储
- * 管理 data/role-permissions.json 文件
+ * 数据持久化由 Go 后端管理，本地保留内存缓存与权限定义常量。
  */
+
+interface RolePermissionRow {
+  role: UserRole;
+  permissions: Permission[];
+}
 
 // 内存缓存
 let cachedRolePermissions: Record<UserRole, Permission[]> | null = null;
 
 /**
- * 确保数据文件存在
+ * 从 Go 后端加载全部角色权限
  */
-async function ensureDataFile(): Promise<void> {
-  await ensureDirectory(DATA_DIR);
-  await ensureFileInitialized(
-    ROLE_PERMISSIONS_FILE,
-    JSON.stringify(DEFAULT_ROLE_PERMISSIONS, null, 2)
+async function loadFromGo(): Promise<Record<UserRole, Permission[]>> {
+  const rows = await goFetch<RolePermissionRow[]>(
+    '/api/admin/role-permissions'
   );
+  const result: Record<UserRole, Permission[]> = {
+    super_admin: ['*'],
+    user: DEFAULT_ROLE_PERMISSIONS.user,
+  };
+  for (const row of rows) {
+    if (row.role === 'super_admin') {
+      result.super_admin = ['*'];
+    } else {
+      result[row.role] = row.permissions;
+    }
+  }
+  return result;
 }
 
 /**
- * 读取角色权限配置
+ * 读取角色权限配置（带内存缓存）
  */
 async function readRolePermissions(): Promise<Record<UserRole, Permission[]>> {
-  // 如果有缓存，直接返回
   if (cachedRolePermissions) {
     return cachedRolePermissions;
   }
-
-  await ensureDataFile();
-  const data = await fs.readFile(ROLE_PERMISSIONS_FILE, 'utf-8');
-  const permissions = JSON.parse(data) as Record<UserRole, Permission[]>;
-
-  // 更新缓存
-  cachedRolePermissions = permissions;
-  return permissions;
-}
-
-/**
- * 写入角色权限配置
- */
-async function writeRolePermissions(
-  permissions: Record<UserRole, Permission[]>
-): Promise<void> {
-  await ensureDataFile();
-  await writeFileAtomic(
-    ROLE_PERMISSIONS_FILE,
-    JSON.stringify(permissions, null, 2),
-    { encoding: 'utf-8' }
-  );
-
-  // 更新缓存
-  cachedRolePermissions = permissions;
+  try {
+    cachedRolePermissions = await loadFromGo();
+  } catch {
+    // Go 后端不可用时回退默认值
+    cachedRolePermissions = { ...DEFAULT_ROLE_PERMISSIONS };
+  }
+  return cachedRolePermissions;
 }
 
 /**
@@ -83,39 +73,43 @@ export const rolePermissionStore = {
   async getByRole(role: UserRole): Promise<Permission[]> {
     const permissions = await readRolePermissions();
 
-    // super_admin 始终拥有所有权限
     if (role === 'super_admin') {
       return ['*'];
     }
-
     return permissions[role] || DEFAULT_ROLE_PERMISSIONS[role] || [];
   },
 
   /**
-   * 更新角色权限配置
+   * 更新角色权限配置（写入 Go 后端并刷新缓存）
    * @param role 角色
    * @param permissions 权限列表
    */
   async updateRole(role: UserRole, permissions: Permission[]): Promise<void> {
-    // 不能修改 super_admin 的权限（始终为 '*'）
     if (role === 'super_admin') {
       throw new Error('不能修改超级管理员的权限');
     }
-
-    const allPermissions = await readRolePermissions();
-    allPermissions[role] = permissions;
-    await writeRolePermissions(allPermissions);
+    await goFetch('/api/admin/role-permissions', {
+      method: 'PUT',
+      body: JSON.stringify({ role, permissions }),
+    });
+    // 刷新缓存
+    cachedRolePermissions = null;
   },
 
   /**
    * 批量更新角色权限配置
    */
   async updateAll(permissions: Record<UserRole, Permission[]>): Promise<void> {
-    // 确保 super_admin 始终为 '*'
     const newPermissions = { ...permissions };
     newPermissions.super_admin = ['*'];
-
-    await writeRolePermissions(newPermissions);
+    for (const [role, perms] of Object.entries(newPermissions)) {
+      if (role === 'super_admin') continue;
+      await goFetch('/api/admin/role-permissions', {
+        method: 'PUT',
+        body: JSON.stringify({ role, permissions: perms }),
+      });
+    }
+    cachedRolePermissions = null;
   },
 
   /**
@@ -125,20 +119,26 @@ export const rolePermissionStore = {
     role: UserRole,
     permission: Permission
   ): Promise<boolean> {
-    // super_admin 拥有所有权限
     if (role === 'super_admin') {
       return true;
     }
-
     const permissions = await this.getByRole(role);
     return permissions.includes(permission);
   },
 
   /**
-   * 重置为默认配置
+   * 重置为默认配置（删除 Go 端记录，让加载时使用 DEFAULT_ROLE_PERMISSIONS）
    */
   async resetToDefault(): Promise<void> {
-    await writeRolePermissions(DEFAULT_ROLE_PERMISSIONS);
+    // 逐角色更新为默认值
+    for (const [role, perms] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
+      if (role === 'super_admin') continue;
+      await goFetch('/api/admin/role-permissions', {
+        method: 'PUT',
+        body: JSON.stringify({ role, permissions: perms }),
+      });
+    }
+    cachedRolePermissions = null;
   },
 
   /**

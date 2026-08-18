@@ -1,8 +1,9 @@
 'use server';
 
-import { BugReport, BugStatus, bugStore } from '@/store/bug-store';
+import { BugReport, BugStatus } from '@/store/bug-store';
 import { headers } from 'next/headers';
 import { apiRateLimiter } from '@/lib/rate-limit';
+import { goFetch } from '@/lib/server/api-client';
 import {
   withActionPermission,
   type ActionResponse,
@@ -45,16 +46,18 @@ export async function submitBugReport(input: {
     if (!input.content || input.content.trim().length < 5) {
       return { success: false, error: '内容太短，请详细描述 BUG' };
     }
-
     if (input.content.length > 1000) {
       return { success: false, error: '内容过长，请简明扼要' };
     }
 
-    await bugStore.create({
-      content: input.content.trim(),
-      contact: input.contact?.trim(),
-      url: input.url,
-      userAgent: input.userAgent,
+    // 公开接口：不需要 X-Internal-Secret
+    await goFetch('/api/bugs', {
+      method: 'POST',
+      body: JSON.stringify({
+        content: input.content.trim(),
+        contact: input.contact?.trim() || '',
+        url: input.url || '',
+      }),
     });
 
     logger.info('收到新的 BUG 报告', { contact: input.contact });
@@ -73,12 +76,7 @@ export async function adminGetBugReports(): Promise<
 > {
   return withActionPermission('bugs:read', async () => {
     try {
-      const bugs = await bugStore.getAll();
-      // 按创建时间倒序
-      bugs.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      const bugs = await goFetch<BugReport[]>('/api/admin/bugs');
       return { success: true, data: bugs };
     } catch (error) {
       logger.error('获取 BUG 列表失败', error);
@@ -96,8 +94,10 @@ export async function adminUpdateBugStatus(
 ): Promise<ActionResponse<void>> {
   return withActionPermission('bugs:update', async (user) => {
     try {
-      const ok = await bugStore.updateStatus(id, status);
-      if (!ok) return { success: false, error: '报告不存在' };
+      await goFetch(`/api/admin/bugs/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
 
       logger.info('更新 BUG 状态成功', { id, status, adminId: user.id });
       return { success: true, data: undefined };
@@ -116,8 +116,10 @@ export async function adminDeleteBugReport(
 ): Promise<ActionResponse<void>> {
   return withActionPermission('bugs:delete', async (user) => {
     try {
-      const ok = await bugStore.delete(id);
-      if (!ok) return { success: false, error: '报告不存在' };
+      await goFetch(`/api/admin/bugs/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        parseJson: false,
+      });
 
       logger.info('删除 BUG 报告成功', { id, adminId: user.id });
       return { success: true, data: undefined };

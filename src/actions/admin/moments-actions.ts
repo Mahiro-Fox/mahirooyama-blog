@@ -1,15 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { MOMENTS_FILE } from '@/constant/dir';
-import { getMoments, Moment, MomentImage } from '@/lib/moments';
+import { Moment, MomentImage } from '@/lib/moments';
+import { goFetch } from '@/lib/server/api-client';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { createUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { writeFileAtomic } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MomentsActions');
@@ -18,14 +17,7 @@ const logger = createLogger('MomentsActions');
 export async function adminGetMoments(): Promise<ActionResponse<Moment[]>> {
   return withActionPermission('moments:read', async () => {
     try {
-      const moments = await getMoments();
-
-      // 按创建时间倒序排列
-      moments.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
+      const moments = await goFetch<Moment[]>('/api/moments');
       return { success: true, data: moments };
     } catch (error) {
       logger.error('获取碎碎念列表失败', error);
@@ -52,7 +44,6 @@ export async function adminCreateMoment(input: {
   location?: string;
 }): Promise<ActionResponse<void>> {
   return withActionPermission('moments:create', async (user) => {
-    // 速率限制检查
     if (user.id) {
       const rateLimit = await serverActionRateLimiter.check(
         `moments:${user.id}`
@@ -72,37 +63,21 @@ export async function adminCreateMoment(input: {
       if (!content || content.trim().length === 0) {
         return { success: false, error: '内容不能为空' };
       }
-
       if (content.length > 200) {
         return { success: false, error: '内容不能超过200字' };
       }
 
-      // 读取现有数据
-      const moments = await getMoments();
+      await goFetch('/api/moments', {
+        method: 'POST',
+        body: JSON.stringify({
+          content: content.trim(),
+          image: image ?? null,
+          moodEmoji: moodEmoji?.trim() || '',
+          location: location?.trim() || '',
+        }),
+      });
 
-      // 生成唯一ID（使用时间戳）
-      const id = Date.now().toString();
-      const createdAt = new Date().toISOString();
-
-      const newMoment: Moment = {
-        id,
-        createdAt,
-        content: content.trim(),
-        image: image || undefined,
-        moodEmoji: moodEmoji?.trim() || undefined,
-        location: location?.trim() || undefined,
-      };
-
-      moments.push(newMoment);
-
-      // 写入文件
-      await writeFileAtomic(
-        MOMENTS_FILE,
-        JSON.stringify(moments, null, 2),
-        { encoding: 'utf-8' }
-      );
-
-      logger.info('创建碎碎念成功', { momentId: id, userId: user.id });
+      logger.info('创建碎碎念成功', { userId: user.id });
       revalidatePath('/', 'layout');
       return { success: true, data: undefined };
     } catch (error) {
@@ -123,7 +98,6 @@ export async function adminUpdateMoment(
   }
 ): Promise<ActionResponse<void>> {
   return withActionPermission('moments:update', async (user) => {
-    // 速率限制检查
     if (user.id) {
       const rateLimit = await serverActionRateLimiter.check(
         `moments:${user.id}`
@@ -139,15 +113,7 @@ export async function adminUpdateMoment(
 
     try {
       const { content, image, moodEmoji, location } = input;
-
-      // 读取现有数据
-      const moments = await getMoments();
-
-      // 查找并更新
-      const index = moments.findIndex((m) => m.id === id);
-      if (index === -1) {
-        return { success: false, error: '碎碎念不存在' };
-      }
+      const body: Record<string, unknown> = {};
 
       if (content !== undefined) {
         if (content.trim().length === 0) {
@@ -156,19 +122,16 @@ export async function adminUpdateMoment(
         if (content.length > 200) {
           return { success: false, error: '内容不能超过200字' };
         }
-        moments[index].content = content.trim();
+        body.content = content.trim();
       }
+      if (image !== undefined) body.image = image ?? null;
+      if (moodEmoji !== undefined) body.moodEmoji = moodEmoji.trim();
+      if (location !== undefined) body.location = location.trim();
 
-      moments[index].image = image || undefined;
-      moments[index].moodEmoji = moodEmoji?.trim() || undefined;
-      moments[index].location = location?.trim() || undefined;
-
-      // 写入文件
-      await writeFileAtomic(
-        MOMENTS_FILE,
-        JSON.stringify(moments, null, 2),
-        { encoding: 'utf-8' }
-      );
+      await goFetch(`/api/moments/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
 
       logger.info('更新碎碎念成功', { momentId: id, userId: user.id });
       revalidatePath('/', 'layout');
@@ -185,7 +148,6 @@ export async function adminDeleteMoment(
   id: string
 ): Promise<ActionResponse<void>> {
   return withActionPermission('moments:delete', async (user) => {
-    // 速率限制检查
     if (user.id) {
       const rateLimit = await serverActionRateLimiter.check(
         `moments:${user.id}`
@@ -200,22 +162,10 @@ export async function adminDeleteMoment(
     }
 
     try {
-      // 读取现有数据
-      const moments = await getMoments();
-
-      // 过滤掉要删除的项
-      const filtered = moments.filter((m) => m.id !== id);
-
-      if (filtered.length === moments.length) {
-        return { success: false, error: '碎碎念不存在' };
-      }
-
-      // 写入文件
-      await writeFileAtomic(
-        MOMENTS_FILE,
-        JSON.stringify(filtered, null, 2),
-        { encoding: 'utf-8' }
-      );
+      await goFetch(`/api/moments/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        parseJson: false,
+      });
 
       logger.info('删除碎碎念成功', { momentId: id, userId: user.id });
       revalidatePath('/', 'layout');
@@ -230,14 +180,7 @@ export async function adminDeleteMoment(
 // GET - 获取公开的碎碎念列表（用于前端展示）
 export async function getPublicMoments(): Promise<ActionResponse<Moment[]>> {
   try {
-    const moments = await getMoments();
-
-    // 按创建时间倒序排列
-    moments.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
+    const moments = await goFetch<Moment[]>('/api/moments');
     return { success: true, data: moments };
   } catch (error) {
     logger.error('获取公开碎碎念列表失败', error);

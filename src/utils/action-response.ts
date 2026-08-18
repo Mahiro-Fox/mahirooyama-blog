@@ -1,4 +1,4 @@
-import type { User } from '@/store/user-store';
+import type { UserResponse } from '@/store/user-store';
 import type { Permission } from '@/constant/permissions';
 import { requirePermission } from '@/lib/permissions';
 
@@ -6,7 +6,7 @@ export type ActionResponse<T = unknown> =
   | { success: true; data: T; message?: string }
   | { success: false; error: string; code?: string; resetTime?: number };
 
-type ActionHandler<T> = (user: User) => Promise<ActionResponse<T>>;
+type ActionHandler<T> = (user: UserResponse) => Promise<ActionResponse<T>>;
 
 /**
  * Server Action 包装器 - 统一认证、权限检查和错误处理
