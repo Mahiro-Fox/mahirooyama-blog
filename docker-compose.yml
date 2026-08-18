@@ -38,11 +38,15 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-mahiro_dev_pwd}
       DB_NAME: ${DB_NAME:-mahiro}
       GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET:-dev_secret_change_me}
+      # uploads 目录：Go 后端需要读写用户上传的文件
+      # 注意：路径和 nginx alias 指向的宿主机路径一致，保证写入后 nginx 立即可读
+      UPLOADS_DIR: /app/uploads
     # 绑定到 127.0.0.1，仅宿主机 nginx 可访问，不对外暴露
     ports:
       - '127.0.0.1:8080:8080'
     volumes:
       - ./data:/data:ro
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,9 +71,14 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       AUTH_URL: ${NEXT_PUBLIC_APP_URL:-https://example.com}
       ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD}
+      # uploads 目录：getPublicMidis 等仍需在 Next.js 端读取 MIDI 文件做解析
+      UPLOADS_DIR: /app/uploads
     # 绑定到 127.0.0.1，仅宿主机 nginx 可访问，不对外暴露
     ports:
       - '127.0.0.1:3000:3000'
+    # 挂载 uploads 目录：getPublicMidis 读取 MIDI 文件解析时长；其他 CRUD 已迁到 Go
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       - backend-go
     logging:

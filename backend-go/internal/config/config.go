@@ -15,6 +15,7 @@ type Config struct {
 	DBPassword     string
 	DBName         string
 	InternalSecret string
+	UploadsDir     string
 }
 
 // LoadFromEnv 从环境变量加载配置
@@ -31,6 +32,7 @@ func LoadFromEnv() (*Config, error) {
 		DBPassword:     getenv("DB_PASSWORD", "mahiro"),
 		DBName:         getenv("DB_NAME", "mahiro"),
 		InternalSecret: getenv("GO_API_SHARED_SECRET", ""),
+		UploadsDir:     getenv("UPLOADS_DIR", "./uploads"),
 	}, nil
 }
 

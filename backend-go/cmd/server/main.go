@@ -37,7 +37,7 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	router.RegisterRoutes(r, gormDB, cfg.InternalSecret)
+	router.RegisterRoutes(r, gormDB, cfg.InternalSecret, cfg.UploadsDir)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.HTTPPort,
