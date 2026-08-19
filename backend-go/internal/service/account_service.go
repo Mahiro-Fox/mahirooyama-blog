@@ -24,6 +24,16 @@ func GetAccount(ctx context.Context, db *gorm.DB, id string) (*model.Account, er
 	return repository.GetAccountByID(ctx, db, id)
 }
 
+// GetAccountByUsername 按用户名查询
+func GetAccountByUsername(ctx context.Context, db *gorm.DB, username string) (*model.Account, error) {
+	return repository.GetAccountByUsername(ctx, db, username)
+}
+
+// GetAccountByEmail 按 email 查询（空 string 直接返回 NotFound）
+func GetAccountByEmail(ctx context.Context, db *gorm.DB, email string) (*model.Account, error) {
+	return repository.GetAccountByEmail(ctx, db, email)
+}
+
 // CreateAccount 创建前台账户（密码会被 bcrypt hash）
 func CreateAccount(ctx context.Context, db *gorm.DB, input model.AccountCreateInput) (*model.Account, error) {
 	if strings.TrimSpace(input.Username) == "" {
@@ -45,11 +55,15 @@ func CreateAccount(ctx context.Context, db *gorm.DB, input model.AccountCreateIn
 		return nil, errors.New("密码加密失败")
 	}
 
+	now := time.Now()
 	a := model.Account{
 		ID:           uuid.NewString(),
 		Username:     strings.TrimSpace(input.Username),
+		Email:        nil,
+		Provider:     model.AccountProviderCredentials,
 		PasswordHash: string(hash),
-		CreatedAt:    time.Now(),
+		CreatedAt:    now,
+		LastUpdated:  now,
 	}
 	if err := repository.CreateAccount(ctx, db, &a); err != nil {
 		return nil, err
@@ -65,6 +79,10 @@ func VerifyAccount(ctx context.Context, db *gorm.DB, input model.AccountLoginInp
 			return nil, errors.New("用户名或密码错误")
 		}
 		return nil, err
+	}
+	// 兼容弃用的 Google 账户：password_hash 为空时直接失败
+	if a.PasswordHash == "" {
+		return nil, errors.New("用户名或密码错误")
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(input.Password)); err != nil {
 		return nil, errors.New("用户名或密码错误")
@@ -83,6 +101,7 @@ func UpdateAccountPassword(ctx context.Context, db *gorm.DB, id, newPassword str
 	}
 	return repository.UpdateAccount(ctx, db, id, map[string]any{
 		"password_hash": string(hash),
+		"last_updated":  time.Now(),
 	})
 }
 

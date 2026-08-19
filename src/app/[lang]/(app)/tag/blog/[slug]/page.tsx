@@ -3,6 +3,7 @@ import { tagStore } from '@/store/tag-store';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
+import { TextAnimate } from '@/components/magicui/text-animate';
 import { Badge } from '@/components/shadcn-ui/badge';
 import {
   Breadcrumb,
@@ -12,26 +13,24 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/shadcn-ui/breadcrumb';
-import { TextAnimate } from '@/components/magicui/text-animate';
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
 import { siteConfig } from '@/config/common';
-import { i18nConfig } from '@/i18n/i18n.config';
 import { absoluteUrl, formatDate } from '@/utils/utils';
 
 interface BlogTagPageProps {
   params: Promise<{ slug: string }>;
 }
-
-export async function generateStaticParams() {
-  const tags = await tagStore.getByType('blog');
-  return i18nConfig.locales.flatMap((locale) =>
-    Object.keys(tags).map((slug) => ({
-      slug,
-      lang: locale,
-    }))
-  );
-}
+export const dynamic = 'force-dynamic';
+// export async function generateStaticParams() {
+//   const tags = await tagStore.getByType('blog');
+//   return i18nConfig.locales.flatMap((locale) =>
+//     Object.keys(tags).map((slug) => ({
+//       slug,
+//       lang: locale,
+//     }))
+//   );
+// }
 
 export async function generateMetadata({ params }: BlogTagPageProps) {
   const { slug } = await params;

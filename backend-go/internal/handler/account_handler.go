@@ -24,7 +24,7 @@ func ListAccountsHandler(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-// GetAccountHandler GET /api/admin/accounts/:id
+// GetAccountHandler GET /api/admin/accounts/:id（管理员端，返回完整字段）
 func GetAccountHandler(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
@@ -38,6 +38,34 @@ func GetAccountHandler(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, a)
+	}
+}
+
+// GetPublicAccountHandler GET /api/accounts/:id（公开只读端点）
+// 只返回 PublicAccountDTO：id / username / email / provider / createdAt
+func GetPublicAccountHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		if id == "" || len(id) < 8 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "无效的账户 ID"})
+			return
+		}
+		a, err := service.GetAccount(c.Request.Context(), db, id)
+		if err != nil {
+			if errors.Is(err, repository.ErrAccountNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "账户不存在"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取账户失败"})
+			return
+		}
+		c.JSON(http.StatusOK, model.PublicAccountDTO{
+			ID:        a.ID,
+			Username:  a.Username,
+			Email:     a.Email,
+			Provider:  a.Provider,
+			CreatedAt: a.CreatedAt,
+		})
 	}
 }
 
@@ -58,12 +86,19 @@ func CreateAccountHandler(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, a)
+		// 注册接口对外仍返回不含密码哈希的精简 DTO
+		c.JSON(http.StatusCreated, model.PublicAccountDTO{
+			ID:        a.ID,
+			Username:  a.Username,
+			Email:     a.Email,
+			Provider:  a.Provider,
+			CreatedAt: a.CreatedAt,
+		})
 	}
 }
 
 // LoginAccountHandler POST /api/accounts/login
-// 前台登录（不需要 X-Internal-Secret）
+// 前台登录（不需要 X-Internal-Secret）。保留用于向后兼容；新端点 login-with-session 由 UserAuthHandler 提供。
 func LoginAccountHandler(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input model.AccountLoginInput
@@ -79,7 +114,13 @@ func LoginAccountHandler(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, a)
+		c.JSON(http.StatusOK, model.PublicAccountDTO{
+			ID:        a.ID,
+			Username:  a.Username,
+			Email:     a.Email,
+			Provider:  a.Provider,
+			CreatedAt: a.CreatedAt,
+		})
 	}
 }
 

@@ -21,7 +21,7 @@ import (
 // MIGRATE_TYPE 指定迁移类型，MIGRATE_SOURCE 指定 JSON 路径
 // 支持的 MIGRATE_TYPE：
 //   movies | music | moments | guestbook | bugs |
-//   accounts | role-permissions | tags | admin-users
+//   accounts | accounts_full | role-permissions | tags | admin-users
 func main() {
 	cfg, err := config.LoadFromEnv()
 	if err != nil {
@@ -72,6 +72,8 @@ func defaultFileName(mtype string) string {
 		return "bugs.json"
 	case "accounts":
 		return "accounts.json"
+	case "accounts_full":
+		return "accounts.json"
 	case "role-permissions":
 		return "role-permissions.json"
 	case "tags":
@@ -96,7 +98,7 @@ func autoMigrateFor(_ context.Context, db *gorm.DB, mtype string) error {
 		targets = []any{&model.GuestbookEntry{}}
 	case "bugs":
 		targets = []any{&model.BugReport{}}
-	case "accounts":
+	case "accounts", "accounts_full":
 		targets = []any{&model.Account{}}
 	case "role-permissions":
 		targets = []any{&model.RolePermission{}}
@@ -125,6 +127,8 @@ func migrateFor(ctx context.Context, db *gorm.DB, mtype, path string) (int, erro
 		return migrateBugs(ctx, db, path)
 	case "accounts":
 		return migrateAccounts(ctx, db, path)
+	case "accounts_full":
+		return migrateAccountsFull(ctx, db, path)
 	case "role-permissions":
 		return migrateRolePermissions(ctx, db, path)
 	case "tags":
@@ -430,6 +434,106 @@ func migrateAccounts(ctx context.Context, db *gorm.DB, path string) (int, error)
 	}
 	return count, nil
 }
+
+// legacyAccountFull：完整 JSON（带 email/provider 字段；缺失则填默认）
+type legacyAccountFull struct {
+	ID           string  `json:"id"`
+	Username     string  `json:"username"`
+	Email        *string `json:"email"`
+	Provider     string  `json:"provider"`
+	PasswordHash string  `json:"passwordHash"`
+	CreatedAt    string  `json:"createdAt"`
+	LastUpdated  string  `json:"lastUpdated"`
+}
+
+// migrateAccountsFull：迁移完整账户字段（email/provider/lastUpdated），对已存在行做字段补全
+// 策略：
+//   - 先按 ID 查是否存在；不存在则 INSERT，存在则只 UPDATE email/provider/lastUpdated/passwordHash(若空)
+//   - provider 缺失默认 credentials；email 空则保持 NULL
+func migrateAccountsFull(ctx context.Context, db *gorm.DB, path string) (int, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return 0, fmt.Errorf("读取文件: %w", err)
+	}
+	var legacy []legacyAccountFull
+	if err := json.Unmarshal(raw, &legacy); err != nil {
+		return 0, fmt.Errorf("解析 JSON: %w", err)
+	}
+	count := 0
+	for _, l := range legacy {
+		created, err := parseTime(l.CreatedAt)
+		if err != nil {
+			log.Printf("warn: ID=%s createdAt 解析失败 %v", l.ID, err)
+			created = time.Now()
+		}
+		lastUpd, err := parseTime(l.LastUpdated)
+		if err != nil {
+			lastUpd = created
+		}
+		provider := model.AccountProvider(strings.TrimSpace(l.Provider))
+		if provider != model.AccountProviderGoogle {
+			provider = model.AccountProviderCredentials
+		}
+		id := strings.TrimSpace(l.ID)
+		if id == "" {
+			log.Printf("warn: 跳过空 ID 账户 username=%s", l.Username)
+			continue
+		}
+		var existing model.Account
+		findErr := db.WithContext(ctx).Where("id = ?", id).First(&existing).Error
+		if findErr == nil {
+			// 存在：仅补字段
+			updates := map[string]any{
+				"last_updated": lastUpd,
+				"provider":     provider,
+			}
+			if existing.Email == nil && l.Email != nil && strings.TrimSpace(*l.Email) != "" {
+				updates["email"] = strings.TrimSpace(*l.Email)
+			}
+			if strings.TrimSpace(existing.PasswordHash) == "" && strings.TrimSpace(l.PasswordHash) != "" {
+				updates["password_hash"] = l.PasswordHash
+			}
+			if len(updates) > 0 {
+				if err := db.WithContext(ctx).Model(&existing).Updates(updates).Error; err != nil {
+					return count, fmt.Errorf("更新账户 %s: %w", id, err)
+				}
+			}
+		} else if errIsNotFound(findErr) {
+			a := model.Account{
+				ID:           id,
+				Username:     strings.TrimSpace(l.Username),
+				Email:        cleanEmailPtr(l.Email),
+				Provider:     provider,
+				PasswordHash: l.PasswordHash,
+				CreatedAt:    created,
+				LastUpdated:  lastUpd,
+			}
+			if err := db.WithContext(ctx).Create(&a).Error; err != nil {
+				return count, fmt.Errorf("创建账户 %s: %w", id, err)
+			}
+		} else {
+			return count, fmt.Errorf("查账户 %s: %w", id, findErr)
+		}
+		count++
+	}
+	return count, nil
+}
+
+func cleanEmailPtr(in *string) *string {
+	if in == nil {
+		return nil
+	}
+	v := strings.TrimSpace(*in)
+	if v == "" {
+		return nil
+	}
+	return &v
+}
+
+func errIsNotFound(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "record not found")
+}
+
 
 // ---------- role-permissions ----------
 

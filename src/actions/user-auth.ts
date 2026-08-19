@@ -1,11 +1,13 @@
 'use server';
 
-import { signIn, signOut } from '@/auth';
-import { accountStore } from '@/store/account-store';
-import { AuthError } from 'next-auth';
+import { goFetch } from '@/lib/server/api-client';
 import { loginRateLimiter } from '@/lib/rate-limit';
-import { getCurrentUser } from '@/lib/user-auth';
 import { createLogger } from '@/utils/logger';
+import {
+  userLoginViaGo,
+  userLogoutViaGo,
+  getCurrentUser,
+} from '@/lib/user-auth';
 
 const logger = createLogger('UserAuthAction');
 
@@ -24,8 +26,6 @@ export async function userLogin(
     if (!username || !password) {
       return { success: false, error: 'Username and password required' };
     }
-
-    // 限流（在 server action 层做，便于把 resetTime 返回给前端）
     const rateLimit = await loginRateLimiter.check(`user-login:${username}`);
     if (!rateLimit.success) {
       return {
@@ -35,34 +35,27 @@ export async function userLogin(
       };
     }
 
-    // 调用 next-auth 的 signIn（credentials provider）
-    // redirect: false → 不抛 NEXT_REDIRECT，返回错误对象
-    await signIn('credentials', {
-      username,
-      password,
-      redirect: false,
-    });
-
-    // signIn 成功 → 查 account 返回用户信息
-    const account = await accountStore.getByUsername(username);
-    if (!account) {
-      return { success: false, error: 'Login failed, please try again' };
+    let loginRes;
+    try {
+      loginRes = await userLoginViaGo(username, password);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err ?? '');
+      if (msg.includes('返回 401')) {
+        return { success: false, error: 'Invalid username or password' };
+      }
+      throw err;
     }
 
     return {
       success: true,
       message: 'Login successful',
-      user: { id: account.id, username: account.username },
+      user: {
+        id: loginRes.account.id,
+        username: loginRes.account.username,
+      },
     };
   } catch (error) {
-    if (error instanceof AuthError) {
-      // CredentialsSignin = authorize 返回 null
-      return { success: false, error: 'Invalid username or password' };
-    }
-    logger.error('Login failed', error, {
-      username,
-      action: 'userLogin',
-    });
+    logger.error('Login failed', error, { username, action: 'userLogin' });
     return { success: false, error: 'Login failed, please try again later' };
   }
 }
@@ -82,34 +75,39 @@ export async function userRegister(
     if (!username || !password) {
       return { success: false, error: 'Username and password required' };
     }
-
     if (username.length < 3) {
-      return {
-        success: false,
-        error: 'Username must be at least 3 characters',
-      };
+      return { success: false, error: 'Username must be at least 3 characters' };
     }
-
     if (password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters' };
+    }
+    // 注册仍走 Go /api/accounts（已支持 bcrypt），成功后立即 Go 端登录写入 user-session cookie
+    type CreateAccountRes =
+      | { id: string; username: string }
+      | { error?: string };
+    const created = await goFetch<CreateAccountRes>('/api/accounts', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    const account = created as { id: string; username: string };
+    if (!account?.id) {
       return {
         success: false,
-        error: 'Password must be at least 6 characters',
+        error:
+          (created as { error?: string }).error ??
+          'Registration failed, please try again later',
       };
     }
 
-    const existing = await accountStore.getByUsername(username);
-    if (existing) {
-      return { success: false, error: 'Username already exists' };
+    try {
+      await userLoginViaGo(username, password);
+    } catch (loginErr) {
+      logger.error('注册后自动登录失败', loginErr, {
+        username,
+        action: 'userRegister:autologin',
+      });
+      // 登录失败不影响注册成功结果；返回成功前端自行跳转
     }
-
-    const account = await accountStore.create({ username, password });
-
-    // 注册成功后自动登录
-    await signIn('credentials', {
-      username,
-      password,
-      redirect: false,
-    });
 
     return {
       success: true,
@@ -117,6 +115,11 @@ export async function userRegister(
       user: { id: account.id, username: account.username },
     };
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error ?? '');
+    // Go /api/accounts 已存在会返回 4xx + error 文本
+    if (msg.includes('已被占用') || /username.*(take|exist|duplicate)/i.test(msg)) {
+      return { success: false, error: 'Username already exists' };
+    }
     logger.error('Registration failed', error, {
       username,
       action: 'userRegister',
@@ -129,8 +132,7 @@ export async function userRegister(
 }
 
 export async function userLogout() {
-  await signOut({ redirect: false });
-  return { success: true };
+  return userLogoutViaGo();
 }
 
 export async function checkUserLogin() {
@@ -145,9 +147,9 @@ export async function checkUserLogin() {
 }
 
 /**
- * Google OAuth 登录（Server Action，供 signin 页的按钮调用）。
- * signIn('google') 会抛 NEXT_REDIRECT，由 Next.js server action runtime 处理。
+ * Google OAuth 登录：按与用户确认的 V2 方案，本轮直接停用（仅保留函数壳 + 明确报错）。
+ * 避免老代码调用时出现奇怪错误。
  */
-export async function userLoginWithGoogle(redirectTo: string = '/chat') {
-  await signIn('google', { redirectTo });
+export async function userLoginWithGoogle(_redirectTo: string = '/chat') {
+  return { success: false, error: 'Google login is disabled in this build.' };
 }

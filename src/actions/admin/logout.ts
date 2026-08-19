@@ -1,18 +1,8 @@
 'use server';
 
-import { sessionStore } from '@/store/session-store';
-import { cookies } from 'next/headers';
-import { ADMIN_SESSION_COOKIE } from '@/constant/auth';
+import { adminLogoutViaGo } from '@/lib/admin-auth';
 
 export async function adminLogout() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
-
-  if (token) {
-    sessionStore.delete(token);
-  }
-
-  cookieStore.delete(ADMIN_SESSION_COOKIE);
-
-  return { success: true };
+  // 直接委托 lib/admin-auth 内统一实现（调 Go 端 + 删 cookie）
+  return adminLogoutViaGo();
 }

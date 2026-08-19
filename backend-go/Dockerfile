@@ -6,9 +6,11 @@ ENV GOPROXY=https://goproxy.cn,direct
 ENV GOSUMDB=off
 # 先拷依赖文件，利用 docker 层缓存（源码变动不触发重新下载依赖）
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod download || go mod tidy && go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o server ./cmd/server \
+# go mod tidy：补齐 golang-jwt/jwt/v5 等新增依赖的 go.sum（本机无 Go 工具链时由构建容器代做）
+RUN go mod tidy \
+    && CGO_ENABLED=0 go build -o server ./cmd/server \
     && CGO_ENABLED=0 go build -o migrator ./cmd/migrator
 
 # 运行阶段：极简镜像

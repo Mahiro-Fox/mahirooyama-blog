@@ -1,15 +1,9 @@
 'use server';
 
-import { sessionStore } from '@/store/session-store';
-import { userStore } from '@/store/user-store';
-import { SignJWT } from 'jose';
-import { cookies } from 'next/headers';
 import {
-  ADMIN_SESSION_COOKIE,
-  JWT_SECRET,
   SESSION_EXPIRY,
 } from '@/constant/auth';
-import { verifyAuth } from '@/lib/admin-auth';
+import { adminLoginViaGo, adminLogoutViaGo, verifyAuth } from '@/lib/admin-auth';
 import { loginRateLimiter } from '@/lib/rate-limit';
 import { createLogger } from '@/utils/logger';
 
@@ -24,6 +18,7 @@ export async function login(
       message: string;
       expiresIn: number;
       sessionId: string;
+      loggedInAt: string;
       user: {
         id: string;
         username: string;
@@ -39,7 +34,7 @@ export async function login(
       return { success: false, error: '请提供用户名和密码' };
     }
 
-    // 速率限制检查
+    // 速率限制仍在 Next 层做：因为它需要把 resetTime 返回给前端 toast
     const rateLimit = await loginRateLimiter.check(`login:${username}`);
     if (!rateLimit.success) {
       return {
@@ -49,78 +44,22 @@ export async function login(
       };
     }
 
-    // 初始化用户存储
-    await userStore.initialize();
-
-    // 验证用户
-    const user = await userStore.verifyPassword(username, password);
-
-    if (!user) {
-      // 防止时序攻击
+    const result = await adminLoginViaGo(username, password);
+    if (!result.success) {
+      // 防止时序攻击：失败小延迟
       await new Promise((resolve) =>
         setTimeout(resolve, Math.random() * 100 + 50)
       );
-      return { success: false, error: '用户名或密码错误' };
+      return { success: false, error: result.error };
     }
-
-    // 生成会话 ID
-    const sessionId = crypto.randomUUID();
-
-    // 创建 JWT token
-    const token = await new SignJWT({
-      userId: user.id,
-      username: user.username,
-      avatar: user.avatar,
-      role: user.role,
-      loggedInAt: new Date().toISOString(),
-      sessionId,
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime(`${SESSION_EXPIRY}s`)
-      .sign(JWT_SECRET);
-
-    // 记录会话
-    const userAgent = 'server-action';
-    const clientIp = 'server-action';
-
-    // 删除旧会话
-    sessionStore.deleteByUserId(user.id);
-
-    sessionStore.create(token, {
-      userId: user.id,
-      sessionId,
-      userAgent,
-      ip: clientIp,
-    });
-
-    // 设置 cookie
-    const isSecure =
-      process.env.COOKIE_SECURE === 'true' ||
-      (process.env.COOKIE_SECURE !== 'false' &&
-        process.env.NODE_ENV === 'production');
-
-    const cookieStore = await cookies();
-    cookieStore.set(ADMIN_SESSION_COOKIE, token, {
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: 'strict',
-      maxAge: SESSION_EXPIRY,
-      path: '/',
-    });
 
     return {
       success: true,
-      message: '登录成功',
-      expiresIn: SESSION_EXPIRY,
-      sessionId,
-      user: {
-        id: user.id,
-        username: user.username,
-        avatar: user.avatar,
-        role: user.role,
-        mustChangePassword: user.mustChangePassword,
-      },
+      message: result.message,
+      expiresIn: result.expiresIn,
+      sessionId: result.sessionId,
+      loggedInAt: result.loggedInAt,
+      user: result.user,
     };
   } catch (error) {
     logger.error('登录失败', error, {
@@ -138,4 +77,12 @@ export async function checkLogin() {
     return { success: false, error: '未登录' };
   }
   return { success: true, user: authCheck };
+}
+
+// —— 兼容：极少数老 import 可能误用到 SESSION_EXPIRY 同名常量——
+export { SESSION_EXPIRY };
+
+// —— 兼容：其他地方可能从 logout.ts 调用 adminLogout，但这里也提供 logout 别名——
+export async function logout() {
+  return adminLogoutViaGo();
 }

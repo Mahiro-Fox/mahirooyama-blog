@@ -1,7 +1,28 @@
 'use server';
 
-import { auth } from '@/auth';
-import { accountStore } from '@/store/account-store';
+import { cookies } from 'next/headers';
+import { USER_SESSION_COOKIE } from '@/constant/auth';
+import { goFetch } from '@/lib/server/api-client';
+
+type UserVerifyResponse = {
+  success: boolean;
+  error?: string;
+  accountId?: string;
+  username?: string;
+  email?: string;
+  loggedInAt?: string;
+  expiresAt?: number;
+  sessionId?: string;
+  recoveredSession?: boolean;
+};
+
+type UserLoginResponse = {
+  token: string;
+  account: { id: string; username: string; email?: string | null; provider?: string; createdAt?: string };
+  expiresIn: number;
+  sessionId: string;
+  loggedInAt: string;
+};
 
 export type CurrentUser = {
   id: string;
@@ -9,23 +30,47 @@ export type CurrentUser = {
   email?: string | null;
 };
 
+type CookieStoreLike = {
+  set: (name: string, value: string, options?: Record<string, unknown>) => void;
+  delete: (name: string) => void;
+};
+
+function setCookie(
+  cookieStore: CookieStoreLike,
+  name: string,
+  value: string,
+  maxAgeSec: number
+): void {
+  const isSecure =
+    process.env.COOKIE_SECURE === 'true' ||
+    (process.env.COOKIE_SECURE !== 'false' &&
+      process.env.NODE_ENV === 'production');
+  cookieStore.set(name, value, {
+    httpOnly: true,
+    secure: isSecure,
+    sameSite: 'strict',
+    maxAge: maxAgeSec,
+    path: '/',
+  });
+}
+
 /**
- * 在 Server Components / Server Actions 中获取当前登录用户。
- * 使用 next-auth 的 auth() 读取 session，替代原读 user-session cookie + jose jwtVerify 的实现。
+ * Server Components/Actions 中获取当前前台登录用户（切走 next-auth → 调 Go 鉴权）
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) return null;
-
-    // 二次校验：account.json 仍存在（防止账号被删后 session 仍有效）
-    const account = await accountStore.getById(String(session.user.id));
-    if (!account) return null;
-
+    const cookieStore = await cookies();
+    const token = cookieStore.get(USER_SESSION_COOKIE);
+    if (!token?.value) return null;
+    const res = await goFetch<UserVerifyResponse>('/api/user/auth/verify', {
+      method: 'POST',
+      body: JSON.stringify({ token: token.value }),
+    });
+    if (!res?.success || !res.accountId || !res.username) return null;
     return {
-      id: String(account.id),
-      username: String(account.username),
-      email: account.email,
+      id: res.accountId,
+      username: res.username,
+      email: res.email ?? null,
     };
   } catch {
     return null;
@@ -33,27 +78,57 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 }
 
 /**
- * 在 API Routes 中校验鉴权。
- * 返回值兼容原签名（去掉 sessionId，下游无人使用）。
+ * 用于 Server Action：{ success, userId, username, error }
  */
 export async function verifyUserAuth() {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(USER_SESSION_COOKIE);
+    if (!token?.value) {
       return { success: false as const, error: 'Not logged in' };
     }
-
-    const account = await accountStore.getById(String(session.user.id));
-    if (!account) {
-      return { success: false as const, error: 'Account not found' };
+    const res = await goFetch<UserVerifyResponse>('/api/user/auth/verify', {
+      method: 'POST',
+      body: JSON.stringify({ token: token.value }),
+    });
+    if (!res?.success || !res.accountId) {
+      return { success: false as const, error: res?.error ?? 'Session expired' };
     }
-
     return {
       success: true as const,
-      userId: String(account.id),
-      username: account.username,
+      userId: res.accountId,
+      username: res.username,
     };
   } catch {
     return { success: false as const, error: 'Session expired' };
   }
+}
+
+// —— 给 actions/user-auth.ts 调用的内部辅助 ——
+
+export async function userLoginViaGo(username: string, password: string) {
+  const res = await goFetch<UserLoginResponse>('/api/user/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+  const cookieStore = await cookies();
+  setCookie(cookieStore, USER_SESSION_COOKIE, res.token, res.expiresIn);
+  return res;
+}
+
+export async function userLogoutViaGo(): Promise<{ success: boolean }> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(USER_SESSION_COOKIE)?.value ?? '';
+  try {
+    if (token) {
+      await goFetch<{ success: boolean }>('/api/user/auth/logout', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
+    }
+  } catch {
+    // 尽力而为
+  }
+  cookieStore.delete(USER_SESSION_COOKIE);
+  return { success: true };
 }

@@ -17,6 +17,7 @@ import (
 	"mahirooyama-blog/backend-go/internal/db"
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/router"
+	"mahirooyama-blog/backend-go/internal/service"
 )
 
 func main() {
@@ -35,9 +36,13 @@ func main() {
 	}
 	log.Println("数据库迁移完成")
 
+	// 会话清理 goroutine：每 10 分钟扫一次两个 session 表，不阻塞主进程
+	stopCleanup := startSessionCleaner(gormDB, 10*time.Minute)
+	defer stopCleanup()
+
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	router.RegisterRoutes(r, gormDB, cfg.InternalSecret, cfg.UploadsDir)
+	router.RegisterRoutes(r, gormDB, cfg)
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.HTTPPort,
@@ -66,9 +71,47 @@ func main() {
 	log.Println("服务已退出")
 }
 
+// startSessionCleaner 启动一个后台 goroutine，周期 t 清理两个过期会话表；
+// 返回 stop 闭包（进程退出前调用能保证一次「尽力而为」的最后清理）
+func startSessionCleaner(db *gorm.DB, t time.Duration) func() {
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	ticker := time.NewTicker(t)
+	once := func() {
+		now := time.Now()
+		n1, e1 := service.CleanupExpiredAdminSessions(ctx, db, now)
+		n2, e2 := service.CleanupExpiredUserSessions(ctx, db, now)
+		if e1 != nil {
+			log.Printf("清理 admin 过期会话失败: %v", e1)
+		}
+		if e2 != nil {
+			log.Printf("清理 user 过期会话失败: %v", e2)
+		}
+		if e1 == nil && e2 == nil && (n1 > 0 || n2 > 0) {
+			log.Printf("清理过期会话: admin=%d user=%d", n1, n2)
+		}
+	}
+	go func() {
+		defer close(done)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				once()
+				return
+			case <-ticker.C:
+				once()
+			}
+		}
+	}()
+	return func() {
+		cancel()
+		<-done
+	}
+}
+
 // autoMigrate 自动建表 + 补充索引
 func autoMigrate(db *gorm.DB) error {
-	// 一次性迁移所有模型
 	models := []any{
 		&model.Movie{},
 		&model.Song{},
@@ -77,13 +120,14 @@ func autoMigrate(db *gorm.DB) error {
 		&model.BugReport{},
 		&model.Account{},
 		&model.AdminUser{},
+		&model.AdminSession{},
+		&model.UserSession{},
 		&model.RolePermission{},
 		&model.Tag{},
 	}
 	if err := db.AutoMigrate(models...); err != nil {
 		return fmt.Errorf("auto migrate: %w", err)
 	}
-	// 补充 GIN 索引
 	indexes := []string{
 		"CREATE INDEX IF NOT EXISTS idx_movies_created_at ON movies (created_at DESC)",
 		"CREATE INDEX IF NOT EXISTS idx_movies_tags_gin ON movies USING gin (tags)",

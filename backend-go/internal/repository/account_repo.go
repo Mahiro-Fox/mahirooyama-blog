@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -45,6 +46,24 @@ func GetAccountByUsername(ctx context.Context, db *gorm.DB, username string) (*m
 			return nil, ErrAccountNotFound
 		}
 		return nil, fmt.Errorf("get account by username: %w", err)
+	}
+	return &a, nil
+}
+
+// ErrAccountEmailTaken Email 已被占用
+var ErrAccountEmailTaken = errors.New("email already taken")
+
+// GetAccountByEmail 按 Email 查询账户（nullable unique 索引：email 为 nil 不命中）
+func GetAccountByEmail(ctx context.Context, db *gorm.DB, email string) (*model.Account, error) {
+	if strings.TrimSpace(email) == "" {
+		return nil, ErrAccountNotFound
+	}
+	var a model.Account
+	if err := db.WithContext(ctx).Where("email = ?", strings.TrimSpace(email)).First(&a).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrAccountNotFound
+		}
+		return nil, fmt.Errorf("get account by email: %w", err)
 	}
 	return &a, nil
 }
