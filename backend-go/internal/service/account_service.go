@@ -45,7 +45,7 @@ func CreateAccount(ctx context.Context, db *gorm.DB, input model.AccountCreateIn
 
 	// 用户名唯一性检查
 	if _, err := repository.GetAccountByUsername(ctx, db, input.Username); err == nil {
-		return nil, errors.New("用户名已被占用")
+		return nil, repository.ErrAccountUsernameTaken
 	} else if !errors.Is(err, repository.ErrAccountNotFound) {
 		return nil, err
 	}
@@ -88,6 +88,72 @@ func VerifyAccount(ctx context.Context, db *gorm.DB, input model.AccountLoginInp
 		return nil, errors.New("用户名或密码错误")
 	}
 	return a, nil
+}
+
+// UpdateAccount 更新前台账户基本信息（用户名 / email）
+// - username 不能为空，且需全局唯一（排除自身）
+// - email 允许置空（nil）；非空时需全局唯一（排除自身）
+// - OAuth 账户（provider != credentials）不允许改 username，避免与第三方身份脱钩
+func UpdateAccount(ctx context.Context, db *gorm.DB, id string, input model.AccountUpdateInput) (*model.Account, error) {
+	a, err := repository.GetAccountByID(ctx, db, id)
+	if err != nil {
+		return nil, err
+	}
+
+	updates := map[string]any{
+		"last_updated": time.Now(),
+	}
+
+	// username 校验
+	if input.Username != nil {
+		trimmed := strings.TrimSpace(*input.Username)
+		if trimmed == "" {
+			return nil, errors.New("用户名不能为空")
+		}
+		if a.Provider != model.AccountProviderCredentials {
+			return nil, errors.New("OAuth 账户不支持修改用户名")
+		}
+		if trimmed != a.Username {
+			existing, lookupErr := repository.GetAccountByUsername(ctx, db, trimmed)
+			if lookupErr == nil && existing.ID != a.ID {
+				return nil, repository.ErrAccountUsernameTaken
+			}
+			if lookupErr != nil && !errors.Is(lookupErr, repository.ErrAccountNotFound) {
+				return nil, lookupErr
+			}
+			updates["username"] = trimmed
+		}
+	}
+
+	// email 校验（允许传 nil 或空串以清空 email）
+	if input.Email != nil {
+		trimmed := strings.TrimSpace(*input.Email)
+		if trimmed == "" {
+			updates["email"] = nil
+		} else if trimmed != derefString(a.Email) {
+			existing, lookupErr := repository.GetAccountByEmail(ctx, db, trimmed)
+			if lookupErr == nil && existing.ID != a.ID {
+				return nil, repository.ErrAccountEmailTaken
+			}
+			if lookupErr != nil && !errors.Is(lookupErr, repository.ErrAccountNotFound) {
+				return nil, lookupErr
+			}
+			updates["email"] = trimmed
+		}
+	}
+
+	if err := repository.UpdateAccount(ctx, db, id, updates); err != nil {
+		return nil, err
+	}
+	return repository.GetAccountByID(ctx, db, id)
+}
+
+// derefString 安全解引用 *string，nil 返回空串
+func derefString(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
 }
 
 // UpdateAccountPassword 更新前台账户密码

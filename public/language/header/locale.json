@@ -50,8 +50,10 @@
     "upload_files_admin_title": "Uploaded Files Management",
     "upload_files_admin_description": "Upload, delete and rename files under the uploads directory.",
 
-    "user_management_admin_title": "User Management",
-    "user_management_admin_description": "Create, edit and delete user accounts, manage user permissions (Super Administrator only).",
+    "front_user_management_admin_title": "Frontend User Management",
+    "front_user_management_admin_description": "View, create, edit and delete frontend registered user accounts.",
+    "admin_user_management_admin_title": "Admin User Management",
+    "admin_user_management_admin_description": "Create, edit and delete admin user accounts, manage user permissions (Super Administrator only).",
 
     "midi_nav_label": "MIDI",
     "midi_nav_description": "VRChat Chinese community auto piano tool",
@@ -157,8 +159,10 @@
     "upload_files_admin_title": "Upload 文件管理",
     "upload_files_admin_description": "上传、删除、重命名 uploads 目录下的文件。",
 
-    "user_management_admin_title": "用户管理",
-    "user_management_admin_description": "创建、编辑、删除用户账号，管理用户权限（仅超级管理员）。",
+    "front_user_management_admin_title": "前台用户管理",
+    "front_user_management_admin_description": "查看、创建、编辑、删除前台注册用户账号。",
+    "admin_user_management_admin_title": "后台用户管理",
+    "admin_user_management_admin_description": "创建、编辑、删除后台用户账号，管理用户权限（仅超级管理员）。",
 
     "midi_nav_label": "MIDI",
     "midi_nav_description": "VRChat 中文吧自动钢琴工具",

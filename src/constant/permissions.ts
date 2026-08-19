@@ -3,17 +3,23 @@ import { type UserRole } from '@/store/user-store';
 /**
  * RBAC 权限系统
  * 权限命名规范: <模块>:<操作>
- * 模块: users, blog, gallery, files, system
+ * 模块: users(后台用户), accounts(前台用户), blog, gallery, files, system
  * 操作: read, create, update, delete, special (特殊操作)
  */
 export type Permission =
-  // 用户管理权限
+  // 用户管理权限（后台用户）
   | 'users:read'
   | 'users:create'
   | 'users:update'
   | 'users:delete'
   | 'users:updateRole' // 修改角色（仅super_admin）
   | 'users:updatePassword' // 修改密码
+  // 前台用户管理权限（accounts）
+  | 'accounts:read'
+  | 'accounts:create'
+  | 'accounts:update'
+  | 'accounts:delete'
+  | 'accounts:updatePassword' // 修改前台用户密码
   // 博客管理权限
   | 'blog:read'
   | 'blog:create'
@@ -85,6 +91,13 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     // 用户权限：只能查看用户列表和修改自己的密码
     'users:read',
     'users:updatePassword',
+
+    // 前台用户管理权限：完整的CRUD
+    'accounts:read',
+    'accounts:create',
+    'accounts:update',
+    'accounts:delete',
+    'accounts:updatePassword',
 
     // 博客权限：完整的CRUD
     'blog:read',
@@ -164,23 +177,23 @@ export const ALL_PERMISSIONS: {
   permissions: { value: Permission; label: string; description: string }[];
 }[] = [
   {
-    group: '用户管理',
+    group: '后台用户管理',
     permissions: [
-      { value: 'users:read', label: '查看用户', description: '查看用户列表' },
+      { value: 'users:read', label: '查看用户', description: '查看后台用户列表' },
       {
         value: 'users:create',
         label: '创建用户',
-        description: '创建新用户（仅超级管理员）',
+        description: '创建新后台用户（仅超级管理员）',
       },
       {
         value: 'users:update',
         label: '修改用户',
-        description: '修改其他用户信息',
+        description: '修改其他后台用户信息',
       },
       {
         value: 'users:delete',
         label: '删除用户',
-        description: '删除用户（仅超级管理员）',
+        description: '删除后台用户（仅超级管理员）',
       },
       {
         value: 'users:updatePassword',
@@ -191,6 +204,36 @@ export const ALL_PERMISSIONS: {
         value: 'users:updateRole',
         label: '修改角色',
         description: '修改用户角色（仅超级管理员）',
+      },
+    ],
+  },
+  {
+    group: '前台用户管理',
+    permissions: [
+      {
+        value: 'accounts:read',
+        label: '查看前台用户',
+        description: '查看前台注册用户列表',
+      },
+      {
+        value: 'accounts:create',
+        label: '创建前台用户',
+        description: '由管理员直接创建前台账户',
+      },
+      {
+        value: 'accounts:update',
+        label: '修改前台用户',
+        description: '修改前台用户的用户名 / 邮箱',
+      },
+      {
+        value: 'accounts:delete',
+        label: '删除前台用户',
+        description: '删除前台账户',
+      },
+      {
+        value: 'accounts:updatePassword',
+        label: '重置前台用户密码',
+        description: '重置前台账户密码',
       },
     ],
   },

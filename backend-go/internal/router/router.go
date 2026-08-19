@@ -163,6 +163,8 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	{
 		accountsAdmin.GET("", handler.ListAccountsHandler(db))
 		accountsAdmin.GET("/:id", handler.GetAccountHandler(db))
+		accountsAdmin.POST("", handler.CreateAccountAdminHandler(db))
+		accountsAdmin.PUT("/:id", handler.UpdateAccountHandler(db))
 		accountsAdmin.PUT("/:id/password", handler.UpdateAccountPasswordHandler(db))
 		accountsAdmin.DELETE("/:id", handler.DeleteAccountHandler(db))
 	}

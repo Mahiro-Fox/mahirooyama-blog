@@ -83,6 +83,10 @@ func CreateAccountHandler(db *gorm.DB) gin.HandlerFunc {
 		}
 		a, err := service.CreateAccount(c.Request.Context(), db, input)
 		if err != nil {
+			if errors.Is(err, repository.ErrAccountUsernameTaken) {
+				c.JSON(http.StatusConflict, gin.H{"error": "用户名已被占用"})
+				return
+			}
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -121,6 +125,62 @@ func LoginAccountHandler(db *gorm.DB) gin.HandlerFunc {
 			Provider:  a.Provider,
 			CreatedAt: a.CreatedAt,
 		})
+	}
+}
+
+// CreateAccountAdminHandler POST /api/admin/accounts
+// 管理端创建前台账户（需要 X-Internal-Secret）。返回完整 Account（密码哈希通过 json:"-" 屏蔽）
+func CreateAccountAdminHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var input model.AccountCreateInput
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "请求参数无效",
+				"details": err.Error(),
+			})
+			return
+		}
+		a, err := service.CreateAccount(c.Request.Context(), db, input)
+		if err != nil {
+			if errors.Is(err, repository.ErrAccountUsernameTaken) {
+				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusCreated, a)
+	}
+}
+
+// UpdateAccountHandler PUT /api/admin/accounts/:id
+// 更新前台账户基本信息（用户名 / email）。OAuth 账户改 username 会被拒绝。
+func UpdateAccountHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		var input model.AccountUpdateInput
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "请求参数无效",
+				"details": err.Error(),
+			})
+			return
+		}
+		a, err := service.UpdateAccount(c.Request.Context(), db, id, input)
+		if err != nil {
+			switch {
+			case errors.Is(err, repository.ErrAccountNotFound):
+				c.JSON(http.StatusNotFound, gin.H{"error": "账户不存在"})
+			case errors.Is(err, repository.ErrAccountUsernameTaken):
+				c.JSON(http.StatusConflict, gin.H{"error": "用户名已被占用"})
+			case errors.Is(err, repository.ErrAccountEmailTaken):
+				c.JSON(http.StatusConflict, gin.H{"error": "邮箱已被占用"})
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			}
+			return
+		}
+		c.JSON(http.StatusOK, a)
 	}
 }
 

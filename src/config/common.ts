@@ -148,11 +148,18 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     adminDescription: 'upload_files_admin_description',
   },
   {
-    name: 'user_management',
+    name: 'front_user_management',
+    icon: User,
+    adminHref: '/admin/front-users',
+    adminTitle: 'front_user_management_admin_title',
+    adminDescription: 'front_user_management_admin_description',
+  },
+  {
+    name: 'admin_user_management',
     icon: Shield,
     adminHref: '/admin/users',
-    adminTitle: 'user_management_admin_title',
-    adminDescription: 'user_management_admin_description',
+    adminTitle: 'admin_user_management_admin_title',
+    adminDescription: 'admin_user_management_admin_description',
   },
   {
     name: 'midi',
