@@ -2,6 +2,7 @@
 
 import { pathCacheStore } from '@/store/path-cache-store';
 import { goFetch, goUploadMultipart } from '@/lib/server/api-client';
+import { appendGoAssetFile } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
@@ -77,10 +78,8 @@ export async function adminUploadFiles(formData: FormData): Promise<
       for (const file of files) {
         try {
           const goFormData = new FormData();
-          goFormData.append('file', file, file.name);
-          if (dir) {
-            goFormData.append('dir', dir);
-          }
+          // 图片转 WebP 并保留源文件；非图片原样转发（由 appendGoAssetFile 统一处理）
+          await appendGoAssetFile(goFormData, file, { dir });
 
           const data = await goUploadMultipart<{ url: string }>(
             '/api/uploads/asset',

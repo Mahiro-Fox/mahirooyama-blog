@@ -466,9 +466,69 @@ export interface GoUploadActionConfig<R extends GoUploadResultConfig> {
  * 创建一个转发到 Go 后端的上传 Server Action
  *
  * 保持 createUploadAction 的权限 + 限流封装，但存储交由 Go 完成。
- * 图片会被 sharp 处理后以 WebP 形式转发（同时携带 width/height）；
+ * 图片会被 sharp 处理后以 WebP 形式转发（同时保留源文件、携带 width/height）；
  * 其他文件（音频等）原样转发。
  */
+
+/**
+ * 将单个文件附加到 /uploads/asset 的 FormData（一次请求一个 file）。
+ *
+ * 图片按 processAndSaveImage 语义处理：
+ * - WebP：不压缩，原样作为 file 保存一份；
+ * - 非 WebP：转 WebP 作为 file，同时把源文件附带为 originalFile，Go 一并落盘；
+ * 非图片：原样作为 file。
+ *
+ * 纯函数，只依赖入参，无外部副作用。
+ */
+export async function appendGoAssetFile(
+  formData: FormData,
+  file: File,
+  opts: { dir: string; quality?: number }
+): Promise<{ width: number; height: number }> {
+  const quality = opts.quality ?? 50;
+  const isImage = file.type.startsWith('image/');
+  let width = 0;
+  let height = 0;
+
+  if (isImage) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const isWebp =
+      file.type === 'image/webp' || file.name.toLowerCase().endsWith('.webp');
+
+    if (isWebp) {
+      const meta = await sharp(buffer).metadata();
+      width = meta.width ?? 0;
+      height = meta.height ?? 0;
+      formData.append('file', file, file.name);
+    } else {
+      const processed = await sharp(buffer).webp({ quality }).toBuffer();
+      const meta = await sharp(processed).metadata();
+      width = meta.width ?? 0;
+      height = meta.height ?? 0;
+
+      const baseName = file.name.replace(/\.[^/.]+$/, '') || 'upload';
+      const webpName = `${baseName}.webp`;
+      formData.append(
+        'file',
+        new Blob([new Uint8Array(processed)], { type: 'image/webp' }),
+        webpName
+      );
+      // 源文件保留原名附带，Go 一并落盘
+      formData.append('originalFile', file, file.name);
+    }
+  } else {
+    formData.append('file', file, file.name);
+  }
+
+  if (opts.dir) {
+    formData.append('dir', opts.dir);
+  }
+  formData.append('width', String(width));
+  formData.append('height', String(height));
+
+  return { width, height };
+}
+
 export function createGoUploadAction<R extends GoUploadResultConfig>(
   config: GoUploadActionConfig<R>
 ): (
@@ -499,49 +559,12 @@ export function createGoUploadAction<R extends GoUploadResultConfig>(
           };
         }
 
-        // ---- 构造转发 FormData ----
+        // ---- 构造转发 FormData（图片转 WebP 并保留源文件）----
         const goFormData = new FormData();
-        let width = 0;
-        let height = 0;
-
-        if (config.target === 'image') {
-          // 图片处理与 processAndSaveImage 语义一致：
-          // WebP 不压缩原样保存一份；非 WebP 同时保留源文件 + 转换 WebP，Go 负责落盘
-          const buffer = Buffer.from(await file.arrayBuffer());
-          const originalMimeType = file.type;
-          const isWebp =
-            originalMimeType === 'image/webp' ||
-            file.name.toLowerCase().endsWith('.webp');
-
-          if (isWebp) {
-            const meta = await sharp(buffer).metadata();
-            width = meta.width ?? 0;
-            height = meta.height ?? 0;
-            goFormData.append('file', file, file.name);
-          } else {
-            const quality = config.quality ?? 50;
-            const processed = await sharp(buffer).webp({ quality }).toBuffer();
-            const meta = await sharp(processed).metadata();
-            width = meta.width ?? 0;
-            height = meta.height ?? 0;
-
-            const baseName = file.name.replace(/\.[^/.]+$/, '') || 'upload';
-            const webpName = `${baseName}.webp`;
-            goFormData.append(
-              'file',
-              new Blob([new Uint8Array(processed)], { type: 'image/webp' }),
-              webpName
-            );
-            // 源文件保留原名附带，Go 一并落盘
-            goFormData.append('originalFile', file, file.name);
-          }
-        } else {
-          goFormData.append('file', file, file.name);
-        }
-
-        goFormData.append('dir', config.dir);
-        goFormData.append('width', String(width));
-        goFormData.append('height', String(height));
+        const { width, height } = await appendGoAssetFile(goFormData, file, {
+          dir: config.dir,
+          quality: config.quality,
+        });
 
         // ---- 转发到 Go ----
         const data = await goUploadMultipart<{
