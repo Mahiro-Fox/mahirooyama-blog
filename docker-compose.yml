@@ -8,15 +8,15 @@ services:
     container_name: mahiro-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-mahiro}
-      POSTGRES_USER: ${DB_USER:-mahiro}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-mahiro_dev_pwd}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     # 生产不对外暴露 5432，仅在容器网络内可达
     # 如需本机调试，临时加端口映射或用 ssh 隧道
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-mahiro}']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -31,13 +31,14 @@ services:
     container_name: mahiro-backend-go
     restart: unless-stopped
     environment:
-      HTTP_PORT: 8080
+      HTTP_PORT: ${HTTP_PORT}
       DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: ${DB_USER:-mahiro}
-      DB_PASSWORD: ${DB_PASSWORD:-mahiro_dev_pwd}
-      DB_NAME: ${DB_NAME:-mahiro}
-      GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET:-dev_secret_change_me}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
       # uploads 目录：Go 后端需要读写用户上传的文件
       # 注意：路径和 nginx alias 指向的宿主机路径一致，保证写入后 nginx 立即可读
       UPLOADS_DIR: /app/uploads
@@ -65,18 +66,10 @@ services:
     environment:
       NODE_ENV: production
       GO_API_INTERNAL_URL: http://backend-go:8080
-      GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET:-dev_secret_change_me}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://mahirooyama.cn}
-      # next-auth 相关（与 .env 保持一致）
+      GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
       JWT_SECRET: ${JWT_SECRET}
-      AUTH_URL: ${NEXT_PUBLIC_APP_URL:-https://mahirooyama.cn}
-      AUTH_SECRET: ${AUTH_SECRET}
-      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST:-true}
-      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID}
-      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET}
       ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD}
-      # uploads 目录：getPublicMidis 等仍需在 Next.js 端读取 MIDI 文件做解析
-      UPLOADS_DIR: /app/uploads
     # 绑定到 127.0.0.1，仅宿主机 nginx 可访问，不对外暴露
     ports:
       - '127.0.0.1:3000:3000'
