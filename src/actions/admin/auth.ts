@@ -79,8 +79,3 @@ export async function checkLogin() {
   }
   return { success: true, user: authCheck };
 }
-
-// —— 兼容：其他地方可能从 logout.ts 调用 adminLogout，但这里也提供 logout 别名——
-export async function logout() {
-  return adminLogoutViaGo();
-}
