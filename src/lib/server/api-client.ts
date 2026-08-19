@@ -49,6 +49,33 @@ export async function goFetch<T = unknown>(
 }
 
 /**
+ * 调用 Go 后端 multipart 上传接口（转发二进制数据）
+ * 不显式设置 Content-Type，让 fetch 自动生成带 boundary 的 multipart 头。
+ * @param path 路径，如 '/api/uploads/asset'
+ * @param formData 已构造的 FormData（含文件字段与 width/height/dir 等元数据）
+ * @returns Go 返回的 JSON 响应（如 { url, width, height }）
+ */
+export async function goUploadMultipart<T = unknown>(
+  path: string,
+  formData: FormData
+): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'X-Internal-Secret': INTERNAL_SECRET,
+    },
+    body: formData,
+    cache: 'no-store',
+  });
+
+  const body = await res.text().catch(() => '');
+  if (!res.ok) {
+    throw new Error(`Go API ${path} 返回 ${res.status}: ${body}`);
+  }
+  return JSON.parse(body || '{}') as T;
+}
+
+/**
  * 构造查询字符串（仅包含非空参数）
  */
 export function buildQuery(params: Record<string, string | undefined>): string {

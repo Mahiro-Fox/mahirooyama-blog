@@ -29,7 +29,6 @@ import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { TagPicker } from '@/components/shared/tag-picker';
 import { useCrud } from '@/hooks/use-crud';
-import { AdminGallery } from '@/lib/gallery';
 import type { ActionResponse } from '@/utils/action-response';
 import { formatDate, formatSize } from '@/utils/utils';
 

@@ -6,7 +6,6 @@ package handler
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -134,93 +133,8 @@ func GetBlogFileHandler(blogDir string) gin.HandlerFunc {
 
 // UploadBlogFileHandler POST /api/blog-files
 // 接收 multipart/form-data，file 字段为 MDX 文件，slug 可选
-func UploadBlogFileHandler(blogDir string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "解析表单失败: " + err.Error()})
-			return
-		}
-
-		file, err := c.FormFile("file")
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "没有提供文件"})
-			return
-		}
-
-		if !strings.HasSuffix(strings.ToLower(file.Filename), ".mdx") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "只接受 .mdx 文件"})
-			return
-		}
-
-		src, err := file.Open()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "打开文件失败"})
-			return
-		}
-		content, err := io.ReadAll(src)
-		src.Close()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文件失败"})
-			return
-		}
-
-		// 验证 frontmatter
-		parsed, _ := fileutil.ParseFrontmatter(string(content))
-		if fileutil.GetString(parsed.Data, "title") == "" || fileutil.GetString(parsed.Data, "lastUpdated") == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "MDX 文件缺少必需的 frontmatter 字段 (title, lastUpdated)"})
-			return
-		}
-
-		// 确定文件名
-		var fileName string
-		if slug := c.PostForm("slug"); slug != "" {
-			cleanSlug := strings.TrimSpace(strings.ToLower(slug))
-			if err := fileutil.ValidateSlug(cleanSlug); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "无效的文件名"})
-				return
-			}
-			fileName = cleanSlug + ".mdx"
-		} else {
-			fileName = fileutil.SanitizeFileName(file.Filename)
-		}
-
-		filePath := filepath.Join(blogDir, fileName)
-		if !fileutil.IsPathSafe(filePath, blogDir) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "非法路径"})
-			return
-		}
-
-		if conflict, _ := fileutil.CheckFileConflict(filePath); conflict != "" {
-			c.JSON(http.StatusConflict, gin.H{"error": conflict})
-			return
-		}
-
-		if err := fileutil.EnsureDirectory(blogDir); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		// 原子写入
-		tmpPath := filePath + ".tmp"
-		if err := os.WriteFile(tmpPath, content, 0644); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "写入文件失败"})
-			return
-		}
-		if err := os.Rename(tmpPath, filePath); err != nil {
-			os.Remove(tmpPath)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "重命名临时文件失败"})
-			return
-		}
-
-		cleanSlug := strings.TrimSuffix(fileName, ".mdx")
-		c.JSON(http.StatusCreated, gin.H{
-			"message":  "文件上传成功",
-			"fileName": fileName,
-			"slug":     cleanSlug,
-		})
-	}
-}
-
+// 注：上传已迁移到前端 adminUploadBlogFile，通过统一 /api/uploads/asset 接口落盘，
+//     本 handler 已移除。此处保留接口文档占位注释。
 // CreateBlogFileHandler POST /api/blog-files (JSON body)
 // 通过 JSON body 创建文件，请求体: { "slug": "...", "content": "..." }
 func CreateBlogFileHandler(blogDir string) gin.HandlerFunc {

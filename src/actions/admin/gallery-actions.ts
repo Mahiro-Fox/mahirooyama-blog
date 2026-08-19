@@ -1,11 +1,10 @@
 'use server';
 
 import { DEFAULT_GALLERY_LIST_LIMIT } from '@/config/limit';
-import { AdminGallery, Gallery } from '@/lib/gallery';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goFetch } from '@/lib/server/api-client';
-import { createUploadAction } from '@/lib/upload-actions';
+import { createGoUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
@@ -14,9 +13,6 @@ import { validateSlug } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('GalleryActions');
-
-const INTERNAL_SECRET = process.env.GO_API_SHARED_SECRET ?? '';
-const BASE_URL = process.env.GO_API_INTERNAL_URL ?? 'http://localhost:8080';
 
 export interface GetPublicGalleriesOptions {
   page?: number;
@@ -292,69 +288,26 @@ export async function adminDeleteGalleryFile(
 }
 
 // 上传图库 JSON 文件（multipart）- 由 gallery-client.tsx 的上传按钮调用
-export async function adminUploadGalleryFile(
-  formData: FormData
-): Promise<
-  ActionResponse<{ message: string; fileName: string; slug: string }>
-> {
-  return withActionPermission('gallery:create', async (user) => {
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(
-        `gallery:${user.id}`
-      );
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
-      }
-    }
+// 经统一上传接口 /api/uploads/asset 转发，dir=content/gallery（Go 负责落盘）
+export const adminUploadGalleryFile = createGoUploadAction({
+  name: '图库JSON文件',
+  permission: 'gallery:create',
+  rateLimitKey: 'gallery:{userId}',
+  formField: 'file',
+  label: 'JSON文件',
+  dir: 'content/gallery',
+  target: 'raw',
+  result: { kind: 'raw-url', message: 'JSON文件上传成功' },
+});
 
-    try {
-      const goFormData = new FormData();
-      const file = formData.get('file');
-      const slug = formData.get('slug');
-      if (file instanceof File) {
-        goFormData.append('file', file);
-      }
-      if (slug) {
-        goFormData.append('slug', slug as string);
-      }
-
-      const res = await fetch(`${BASE_URL}/api/gallery-files/upload`, {
-        method: 'POST',
-        headers: {
-          'X-Internal-Secret': INTERNAL_SECRET,
-        },
-        body: goFormData,
-        cache: 'no-store',
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        logger.error('上传图库文件失败', {
-          status: res.status,
-          userId: user.id,
-        });
-        return { success: false, error: data.error || '上传失败' };
-      }
-
-      logger.info('上传图库文件成功', { userId: user.id });
-      return { success: true, data };
-    } catch (error) {
-      logger.error('转发上传图库请求失败', error);
-      return { success: false, error: '上传失败' };
-    }
-  });
-}
-
-export const adminUploadGalleryThumbnail = createUploadAction({
+export const adminUploadGalleryThumbnail = createGoUploadAction({
   name: '图库缩略图',
   permission: 'gallery:create',
   rateLimitKey: 'gallery:{userId}',
   formField: 'image',
-  validation: { kind: 'mime', prefix: 'image/', label: '图片' },
-  storage: { kind: 'image', dir: 'images/gallery', quality: 85 },
+  label: '图片',
+  dir: 'images/gallery',
+  target: 'image',
+  quality: 85,
   result: { kind: 'raw-url', message: '图片上传成功' },
 });

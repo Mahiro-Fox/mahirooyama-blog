@@ -23,7 +23,6 @@ import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { useCrud } from '@/hooks/use-crud';
-import { Moment, MomentImage } from '@/lib/moments';
 import { formatDate } from '@/utils/utils';
 
 type MomentCreateInput = {

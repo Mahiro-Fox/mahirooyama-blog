@@ -9,7 +9,6 @@ import { LinkCard } from '@/components/shared/link-card';
 import { MagneticButton } from '@/components/shared/magnetic-button';
 import { SpotlightCard } from '@/components/shared/spotlight-card';
 import { useT } from '@/i18n/dictionary-provider';
-import { Gallery } from '@/lib/gallery';
 import { formatDate } from '@/utils/utils';
 
 export default function Galleries({ galleries }: { galleries: Gallery[] }) {

@@ -22,7 +22,6 @@ import { Badge } from '@/components/shadcn-ui/badge';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
 import { useCrud } from '@/hooks/use-crud';
-import { Guestbook } from '@/lib/guestbook';
 import { formatDate, isEmail } from '@/utils/utils';
 
 type GuestbookCreateInput = {

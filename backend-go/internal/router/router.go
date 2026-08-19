@@ -59,7 +59,6 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	{
 		midi.GET("", handler.ListMidiFilesHandler(midiDir))
 		midiWrite := midi.Group("", middleware.RequireInternalSecret(internalSecret))
-		midiWrite.POST("", handler.UploadMidiFileHandler(midiDir))
 		midiWrite.PUT("/:slug", handler.RenameMidiFileHandler(midiDir))
 		midiWrite.DELETE("/:slug", handler.DeleteMidiFileHandler(midiDir))
 	}
@@ -74,6 +73,12 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		uploadFiles.POST("/folder", handler.CreateFolderHandler(cfg.UploadsDir))
 	}
 
+	// 统一资源上传路由（各业务上传 action 复用）
+	uploads := api.Group("/uploads", middleware.RequireInternalSecret(internalSecret))
+	{
+		uploads.POST("/asset", handler.UploadAssetHandler(cfg.UploadsDir))
+	}
+
 	// blog-files 路由
 	blogDir := filepath.Join(cfg.UploadsDir, "content", "blog")
 	blogFiles := api.Group("/blog-files", middleware.RequireInternalSecret(internalSecret))
@@ -81,7 +86,6 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		blogFiles.GET("", handler.ListBlogFilesHandler(blogDir))
 		blogFiles.GET("/:slug", handler.GetBlogFileHandler(blogDir))
 		blogFiles.POST("", handler.CreateBlogFileHandler(blogDir))
-		blogFiles.POST("/upload", handler.UploadBlogFileHandler(blogDir))
 		blogFiles.PUT("/:slug", handler.UpdateBlogFileHandler(blogDir))
 		blogFiles.PATCH("/:slug", handler.RenameBlogFileHandler(blogDir))
 		blogFiles.DELETE("/:slug", handler.DeleteBlogFileHandler(blogDir))
@@ -94,7 +98,6 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		galleryFiles.GET("", handler.ListGalleryFilesHandler(galleryDir))
 		galleryFiles.GET("/:slug", handler.GetGalleryFileHandler(galleryDir))
 		galleryFiles.POST("", handler.CreateGalleryFileHandler(galleryDir))
-		galleryFiles.POST("/upload", handler.UploadGalleryFileHandler(galleryDir))
 		galleryFiles.PUT("/:slug", handler.UpdateGalleryFileHandler(galleryDir))
 		galleryFiles.PATCH("/:slug", handler.RenameGalleryFileHandler(galleryDir))
 		galleryFiles.DELETE("/:slug", handler.DeleteGalleryFileHandler(galleryDir))

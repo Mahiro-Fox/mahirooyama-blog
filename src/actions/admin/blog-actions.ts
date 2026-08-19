@@ -2,11 +2,10 @@
 
 import matter from 'gray-matter';
 import { DEFAULT_BLOG_LIST_LIMIT } from '@/config/limit';
-import { AdminBlog, Blog } from '@/lib/blog';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goFetch } from '@/lib/server/api-client';
-import { createUploadAction } from '@/lib/upload-actions';
+import { createGoUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
@@ -15,9 +14,6 @@ import { validateSlug } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('BlogActions');
-
-const INTERNAL_SECRET = process.env.GO_API_SHARED_SECRET ?? '';
-const BASE_URL = process.env.GO_API_INTERNAL_URL ?? 'http://localhost:8080';
 
 export interface GetPublicBlogsOptions {
   page?: number;
@@ -316,68 +312,26 @@ export async function adminDeleteBlogFile(
 }
 
 // 上传 MDX 文件（multipart）- 由 blog-client.tsx 的上传按钮调用
-export async function adminUploadBlogFile(
-  formData: FormData
-): Promise<
-  ActionResponse<{ message: string; fileName: string; slug: string }>
-> {
-  return withActionPermission('blog:create', async (user) => {
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(`blog:${user.id}`);
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
-      }
-    }
+// 经统一上传接口 /api/uploads/asset 转发，dir=content/blog（Go 负责落盘）
+export const adminUploadBlogFile = createGoUploadAction({
+  name: '博客MDX文件',
+  permission: 'blog:create',
+  rateLimitKey: 'blog:{userId}',
+  formField: 'file',
+  label: 'MDX文件',
+  dir: 'content/blog',
+  target: 'raw',
+  result: { kind: 'raw-url', message: 'MDX文件上传成功' },
+});
 
-    try {
-      // 构建转发到 Go 的 FormData（保留 file 和 slug 字段）
-      const goFormData = new FormData();
-      const file = formData.get('file');
-      const slug = formData.get('slug');
-      if (file instanceof File) {
-        goFormData.append('file', file);
-      }
-      if (slug) {
-        goFormData.append('slug', slug as string);
-      }
-
-      const res = await fetch(`${BASE_URL}/api/blog-files/upload`, {
-        method: 'POST',
-        headers: {
-          'X-Internal-Secret': INTERNAL_SECRET,
-        },
-        body: goFormData,
-        cache: 'no-store',
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        logger.error('上传 MDX 文件失败', {
-          status: res.status,
-          userId: user.id,
-        });
-        return { success: false, error: data.error || '上传失败' };
-      }
-
-      logger.info('上传 MDX 文件成功', { userId: user.id });
-      return { success: true, data };
-    } catch (error) {
-      logger.error('转发上传 MDX 请求失败', error);
-      return { success: false, error: '上传失败' };
-    }
-  });
-}
-
-export const adminUploadBlogThumbnail = createUploadAction({
+export const adminUploadBlogThumbnail = createGoUploadAction({
   name: '博客缩略图',
   permission: 'blog:create',
   rateLimitKey: 'blog:{userId}',
   formField: 'image',
-  validation: { kind: 'mime', prefix: 'image/', label: '图片' },
-  storage: { kind: 'image', dir: 'images/blog', quality: 85 },
+  label: '图片',
+  dir: 'images/blog',
+  target: 'image',
+  quality: 85,
   result: { kind: 'raw-url', message: '图片上传成功' },
 });

@@ -5,7 +5,6 @@ package handler
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -77,58 +76,8 @@ func ListMidiFilesHandler(midiDir string) gin.HandlerFunc {
 }
 
 // UploadMidiFileHandler POST /api/midi
-// multipart/form-data，file 字段，扩展名必须为 .mid
-func UploadMidiFileHandler(midiDir string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		file, err := c.FormFile("file")
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "没有提供文件"})
-			return
-		}
-
-		ext := strings.ToLower(filepath.Ext(file.Filename))
-		if ext != ".mid" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "仅支持 .mid 文件"})
-			return
-		}
-
-		if err := fileutil.EnsureDirectory(midiDir); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		safeName := fileutil.SanitizeFileName(file.Filename)
-		if !strings.HasSuffix(strings.ToLower(safeName), ".mid") {
-			safeName += ".mid"
-		}
-		fullPath := filepath.Join(midiDir, safeName)
-
-		if conflict, _ := fileutil.CheckFileConflict(fullPath); conflict != "" {
-			c.JSON(http.StatusConflict, gin.H{"error": conflict})
-			return
-		}
-
-		src, err := file.Open()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "打开文件失败"})
-			return
-		}
-		defer src.Close()
-		dst, err := os.Create(fullPath)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "创建文件失败"})
-			return
-		}
-		defer dst.Close()
-		if _, err := io.Copy(dst, src); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "写入文件失败"})
-			return
-		}
-
-		c.JSON(http.StatusCreated, gin.H{"success": true, "fileName": safeName})
-	}
-}
-
+// 注：上传已迁移到前端 adminUploadMidiFile，通过统一 /api/uploads/asset 接口落盘，
+//     本 handler 已移除。此处保留接口文档占位注释。
 // DeleteMidiFileHandler DELETE /api/midi/:slug
 func DeleteMidiFileHandler(midiDir string) gin.HandlerFunc {
 	return func(c *gin.Context) {

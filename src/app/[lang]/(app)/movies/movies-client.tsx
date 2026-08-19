@@ -6,7 +6,6 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { Input } from '@/components/shadcn-ui/input';
 import { useT } from '@/i18n/dictionary-provider';
-import { Movie } from '@/lib/movies';
 import { cn } from '@/utils/utils';
 
 const CACHE_KEY = 'movies_cache';
@@ -75,7 +74,7 @@ export function MoviesClient({ initialMovies }: MoviesClientProps) {
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2" />
             <Input
               type="text"
               placeholder={t('movies.search_placeholder')}

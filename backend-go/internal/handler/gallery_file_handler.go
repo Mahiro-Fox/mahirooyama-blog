@@ -7,7 +7,6 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -152,103 +151,8 @@ func GetGalleryFileHandler(galleryDir string) gin.HandlerFunc {
 
 // UploadGalleryFileHandler POST /api/gallery-files (multipart)
 // 接收 multipart/form-data，file 字段为 JSON 文件，slug 可选
-func UploadGalleryFileHandler(galleryDir string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "解析表单失败: " + err.Error()})
-			return
-		}
-
-		file, err := c.FormFile("file")
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "没有提供文件"})
-			return
-		}
-
-		if !strings.HasSuffix(strings.ToLower(file.Filename), ".json") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "只接受 .json 文件"})
-			return
-		}
-
-		src, err := file.Open()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "打开文件失败"})
-			return
-		}
-		content, err := io.ReadAll(src)
-		src.Close()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文件失败"})
-			return
-		}
-
-		// 验证 JSON 格式和必需字段
-		var parsed map[string]interface{}
-		if err := json.Unmarshal(content, &parsed); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "JSON 文件格式无效"})
-			return
-		}
-		if getStringField(parsed, "title") == "" || getStringField(parsed, "thumbnail") == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "JSON 文件缺少必需的字段 (title, thumbnail)"})
-			return
-		}
-
-		// 确定文件名
-		var fileName string
-		if slug := c.PostForm("slug"); slug != "" {
-			cleanSlug := strings.TrimSpace(strings.ToLower(slug))
-			if err := fileutil.ValidateSlug(cleanSlug); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "无效的文件名"})
-				return
-			}
-			fileName = cleanSlug + ".json"
-		} else {
-			fileName = fileutil.SanitizeFileName(file.Filename)
-		}
-
-		filePath := filepath.Join(galleryDir, fileName)
-		if !fileutil.IsPathSafe(filePath, galleryDir) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "非法路径"})
-			return
-		}
-
-		if conflict, _ := fileutil.CheckFileConflict(filePath); conflict != "" {
-			c.JSON(http.StatusConflict, gin.H{"error": conflict})
-			return
-		}
-
-		if err := fileutil.EnsureDirectory(galleryDir); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		// 格式化 JSON 并原子写入
-		formatted, err := json.MarshalIndent(parsed, "", "  ")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "JSON 格式化失败"})
-			return
-		}
-
-		tmpPath := filePath + ".tmp"
-		if err := os.WriteFile(tmpPath, formatted, 0644); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "写入文件失败"})
-			return
-		}
-		if err := os.Rename(tmpPath, filePath); err != nil {
-			os.Remove(tmpPath)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "重命名临时文件失败"})
-			return
-		}
-
-		cleanSlug := strings.TrimSuffix(fileName, ".json")
-		c.JSON(http.StatusCreated, gin.H{
-			"message":  "文件创建成功",
-			"fileName": fileName,
-			"slug":     cleanSlug,
-		})
-	}
-}
-
+// 注：上传已迁移到前端 adminUploadGalleryFile，通过统一 /api/uploads/asset 接口落盘，
+//     本 handler 已移除。此处保留接口文档占位注释。
 // CreateGalleryFileHandler POST /api/gallery-files (JSON body)
 // 通过 JSON body 创建文件，请求体: { "slug": "...", "content": "..." }
 func CreateGalleryFileHandler(galleryDir string) gin.HandlerFunc {

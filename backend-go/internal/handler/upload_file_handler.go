@@ -5,11 +5,11 @@ package handler
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -128,15 +128,15 @@ func ListUploadFilesHandler(uploadsDir string) gin.HandlerFunc {
 // 接收 multipart/form-data，files 字段支持多文件
 // 注意：Go 端暂不做 WebP 转换，原 Next.js 代码已兼容 converted=false
 func UploadFilesHandler(uploadsDir string) gin.HandlerFunc {
-	const maxFileSize = 10 << 20       // 10MB 单文件
-	const maxFilesCount = 20            // 单次最多 20 个
-	const maxTotalSize = 100 << 20      // 单次总大小 100MB
-	allowedMime := map[string]bool{
-		"image/jpeg": true, "image/png": true, "image/gif": true, "image/webp": true,
-		"audio/midi": true, "audio/mid": true, "audio/x-midi": true,
-		"video/mp4": true, "application/pdf": true,
-		"text/plain": true, "application/json": true,
-		"application/octet-stream": true,
+	const maxFileSize = 10 << 20  // 10MB 单文件
+	const maxFilesCount = 20      // 单次最多 20 个
+	const maxTotalSize = 100 << 20 // 单次总大小 100MB
+	allowedMime := []string{
+		"image/jpeg", "image/png", "image/gif", "image/webp",
+		"audio/midi", "audio/mid", "audio/x-midi",
+		"video/mp4", "application/pdf",
+		"text/plain", "application/json",
+		"application/octet-stream",
 	}
 
 	return func(c *gin.Context) {
@@ -182,8 +182,8 @@ func UploadFilesHandler(uploadsDir string) gin.HandlerFunc {
 				continue
 			}
 			totalSize += fh.Size
-			if !allowedMime[fh.Header.Get("Content-Type")] {
-				results = append(results, UploadResult{Name: fh.Filename, Success: false, Error: fmt.Sprintf("不支持的文件类型: %s", fh.Header.Get("Content-Type"))})
+			if err := fileutil.TypeAllowed(fh.Header.Get("Content-Type"), fh.Filename, allowedMime); err != nil {
+				results = append(results, UploadResult{Name: fh.Filename, Success: false, Error: err.Error()})
 				continue
 			}
 		}
@@ -194,7 +194,6 @@ func UploadFilesHandler(uploadsDir string) gin.HandlerFunc {
 
 		for _, fh := range files {
 			safeName := fileutil.SanitizeFileName(fh.Filename)
-			filePath := filepath.Join(targetDir, safeName)
 
 			// 跳过前面已验证失败的
 			alreadyFailed := false
@@ -208,36 +207,19 @@ func UploadFilesHandler(uploadsDir string) gin.HandlerFunc {
 				continue
 			}
 
-			if conflict, _ := fileutil.CheckFileConflict(filePath); conflict != "" {
-				results = append(results, UploadResult{Name: safeName, Success: false, Error: conflict})
-				continue
-			}
-
-			src, err := fh.Open()
+			saved, err := fileutil.SaveUploadedFile(fh, fileutil.UploadOptions{
+				RootDir: uploadsDir,
+				RelDir:  relativePath,
+				Allowed: allowedMime,
+				MaxSize: maxFileSize,
+			})
 			if err != nil {
-				results = append(results, UploadResult{Name: safeName, Success: false, Error: "打开文件失败"})
+				results = append(results, UploadResult{Name: safeName, Success: false, Error: err.Error()})
 				continue
 			}
-			dst, err := os.Create(filePath)
-			if err != nil {
-				src.Close()
-				results = append(results, UploadResult{Name: safeName, Success: false, Error: "创建文件失败"})
-				continue
-			}
-			if _, err := io.Copy(dst, src); err != nil {
-				src.Close()
-				dst.Close()
-				results = append(results, UploadResult{Name: safeName, Success: false, Error: "写入文件失败"})
-				continue
-			}
-			src.Close()
-			dst.Close()
-
-			itemRelPath := filepath.Join(relativePath, safeName)
-			webPath := "/uploads/" + strings.ReplaceAll(itemRelPath, "\\", "/")
 			results = append(results, UploadResult{
-				Name:      safeName,
-				Path:      webPath,
+				Name:      filepath.Base(saved.RelPath),
+				Path:      saved.WebPath,
 				Success:   true,
 				Converted: false,
 			})
@@ -384,4 +366,66 @@ func fileItemType(entry os.DirEntry) string {
 		return "directory"
 	}
 	return "file"
+}
+
+// UploadAssetResult 统一资源上传结果
+type UploadAssetResult struct {
+	URL    string `json:"url"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+}
+
+// UploadAssetHandler POST /api/uploads/asset
+// 统一的资源（图片/音频等）上传接口，供前端各业务上传 action 复用。
+// multipart/form-data：
+//   - file  必填：二进制文件（前端可用 sharp 处理后的内容）
+//   - dir   可选：相对 uploads 根目录的子目录，如 images/blog；空则存根目录
+//   - width 可选：图片宽（前端 sharp 计算后传入）
+//   - height 可选：图片高（前端 sharp 计算后传入）
+//
+// 返回 { url, width, height } 或 { error }。仅保存原样文件，不做格式转换。
+func UploadAssetHandler(uploadsDir string) gin.HandlerFunc {
+	allowedMime := []string{
+		"image/jpeg", "image/png", "image/gif", "image/webp",
+		"audio/midi", "audio/mid", "audio/x-midi", "audio/mpeg", "audio/wav",
+		"video/mp4", "application/pdf",
+		"text/plain", "application/json",
+		"application/octet-stream",
+		// 扩展名规则：供 blog(mdx)/gallery(json)/midi(mid) 等文本类上传复用
+		".mdx", ".md", ".json", ".mid",
+	}
+
+	return func(c *gin.Context) {
+		file, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "未提供文件"})
+			return
+		}
+
+		relDir := strings.Trim(strings.TrimSpace(c.PostForm("dir")), "/")
+		width, _ := strconv.Atoi(strings.TrimSpace(c.PostForm("width")))
+		height, _ := strconv.Atoi(strings.TrimSpace(c.PostForm("height")))
+
+		saved, err := fileutil.SaveUploadedFile(file, fileutil.UploadOptions{
+			RootDir: uploadsDir,
+			RelDir:  relDir,
+			Allowed: allowedMime,
+			Width:   width,
+			Height:  height,
+		})
+		if err != nil {
+			status := http.StatusBadRequest
+			if strings.Contains(err.Error(), "已存在") {
+				status = http.StatusConflict
+			}
+			c.JSON(status, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, UploadAssetResult{
+			URL:    saved.WebPath,
+			Width:  saved.Width,
+			Height: saved.Height,
+		})
+	}
 }

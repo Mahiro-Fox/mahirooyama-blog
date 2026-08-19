@@ -2,7 +2,6 @@
 
 import { Midi } from '@tonejs/midi';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MidiFile } from '@/lib/midi-files';
 
 interface MidiPlayerState {
   currentPlayingId: string | null;

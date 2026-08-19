@@ -20,7 +20,6 @@ import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
 import { Link } from '@/components/shared/link';
 import { useCrud } from '@/hooks/use-crud';
-import { Movie, MovieSource } from '@/lib/movies';
 import { formatDate } from '@/utils/utils';
 
 type MovieCreateInput = Omit<Movie, 'created_at' | 'updated_at'>;

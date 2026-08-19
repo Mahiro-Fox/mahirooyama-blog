@@ -16,7 +16,6 @@ import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
 import { useMidiPlayer } from '@/hooks/use-midi-player';
 import { useT } from '@/i18n/dictionary-provider';
-import type { MidiFile } from '@/lib/midi-files';
 import { trackEvent } from '@/utils/tracker';
 import { debounce } from '@/utils/utils';
 

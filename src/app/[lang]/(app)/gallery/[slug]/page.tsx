@@ -14,8 +14,6 @@ import {
 } from '@/components/shadcn-ui/breadcrumb';
 import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';
 import { LinkBadge } from '@/components/shared/link-badge';
-import { i18nConfig } from '@/i18n/i18n.config';
-import { getGalleries } from '@/lib/gallery';
 import { formatDate } from '@/utils/utils';
 
 interface GalleryImagePageProps {

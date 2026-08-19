@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Badge } from '@/components/shadcn-ui/badge';
 import { useT } from '@/i18n/dictionary-provider';
-import type { Movie } from '@/lib/movies';
 import { cn } from '@/utils/utils';
 
 interface MovieDetailClientProps {
@@ -36,7 +35,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                 />
               </div>
 
-              <div className="bg-card rounded-xl border border-border p-6">
+              <div className="bg-card border-border rounded-xl border p-6">
                 <div className="mb-6 flex flex-wrap items-center gap-4">
                   <div className="text-muted-foreground flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
@@ -71,7 +70,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
 
             <div className="space-y-6">
               <div className="sticky top-24">
-                <div className="bg-card overflow-hidden rounded-xl border border-border">
+                <div className="bg-card border-border overflow-hidden rounded-xl border">
                   <div className="relative aspect-[2/3]">
                     <Image
                       src={movie.poster}
@@ -133,9 +132,7 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                     <div className="border-border border-t pt-4">
                       <p className="text-muted-foreground text-xs">
                         {t('movies.added_on')}{' '}
-                        {new Date(movie.created_at).toLocaleDateString(
-                          'zh-CN'
-                        )}
+                        {new Date(movie.created_at).toLocaleDateString('zh-CN')}
                       </p>
                     </div>
                   </div>

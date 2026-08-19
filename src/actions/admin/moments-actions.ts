@@ -1,10 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { Moment, MomentImage } from '@/lib/moments';
-import { goFetch } from '@/lib/server/api-client';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
-import { createUploadAction } from '@/lib/upload-actions';
+import { goFetch } from '@/lib/server/api-client';
+import { createGoUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
@@ -26,13 +25,15 @@ export async function adminGetMoments(): Promise<ActionResponse<Moment[]>> {
   });
 }
 
-export const adminUploadMomentImage = createUploadAction({
+export const adminUploadMomentImage = createGoUploadAction({
   name: '碎碎念图片',
   permission: 'moments:create',
   rateLimitKey: 'moments:{userId}',
   formField: 'image',
-  validation: { kind: 'mime', prefix: 'image/', label: '图片' },
-  storage: { kind: 'image', dir: 'images/moments', quality: 85 },
+  label: '图片',
+  dir: 'images/moments',
+  target: 'image',
+  quality: 85,
   result: { kind: 'image-full', message: '图片上传成功' },
 });
 

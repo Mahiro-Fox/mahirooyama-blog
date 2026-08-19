@@ -8,13 +8,12 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Song } from '@/lib/music';
 import { throttle } from '@/utils/utils';
 
 export type PlayMode = 'sequential' | 'random' | 'loop';
 interface MusicContextValue {
   /** 当前播放的歌曲，null 表示没有歌曲 */
-  currentSong: Song | null;
+  currentMusic: Music | null;
   /** 是否正在播放 */
   isPlaying: boolean;
   /** 当前播放进度 */
@@ -26,7 +25,7 @@ interface MusicContextValue {
   /** 是否展开播放器 */
   isCollapsed: boolean;
   /** 歌曲列表 */
-  playlist: Song[];
+  playlist: Music[];
   /** 播放模式 */
   playMode: PlayMode;
   /** 当前播放的歌曲索引 */
@@ -62,7 +61,7 @@ export function useMusic() {
 }
 
 interface MusicProviderProps {
-  playlist: Song[];
+  playlist: Music[];
   initialIndex?: number;
   children: React.ReactNode;
 }
@@ -135,13 +134,13 @@ export function MusicProvider({
     };
   }, []);
 
-  const currentSong = playlist[currentIndex] || null;
+  const currentMusic = playlist[currentIndex] || null;
 
   // 当前歌曲变化时，更新音频源
   useEffect(() => {
-    if (!audioRef.current || !currentSong) return;
+    if (!audioRef.current || !currentMusic) return;
 
-    audioRef.current.src = currentSong.url;
+    audioRef.current.src = currentMusic.url;
     setDuration(0);
     setProgress(0);
 
@@ -166,7 +165,7 @@ export function MusicProvider({
     };
 
     const handleError = () => {
-      console.warn(`Failed to load audio: ${currentSong.url}`);
+      console.warn(`Failed to load audio: ${currentMusic.url}`);
     };
 
     audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -183,7 +182,7 @@ export function MusicProvider({
       audioRef.current?.removeEventListener('ended', handleEnded);
       audioRef.current?.removeEventListener('error', handleError);
     };
-  }, [currentSong]);
+  }, [currentMusic]);
 
   // 播放状态切换时，通知浏览器播放
   useEffect(() => {
@@ -269,7 +268,7 @@ export function MusicProvider({
   return (
     <MusicContext.Provider
       value={{
-        currentSong,
+        currentMusic,
         isPlaying,
         progress,
         duration,

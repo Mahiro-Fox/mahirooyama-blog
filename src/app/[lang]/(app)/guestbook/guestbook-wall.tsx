@@ -2,7 +2,6 @@
 
 import { MessageSquare } from 'lucide-react';
 import { AnimatePresence, m } from 'motion/react';
-import { Guestbook } from '@/lib/guestbook';
 import { formatDateWithHMS } from '@/utils/utils';
 
 interface GuestbookWallProps {

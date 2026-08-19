@@ -1,10 +1,9 @@
 'use server';
 
 import { siteConfig } from '@/config/common';
-import { Guestbook } from '@/lib/guestbook';
 import { notifyReply } from '@/lib/email-send/notify-reply';
-import { goFetch } from '@/lib/server/api-client';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
+import { goFetch } from '@/lib/server/api-client';
 import {
   withActionPermission,
   type ActionResponse,

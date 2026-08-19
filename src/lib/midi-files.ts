@@ -3,20 +3,6 @@ import path from 'path';
 import { MIDI_DIR } from '@/constant/dir';
 import { ensureDirectory } from '@/utils/file-utils';
 
-export interface MidiFile {
-  name: string;
-  path: string;
-  duration: number; // duration in seconds
-}
-
-export interface MidiAdminFile {
-  slug: string;
-  fileName: string;
-  name: string;
-  size: number;
-  lastModified: string;
-}
-
 /**
  * 解析 MIDI 文件总时长（秒）
  *

@@ -4,7 +4,6 @@ import { MapPin, Smile } from 'lucide-react';
 import { m } from 'motion/react';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { OptimizedImage } from '@/components/shared/optimized-image';
-import { Moment } from '@/lib/moments';
 import { formatDateWithHMS } from '@/utils/utils';
 
 interface MomentsTimelineProps {

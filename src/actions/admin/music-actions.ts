@@ -1,10 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { Song } from '@/lib/music';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goFetch } from '@/lib/server/api-client';
-import { createUploadAction } from '@/lib/upload-actions';
+import { createGoUploadAction } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
@@ -13,9 +12,9 @@ import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MusicActions');
 
-export async function getPublicMusic(): Promise<ActionResponse<Song[]>> {
+export async function getPublicMusic(): Promise<ActionResponse<Music[]>> {
   try {
-    const songs = await goFetch<Song[]>('/api/music');
+    const songs = await goFetch<Music[]>('/api/music');
     return { success: true, data: songs };
   } catch (error) {
     logger.error('获取音乐列表失败', error);
@@ -23,10 +22,10 @@ export async function getPublicMusic(): Promise<ActionResponse<Song[]>> {
   }
 }
 
-export async function adminGetMusic(): Promise<ActionResponse<Song[]>> {
+export async function adminGetMusic(): Promise<ActionResponse<Music[]>> {
   return withActionPermission('music:read', async () => {
     try {
-      const songs = await goFetch<Song[]>('/api/music');
+      const songs = await goFetch<Music[]>('/api/music');
       return { success: true, data: songs };
     } catch (error) {
       logger.error('获取音乐列表失败', error);
@@ -172,12 +171,13 @@ export async function adminDeleteMusic(
   });
 }
 
-export const adminUploadMusicFile = createUploadAction({
+export const adminUploadMusicFile = createGoUploadAction({
   name: '音频文件',
   permission: 'music:create',
   rateLimitKey: 'music:{userId}',
   formField: 'audio',
-  validation: { kind: 'mime', prefix: 'audio/', label: '音频' },
-  storage: { kind: 'raw', dir: 'music' },
+  label: '音频',
+  dir: 'music',
+  target: 'raw',
   result: { kind: 'raw-url', message: '音频上传成功' },
 });

@@ -21,7 +21,6 @@ import { FileUploadTrigger } from '@/components/admin/file-upload-trigger';
 import { Button } from '@/components/shadcn-ui/button';
 import { Input } from '@/components/shadcn-ui/input';
 import { OptimizedImage } from '@/components/shared/optimized-image';
-import { Song } from '@/lib/music';
 import { useCrud } from '@/hooks/use-crud';
 
 type MusicCreateInput = {
@@ -33,18 +32,18 @@ type MusicCreateInput = {
 type MusicUpdateInput = Partial<MusicCreateInput>;
 
 export default function MusicClient({
-  songs: initialSongs,
+  songs: initialMusics,
 }: {
-  songs: Song[];
+  songs: Music[];
 }) {
   // === 用 useCrud 管理 CRUD 状态 ===
-  const crud = useCrud<Song, MusicCreateInput, MusicUpdateInput>({
+  const crud = useCrud<Music, MusicCreateInput, MusicUpdateInput>({
     getList: adminGetMusic,
     create: adminCreateMusic,
     update: adminUpdateMusic,
     delete: adminDeleteMusic,
     idField: 'id',
-    initialData: initialSongs,
+    initialData: initialMusics,
     createSuccessMessage: '音乐添加成功',
     updateSuccessMessage: '音乐更新成功',
     deleteSuccessMessage: '音乐删除成功',
@@ -54,7 +53,7 @@ export default function MusicClient({
     items: songs,
     loading,
     isSubmitting,
-    selectedItem: selectedSong,
+    selectedItem: selectedMusic,
     isCreateDialogOpen,
     isEditDialogOpen,
     isDeleteDialogOpen,
@@ -78,13 +77,13 @@ export default function MusicClient({
 
   // 打开/切换到编辑模式时，从 selectedItem 回填表单
   useEffect(() => {
-    if (isEditDialogOpen && selectedSong) {
-      setName(selectedSong.name);
-      setArtist(selectedSong.artist);
-      setUrl(selectedSong.url);
-      setCover(selectedSong.cover);
+    if (isEditDialogOpen && selectedMusic) {
+      setName(selectedMusic.name);
+      setArtist(selectedMusic.artist);
+      setUrl(selectedMusic.url);
+      setCover(selectedMusic.cover);
     }
-  }, [isEditDialogOpen, selectedSong]);
+  }, [isEditDialogOpen, selectedMusic]);
 
   // 打开创建模式时，清空表单（render 期守卫：打开瞬间同步重置，避免用户先看到旧值）
   const [prevCreateOpen, setPrevCreateOpen] = useState(false);
@@ -133,8 +132,8 @@ export default function MusicClient({
     if (editMode === 'create') {
       await createItem({ name, artist, url, cover });
     } else {
-      if (!selectedSong) return;
-      await updateItem(selectedSong.id, { name, artist, url, cover });
+      if (!selectedMusic) return;
+      await updateItem(selectedMusic.id, { name, artist, url, cover });
     }
   };
 

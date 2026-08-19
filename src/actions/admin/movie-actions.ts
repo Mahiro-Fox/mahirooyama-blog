@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { Movie } from '@/lib/movies';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { buildQuery, goFetch } from '@/lib/server/api-client';
 import {

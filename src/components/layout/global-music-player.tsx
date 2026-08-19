@@ -20,7 +20,6 @@ import Image from 'next/image';
 import React, { useRef, useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
 import { useT } from '@/i18n/dictionary-provider';
-import { Song } from '@/lib/music';
 import { trackEvent } from '@/utils/tracker';
 import { cn } from '@/utils/utils';
 
@@ -35,7 +34,7 @@ type LucideIcon = React.ForwardRefExoticComponent<
 >;
 
 interface CollapsedPlayerProps {
-  song: Song;
+  song: Music;
   isPlaying: boolean;
   onExpand: () => void;
 }
@@ -66,7 +65,7 @@ function CollapsedPlayer({ song, isPlaying, onExpand }: CollapsedPlayerProps) {
 }
 
 interface PlayerViewProps {
-  song: Song;
+  song: Music;
   isPlaying: boolean;
   progress: number;
   duration: number;
@@ -224,15 +223,15 @@ function PlayerView({
 }
 
 interface PlaylistViewProps {
-  playlist: Song[];
-  currentSongId: string;
-  onSwitch: (index: number, song: Song) => void;
+  playlist: Music[];
+  currentMusicId: string;
+  onSwitch: (index: number, song: Music) => void;
 }
 
 /** 展开面板 - 播放列表视图 */
 function PlaylistView({
   playlist,
-  currentSongId,
+  currentMusicId,
   onSwitch,
 }: PlaylistViewProps) {
   const t = useT();
@@ -249,7 +248,7 @@ function PlaylistView({
               onClick={() => onSwitch(index, song)}
               className={cn(
                 'flex w-full cursor-pointer items-center justify-between gap-2 rounded px-2 py-1 text-left transition-colors',
-                song.id === currentSongId
+                song.id === currentMusicId
                   ? 'bg-primary/10 text-primary'
                   : 'hover:bg-accent/50'
               )}
@@ -335,12 +334,12 @@ function PlayerControls({
 
 interface ExpandedPlayerProps {
   playerRef: React.RefObject<HTMLDivElement | null>;
-  currentSong: Song;
+  currentMusic: Music;
   isPlaying: boolean;
   progress: number;
   duration: number;
   volume: number;
-  playlist: Song[];
+  playlist: Music[];
   currentView: 'player' | 'playlist';
   playModeText: string;
   PlayModeIcon: LucideIcon;
@@ -350,7 +349,7 @@ interface ExpandedPlayerProps {
   onNext: () => void;
   onSeek: (time: number) => void;
   onSetVolume: (volume: number) => void;
-  onSwitch: (index: number, song: Song) => void;
+  onSwitch: (index: number, song: Music) => void;
   onCycleMode: () => void;
   onToggleExpand: () => void;
 }
@@ -358,7 +357,7 @@ interface ExpandedPlayerProps {
 /** 展开状态的面板（播放器/播放列表 左右滑动切换） */
 function ExpandedPlayer({
   playerRef,
-  currentSong,
+  currentMusic,
   isPlaying,
   progress,
   duration,
@@ -391,7 +390,7 @@ function ExpandedPlayer({
         >
           <div className="w-full flex-shrink-0">
             <PlayerView
-              song={currentSong}
+              song={currentMusic}
               isPlaying={isPlaying}
               progress={progress}
               duration={duration}
@@ -407,7 +406,7 @@ function ExpandedPlayer({
           <div className="w-full flex-shrink-0">
             <PlaylistView
               playlist={playlist}
-              currentSongId={currentSong.id}
+              currentMusicId={currentMusic.id}
               onSwitch={onSwitch}
             />
           </div>
@@ -428,7 +427,7 @@ function ExpandedPlayer({
 
 export function GlobalMusicPlayer() {
   const {
-    currentSong,
+    currentMusic,
     isPlaying,
     progress,
     duration,
@@ -456,7 +455,7 @@ export function GlobalMusicPlayer() {
     'player'
   );
 
-  const handleSwitch = (index: number, song: Song) => {
+  const handleSwitch = (index: number, song: Music) => {
     seek(0);
     play(index);
     setCurrentView('player');
@@ -488,7 +487,7 @@ export function GlobalMusicPlayer() {
     },
   };
 
-  if (!currentSong) {
+  if (!currentMusic) {
     return null;
   }
 
@@ -506,14 +505,14 @@ export function GlobalMusicPlayer() {
     >
       {isCollapsed ? (
         <CollapsedPlayer
-          song={currentSong}
+          song={currentMusic}
           isPlaying={isPlaying}
           onExpand={toggleExpand}
         />
       ) : (
         <ExpandedPlayer
           playerRef={playerRef}
-          currentSong={currentSong}
+          currentMusic={currentMusic}
           isPlaying={isPlaying}
           progress={progress}
           duration={duration}
