@@ -1,9 +1,11 @@
 'use server';
 
+import { SESSION_EXPIRY } from '@/constant/auth';
 import {
-  SESSION_EXPIRY,
-} from '@/constant/auth';
-import { adminLoginViaGo, adminLogoutViaGo, verifyAuth } from '@/lib/admin-auth';
+  adminLoginViaGo,
+  adminLogoutViaGo,
+  verifyAuth,
+} from '@/lib/admin-auth';
 import { loginRateLimiter } from '@/lib/rate-limit';
 import { createLogger } from '@/utils/logger';
 
@@ -78,9 +80,6 @@ export async function checkLogin() {
   }
   return { success: true, user: authCheck };
 }
-
-// —— 兼容：极少数老 import 可能误用到 SESSION_EXPIRY 同名常量——
-export { SESSION_EXPIRY };
 
 // —— 兼容：其他地方可能从 logout.ts 调用 adminLogout，但这里也提供 logout 别名——
 export async function logout() {
