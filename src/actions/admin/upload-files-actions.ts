@@ -1,7 +1,7 @@
 'use server';
 
 import { pathCacheStore } from '@/store/path-cache-store';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, goUploadMultipart } from '@/lib/server/api-client';
 import {
   withActionPermission,
   type ActionResponse,
@@ -9,9 +9,6 @@ import {
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('UploadFilesActions');
-
-const INTERNAL_SECRET = process.env.GO_API_SHARED_SECRET ?? '';
-const BASE_URL = process.env.GO_API_INTERNAL_URL ?? 'http://localhost:8080';
 
 export interface FileItem {
   name: string;
@@ -28,8 +25,23 @@ export interface FileListResponse {
   breadcrumb: string[];
 }
 
-// POST - 上传文件（转发 multipart 到 Go POST /api/upload-files）
-// 由 Server Action 带 X-Internal-Secret 调用，浏览器不直接暴露密钥
+// 从 goUploadMultipart 抛出的错误信息中抽取 Go 返回的 error 字段
+// 消息形如：`Go API /api/uploads/asset 返回 409: {"error":"已存在"}`
+function extractGoError(message: string): string {
+  const match = message.match(/返回 \d+: (.+)$/s);
+  if (!match) return message;
+  try {
+    const body = JSON.parse(match[1]);
+    if (typeof body?.error === 'string') return body.error;
+  } catch {
+    // 忽略解析失败，回退到原始消息
+  }
+  return message;
+}
+
+// POST - 上传文件
+// 原 Go /api/upload-files 批量上传已移除，改由前端逐文件调用统一上传接口
+// /api/uploads/asset 落盘，并聚合出逐文件 results 返回，行为与旧接口一致。
 export async function adminUploadFiles(formData: FormData): Promise<
   ActionResponse<{
     message: string;
@@ -38,52 +50,74 @@ export async function adminUploadFiles(formData: FormData): Promise<
       path: string;
       success: boolean;
       converted?: boolean;
-      webpPath?: string;
       error?: string;
     }[];
   }>
 > {
   return withActionPermission('files:upload', async (user) => {
     try {
-      // 解析 path 参数
       const pathValue = formData.get('path') as string | null;
       const relativePath = pathValue ?? '';
+      // 去掉首尾斜杠，作为 /uploads/asset 的 dir
+      const dir = relativePath.replace(/^\/+|\/+$/g, '');
 
-      // 构建新的 FormData 转发给 Go（只保留 files 字段）
-      const goFormData = new FormData();
-      const files = formData.getAll('files');
-      for (const f of files) {
-        goFormData.append('files', f);
+      const files = formData.getAll('files') as File[];
+      if (files.length === 0) {
+        return { success: false, error: '没有提供文件' };
       }
 
-      const res = await fetch(
-        `${BASE_URL}/api/upload-files?path=${encodeURIComponent(relativePath)}`,
-        {
-          method: 'POST',
-          headers: {
-            'X-Internal-Secret': INTERNAL_SECRET,
-          },
-          body: goFormData,
-          cache: 'no-store',
+      const results: {
+        name: string;
+        path: string;
+        success: boolean;
+        converted?: boolean;
+        error?: string;
+      }[] = [];
+
+      for (const file of files) {
+        try {
+          const goFormData = new FormData();
+          goFormData.append('file', file, file.name);
+          if (dir) {
+            goFormData.append('dir', dir);
+          }
+
+          const data = await goUploadMultipart<{ url: string }>(
+            '/api/uploads/asset',
+            goFormData
+          );
+          results.push({
+            name: file.name,
+            path: data.url,
+            success: true,
+            converted: false,
+          });
+        } catch (error) {
+          results.push({
+            name: file.name,
+            path: '',
+            success: false,
+            error:
+              error instanceof Error ? extractGoError(error.message) : '上传失败',
+          });
         }
-      );
-
-      const data = await res.json();
-      if (!res.ok) {
-        logger.error('上传文件失败', { status: res.status, userId: user.id });
-        return {
-          success: false,
-          error: data.error || '上传失败',
-          details: data.details,
-        };
       }
 
-      logger.info('上传文件成功', {
+      const successCount = results.filter((r) => r.success).length;
+      const failCount = results.length - successCount;
+
+      logger.info('上传文件完成', {
         count: files.length,
         relativePath,
         userId: user.id,
       });
-      return { success: true, data };
+      return {
+        success: true,
+        data: {
+          message: `上传完成: ${successCount} 成功, ${failCount} 失败`,
+          results,
+        },
+      };
     } catch (error) {
       logger.error('转发上传请求失败', error);
       return { success: false, error: '上传失败' };

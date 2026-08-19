@@ -67,7 +67,6 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	uploadFiles := api.Group("/upload-files", middleware.RequireInternalSecret(internalSecret))
 	{
 		uploadFiles.GET("", handler.ListUploadFilesHandler(cfg.UploadsDir))
-		uploadFiles.POST("", handler.UploadFilesHandler(cfg.UploadsDir))
 		uploadFiles.PUT("", handler.RenameFileHandler(cfg.UploadsDir))
 		uploadFiles.DELETE("", handler.DeleteFileHandler(cfg.UploadsDir))
 		uploadFiles.POST("/folder", handler.CreateFolderHandler(cfg.UploadsDir))

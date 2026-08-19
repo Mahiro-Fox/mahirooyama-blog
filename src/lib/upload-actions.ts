@@ -505,21 +505,36 @@ export function createGoUploadAction<R extends GoUploadResultConfig>(
         let height = 0;
 
         if (config.target === 'image') {
-          // 用 sharp 处理图片：转 WebP + 读取尺寸，Go 仅负责落盘
+          // 图片处理与 processAndSaveImage 语义一致：
+          // WebP 不压缩原样保存一份；非 WebP 同时保留源文件 + 转换 WebP，Go 负责落盘
           const buffer = Buffer.from(await file.arrayBuffer());
-          const quality = config.quality ?? 50;
-          const processed = await sharp(buffer).webp({ quality }).toBuffer();
-          const meta = await sharp(processed).metadata();
-          width = meta.width ?? 0;
-          height = meta.height ?? 0;
+          const originalMimeType = file.type;
+          const isWebp =
+            originalMimeType === 'image/webp' ||
+            file.name.toLowerCase().endsWith('.webp');
 
-          const baseName = file.name.replace(/\.[^/.]+$/, '') || 'upload';
-          const webpName = `${baseName}.webp`;
-          goFormData.append(
-            'file',
-            new Blob([new Uint8Array(processed)], { type: 'image/webp' }),
-            webpName
-          );
+          if (isWebp) {
+            const meta = await sharp(buffer).metadata();
+            width = meta.width ?? 0;
+            height = meta.height ?? 0;
+            goFormData.append('file', file, file.name);
+          } else {
+            const quality = config.quality ?? 50;
+            const processed = await sharp(buffer).webp({ quality }).toBuffer();
+            const meta = await sharp(processed).metadata();
+            width = meta.width ?? 0;
+            height = meta.height ?? 0;
+
+            const baseName = file.name.replace(/\.[^/.]+$/, '') || 'upload';
+            const webpName = `${baseName}.webp`;
+            goFormData.append(
+              'file',
+              new Blob([new Uint8Array(processed)], { type: 'image/webp' }),
+              webpName
+            );
+            // 源文件保留原名附带，Go 一并落盘
+            goFormData.append('originalFile', file, file.name);
+          }
         } else {
           goFormData.append('file', file, file.name);
         }

@@ -1,6 +1,6 @@
 // Package fileutil 提供统一的文件上传/保存能力
 // upload.go 封装「类型校验 → 命名清理 → 目录确保 → 冲突检查 → 写入」
-// 复用方：upload_files_handler(UploadFilesHandler)、blog/gallery/midi 上传、以及统一资源上传接口。
+// 复用方：blog/gallery/midi 上传、统一资源上传接口 /api/uploads/asset。
 // 纯函数式：只依赖传入参数，不持有全局状态。
 package fileutil
 
@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// 单文件大小上限默认值（10MB），与旧 UploadFilesHandler 保持一致
+// 单文件大小上限默认值（10MB），与旧批量上传逻辑保持一致
 const DefaultMaxUploadSize int64 = 10 << 20
 
 // SavedFile 单个文件的上传结果（纯数据）
