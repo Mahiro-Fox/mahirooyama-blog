@@ -6,8 +6,16 @@
  * 试点阶段不传 JWT，鉴权由 Next.js 侧 withActionPermission 完成后转发用户信息。
  */
 
-const INTERNAL_SECRET = process.env.GO_API_SHARED_SECRET ?? '';
-const BASE_URL = process.env.GO_API_INTERNAL_URL ?? 'http://localhost:8080';
+if (!process.env.GO_API_SHARED_SECRET) {
+  throw new Error('GO_API_SHARED_SECRET 环境变量未配置');
+}
+
+if (!process.env.GO_API_INTERNAL_URL) {
+  throw new Error('GO_API_INTERNAL_URL 环境变量未配置');
+}
+
+const INTERNAL_SECRET = process.env.GO_API_SHARED_SECRET;
+const BASE_URL = process.env.GO_API_INTERNAL_URL;
 
 export interface GoFetchOptions extends RequestInit {
   /** 是否解析 JSON 响应（默认 true）。DELETE 返回 204 时设为 false */
