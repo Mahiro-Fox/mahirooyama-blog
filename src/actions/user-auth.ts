@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { goFetch } from '@/lib/server/api-client';
 import { loginRateLimiter } from '@/lib/rate-limit';
 import { createLogger } from '@/utils/logger';
@@ -10,6 +11,14 @@ import {
 } from '@/lib/user-auth';
 
 const logger = createLogger('UserAuthAction');
+
+// 从请求头解析客户端 IP（用于限流叠加 IP 维度）
+async function clientIp(): Promise<string> {
+  const h = await headers();
+  return h.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    h.get('x-real-ip') ||
+    'unknown';
+}
 
 export async function userLogin(
   username: string,
@@ -27,11 +36,14 @@ export async function userLogin(
       return { success: false, error: 'Username and password required' };
     }
     const rateLimit = await loginRateLimiter.check(`user-login:${username}`);
-    if (!rateLimit.success) {
+    const ipLimit = await loginRateLimiter.check(
+      `user-login-ip:${await clientIp()}`
+    );
+    if (!rateLimit.success || !ipLimit.success) {
       return {
         success: false,
         error: 'Too many attempts, please try again later',
-        resetTime: rateLimit.resetTime,
+        resetTime: Math.max(rateLimit.resetTime, ipLimit.resetTime),
       };
     }
 
@@ -69,7 +81,7 @@ export async function userRegister(
       message: string;
       user: { id: string; username: string };
     }
-  | { success: false; error: string }
+  | { success: false; error: string; resetTime?: number }
 > {
   try {
     if (!username || !password) {
@@ -80,6 +92,20 @@ export async function userRegister(
     }
     if (password.length < 6) {
       return { success: false, error: 'Password must be at least 6 characters' };
+    }
+    // 注册限流：叠加 IP 维度（复用注册专用的更严格限制，如用户名/前缀防霸占）
+    const regIpLimit = await loginRateLimiter.check(
+      `user-register-ip:${await clientIp()}`
+    );
+    const regNameLimit = await loginRateLimiter.check(
+      `user-register-name:${username.toLowerCase()}`
+    );
+    if (!regIpLimit.success || !regNameLimit.success) {
+      return {
+        success: false,
+        error: 'Registration is too frequent, please try again later',
+        resetTime: Math.max(regIpLimit.resetTime, regNameLimit.resetTime),
+      };
     }
     // 注册仍走 Go /api/accounts（已支持 bcrypt），成功后立即 Go 端登录写入 user-session cookie
     type CreateAccountRes =

@@ -1,14 +1,11 @@
 'use server';
 
-import fs from 'fs/promises';
-import path from 'path';
-import { ANALYTICS_DIR, ANALYTICS_RETENTION_DAYS } from '@/constant/dir';
 import {
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
-import { ensureDirectory } from '@/utils/file-utils';
 import { createLogger } from '@/utils/logger';
+import { goFetch } from '@/lib/server/api-client';
 
 const logger = createLogger('AnalyticsActions');
 
@@ -40,6 +37,9 @@ export interface AnalyticsStats {
   retentionDays: number;
 }
 
+/**
+ * 读取访问日志 + 统计（数据已迁移到 Go/PostgreSQL）
+ */
 export async function adminGetAnalyticsLogs(): Promise<
   ActionResponse<{
     logs: AnalyticsLog[];
@@ -48,61 +48,10 @@ export async function adminGetAnalyticsLogs(): Promise<
 > {
   return withActionPermission('analytics:read', async () => {
     try {
-      await ensureDirectory(ANALYTICS_DIR);
-      const files = await fs.readdir(ANALYTICS_DIR);
-      const logFiles = files
-        .filter((f) => f.startsWith('analytics-') && f.endsWith('.json'))
-        .sort()
-        .reverse();
-
-      let allLogs: AnalyticsLog[] = [];
-      let expiredLogsCount = 0;
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - ANALYTICS_RETENTION_DAYS);
-
-      for (const file of logFiles) {
-        const filePath = path.join(ANALYTICS_DIR, file);
-        const fileDateStr = file.replace('analytics-', '').replace('.json', '');
-        const fileDate = new Date(fileDateStr);
-        const isExpired = fileDate < cutoffDate;
-
-        try {
-          const content = await fs.readFile(filePath, 'utf-8');
-          const logs: AnalyticsLog[] = JSON.parse(content);
-
-          if (isExpired) {
-            expiredLogsCount += logs.length;
-          } else {
-            allLogs = [...allLogs, ...logs];
-          }
-        } catch {
-          continue;
-        }
-      }
-
-      allLogs.sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      const data = await goFetch<{ logs: AnalyticsLog[]; stats: AnalyticsStats }>(
+        '/api/admin/analytics'
       );
-
-      const expiredFiles = logFiles.filter((f) => {
-        const dateStr = f.replace('analytics-', '').replace('.json', '');
-        return new Date(dateStr) < cutoffDate;
-      });
-
-      return {
-        success: true,
-        data: {
-          logs: allLogs,
-          stats: {
-            totalLogs: allLogs.length,
-            totalFiles: logFiles.length,
-            expiredFiles: expiredFiles.length,
-            expiredLogsCount,
-            retentionDays: ANALYTICS_RETENTION_DAYS,
-          },
-        },
-      };
+      return { success: true, data };
     } catch (error) {
       logger.error('获取访问日志失败', error);
       return {
@@ -124,47 +73,20 @@ export async function deleteExpiredAnalyticsLogs(): Promise<
 > {
   return withActionPermission('analytics:delete', async () => {
     try {
-      // 无需确保目录存在，删除按钮必须要有数据才会显示，get接口会确保目录存在
-      // await ensureDirectory(ANALYTICS_DIR);
-      const files = await fs.readdir(ANALYTICS_DIR);
-      const logFiles = files.filter(
-        (f) => f.startsWith('analytics-') && f.endsWith('.json')
-      );
+      const data = await goFetch<{
+        deletedFiles: number;
+        deletedLogs: number;
+        message?: string;
+      }>('/api/admin/analytics', { method: 'DELETE' });
 
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - ANALYTICS_RETENTION_DAYS);
-
-      let deletedFiles = 0;
-      let deletedLogs = 0;
-
-      for (const file of logFiles) {
-        const dateStr = file.replace('analytics-', '').replace('.json', '');
-        const fileDate = new Date(dateStr);
-
-        if (fileDate < cutoffDate) {
-          const filePath = path.join(ANALYTICS_DIR, file);
-
-          try {
-            const content = await fs.readFile(filePath, 'utf-8');
-            const logs: AnalyticsLog[] = JSON.parse(content);
-            deletedLogs += logs.length;
-
-            await fs.unlink(filePath);
-            deletedFiles++;
-          } catch {
-            continue;
-          }
-        }
-      }
-
-      const message = `成功删除 ${deletedFiles} 个过期日志文件，共 ${deletedLogs} 条记录`;
+      const message = data?.message ?? `成功删除 ${data?.deletedLogs ?? 0} 条过期记录`;
       logger.info(message);
       return {
         success: true,
         message,
         data: {
-          deletedFiles,
-          deletedLogs,
+          deletedFiles: data?.deletedFiles ?? 0,
+          deletedLogs: data?.deletedLogs ?? 0,
         },
       };
     } catch (error) {

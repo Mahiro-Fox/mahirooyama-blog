@@ -210,4 +210,16 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		tagsAdmin.PUT("/:type/:id", handler.UpdateTagHandler(store))
 		tagsAdmin.DELETE("/:type/:id", handler.DeleteTagHandler(store))
 	}
+
+	// analytics 路由
+	// POST 为前端埋点公开入口（nginx /api/* 直达）；GET/DELETE 为后台管理，需内部密钥鉴权
+	analytics := api.Group("/analytics")
+	{
+		analytics.POST("", handler.CreateAnalyticsHandler(store))
+	}
+	analyticsAdmin := api.Group("/admin/analytics", middleware.RequireInternalSecret(internalSecret))
+	{
+		analyticsAdmin.GET("", handler.GetAnalyticsLogsHandler(store))
+		analyticsAdmin.DELETE("", handler.DeleteExpiredAnalyticsHandler(store))
+	}
 }

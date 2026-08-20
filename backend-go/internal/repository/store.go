@@ -96,6 +96,13 @@ type Store interface {
 	DeleteUserSessionsByAccountID(ctx context.Context, accountID string) (int64, error)
 	UpdateUserSessionLastUsedAt(ctx context.Context, token string, at time.Time) error
 	DeleteExpiredUserSessions(ctx context.Context, now time.Time) (int64, error)
+
+	// analytics logs（埋点）
+	CreateAnalyticsLog(ctx context.Context, l *model.AnalyticsLog) error
+	ListAnalyticsLogs(ctx context.Context, limit int) ([]model.AnalyticsLog, error)
+	CountAnalyticsLogs(ctx context.Context) (int64, error)
+	CountExpiredAnalyticsLogs(ctx context.Context, before time.Time) (int64, error)
+	DeleteExpiredAnalyticsLogs(ctx context.Context, before time.Time) (int64, error)
 }
 
 // GormStore 基于 *gorm.DB 的默认实现。

@@ -281,82 +281,6 @@ function buildResultData(
 // ============================================================
 
 /**
- * 创建一个标准的文件上传 Server Action
- *
- * @example
- * export const adminUploadBlogThumbnail = createUploadAction({
- *   name: '博客缩略图',
- *   permission: 'blog:create',
- *   rateLimitKey: 'blog:{userId}',
- *   formField: 'image',
- *   validation: { kind: 'mime', prefix: 'image/', label: '图片' },
- *   storage: { kind: 'image', dir: 'images/blog', quality: 85 },
- *   result: { kind: 'raw-url', message: '图片上传成功' },
- * });
- */
-export function createUploadAction<
-  R extends ResultConfig | undefined = undefined,
->(
-  config: CreateUploadActionConfig<R>
-): (formData: FormData) => Promise<ActionResponse<UploadActionResult<R>>> {
-  return async (formData: FormData) => {
-    return withActionPermission(config.permission, async (user) => {
-      // ---- 限流检查 ----
-      const key = config.rateLimitKey.replace('{userId}', String(user.id));
-      if (user.id) {
-        const rateLimit = await serverActionRateLimiter.check(key);
-        if (!rateLimit.success) {
-          return {
-            success: false,
-            error: '操作过于频繁，请稍后再试',
-            resetTime: rateLimit.resetTime,
-          };
-        }
-      }
-
-      try {
-        // ---- 解析文件 ----
-        const file = formData.get(config.formField) as File | null;
-        if (!file) {
-          return {
-            success: false,
-            error: `未提供${config.validation.label}文件`,
-          };
-        }
-
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-
-        const uploadResult = await performUpload({
-          config,
-          file,
-          buffer,
-          user,
-        });
-
-        if (!uploadResult.success) {
-          return uploadResult;
-        }
-
-        const data = buildResultData(uploadResult.data, config);
-
-        logger.info(`${config.name}上传成功`, {
-          fileName: file.name,
-          userId: user.id,
-        });
-
-        return { success: true, data } as ActionResponse<UploadActionResult<R>>;
-      } catch (error) {
-        logger.error(`${config.name}上传失败`, error);
-        const errorMessage =
-          error instanceof Error ? error.message : '上传失败';
-        return { success: false, error: errorMessage };
-      }
-    });
-  };
-}
-
-/**
  * 独立的文件上传函数（不含权限/限流包装）
  *
  * 用于需要自定义鉴权逻辑的场景（如头像上传使用 verifyAuth）。
@@ -408,7 +332,6 @@ export async function uploadFile<
 // 说明：上传落盘逻辑已迁移至 Go 后端（/api/uploads/asset）。
 // Next 侧仅保留：权限校验 + 限流 + sharp 图片处理（转 WebP/取尺寸），
 // 然后通过 goUploadMultipart 将二进制数据与 dir/width/height 转发给 Go。
-// createUploadAction 仍保留，供尚未迁移至 Go 的调用方使用。
 // ============================================================
 
 /** 转发到 Go 的上传结果返回结构 */
@@ -465,7 +388,7 @@ export interface GoUploadActionConfig<R extends GoUploadResultConfig> {
 /**
  * 创建一个转发到 Go 后端的上传 Server Action
  *
- * 保持 createUploadAction 的权限 + 限流封装，但存储交由 Go 完成。
+ * 保持统一的权限 + 限流封装，但存储交由 Go 完成。
  * 图片会被 sharp 处理后以 WebP 形式转发（同时保留源文件、携带 width/height）；
  * 其他文件（音频等）原样转发。
  */

@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from 'next/headers';
 import {
   adminLoginViaGo,
   adminLogoutViaGo,
@@ -9,6 +10,14 @@ import { loginRateLimiter } from '@/lib/rate-limit';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('AuthAction');
+
+// 从请求头解析客户端 IP（用于限流叠加 IP 维度）
+async function clientIp(): Promise<string> {
+  const h = await headers();
+  return h.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    h.get('x-real-ip') ||
+    'unknown';
+}
 
 export async function login(
   username: string,
@@ -37,11 +46,12 @@ export async function login(
 
     // 速率限制仍在 Next 层做：因为它需要把 resetTime 返回给前端 toast
     const rateLimit = await loginRateLimiter.check(`login:${username}`);
-    if (!rateLimit.success) {
+    const ipLimit = await loginRateLimiter.check(`login-ip:${await clientIp()}`);
+    if (!rateLimit.success || !ipLimit.success) {
       return {
         success: false,
         error: '登录尝试过于频繁，请稍后再试',
-        resetTime: rateLimit.resetTime,
+        resetTime: Math.max(rateLimit.resetTime, ipLimit.resetTime),
       };
     }
 

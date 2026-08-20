@@ -130,6 +130,7 @@ func autoMigrate(db *gorm.DB) error {
 		&model.UserSession{},
 		&model.RolePermission{},
 		&model.Tag{},
+		&model.AnalyticsLog{},
 	}
 	if err := db.AutoMigrate(models...); err != nil {
 		return fmt.Errorf("auto migrate: %w", err)
