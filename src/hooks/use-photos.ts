@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getPhotosAction } from '@/actions/photos';
+import { getPhotosAction } from '@/actions/app/photos';
 import { PhotoItem } from '@/lib/photos';
 
 interface UsePhotosOptions {

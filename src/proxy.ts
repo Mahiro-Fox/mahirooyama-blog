@@ -1,8 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { pageRoutesConfig } from '@/config/common';
-import { i18nConfig } from '@/i18n/i18n.config';
 import { ADMIN_SESSION_COOKIE } from '@/constant/auth';
+import { i18nConfig } from '@/i18n/i18n.config';
 
 // —— 登录态判定：proxy 走 edge runtime，不再引入 next-auth。
 // 因为 next-auth 已被移除，proxy 只能做「有没有 admin-session cookie」的粗校验，
@@ -52,8 +52,7 @@ export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const defaultLang = i18nConfig.defaultLang;
   const locales = i18nConfig.locales;
-  const cookieLocale =
-    req.cookies.get('NEXT_LOCALE')?.value || defaultLang;
+  const cookieLocale = req.cookies.get('NEXT_LOCALE')?.value || defaultLang;
 
   const pathSegments = pathname.split('/').filter(Boolean);
   const firstSegment = pathSegments[0];
@@ -88,7 +87,7 @@ export default async function middleware(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-pathname', pathname);
-  requestHeaders.set('x-i18n-rewritten', '1');
+  requestHeaders.set('x-i18n-rewritten', 'true');
 
   const pathnameWithoutLocale = hasLocaleInPath
     ? '/' + pathSegments.slice(1).join('/') || '/'
@@ -107,7 +106,9 @@ export default async function middleware(req: NextRequest) {
       return addSecurityHeaders(NextResponse.redirect(loginUrl));
     }
     const response = rewriteUrl
-      ? NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })
+      ? NextResponse.rewrite(rewriteUrl, {
+          request: { headers: requestHeaders },
+        })
       : NextResponse.next({ request: { headers: requestHeaders } });
     return addSecurityHeaders(response);
   }

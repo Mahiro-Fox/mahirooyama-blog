@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Suspense, useState } from 'react';
-import { userRegister } from '@/actions/user-auth';
+import { userRegister } from '@/actions/app/user-auth';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,

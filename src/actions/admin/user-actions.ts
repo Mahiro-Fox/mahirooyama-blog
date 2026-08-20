@@ -8,7 +8,7 @@ import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goUploadMultipart } from '@/lib/server/api-client';
-import { appendGoAssetFile } from '@/lib/upload-actions';
+import { appendGoAssetFile } from '@/lib/upload';
 import {
   withActionPermission,
   type ActionResponse,

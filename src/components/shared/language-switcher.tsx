@@ -3,7 +3,7 @@
 import { Languages } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { setLocale } from '@/actions/set-locale';
+import { setLocale } from '@/actions/app/set-locale';
 import {
   DropdownMenu,
   DropdownMenuContent,

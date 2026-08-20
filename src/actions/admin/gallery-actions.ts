@@ -4,7 +4,7 @@ import { DEFAULT_GALLERY_LIST_LIMIT } from '@/config/limit';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goFetch } from '@/lib/server/api-client';
-import { createGoUploadAction } from '@/lib/upload-actions';
+import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
   type ActionResponse,

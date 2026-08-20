@@ -7,7 +7,7 @@ import { tagStore } from '@/store/tag-store';
 import { ChevronDown } from 'lucide-react';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
-import { getHomeBannerImages } from '@/actions/home-banner';
+import { getHomeBannerImages } from '@/actions/app/home-banner';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
 import { VermilionThread } from '@/components/shared/vermilion-thread';

@@ -2,7 +2,7 @@
 
 import { pathCacheStore } from '@/store/path-cache-store';
 import { goFetch, goUploadMultipart } from '@/lib/server/api-client';
-import { appendGoAssetFile } from '@/lib/upload-actions';
+import { appendGoAssetFile } from '@/lib/upload';
 import {
   withActionPermission,
   type ActionResponse,
@@ -97,7 +97,9 @@ export async function adminUploadFiles(formData: FormData): Promise<
             path: '',
             success: false,
             error:
-              error instanceof Error ? extractGoError(error.message) : '上传失败',
+              error instanceof Error
+                ? extractGoError(error.message)
+                : '上传失败',
           });
         }
       }

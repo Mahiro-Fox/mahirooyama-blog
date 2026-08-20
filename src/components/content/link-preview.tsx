@@ -1,7 +1,7 @@
 import { ExternalLinkIcon } from 'lucide-react';
 import { Suspense } from 'react';
 import { getPublicBlog } from '@/actions/admin/blog-actions';
-import { getOGData } from '@/actions/fetch-og-metadata';
+import { getOGData } from '@/actions/app/fetch-og-metadata';
 import { ImageWithFallback } from '@/components/shared/image-with-fallback';
 import { Link } from '@/components/shared/link';
 import { OptimizedImage } from '@/components/shared/optimized-image';

@@ -4,7 +4,7 @@ import { LogOut, Menu, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useState } from 'react';
-import { userLogout } from '@/actions/user-auth';
+import { userLogout } from '@/actions/app/user-auth';
 import { Search } from '@/components/layout/site-header/search';
 import { Button } from '@/components/shadcn-ui/button';
 import {

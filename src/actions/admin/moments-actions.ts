@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goFetch } from '@/lib/server/api-client';
-import { createGoUploadAction } from '@/lib/upload-actions';
+import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
   type ActionResponse,

@@ -2,10 +2,10 @@
 
 import path from 'path';
 import { MIDI_DIR } from '@/constant/dir';
-import { getMidis, readMidiFile } from '@/lib/midi-files';
+import { getMidis, readMidiFile } from '@/lib/midi';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goFetch } from '@/lib/server/api-client';
-import { createGoUploadAction } from '@/lib/upload-actions';
+import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
   type ActionResponse,

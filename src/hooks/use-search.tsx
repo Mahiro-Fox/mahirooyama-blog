@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { searchContent } from '@/actions/search';
+import { searchContent } from '@/actions/app/search';
 import type { SearchResult } from '@/lib/search';
 import { debounce } from '@/utils/utils';
 
