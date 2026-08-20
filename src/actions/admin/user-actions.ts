@@ -7,7 +7,8 @@ import { AVATAR_DIR } from '@/constant/dir';
 import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
-import { uploadFile } from '@/lib/upload-actions';
+import { goUploadMultipart } from '@/lib/server/api-client';
+import { appendGoAssetFile } from '@/lib/upload-actions';
 import {
   withActionPermission,
   type ActionResponse,
@@ -88,40 +89,24 @@ export async function adminUploadAvatar(
       return { success: false, error: '用户不存在' };
     }
 
-    // 4. 使用通用上传逻辑（校验 + 存储）
-    const uploadResult = await uploadFile<{
-      kind: 'custom';
-      build: (ctx: { url: string }) => { url: string };
-    }>(
-      formData,
-      {
-        name: '头像',
-        permission: 'users:update',
-        rateLimitKey: 'user:{userId}',
-        formField: 'avatar',
-        validation: { kind: 'mime', prefix: 'image/', label: '图片' },
-        storage: {
-          kind: 'image',
-          dir: 'images/avatar',
-          width: 200,
-          height: 200,
-          quality: 80,
-        },
-        result: {
-          kind: 'custom',
-          build: (ctx) => ({
-            url: ctx.url,
-          }),
-        },
-      },
-      { id: userId }
-    );
-
-    if (!uploadResult.success) {
-      return uploadResult;
+    // 4. 使用 Go 统一资源上传（/api/uploads/asset）：
+    //    图片经 sharp 转 WebP + 保留源文件，落盘由 Go 完成
+    //    （复用 createGoUploadAction 同源的 appendGoAssetFile 流程）
+    const file = formData.get('avatar') as File | null;
+    if (!file) {
+      return { success: false, error: '未提供图片文件' };
     }
-
-    const avatarUrl = uploadResult.data.url;
+    const goFormData = new FormData();
+    await appendGoAssetFile(goFormData, file, {
+      dir: 'images/avatar',
+      quality: 80,
+    });
+    const uploadData = await goUploadMultipart<{
+      url: string;
+      width: number;
+      height: number;
+    }>('/api/uploads/asset', goFormData);
+    const avatarUrl = uploadData.url;
 
     // 5. 删除旧头像（如果不是默认头像）
     if (user.avatar && !user.avatar.includes('default')) {
