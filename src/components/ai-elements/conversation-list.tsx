@@ -18,6 +18,12 @@ import {
   conversationLocalStorage,
   type StoredConversationSummary,
 } from '@/lib/conversation-local-storage';
+import {
+  deleteConversation,
+  getConversation,
+  getMyConversations,
+  renameConversation,
+} from '@/actions/admin/conversation-actions';
 import { cn } from '@/utils/utils';
 
 interface ConversationListProps {
@@ -222,10 +228,9 @@ export function ConversationList({
     setLoading(true);
     try {
       if (isUserAuth) {
-        const res = await fetch('/api/conversations');
-        if (res.ok) {
-          const data = (await res.json()) as ConversationSummary[];
-          setSummaries(data);
+        const res = await getMyConversations();
+        if (res.success && res.data) {
+          setSummaries(res.data);
         }
       } else {
         const data = conversationLocalStorage.list();
@@ -249,10 +254,9 @@ export function ConversationList({
 
       try {
         if (isUserAuth) {
-          const res = await fetch(`/api/conversations/${id}`);
-          if (res.ok) {
-            const data = await res.json();
-            onSelect(data.id, data.messages);
+          const res = await getConversation(id);
+          if (res.success && res.data) {
+            onSelect(res.data.id, res.data.messages);
           }
         } else {
           const conv = conversationLocalStorage.get(id);
@@ -289,17 +293,15 @@ export function ConversationList({
 
     try {
       if (isUserAuth) {
-        const res = await fetch(`/api/conversations/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: trimmed }),
-        });
-        if (res.ok) {
+        const res = await renameConversation(editingId, trimmed);
+        if (res.success && typeof res.data === 'string') {
           setSummaries((prev) =>
-            prev.map((s) => (s.id === editingId ? { ...s, title: trimmed } : s))
+            prev.map((s) =>
+              s.id === editingId ? { ...s, title: res.data as string } : s
+            )
           );
         } else {
-          toast.error(t('chat.update_title_failed'));
+          toast.error(res.error ?? t('chat.update_title_failed'));
         }
       } else {
         conversationLocalStorage.updateTitle(editingId, trimmed);
@@ -338,14 +340,14 @@ export function ConversationList({
       const isCurrent = id === currentConversationId;
       try {
         if (isUserAuth) {
-          const res = await fetch(`/api/conversations/${id}`, {
-            method: 'DELETE',
-          });
-          if (res.ok) {
+          const res = await deleteConversation(id);
+          if (res.success) {
             toast.success(t('chat.conversation_deleted'));
             onDeleted?.();
             if (isCurrent) onDeletedCurrent?.();
             await fetchList();
+          } else {
+            toast.error(res.error ?? t('chat.delete_conversation_failed'));
           }
         } else {
           conversationLocalStorage.delete(id);
