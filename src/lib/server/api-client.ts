@@ -6,16 +6,24 @@
  * 试点阶段不传 JWT，鉴权由 Next.js 侧 withActionPermission 完成后转发用户信息。
  */
 
-if (!process.env.GO_API_SHARED_SECRET) {
-  throw new Error('GO_API_SHARED_SECRET 环境变量未配置');
+// 这两个守卫放在函数体内（运行时才执行），而不是模块顶层。
+// 原因：next build 会加载本模块；若在顶层 throw，构建阶段缺少
+// GO_API_SHARED_SECRET / GO_API_INTERNAL_URL 会直接构建失败。
+// 这两个变量只在运行时（Server Action / Route Handler）才真正使用，
+// 因此把检查惰性化，让构建不再依赖它们。
+function getInternalSecret(): string {
+  if (!process.env.GO_API_SHARED_SECRET) {
+    throw new Error('GO_API_SHARED_SECRET 环境变量未配置');
+  }
+  return process.env.GO_API_SHARED_SECRET;
 }
 
-if (!process.env.GO_API_INTERNAL_URL) {
-  throw new Error('GO_API_INTERNAL_URL 环境变量未配置');
+function getBaseUrl(): string {
+  if (!process.env.GO_API_INTERNAL_URL) {
+    throw new Error('GO_API_INTERNAL_URL 环境变量未配置');
+  }
+  return process.env.GO_API_INTERNAL_URL;
 }
-
-const INTERNAL_SECRET = process.env.GO_API_SHARED_SECRET;
-const BASE_URL = process.env.GO_API_INTERNAL_URL;
 
 export interface GoFetchOptions extends RequestInit {
   /** 是否解析 JSON 响应（默认 true）。DELETE 返回 204 时设为 false */
@@ -33,12 +41,14 @@ export async function goFetch<T = unknown>(
   options: GoFetchOptions = {}
 ): Promise<T> {
   const { parseJson = true, ...init } = options;
+  const baseUrl = getBaseUrl();
+  const internalSecret = getInternalSecret();
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      'X-Internal-Secret': INTERNAL_SECRET,
+      'X-Internal-Secret': internalSecret,
       ...(init.headers ?? {}),
     },
     cache: 'no-store', // 试点阶段避免 Next 缓存干扰，确保数据实时
@@ -67,10 +77,12 @@ export async function goUploadMultipart<T = unknown>(
   path: string,
   formData: FormData
 ): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const baseUrl = getBaseUrl();
+  const internalSecret = getInternalSecret();
+  const res = await fetch(`${baseUrl}${path}`, {
     method: 'POST',
     headers: {
-      'X-Internal-Secret': INTERNAL_SECRET,
+      'X-Internal-Secret': internalSecret,
     },
     body: formData,
     cache: 'no-store',
