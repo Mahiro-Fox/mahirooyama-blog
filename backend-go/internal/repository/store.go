@@ -103,6 +103,13 @@ type Store interface {
 	CountAnalyticsLogs(ctx context.Context) (int64, error)
 	CountExpiredAnalyticsLogs(ctx context.Context, before time.Time) (int64, error)
 	DeleteExpiredAnalyticsLogs(ctx context.Context, before time.Time) (int64, error)
+
+	// conversations（AI 对话存储：前端保留 AI 逻辑，本层仅负责落盘与读取）
+	UpsertConversation(ctx context.Context, c *model.Conversation) error
+	GetConversationByID(ctx context.Context, userID, id string) (*model.Conversation, error)
+	ListConversationSummariesByUser(ctx context.Context, userID string) ([]model.ConversationSummary, error)
+	DeleteConversation(ctx context.Context, userID, id string) (int64, error)
+	UpdateConversationTitle(ctx context.Context, userID, id, title string) error
 }
 
 // GormStore 基于 *gorm.DB 的默认实现。

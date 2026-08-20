@@ -222,4 +222,16 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		analyticsAdmin.GET("", handler.GetAnalyticsLogsHandler(store))
 		analyticsAdmin.DELETE("", handler.DeleteExpiredAnalyticsHandler(store))
 	}
+
+	// conversations 路由（AI 对话存储）
+	// AI 对话逻辑仍在前端 Next 侧，本组仅负责落盘与读取，全部需内部密钥鉴权。
+	// userId 由 Next 在完成用户鉴权后透传，用于隔离不同用户的对话。
+	conversations := api.Group("/conversations", middleware.RequireInternalSecret(internalSecret))
+	{
+		conversations.GET("", handler.ListConversationsHandler(store))
+		conversations.PUT("/:id", handler.UpsertConversationHandler(store))
+		conversations.GET("/:id", handler.GetConversationHandler(store))
+		conversations.PATCH("/:id", handler.UpdateConversationTitleHandler(store))
+		conversations.DELETE("/:id", handler.DeleteConversationHandler(store))
+	}
 }

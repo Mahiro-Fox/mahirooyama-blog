@@ -1,14 +1,16 @@
 import crypto from 'crypto';
-import fs from 'fs/promises';
-import path from 'path';
 import type { UIMessage } from 'ai';
-import { CONVERSATIONS_DIR } from '@/constant/dir';
-import {
-  ensureDirectory,
-  isFileNotFoundError,
-  isPathSafe,
-  writeFileAtomic,
-} from '@/utils/file-utils';
+import { goFetch } from '@/lib/server/api-client';
+
+/**
+ * 对话存储（Go/PostgreSQL 版）
+ *
+ * 存储只负责落盘与读取：每一次读写都通过 goFetch 转发到 Go 后端的
+ * /api/conversations 端点（Infostore conversations 表，messages 为 jsonb）。
+ * AI 对话逻辑（生成、标题推导等）仍在前端。
+ *
+ * 注意：本模块仅用于 Server 端（API route / Server Action）。
+ */
 
 export interface Conversation {
   id: string;
@@ -41,59 +43,6 @@ function validateIds(userId: string, conversationId?: string): void {
   }
 }
 
-function getUserDir(userId: string): string {
-  return path.join(CONVERSATIONS_DIR, userId);
-}
-
-function getConversationPath(userId: string, conversationId: string): string {
-  const userDir = getUserDir(userId);
-  const filePath = path.join(userDir, `${conversationId}.json`);
-
-  if (!isPathSafe(filePath, CONVERSATIONS_DIR)) {
-    throw new Error('Invalid path: path traversal detected');
-  }
-
-  return filePath;
-}
-
-interface LockEntry {
-  promise: Promise<void>;
-  token: symbol;
-}
-
-const writeLocks = new Map<string, LockEntry>();
-
-async function withWriteLock(
-  filePath: string,
-  fn: () => Promise<void>
-): Promise<void> {
-  const lockKey = filePath;
-  const existing = writeLocks.get(lockKey);
-
-  if (existing) {
-    await existing.promise;
-  }
-
-  const entry: LockEntry = {
-    promise: Promise.resolve(),
-    token: Symbol('lock'),
-  };
-
-  const taskPromise = (async () => {
-    try {
-      await fn();
-    } finally {
-      if (writeLocks.get(lockKey)?.token === entry.token) {
-        writeLocks.delete(lockKey);
-      }
-    }
-  })();
-
-  entry.promise = taskPromise;
-  writeLocks.set(lockKey, entry);
-  await taskPromise;
-}
-
 function deriveTitle(messages: UIMessage[]): string {
   const firstUserMessage = messages.find((m) => m.role === 'user');
   if (!firstUserMessage?.parts) return '新对话';
@@ -106,6 +55,10 @@ function deriveTitle(messages: UIMessage[]): string {
   }
 
   return '新对话';
+}
+
+function isNotFound(e: unknown): boolean {
+  return e instanceof Error && / 404/.test(e.message);
 }
 
 export const conversationStore = {
@@ -122,12 +75,13 @@ export const conversationStore = {
       messages: [],
     };
 
-    const filePath = getConversationPath(userId, conversation.id);
-    await withWriteLock(filePath, async () => {
-      await ensureDirectory(path.dirname(filePath));
-      await writeFileAtomic(filePath, JSON.stringify(conversation, null, 2), {
-        encoding: 'utf-8',
-      });
+    await goFetch<void>(`/api/conversations/${conversation.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        userId,
+        title: conversation.title,
+        messages: [],
+      }),
     });
 
     return conversation;
@@ -139,54 +93,20 @@ export const conversationStore = {
   ): Promise<Conversation | null> {
     validateIds(userId, conversationId);
 
-    const filePath = getConversationPath(userId, conversationId);
-
     try {
-      const data = await fs.readFile(filePath, 'utf-8');
-      return JSON.parse(data) as Conversation;
-    } catch (error) {
-      // 如果是文件不存在的其他错误，返回null
-      if (isFileNotFoundError(error)) {
-        return null;
-      }
-      throw error;
+      return await goFetch<Conversation>(
+        `/api/conversations/${conversationId}?userId=${userId}`
+      );
+    } catch (e) {
+      if (isNotFound(e)) return null;
+      throw e;
     }
   },
 
   async listByUser(userId: string): Promise<ConversationSummary[]> {
     validateIds(userId);
-
-    const userDir = getUserDir(userId);
-
-    try {
-      await fs.access(userDir);
-    } catch {
-      return [];
-    }
-
-    const files = await fs.readdir(userDir);
-    const summaries: ConversationSummary[] = [];
-
-    for (const file of files) {
-      if (!file.endsWith('.json')) continue;
-
-      try {
-        const filePath = path.join(userDir, file);
-        const data = await fs.readFile(filePath, 'utf-8');
-        const conv = JSON.parse(data) as Conversation;
-        summaries.push({
-          id: conv.id,
-          title: conv.title,
-          updatedAt: conv.updatedAt,
-        });
-      } catch {
-        // Skip corrupted files
-      }
-    }
-
-    return summaries.sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    return goFetch<ConversationSummary[]>(
+      `/api/conversations?userId=${userId}`
     );
   },
 
@@ -197,58 +117,30 @@ export const conversationStore = {
   ): Promise<void> {
     validateIds(userId, conversationId);
 
-    const filePath = getConversationPath(userId, conversationId);
+    // 标题推导仍在前端：仅在尚无自定义标题时，才用首个用户消息生成
+    let title = deriveTitle(messages);
+    const existing = await this.get(userId, conversationId);
+    if (existing && existing.title !== '新对话') {
+      title = existing.title;
+    }
 
-    await withWriteLock(filePath, async () => {
-      let existing: Conversation | null = null;
-      try {
-        const data = await fs.readFile(filePath, 'utf-8');
-        existing = JSON.parse(data) as Conversation;
-      } catch (error) {
-        // 如果是除文件不存在的其他错误，抛出error
-        if (!isFileNotFoundError(error)) {
-          throw error;
-        }
-      }
-
-      const now = new Date().toISOString();
-      const conversation: Conversation = existing
-        ? {
-            ...existing,
-            messages,
-            title:
-              existing.title === '新对话'
-                ? deriveTitle(messages)
-                : existing.title,
-            updatedAt: now,
-          }
-        : {
-            id: conversationId,
-            userId,
-            title: deriveTitle(messages),
-            createdAt: now,
-            updatedAt: now,
-            messages,
-          };
-
-      await writeFileAtomic(filePath, JSON.stringify(conversation, null, 2), {
-        encoding: 'utf-8',
-      });
+    await goFetch<void>(`/api/conversations/${conversationId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ userId, title, messages }),
     });
   },
 
   async delete(userId: string, conversationId: string): Promise<void> {
     validateIds(userId, conversationId);
 
-    const filePath = getConversationPath(userId, conversationId);
-
     try {
-      await fs.unlink(filePath);
-    } catch (error) {
-      // 如果是除文件不存在的其他错误，抛出error
-      if (!isFileNotFoundError(error)) {
-        throw error;
-      }
+      await goFetch<void>(
+        `/api/conversations/${conversationId}?userId=${userId}`,
+        { method: 'DELETE', parseJson: false }
+      );
+    } catch (e) {
+      // 会话不存在也算删除成功
+      if (!isNotFound(e)) throw e;
     }
   },
 
@@ -259,16 +151,10 @@ export const conversationStore = {
   ): Promise<void> {
     validateIds(userId, conversationId);
 
-    const filePath = getConversationPath(userId, conversationId);
-
-    await withWriteLock(filePath, async () => {
-      const data = await fs.readFile(filePath, 'utf-8');
-      const conv = JSON.parse(data) as Conversation;
-      conv.title = title;
-      conv.updatedAt = new Date().toISOString();
-      await writeFileAtomic(filePath, JSON.stringify(conv, null, 2), {
-        encoding: 'utf-8',
-      });
+    await goFetch<void>(`/api/conversations/${conversationId}`, {
+      method: 'PATCH',
+      parseJson: false,
+      body: JSON.stringify({ userId, title }),
     });
   },
 };
