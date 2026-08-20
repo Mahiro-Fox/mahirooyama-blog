@@ -18,18 +18,18 @@ var ErrAccountNotFound = errors.New("account not found")
 var ErrAccountUsernameTaken = errors.New("username already taken")
 
 // ListAccounts 列出全部前台账户（按创建时间倒序）
-func ListAccounts(ctx context.Context, db *gorm.DB) ([]model.Account, error) {
+func (s *GormStore) ListAccounts(ctx context.Context) ([]model.Account, error) {
 	var accounts []model.Account
-	if err := db.WithContext(ctx).Order("created_at DESC").Find(&accounts).Error; err != nil {
+	if err := s.db.WithContext(ctx).Order("created_at DESC").Find(&accounts).Error; err != nil {
 		return nil, fmt.Errorf("list accounts: %w", err)
 	}
 	return accounts, nil
 }
 
 // GetAccountByID 按 ID 查询账户
-func GetAccountByID(ctx context.Context, db *gorm.DB, id string) (*model.Account, error) {
+func (s *GormStore) GetAccountByID(ctx context.Context, id string) (*model.Account, error) {
 	var a model.Account
-	if err := db.WithContext(ctx).First(&a, "id = ?", id).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&a, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrAccountNotFound
 		}
@@ -39,9 +39,9 @@ func GetAccountByID(ctx context.Context, db *gorm.DB, id string) (*model.Account
 }
 
 // GetAccountByUsername 按用户名查询账户（登录用）
-func GetAccountByUsername(ctx context.Context, db *gorm.DB, username string) (*model.Account, error) {
+func (s *GormStore) GetAccountByUsername(ctx context.Context, username string) (*model.Account, error) {
 	var a model.Account
-	if err := db.WithContext(ctx).Where("username = ?", username).First(&a).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("username = ?", username).First(&a).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrAccountNotFound
 		}
@@ -54,12 +54,12 @@ func GetAccountByUsername(ctx context.Context, db *gorm.DB, username string) (*m
 var ErrAccountEmailTaken = errors.New("email already taken")
 
 // GetAccountByEmail 按 Email 查询账户（nullable unique 索引：email 为 nil 不命中）
-func GetAccountByEmail(ctx context.Context, db *gorm.DB, email string) (*model.Account, error) {
+func (s *GormStore) GetAccountByEmail(ctx context.Context, email string) (*model.Account, error) {
 	if strings.TrimSpace(email) == "" {
 		return nil, ErrAccountNotFound
 	}
 	var a model.Account
-	if err := db.WithContext(ctx).Where("email = ?", strings.TrimSpace(email)).First(&a).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("email = ?", strings.TrimSpace(email)).First(&a).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrAccountNotFound
 		}
@@ -69,19 +69,19 @@ func GetAccountByEmail(ctx context.Context, db *gorm.DB, email string) (*model.A
 }
 
 // CreateAccount 创建前台账户
-func CreateAccount(ctx context.Context, db *gorm.DB, a *model.Account) error {
-	if err := db.WithContext(ctx).Create(a).Error; err != nil {
+func (s *GormStore) CreateAccount(ctx context.Context, a *model.Account) error {
+	if err := s.db.WithContext(ctx).Create(a).Error; err != nil {
 		return fmt.Errorf("create account: %w", err)
 	}
 	return nil
 }
 
-// UpdateAccount 更新指定字段
-func UpdateAccount(ctx context.Context, db *gorm.DB, id string, updates map[string]any) error {
-	result := db.WithContext(ctx).
+// UpdateAccount 按 ID 部分更新（类型化补丁，nil 指针字段不更新）
+func (s *GormStore) UpdateAccount(ctx context.Context, id string, patch *model.AccountPatch) error {
+	result := s.db.WithContext(ctx).
 		Model(&model.Account{}).
 		Where("id = ?", id).
-		Updates(updates)
+		Updates(patch)
 	if result.Error != nil {
 		return fmt.Errorf("update account: %w", result.Error)
 	}
@@ -92,8 +92,8 @@ func UpdateAccount(ctx context.Context, db *gorm.DB, id string, updates map[stri
 }
 
 // DeleteAccount 删除账户
-func DeleteAccount(ctx context.Context, db *gorm.DB, id string) error {
-	result := db.WithContext(ctx).Where("id = ?", id).Delete(&model.Account{})
+func (s *GormStore) DeleteAccount(ctx context.Context, id string) error {
+	result := s.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Account{})
 	if result.Error != nil {
 		return fmt.Errorf("delete account: %w", result.Error)
 	}

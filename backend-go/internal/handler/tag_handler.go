@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
@@ -14,10 +13,10 @@ import (
 )
 
 // ListTagsHandler GET /api/tags?type=blog|gallery
-func ListTagsHandler(db *gorm.DB) gin.HandlerFunc {
+func ListTagsHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tagType := strings.TrimSpace(c.Query("type"))
-		tags, err := service.ListTags(c.Request.Context(), db, tagType)
+		tags, err := service.ListTags(c.Request.Context(), store, tagType)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取标签列表失败"})
 			return
@@ -27,11 +26,11 @@ func ListTagsHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetTagHandler GET /api/tags/:type/:id
-func GetTagHandler(db *gorm.DB) gin.HandlerFunc {
+func GetTagHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tagType := c.Param("type")
 		id := c.Param("id")
-		t, err := service.GetTag(c.Request.Context(), db, id, tagType)
+		t, err := service.GetTag(c.Request.Context(), store, id, tagType)
 		if err != nil {
 			if errors.Is(err, repository.ErrTagNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "标签不存在"})
@@ -45,7 +44,7 @@ func GetTagHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // CreateTagHandler POST /api/admin/tags
-func CreateTagHandler(db *gorm.DB) gin.HandlerFunc {
+func CreateTagHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input model.TagInput
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -55,7 +54,7 @@ func CreateTagHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		t, err := service.CreateTag(c.Request.Context(), db, input)
+		t, err := service.CreateTag(c.Request.Context(), store, input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -65,7 +64,7 @@ func CreateTagHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // UpdateTagHandler PUT /api/admin/tags/:type/:id
-func UpdateTagHandler(db *gorm.DB) gin.HandlerFunc {
+func UpdateTagHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tagType := c.Param("type")
 		id := c.Param("id")
@@ -77,7 +76,7 @@ func UpdateTagHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		t, err := service.UpdateTag(c.Request.Context(), db, id, tagType, input)
+		t, err := service.UpdateTag(c.Request.Context(), store, id, tagType, input)
 		if err != nil {
 			if errors.Is(err, repository.ErrTagNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "标签不存在"})
@@ -91,11 +90,11 @@ func UpdateTagHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // DeleteTagHandler DELETE /api/admin/tags/:type/:id
-func DeleteTagHandler(db *gorm.DB) gin.HandlerFunc {
+func DeleteTagHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tagType := c.Param("type")
 		id := c.Param("id")
-		if err := service.DeleteTag(c.Request.Context(), db, id, tagType); err != nil {
+		if err := service.DeleteTag(c.Request.Context(), store, id, tagType); err != nil {
 			if errors.Is(err, repository.ErrTagNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "标签不存在"})
 				return

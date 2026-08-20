@@ -10,14 +10,17 @@ import (
 	"mahirooyama-blog/backend-go/internal/config"
 	"mahirooyama-blog/backend-go/internal/handler"
 	"mahirooyama-blog/backend-go/internal/middleware"
+	"mahirooyama-blog/backend-go/internal/repository"
 )
 
-// RegisterRoutes 注册所有路由（接收 Config，让新的 auth 处理器能读 JWT 相关配置）
-// 旧签名的字符串参数都从 cfg 里取；为了不打断调用方仍同时暴露兼容入口。
+// RegisterRoutes 注册所有路由（接收 Config，让 auth 处理器能读 JWT 相关配置）
 func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	if cfg == nil {
 		panic("RegisterRoutes: cfg is nil")
 	}
+
+	// 数据访问单一入口。handler 层只依赖 Store 接口，便于后续注入 mock 写单测。
+	store := repository.NewStore(db)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -29,28 +32,28 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// —— Auth：后台管理员 ——（登录/鉴权/登出都是公开入口；真正的权限通过 JWT+verify 判定）
 	adminAuth := api.Group("/admin/auth")
 	{
-		adminAuth.POST("/login", handler.AdminLoginHandler(db, cfg))
-		adminAuth.POST("/verify", handler.AdminVerifyHandler(db, cfg))
-		adminAuth.POST("/logout", handler.AdminLogoutHandler(db, cfg))
+		adminAuth.POST("/login", handler.AdminLoginHandler(store, cfg))
+		adminAuth.POST("/verify", handler.AdminVerifyHandler(store, cfg))
+		adminAuth.POST("/logout", handler.AdminLogoutHandler(store, cfg))
 	}
 
 	// —— Auth：前台访客 ——
 	userAuth := api.Group("/user/auth")
 	{
-		userAuth.POST("/login", handler.UserLoginHandler(db, cfg))
-		userAuth.POST("/verify", handler.UserVerifyHandler(db, cfg))
-		userAuth.POST("/logout", handler.UserLogoutHandler(db, cfg))
+		userAuth.POST("/login", handler.UserLoginHandler(store, cfg))
+		userAuth.POST("/verify", handler.UserVerifyHandler(store, cfg))
+		userAuth.POST("/logout", handler.UserLogoutHandler(store, cfg))
 	}
 
 	// movies 路由
 	movies := api.Group("/movies")
 	{
-		movies.GET("", handler.ListMoviesHandler(db))
-		movies.GET("/:id", handler.GetMovieHandler(db))
+		movies.GET("", handler.ListMoviesHandler(store))
+		movies.GET("/:id", handler.GetMovieHandler(store))
 		write := movies.Group("", middleware.RequireInternalSecret(internalSecret))
-		write.POST("", handler.CreateMovieHandler(db))
-		write.PUT("/:id", handler.UpdateMovieHandler(db))
-		write.DELETE("/:id", handler.DeleteMovieHandler(db))
+		write.POST("", handler.CreateMovieHandler(store))
+		write.PUT("/:id", handler.UpdateMovieHandler(store))
+		write.DELETE("/:id", handler.DeleteMovieHandler(store))
 	}
 
 	// midi 路由
@@ -105,112 +108,106 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// music 路由
 	music := api.Group("/music")
 	{
-		music.GET("", handler.ListSongsHandler(db))
-		music.GET("/:id", handler.GetSongHandler(db))
+		music.GET("", handler.ListSongsHandler(store))
+		music.GET("/:id", handler.GetSongHandler(store))
 		write := music.Group("", middleware.RequireInternalSecret(internalSecret))
-		write.POST("", handler.CreateSongHandler(db))
-		write.PUT("/:id", handler.UpdateSongHandler(db))
-		write.DELETE("/:id", handler.DeleteSongHandler(db))
+		write.POST("", handler.CreateSongHandler(store))
+		write.PUT("/:id", handler.UpdateSongHandler(store))
+		write.DELETE("/:id", handler.DeleteSongHandler(store))
 	}
 
 	// moments 路由
 	moments := api.Group("/moments")
 	{
-		moments.GET("", handler.ListMomentsHandler(db))
-		moments.GET("/:id", handler.GetMomentHandler(db))
+		moments.GET("", handler.ListMomentsHandler(store))
+		moments.GET("/:id", handler.GetMomentHandler(store))
 		write := moments.Group("", middleware.RequireInternalSecret(internalSecret))
-		write.POST("", handler.CreateMomentHandler(db))
-		write.PUT("/:id", handler.UpdateMomentHandler(db))
-		write.DELETE("/:id", handler.DeleteMomentHandler(db))
+		write.POST("", handler.CreateMomentHandler(store))
+		write.PUT("/:id", handler.UpdateMomentHandler(store))
+		write.DELETE("/:id", handler.DeleteMomentHandler(store))
 	}
 
 	// guestbook 路由
 	guestbook := api.Group("/guestbook")
 	{
-		guestbook.GET("", handler.ListApprovedGuestbookHandler(db))
-		guestbook.GET("/:id", handler.GetGuestbookHandler(db))
-		guestbook.POST("", handler.CreateGuestbookHandler(db))
+		guestbook.GET("", handler.ListApprovedGuestbookHandler(store))
+		guestbook.GET("/:id", handler.GetGuestbookHandler(store))
+		guestbook.POST("", handler.CreateGuestbookHandler(store))
 	}
 	guestbookAdmin := api.Group("/admin/guestbook", middleware.RequireInternalSecret(internalSecret))
 	{
-		guestbookAdmin.GET("", handler.ListAllGuestbookHandler(db))
-		guestbookAdmin.GET("/:id", handler.GetGuestbookHandler(db))
-		guestbookAdmin.PUT("/:id", handler.UpdateGuestbookHandler(db))
-		guestbookAdmin.PATCH("/:id/approve", handler.ApproveGuestbookHandler(db))
-		guestbookAdmin.POST("/:id/reply", handler.ReplyGuestbookHandler(db))
-		guestbookAdmin.DELETE("/:id", handler.DeleteGuestbookHandler(db))
+		guestbookAdmin.GET("", handler.ListAllGuestbookHandler(store))
+		guestbookAdmin.GET("/:id", handler.GetGuestbookHandler(store))
+		guestbookAdmin.PUT("/:id", handler.UpdateGuestbookHandler(store))
+		guestbookAdmin.PATCH("/:id/approve", handler.ApproveGuestbookHandler(store))
+		guestbookAdmin.POST("/:id/reply", handler.ReplyGuestbookHandler(store))
+		guestbookAdmin.DELETE("/:id", handler.DeleteGuestbookHandler(store))
 	}
 
 	// bugs 路由
 	bugs := api.Group("/bugs")
 	{
-		bugs.POST("", handler.CreateBugHandler(db))
+		bugs.POST("", handler.CreateBugHandler(store))
 	}
 	bugsAdmin := api.Group("/admin/bugs", middleware.RequireInternalSecret(internalSecret))
 	{
-		bugsAdmin.GET("", handler.ListBugsHandler(db))
-		bugsAdmin.GET("/:id", handler.GetBugHandler(db))
-		bugsAdmin.PATCH("/:id/status", handler.UpdateBugStatusHandler(db))
-		bugsAdmin.DELETE("/:id", handler.DeleteBugHandler(db))
+		bugsAdmin.GET("", handler.ListBugsHandler(store))
+		bugsAdmin.GET("/:id", handler.GetBugHandler(store))
+		bugsAdmin.PATCH("/:id/status", handler.UpdateBugStatusHandler(store))
+		bugsAdmin.DELETE("/:id", handler.DeleteBugHandler(store))
 	}
 
 	// accounts 路由
 	accounts := api.Group("/accounts")
 	{
-		accounts.POST("", handler.CreateAccountHandler(db))
-		accounts.POST("/login", handler.LoginAccountHandler(db))
-		accounts.GET("/:id", handler.GetPublicAccountHandler(db)) // 新：前台公开用户资料（与 Next accounts/:id 对应）
+		accounts.POST("", handler.CreateAccountHandler(store))
+		accounts.POST("/login", handler.LoginAccountHandler(store))
+		accounts.GET("/:id", handler.GetPublicAccountHandler(store)) // 新：前台公开用户资料（与 Next accounts/:id 对应）
 	}
 	accountsAdmin := api.Group("/admin/accounts", middleware.RequireInternalSecret(internalSecret))
 	{
-		accountsAdmin.GET("", handler.ListAccountsHandler(db))
-		accountsAdmin.GET("/:id", handler.GetAccountHandler(db))
-		accountsAdmin.POST("", handler.CreateAccountAdminHandler(db))
-		accountsAdmin.PUT("/:id", handler.UpdateAccountHandler(db))
-		accountsAdmin.PUT("/:id/password", handler.UpdateAccountPasswordHandler(db))
-		accountsAdmin.DELETE("/:id", handler.DeleteAccountHandler(db))
+		accountsAdmin.GET("", handler.ListAccountsHandler(store))
+		accountsAdmin.GET("/:id", handler.GetAccountHandler(store))
+		accountsAdmin.POST("", handler.CreateAccountAdminHandler(store))
+		accountsAdmin.PUT("/:id", handler.UpdateAccountHandler(store))
+		accountsAdmin.PUT("/:id/password", handler.UpdateAccountPasswordHandler(store))
+		accountsAdmin.DELETE("/:id", handler.DeleteAccountHandler(store))
 	}
 
 	// admin-users 路由
 	usersLogin := api.Group("/admin/users")
 	{
-		usersLogin.POST("/login", handler.LoginAdminUserHandler(db))
+		usersLogin.POST("/login", handler.LoginAdminUserHandler(store))
 	}
 	usersAdmin := api.Group("/admin/users", middleware.RequireInternalSecret(internalSecret))
 	{
-		usersAdmin.GET("", handler.ListAdminUsersHandler(db))
-		usersAdmin.GET("/:id", handler.GetAdminUserHandler(db))
-		usersAdmin.POST("", handler.CreateAdminUserHandler(db))
-		usersAdmin.PUT("/:id", handler.UpdateAdminUserHandler(db))
-		usersAdmin.PUT("/:id/password", handler.UpdateAdminUserPasswordHandler(db))
-		usersAdmin.DELETE("/:id", handler.DeleteAdminUserHandler(db))
+		usersAdmin.GET("", handler.ListAdminUsersHandler(store))
+		usersAdmin.GET("/:id", handler.GetAdminUserHandler(store))
+		usersAdmin.POST("", handler.CreateAdminUserHandler(store))
+		usersAdmin.PUT("/:id", handler.UpdateAdminUserHandler(store))
+		usersAdmin.PUT("/:id/password", handler.UpdateAdminUserPasswordHandler(store))
+		usersAdmin.DELETE("/:id", handler.DeleteAdminUserHandler(store))
 	}
 
 	// role-permissions 路由
 	rolePerms := api.Group("/admin/role-permissions", middleware.RequireInternalSecret(internalSecret))
 	{
-		rolePerms.GET("", handler.ListRolePermissionsHandler(db))
-		rolePerms.GET("/:role", handler.GetRolePermissionsHandler(db))
-		rolePerms.PUT("", handler.UpdateRolePermissionsHandler(db))
-		rolePerms.DELETE("/:role", handler.DeleteRolePermissionsHandler(db))
+		rolePerms.GET("", handler.ListRolePermissionsHandler(store))
+		rolePerms.GET("/:role", handler.GetRolePermissionsHandler(store))
+		rolePerms.PUT("", handler.UpdateRolePermissionsHandler(store))
+		rolePerms.DELETE("/:role", handler.DeleteRolePermissionsHandler(store))
 	}
 
 	// tags 路由
 	tags := api.Group("/tags")
 	{
-		tags.GET("", handler.ListTagsHandler(db))
-		tags.GET("/:type/:id", handler.GetTagHandler(db))
+		tags.GET("", handler.ListTagsHandler(store))
+		tags.GET("/:type/:id", handler.GetTagHandler(store))
 	}
 	tagsAdmin := api.Group("/admin/tags", middleware.RequireInternalSecret(internalSecret))
 	{
-		tagsAdmin.POST("", handler.CreateTagHandler(db))
-		tagsAdmin.PUT("/:type/:id", handler.UpdateTagHandler(db))
-		tagsAdmin.DELETE("/:type/:id", handler.DeleteTagHandler(db))
+		tagsAdmin.POST("", handler.CreateTagHandler(store))
+		tagsAdmin.PUT("/:type/:id", handler.UpdateTagHandler(store))
+		tagsAdmin.DELETE("/:type/:id", handler.DeleteTagHandler(store))
 	}
-}
-
-// RegisterRoutesLegacy 兼容旧调用（cmd/server/main.go 未跟上时的兜底，会 panic —— 不允许混用）
-func RegisterRoutesLegacy(r *gin.Engine, db *gorm.DB, internalSecret, uploadsDir string) {
-	_ = []any{r, db, internalSecret, uploadsDir}
-	panic("RegisterRoutesLegacy 已废弃，请使用 RegisterRoutes(r, db, cfg) 并传入 *config.Config")
 }

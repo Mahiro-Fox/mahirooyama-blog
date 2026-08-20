@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
@@ -13,9 +12,9 @@ import (
 )
 
 // ListRolePermissionsHandler GET /api/admin/role-permissions
-func ListRolePermissionsHandler(db *gorm.DB) gin.HandlerFunc {
+func ListRolePermissionsHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		rps, err := service.ListRolePermissions(c.Request.Context(), db)
+		rps, err := service.ListRolePermissions(c.Request.Context(), store)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取角色权限失败"})
 			return
@@ -25,10 +24,10 @@ func ListRolePermissionsHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetRolePermissionsHandler GET /api/admin/role-permissions/:role
-func GetRolePermissionsHandler(db *gorm.DB) gin.HandlerFunc {
+func GetRolePermissionsHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role := c.Param("role")
-		rp, err := service.GetRolePermissions(c.Request.Context(), db, role)
+		rp, err := service.GetRolePermissions(c.Request.Context(), store, role)
 		if err != nil {
 			if errors.Is(err, repository.ErrRoleNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "角色不存在"})
@@ -42,7 +41,7 @@ func GetRolePermissionsHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // UpdateRolePermissionsHandler PUT /api/admin/role-permissions
-func UpdateRolePermissionsHandler(db *gorm.DB) gin.HandlerFunc {
+func UpdateRolePermissionsHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input model.RolePermissionUpdateInput
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -52,7 +51,7 @@ func UpdateRolePermissionsHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		rp, err := service.UpdateRolePermissions(c.Request.Context(), db, input)
+		rp, err := service.UpdateRolePermissions(c.Request.Context(), store, input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -62,10 +61,10 @@ func UpdateRolePermissionsHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // DeleteRolePermissionsHandler DELETE /api/admin/role-permissions/:role
-func DeleteRolePermissionsHandler(db *gorm.DB) gin.HandlerFunc {
+func DeleteRolePermissionsHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role := c.Param("role")
-		if err := service.DeleteRolePermissions(c.Request.Context(), db, role); err != nil {
+		if err := service.DeleteRolePermissions(c.Request.Context(), store, role); err != nil {
 			if errors.Is(err, repository.ErrRoleNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "角色不存在"})
 				return

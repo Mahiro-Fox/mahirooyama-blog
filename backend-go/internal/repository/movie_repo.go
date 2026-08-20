@@ -14,8 +14,8 @@ import (
 var ErrMovieNotFound = errors.New("movie not found")
 
 // ListMovies 列出电影，支持按 search/tag 过滤，按 created_at 倒序
-func ListMovies(ctx context.Context, db *gorm.DB, search, tag string) ([]model.Movie, error) {
-	query := db.WithContext(ctx).Model(&model.Movie{})
+func (s *GormStore) ListMovies(ctx context.Context, search, tag string) ([]model.Movie, error) {
+	query := s.db.WithContext(ctx).Model(&model.Movie{})
 	if search != "" {
 		like := "%" + search + "%"
 		query = query.Where(
@@ -34,9 +34,9 @@ func ListMovies(ctx context.Context, db *gorm.DB, search, tag string) ([]model.M
 }
 
 // GetMovie 按 ID 查询单部电影
-func GetMovie(ctx context.Context, db *gorm.DB, id string) (*model.Movie, error) {
+func (s *GormStore) GetMovie(ctx context.Context, id string) (*model.Movie, error) {
 	var m model.Movie
-	if err := db.WithContext(ctx).First(&m, "id = ?", id).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&m, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrMovieNotFound
 		}
@@ -46,19 +46,19 @@ func GetMovie(ctx context.Context, db *gorm.DB, id string) (*model.Movie, error)
 }
 
 // CreateMovie 创建电影
-func CreateMovie(ctx context.Context, db *gorm.DB, m *model.Movie) error {
-	if err := db.WithContext(ctx).Create(m).Error; err != nil {
+func (s *GormStore) CreateMovie(ctx context.Context, m *model.Movie) error {
+	if err := s.db.WithContext(ctx).Create(m).Error; err != nil {
 		return fmt.Errorf("create movie: %w", err)
 	}
 	return nil
 }
 
-// UpdateMovie 按 ID 更新指定字段（map 形式避免零值被忽略）
-func UpdateMovie(ctx context.Context, db *gorm.DB, id string, updates map[string]any) error {
-	result := db.WithContext(ctx).
+// UpdateMovie 按 ID 部分更新（类型化补丁，nil 指针字段不更新）
+func (s *GormStore) UpdateMovie(ctx context.Context, id string, patch *model.MoviePatch) error {
+	result := s.db.WithContext(ctx).
 		Model(&model.Movie{}).
 		Where("id = ?", id).
-		Updates(updates)
+		Updates(patch)
 	if result.Error != nil {
 		return fmt.Errorf("update movie: %w", result.Error)
 	}
@@ -69,8 +69,8 @@ func UpdateMovie(ctx context.Context, db *gorm.DB, id string, updates map[string
 }
 
 // DeleteMovie 按 ID 删除电影
-func DeleteMovie(ctx context.Context, db *gorm.DB, id string) error {
-	result := db.WithContext(ctx).Where("id = ?", id).Delete(&model.Movie{})
+func (s *GormStore) DeleteMovie(ctx context.Context, id string) error {
+	result := s.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Movie{})
 	if result.Error != nil {
 		return fmt.Errorf("delete movie: %w", result.Error)
 	}

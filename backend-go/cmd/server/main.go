@@ -16,6 +16,7 @@ import (
 	"mahirooyama-blog/backend-go/internal/config"
 	"mahirooyama-blog/backend-go/internal/db"
 	"mahirooyama-blog/backend-go/internal/model"
+	"mahirooyama-blog/backend-go/internal/repository"
 	"mahirooyama-blog/backend-go/internal/router"
 	"mahirooyama-blog/backend-go/internal/service"
 )
@@ -37,7 +38,7 @@ func main() {
 	log.Println("数据库迁移完成")
 
 	// 会话清理 goroutine：每 10 分钟扫一次两个 session 表，不阻塞主进程
-	stopCleanup := startSessionCleaner(gormDB, 10*time.Minute)
+	stopCleanup := startSessionCleaner(repository.NewStore(gormDB), 10*time.Minute)
 	defer stopCleanup()
 
 	gin.SetMode(gin.ReleaseMode)
@@ -72,15 +73,20 @@ func main() {
 }
 
 // startSessionCleaner 启动一个后台 goroutine，周期 t 清理两个过期会话表；
-// 返回 stop 闭包（进程退出前调用能保证一次「尽力而为」的最后清理）
-func startSessionCleaner(db *gorm.DB, t time.Duration) func() {
+// 每次清理使用独立的单次超时，避免 DB 异常时清理永久阻塞；返回 stop 闭包
+func startSessionCleaner(store repository.Store, t time.Duration) func() {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	ticker := time.NewTicker(t)
+	// 单次清理超时：数据库短暂异常也不拖住，只跳过本轮
+	const cleanupTimeout = 30 * time.Second
 	once := func() {
+		// 每次清理生成带超时的 ctx；超时/取消时由数据库驱动 context 迅速返回，不放无限等待
+		rctx, rcancel := context.WithTimeout(ctx, cleanupTimeout)
+		defer rcancel()
 		now := time.Now()
-		n1, e1 := service.CleanupExpiredAdminSessions(ctx, db, now)
-		n2, e2 := service.CleanupExpiredUserSessions(ctx, db, now)
+		n1, e1 := service.CleanupExpiredAdminSessions(rctx, store, now)
+		n2, e2 := service.CleanupExpiredUserSessions(rctx, store, now)
 		if e1 != nil {
 			log.Printf("清理 admin 过期会话失败: %v", e1)
 		}

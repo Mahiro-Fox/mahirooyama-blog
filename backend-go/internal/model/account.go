@@ -49,3 +49,11 @@ type AccountUpdateInput struct {
 	Username *string `json:"username"`
 	Email    *string `json:"email"`
 }
+
+// AccountPatch 部分更新前台账户的类型化补丁（指针字段，nil 表示不更新）。
+type AccountPatch struct {
+	Username     *string    `json:"username"`
+	Email        *string    `json:"email"`
+	PasswordHash *string    `json:"-"`
+	LastUpdated  *time.Time `json:"-"`
+}

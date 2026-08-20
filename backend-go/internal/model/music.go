@@ -26,3 +26,11 @@ type SongUpdate struct {
 	URL    *string `json:"url"`
 	Cover  *string `json:"cover"`
 }
+
+// SongPatch 部分更新音乐的类型化补丁（指针字段，nil 表示不更新）。
+type SongPatch struct {
+	Name   *string `json:"name"`
+	Artist *string `json:"artist"`
+	URL    *string `json:"url"`
+	Cover  *string `json:"cover"`
+}

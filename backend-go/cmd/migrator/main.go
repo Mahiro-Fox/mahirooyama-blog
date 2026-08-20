@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/config"
@@ -174,8 +173,6 @@ func migrateMovies(ctx context.Context, db *gorm.DB, path string) (int, error) {
 		if tags == nil {
 			tags = []string{}
 		}
-		sourcesJSON, _ := json.Marshal(l.Sources)
-
 		m := model.Movie{
 			ID:        strings.TrimSpace(l.ID),
 			Title:     strings.TrimSpace(l.Title),
@@ -183,7 +180,7 @@ func migrateMovies(ctx context.Context, db *gorm.DB, path string) (int, error) {
 			Year:      strings.TrimSpace(l.Year),
 			Tags:      pq.StringArray(tags),
 			Summary:   l.Summary,
-			Sources:   datatypes.JSON(sourcesJSON),
+			Sources:   model.MovieSources(l.Sources),
 			CreatedAt: ts,
 			UpdatedAt: ts,
 		}
@@ -265,15 +262,11 @@ func migrateMoments(ctx context.Context, db *gorm.DB, path string) (int, error) 
 			log.Printf("warn: ID=%s 时间解析失败 %v, 用 now() 替代", l.ID, err)
 			ts = time.Now()
 		}
-		imageJSON := []byte("null")
-		if l.Image != nil {
-			imageJSON, _ = json.Marshal(l.Image)
-		}
 		m := model.Moment{
 			ID:        strings.TrimSpace(l.ID),
 			CreatedAt: ts,
 			Content:   l.Content,
-			Image:     datatypes.JSON(imageJSON),
+			Image:     model.MomentImageData{Image: (*model.MomentImage)(l.Image)},
 			MoodEmoji: l.MoodEmoji,
 			Location:  l.Location,
 		}

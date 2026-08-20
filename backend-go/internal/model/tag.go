@@ -37,3 +37,11 @@ type TagUpdateInput struct {
 	Icon        *string `json:"icon"`
 	Description *string `json:"description"`
 }
+
+// TagPatch 部分更新标签的类型化补丁（指针字段，nil 表示不更新）。
+type TagPatch struct {
+	Name        *string    `json:"name"`
+	Icon        *string    `json:"icon"`
+	Description *string    `json:"description"`
+	LastUpdated *time.Time `json:"-"`
+}

@@ -3,31 +3,28 @@
 package handler
 
 import (
+	"errors"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/config"
+	"mahirooyama-blog/backend-go/internal/model"
+	"mahirooyama-blog/backend-go/internal/repository"
 	"mahirooyama-blog/backend-go/internal/service"
 )
 
-// adminLoginRequest 请求体（与 Next app/api/admin/auth/login/route.ts 对应）
-type adminLoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 // AdminLoginHandler 后台登录
 // Response（200）形状与 Next 路由保持一致：{token, user: AdminUser, expiresIn, mustChangePassword, sessionId, loggedInAt}
-func AdminLoginHandler(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
+func AdminLoginHandler(store repository.Store, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if cfg == nil || db == nil {
+		if cfg == nil || store == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "服务未初始化"})
 			return
 		}
-		var req adminLoginRequest
+		var req model.AccountLoginInput
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "参数错误"})
 			return
@@ -36,10 +33,16 @@ func AdminLoginHandler(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "用户名和密码必填"})
 			return
 		}
-		result, err := service.AdminLogin(c.Request.Context(), db, cfg, req.Username, req.Password)
+		result, err := service.AdminLogin(c.Request.Context(), store, cfg, req.Username, req.Password)
 		if err != nil {
-			// 用户名密码错误统一 401
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			if errors.Is(err, service.ErrInvalidCredentials) {
+				// 凭据错误：统一 401 固定文案，不透出内部细节
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "用户名或密码错误"})
+				return
+			}
+			// 其余视为服务端内部错误：只进日志，对外返回通用文案
+			log.Printf("admin login internal error: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "登录失败，请稍后重试"})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{
@@ -55,10 +58,10 @@ func AdminLoginHandler(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
 
 // AdminVerifyHandler 后台鉴权（Next server action 调用 → 读 cookie 里的 token 传过来）
 // Authorization: Bearer <token> 或 body.token 或 query.token
-func AdminVerifyHandler(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
+func AdminVerifyHandler(store repository.Store, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := extractToken(c)
-		res, err := service.AdminVerify(c.Request.Context(), db, cfg, token)
+		res, err := service.AdminVerify(c.Request.Context(), store, cfg, token)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "鉴权错误"})
 			return
@@ -76,14 +79,14 @@ func AdminVerifyHandler(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
 
 // AdminLogoutHandler 后台登出：按 token 删会话
 // 返回 200 { success: true }，幂等
-func AdminLogoutHandler(db *gorm.DB, cfg *config.Config) gin.HandlerFunc {
+func AdminLogoutHandler(store repository.Store, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := extractToken(c)
 		if token == "" {
 			c.JSON(http.StatusOK, gin.H{"success": true})
 			return
 		}
-		if err := service.AdminLogout(c.Request.Context(), db, token); err != nil {
+		if err := service.AdminLogout(c.Request.Context(), store, token); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "登出失败"})
 			return
 		}

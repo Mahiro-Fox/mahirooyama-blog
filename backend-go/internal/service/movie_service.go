@@ -2,71 +2,68 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 	"time"
 
 	"github.com/lib/pq"
-	"gorm.io/datatypes"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
 )
 
 // ListMovies 列出公开电影
-func ListMovies(ctx context.Context, db *gorm.DB, search, tag string) ([]model.Movie, error) {
-	return repository.ListMovies(ctx, db, search, tag)
+func ListMovies(ctx context.Context, store repository.Store, search, tag string) ([]model.Movie, error) {
+	return store.ListMovies(ctx, search, tag)
 }
 
 // GetMovie 查询单部电影
-func GetMovie(ctx context.Context, db *gorm.DB, id string) (*model.Movie, error) {
-	return repository.GetMovie(ctx, db, id)
+func GetMovie(ctx context.Context, store repository.Store, id string) (*model.Movie, error) {
+	return store.GetMovie(ctx, id)
 }
 
 // CreateMovie 创建电影（含必填校验和 ID 唯一性检查）
-func CreateMovie(ctx context.Context, db *gorm.DB, input model.MovieInput) (*model.Movie, error) {
+func CreateMovie(ctx context.Context, store repository.Store, input model.MovieInput) (*model.Movie, error) {
 	if err := validateCreateInput(input); err != nil {
 		return nil, err
 	}
 
 	// 检查 ID 是否已存在
-	if _, err := repository.GetMovie(ctx, db, strings.TrimSpace(input.ID)); err == nil {
+	if _, err := store.GetMovie(ctx, strings.TrimSpace(input.ID)); err == nil {
 		return nil, errors.New("该 ID 已存在，请使用其他 ID")
 	} else if !errors.Is(err, repository.ErrMovieNotFound) {
 		return nil, err
 	}
 
 	m := buildMovieFromInput(input)
-	if err := repository.CreateMovie(ctx, db, &m); err != nil {
+	if err := store.CreateMovie(ctx, &m); err != nil {
 		return nil, err
 	}
 	return &m, nil
 }
 
 // UpdateMovie 更新电影（部分字段）
-func UpdateMovie(ctx context.Context, db *gorm.DB, id string, input model.MovieUpdate) (*model.Movie, error) {
+func UpdateMovie(ctx context.Context, store repository.Store, id string, input model.MovieUpdate) (*model.Movie, error) {
 	// 先校验存在
-	if _, err := repository.GetMovie(ctx, db, id); err != nil {
+	if _, err := store.GetMovie(ctx, id); err != nil {
 		return nil, err
 	}
 
-	updates := buildUpdateMap(input)
-	if len(updates) == 0 {
+	updates := buildMoviePatch(input)
+	if moviePatchIsEmpty(updates) {
 		// 无字段需要更新，直接返回当前数据
-		return repository.GetMovie(ctx, db, id)
+		return store.GetMovie(ctx, id)
 	}
 
-	if err := repository.UpdateMovie(ctx, db, id, updates); err != nil {
+	if err := store.UpdateMovie(ctx, id, updates); err != nil {
 		return nil, err
 	}
-	return repository.GetMovie(ctx, db, id)
+	return store.GetMovie(ctx, id)
 }
 
 // DeleteMovie 删除电影
-func DeleteMovie(ctx context.Context, db *gorm.DB, id string) error {
-	return repository.DeleteMovie(ctx, db, id)
+func DeleteMovie(ctx context.Context, store repository.Store, id string) error {
+	return store.DeleteMovie(ctx, id)
 }
 
 // validateCreateInput 创建电影时的必填校验
@@ -92,7 +89,6 @@ func buildMovieFromInput(input model.MovieInput) model.Movie {
 	if tags == nil {
 		tags = []string{}
 	}
-	sourcesJSON, _ := json.Marshal(input.Sources)
 	now := time.Now()
 	return model.Movie{
 		ID:        strings.TrimSpace(input.ID),
@@ -101,33 +97,43 @@ func buildMovieFromInput(input model.MovieInput) model.Movie {
 		Year:      strings.TrimSpace(input.Year),
 		Tags:      pq.StringArray(tags),
 		Summary:   input.Summary,
-		Sources:   datatypes.JSON(sourcesJSON),
+		Sources:   model.MovieSources(input.Sources),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// buildUpdateMap 构造 GORM Updates 用的 map（只包含提供的字段）
-func buildUpdateMap(input model.MovieUpdate) map[string]any {
-	updates := map[string]any{}
+// buildMoviePatch 构造类型化更新补丁（只包含提供的字段，指针字段 nil 表示不更新）
+func buildMoviePatch(input model.MovieUpdate) *model.MoviePatch {
+	patch := &model.MoviePatch{}
 	if input.Title != nil {
-		updates["title"] = strings.TrimSpace(*input.Title)
+		t := strings.TrimSpace(*input.Title)
+		patch.Title = &t
 	}
 	if input.Poster != nil {
-		updates["poster"] = strings.TrimSpace(*input.Poster)
+		t := strings.TrimSpace(*input.Poster)
+		patch.Poster = &t
 	}
 	if input.Year != nil {
-		updates["year"] = strings.TrimSpace(*input.Year)
+		t := strings.TrimSpace(*input.Year)
+		patch.Year = &t
 	}
 	if input.Tags != nil {
-		updates["tags"] = pq.StringArray(input.Tags)
+		t := pq.StringArray(input.Tags)
+		patch.Tags = &t
 	}
 	if input.Summary != nil {
-		updates["summary"] = *input.Summary
+		patch.Summary = input.Summary
 	}
 	if input.Sources != nil {
-		sourcesJSON, _ := json.Marshal(input.Sources)
-		updates["sources"] = datatypes.JSON(sourcesJSON)
+		s := model.MovieSources(input.Sources)
+		patch.Sources = &s
 	}
-	return updates
+	return patch
+}
+
+// moviePatchIsEmpty 判断补丁是否没有任何待更新字段
+func moviePatchIsEmpty(p *model.MoviePatch) bool {
+	return p.Title == nil && p.Poster == nil && p.Year == nil &&
+		p.Tags == nil && p.Summary == nil && p.Sources == nil
 }

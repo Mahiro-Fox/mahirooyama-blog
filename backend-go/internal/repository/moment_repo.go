@@ -14,18 +14,18 @@ import (
 var ErrMomentNotFound = errors.New("moment not found")
 
 // ListMoments 列出碎碎念，按 created_at 倒序
-func ListMoments(ctx context.Context, db *gorm.DB) ([]model.Moment, error) {
+func (s *GormStore) ListMoments(ctx context.Context) ([]model.Moment, error) {
 	var moments []model.Moment
-	if err := db.WithContext(ctx).Order("created_at DESC").Find(&moments).Error; err != nil {
+	if err := s.db.WithContext(ctx).Order("created_at DESC").Find(&moments).Error; err != nil {
 		return nil, fmt.Errorf("list moments: %w", err)
 	}
 	return moments, nil
 }
 
 // GetMoment 按 ID 查询单条碎碎念
-func GetMoment(ctx context.Context, db *gorm.DB, id string) (*model.Moment, error) {
+func (s *GormStore) GetMoment(ctx context.Context, id string) (*model.Moment, error) {
 	var m model.Moment
-	if err := db.WithContext(ctx).First(&m, "id = ?", id).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&m, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrMomentNotFound
 		}
@@ -35,19 +35,19 @@ func GetMoment(ctx context.Context, db *gorm.DB, id string) (*model.Moment, erro
 }
 
 // CreateMoment 创建碎碎念
-func CreateMoment(ctx context.Context, db *gorm.DB, m *model.Moment) error {
-	if err := db.WithContext(ctx).Create(m).Error; err != nil {
+func (s *GormStore) CreateMoment(ctx context.Context, m *model.Moment) error {
+	if err := s.db.WithContext(ctx).Create(m).Error; err != nil {
 		return fmt.Errorf("create moment: %w", err)
 	}
 	return nil
 }
 
-// UpdateMoment 按 ID 更新指定字段
-func UpdateMoment(ctx context.Context, db *gorm.DB, id string, updates map[string]any) error {
-	result := db.WithContext(ctx).
+// UpdateMoment 按 ID 部分更新（类型化补丁，nil 指针字段不更新）
+func (s *GormStore) UpdateMoment(ctx context.Context, id string, patch *model.MomentPatch) error {
+	result := s.db.WithContext(ctx).
 		Model(&model.Moment{}).
 		Where("id = ?", id).
-		Updates(updates)
+		Updates(patch)
 	if result.Error != nil {
 		return fmt.Errorf("update moment: %w", result.Error)
 	}
@@ -58,8 +58,8 @@ func UpdateMoment(ctx context.Context, db *gorm.DB, id string, updates map[strin
 }
 
 // DeleteMoment 按 ID 删除碎碎念
-func DeleteMoment(ctx context.Context, db *gorm.DB, id string) error {
-	result := db.WithContext(ctx).Where("id = ?", id).Delete(&model.Moment{})
+func (s *GormStore) DeleteMoment(ctx context.Context, id string) error {
+	result := s.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Moment{})
 	if result.Error != nil {
 		return fmt.Errorf("delete moment: %w", result.Error)
 	}

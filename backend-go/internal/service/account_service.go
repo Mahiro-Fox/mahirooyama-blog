@@ -3,39 +3,39 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
 )
 
 // ListAccounts 列出全部前台账户
-func ListAccounts(ctx context.Context, db *gorm.DB) ([]model.Account, error) {
-	return repository.ListAccounts(ctx, db)
+func ListAccounts(ctx context.Context, store repository.Store) ([]model.Account, error) {
+	return store.ListAccounts(ctx)
 }
 
 // GetAccount 按 ID 查询
-func GetAccount(ctx context.Context, db *gorm.DB, id string) (*model.Account, error) {
-	return repository.GetAccountByID(ctx, db, id)
+func GetAccount(ctx context.Context, store repository.Store, id string) (*model.Account, error) {
+	return store.GetAccountByID(ctx, id)
 }
 
 // GetAccountByUsername 按用户名查询
-func GetAccountByUsername(ctx context.Context, db *gorm.DB, username string) (*model.Account, error) {
-	return repository.GetAccountByUsername(ctx, db, username)
+func GetAccountByUsername(ctx context.Context, store repository.Store, username string) (*model.Account, error) {
+	return store.GetAccountByUsername(ctx, username)
 }
 
 // GetAccountByEmail 按 email 查询（空 string 直接返回 NotFound）
-func GetAccountByEmail(ctx context.Context, db *gorm.DB, email string) (*model.Account, error) {
-	return repository.GetAccountByEmail(ctx, db, email)
+func GetAccountByEmail(ctx context.Context, store repository.Store, email string) (*model.Account, error) {
+	return store.GetAccountByEmail(ctx, email)
 }
 
 // CreateAccount 创建前台账户（密码会被 bcrypt hash）
-func CreateAccount(ctx context.Context, db *gorm.DB, input model.AccountCreateInput) (*model.Account, error) {
+func CreateAccount(ctx context.Context, store repository.Store, input model.AccountCreateInput) (*model.Account, error) {
 	if strings.TrimSpace(input.Username) == "" {
 		return nil, errors.New("用户名不能为空")
 	}
@@ -44,7 +44,7 @@ func CreateAccount(ctx context.Context, db *gorm.DB, input model.AccountCreateIn
 	}
 
 	// 用户名唯一性检查
-	if _, err := repository.GetAccountByUsername(ctx, db, input.Username); err == nil {
+	if _, err := store.GetAccountByUsername(ctx, input.Username); err == nil {
 		return nil, repository.ErrAccountUsernameTaken
 	} else if !errors.Is(err, repository.ErrAccountNotFound) {
 		return nil, err
@@ -65,27 +65,27 @@ func CreateAccount(ctx context.Context, db *gorm.DB, input model.AccountCreateIn
 		CreatedAt:    now,
 		LastUpdated:  now,
 	}
-	if err := repository.CreateAccount(ctx, db, &a); err != nil {
+	if err := store.CreateAccount(ctx, &a); err != nil {
 		return nil, err
 	}
 	return &a, nil
 }
 
 // VerifyAccount 校验用户名密码（登录用）
-func VerifyAccount(ctx context.Context, db *gorm.DB, input model.AccountLoginInput) (*model.Account, error) {
-	a, err := repository.GetAccountByUsername(ctx, db, input.Username)
+func VerifyAccount(ctx context.Context, store repository.Store, input model.AccountLoginInput) (*model.Account, error) {
+	a, err := store.GetAccountByUsername(ctx, input.Username)
 	if err != nil {
 		if errors.Is(err, repository.ErrAccountNotFound) {
-			return nil, errors.New("用户名或密码错误")
+			return nil, fmt.Errorf("%w", ErrInvalidCredentials)
 		}
 		return nil, err
 	}
 	// 兼容弃用的 Google 账户：password_hash 为空时直接失败
 	if a.PasswordHash == "" {
-		return nil, errors.New("用户名或密码错误")
+		return nil, fmt.Errorf("%w", ErrInvalidCredentials)
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(a.PasswordHash), []byte(input.Password)); err != nil {
-		return nil, errors.New("用户名或密码错误")
+		return nil, fmt.Errorf("%w", ErrInvalidCredentials)
 	}
 	return a, nil
 }
@@ -94,15 +94,14 @@ func VerifyAccount(ctx context.Context, db *gorm.DB, input model.AccountLoginInp
 // - username 不能为空，且需全局唯一（排除自身）
 // - email 允许置空（nil）；非空时需全局唯一（排除自身）
 // - OAuth 账户（provider != credentials）不允许改 username，避免与第三方身份脱钩
-func UpdateAccount(ctx context.Context, db *gorm.DB, id string, input model.AccountUpdateInput) (*model.Account, error) {
-	a, err := repository.GetAccountByID(ctx, db, id)
+func UpdateAccount(ctx context.Context, store repository.Store, id string, input model.AccountUpdateInput) (*model.Account, error) {
+	a, err := store.GetAccountByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	updates := map[string]any{
-		"last_updated": time.Now(),
-	}
+	now := time.Now()
+	patch := &model.AccountPatch{LastUpdated: &now}
 
 	// username 校验
 	if input.Username != nil {
@@ -114,14 +113,14 @@ func UpdateAccount(ctx context.Context, db *gorm.DB, id string, input model.Acco
 			return nil, errors.New("OAuth 账户不支持修改用户名")
 		}
 		if trimmed != a.Username {
-			existing, lookupErr := repository.GetAccountByUsername(ctx, db, trimmed)
+			existing, lookupErr := store.GetAccountByUsername(ctx, trimmed)
 			if lookupErr == nil && existing.ID != a.ID {
 				return nil, repository.ErrAccountUsernameTaken
 			}
 			if lookupErr != nil && !errors.Is(lookupErr, repository.ErrAccountNotFound) {
 				return nil, lookupErr
 			}
-			updates["username"] = trimmed
+			patch.Username = &trimmed
 		}
 	}
 
@@ -129,23 +128,24 @@ func UpdateAccount(ctx context.Context, db *gorm.DB, id string, input model.Acco
 	if input.Email != nil {
 		trimmed := strings.TrimSpace(*input.Email)
 		if trimmed == "" {
-			updates["email"] = nil
+			empty := ""
+			patch.Email = &empty
 		} else if trimmed != derefString(a.Email) {
-			existing, lookupErr := repository.GetAccountByEmail(ctx, db, trimmed)
+			existing, lookupErr := store.GetAccountByEmail(ctx, trimmed)
 			if lookupErr == nil && existing.ID != a.ID {
 				return nil, repository.ErrAccountEmailTaken
 			}
 			if lookupErr != nil && !errors.Is(lookupErr, repository.ErrAccountNotFound) {
 				return nil, lookupErr
 			}
-			updates["email"] = trimmed
+			patch.Email = &trimmed
 		}
 	}
 
-	if err := repository.UpdateAccount(ctx, db, id, updates); err != nil {
+	if err := store.UpdateAccount(ctx, id, patch); err != nil {
 		return nil, err
 	}
-	return repository.GetAccountByID(ctx, db, id)
+	return store.GetAccountByID(ctx, id)
 }
 
 // derefString 安全解引用 *string，nil 返回空串
@@ -157,7 +157,7 @@ func derefString(p *string) string {
 }
 
 // UpdateAccountPassword 更新前台账户密码
-func UpdateAccountPassword(ctx context.Context, db *gorm.DB, id, newPassword string) error {
+func UpdateAccountPassword(ctx context.Context, store repository.Store, id, newPassword string) error {
 	if len(newPassword) < 6 {
 		return errors.New("密码长度不能少于 6 位")
 	}
@@ -165,13 +165,15 @@ func UpdateAccountPassword(ctx context.Context, db *gorm.DB, id, newPassword str
 	if err != nil {
 		return errors.New("密码加密失败")
 	}
-	return repository.UpdateAccount(ctx, db, id, map[string]any{
-		"password_hash": string(hash),
-		"last_updated":  time.Now(),
+	now := time.Now()
+	hashStr := string(hash)
+	return store.UpdateAccount(ctx, id, &model.AccountPatch{
+		PasswordHash: &hashStr,
+		LastUpdated:  &now,
 	})
 }
 
 // DeleteAccount 删除前台账户
-func DeleteAccount(ctx context.Context, db *gorm.DB, id string) error {
-	return repository.DeleteAccount(ctx, db, id)
+func DeleteAccount(ctx context.Context, store repository.Store, id string) error {
+	return store.DeleteAccount(ctx, id)
 }

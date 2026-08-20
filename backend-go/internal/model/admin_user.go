@@ -41,3 +41,13 @@ type AdminUserUpdateInput struct {
 type AdminUserPasswordUpdateInput struct {
 	Password string `json:"password" binding:"required"`
 }
+
+// AdminUserPatch 部分更新后台用户的类型化补丁（指针字段，nil 表示不更新）。
+type AdminUserPatch struct {
+	Username           *string        `json:"username"`
+	Avatar             *string        `json:"avatar"`
+	Role               *AdminUserRole `json:"role"`
+	PasswordHash       *string        `json:"-"`
+	MustChangePassword *bool          `json:"-"`
+	LastUpdated        *time.Time     `json:"-"`
+}

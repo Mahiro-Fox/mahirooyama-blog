@@ -265,9 +265,9 @@ func UploadAssetHandler(uploadsDir string) gin.HandlerFunc {
 		"image/jpeg", "image/png", "image/gif", "image/webp",
 		"audio/midi", "audio/mid", "audio/x-midi", "audio/mpeg", "audio/wav",
 		"video/mp4", "application/pdf",
-		"text/plain", "application/json",
-		"application/octet-stream",
-		// 扩展名规则：供 blog(mdx)/gallery(json)/midi(mid) 等文本类上传复用
+		// 文本类仅走扩展名规则（供 blog(mdx)/gallery(json)/midi(mid) 上传复用）。
+		// 不开放 text/plain、application/json、application/octet-stream，
+		// 类型以服务端嗅探为准（http.DetectContentType），未知/纯文本未命中扩展名规则会被拒绝。
 		".mdx", ".md", ".json", ".mid",
 	}
 	// 源文件白名单：仅图片，供「保留原图 + WebP」场景（遵循 processAndSaveImage 语义）

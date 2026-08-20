@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
@@ -14,11 +13,11 @@ import (
 )
 
 // ListMoviesHandler GET /api/movies?search=&tag=
-func ListMoviesHandler(db *gorm.DB) gin.HandlerFunc {
+func ListMoviesHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		search := strings.TrimSpace(c.Query("search"))
 		tag := strings.TrimSpace(c.Query("tag"))
-		movies, err := service.ListMovies(c.Request.Context(), db, search, tag)
+		movies, err := service.ListMovies(c.Request.Context(), store, search, tag)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取电影列表失败"})
 			return
@@ -28,10 +27,10 @@ func ListMoviesHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetMovieHandler GET /api/movies/:id
-func GetMovieHandler(db *gorm.DB) gin.HandlerFunc {
+func GetMovieHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		m, err := service.GetMovie(c.Request.Context(), db, id)
+		m, err := service.GetMovie(c.Request.Context(), store, id)
 		if err != nil {
 			if errors.Is(err, repository.ErrMovieNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "电影不存在"})
@@ -45,7 +44,7 @@ func GetMovieHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // CreateMovieHandler POST /api/movies
-func CreateMovieHandler(db *gorm.DB) gin.HandlerFunc {
+func CreateMovieHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input model.MovieInput
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -55,7 +54,7 @@ func CreateMovieHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		m, err := service.CreateMovie(c.Request.Context(), db, input)
+		m, err := service.CreateMovie(c.Request.Context(), store, input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -65,7 +64,7 @@ func CreateMovieHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // UpdateMovieHandler PUT /api/movies/:id
-func UpdateMovieHandler(db *gorm.DB) gin.HandlerFunc {
+func UpdateMovieHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var input model.MovieUpdate
@@ -76,7 +75,7 @@ func UpdateMovieHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		m, err := service.UpdateMovie(c.Request.Context(), db, id, input)
+		m, err := service.UpdateMovie(c.Request.Context(), store, id, input)
 		if err != nil {
 			if errors.Is(err, repository.ErrMovieNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "电影不存在"})
@@ -90,10 +89,10 @@ func UpdateMovieHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // DeleteMovieHandler DELETE /api/movies/:id
-func DeleteMovieHandler(db *gorm.DB) gin.HandlerFunc {
+func DeleteMovieHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		if err := service.DeleteMovie(c.Request.Context(), db, id); err != nil {
+		if err := service.DeleteMovie(c.Request.Context(), store, id); err != nil {
 			if errors.Is(err, repository.ErrMovieNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "电影不存在"})
 				return

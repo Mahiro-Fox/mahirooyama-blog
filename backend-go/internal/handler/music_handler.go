@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
@@ -13,9 +12,9 @@ import (
 )
 
 // ListSongsHandler GET /api/music
-func ListSongsHandler(db *gorm.DB) gin.HandlerFunc {
+func ListSongsHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		songs, err := service.ListSongs(c.Request.Context(), db)
+		songs, err := service.ListSongs(c.Request.Context(), store)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取音乐列表失败"})
 			return
@@ -25,10 +24,10 @@ func ListSongsHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetSongHandler GET /api/music/:id
-func GetSongHandler(db *gorm.DB) gin.HandlerFunc {
+func GetSongHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		s, err := service.GetSong(c.Request.Context(), db, id)
+		s, err := service.GetSong(c.Request.Context(), store, id)
 		if err != nil {
 			if errors.Is(err, repository.ErrSongNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "音乐不存在"})
@@ -42,7 +41,7 @@ func GetSongHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // CreateSongHandler POST /api/music
-func CreateSongHandler(db *gorm.DB) gin.HandlerFunc {
+func CreateSongHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input model.SongInput
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -52,7 +51,7 @@ func CreateSongHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		s, err := service.CreateSong(c.Request.Context(), db, input)
+		s, err := service.CreateSong(c.Request.Context(), store, input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -62,7 +61,7 @@ func CreateSongHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // UpdateSongHandler PUT /api/music/:id
-func UpdateSongHandler(db *gorm.DB) gin.HandlerFunc {
+func UpdateSongHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var input model.SongUpdate
@@ -73,7 +72,7 @@ func UpdateSongHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		s, err := service.UpdateSong(c.Request.Context(), db, id, input)
+		s, err := service.UpdateSong(c.Request.Context(), store, id, input)
 		if err != nil {
 			if errors.Is(err, repository.ErrSongNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "音乐不存在"})
@@ -87,10 +86,10 @@ func UpdateSongHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // DeleteSongHandler DELETE /api/music/:id
-func DeleteSongHandler(db *gorm.DB) gin.HandlerFunc {
+func DeleteSongHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		if err := service.DeleteSong(c.Request.Context(), db, id); err != nil {
+		if err := service.DeleteSong(c.Request.Context(), store, id); err != nil {
 			if errors.Is(err, repository.ErrSongNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "音乐不存在"})
 				return

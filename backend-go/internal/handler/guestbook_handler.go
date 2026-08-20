@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
@@ -15,9 +14,9 @@ import (
 
 // ListApprovedGuestbookHandler GET /api/guestbook
 // 公开接口：仅返回已审核通过的留言
-func ListApprovedGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
+func ListApprovedGuestbookHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		entries, err := service.ListApprovedGuestbook(c.Request.Context(), db)
+		entries, err := service.ListApprovedGuestbook(c.Request.Context(), store)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取留言列表失败"})
 			return
@@ -28,9 +27,9 @@ func ListApprovedGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 
 // ListAllGuestbookHandler GET /api/admin/guestbook
 // 管理后台：返回全部留言
-func ListAllGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
+func ListAllGuestbookHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		entries, err := service.ListAllGuestbook(c.Request.Context(), db)
+		entries, err := service.ListAllGuestbook(c.Request.Context(), store)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取留言列表失败"})
 			return
@@ -40,10 +39,10 @@ func ListAllGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetGuestbookHandler GET /api/guestbook/:id
-func GetGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
+func GetGuestbookHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		e, err := service.GetGuestbook(c.Request.Context(), db, id)
+		e, err := service.GetGuestbook(c.Request.Context(), store, id)
 		if err != nil {
 			if errors.Is(err, repository.ErrGuestbookNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "留言不存在"})
@@ -58,7 +57,7 @@ func GetGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 
 // CreateGuestbookHandler POST /api/guestbook
 // 访客提交留言（不需要 X-Internal-Secret）
-func CreateGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
+func CreateGuestbookHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input model.GuestbookCreateInput
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -68,7 +67,7 @@ func CreateGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		e, err := service.CreateGuestbook(c.Request.Context(), db, input)
+		e, err := service.CreateGuestbook(c.Request.Context(), store, input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -78,7 +77,7 @@ func CreateGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // UpdateGuestbookHandler PUT /api/admin/guestbook/:id
-func UpdateGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
+func UpdateGuestbookHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var input model.GuestbookUpdateInput
@@ -89,7 +88,7 @@ func UpdateGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		e, err := service.UpdateGuestbook(c.Request.Context(), db, id, input)
+		e, err := service.UpdateGuestbook(c.Request.Context(), store, id, input)
 		if err != nil {
 			if errors.Is(err, repository.ErrGuestbookNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "留言不存在"})
@@ -104,7 +103,7 @@ func UpdateGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 
 // ApproveGuestbookHandler PATCH /api/admin/guestbook/:id/approve
 // 请求体：{"approved": true|false}
-func ApproveGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
+func ApproveGuestbookHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var body struct {
@@ -114,7 +113,7 @@ func ApproveGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数无效"})
 			return
 		}
-		e, err := service.ApproveGuestbook(c.Request.Context(), db, id, body.Approved)
+		e, err := service.ApproveGuestbook(c.Request.Context(), store, id, body.Approved)
 		if err != nil {
 			if errors.Is(err, repository.ErrGuestbookNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "留言不存在"})
@@ -128,7 +127,7 @@ func ApproveGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // ReplyGuestbookHandler POST /api/admin/guestbook/:id/reply
-func ReplyGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
+func ReplyGuestbookHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var input model.GuestbookReplyInput
@@ -139,7 +138,7 @@ func ReplyGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		e, err := service.ReplyGuestbook(c.Request.Context(), db, id, input)
+		e, err := service.ReplyGuestbook(c.Request.Context(), store, id, input)
 		if err != nil {
 			if errors.Is(err, repository.ErrGuestbookNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "留言不存在"})
@@ -153,10 +152,10 @@ func ReplyGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // DeleteGuestbookHandler DELETE /api/admin/guestbook/:id
-func DeleteGuestbookHandler(db *gorm.DB) gin.HandlerFunc {
+func DeleteGuestbookHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := strings.TrimSpace(c.Param("id"))
-		if err := service.DeleteGuestbook(c.Request.Context(), db, id); err != nil {
+		if err := service.DeleteGuestbook(c.Request.Context(), store, id); err != nil {
 			if errors.Is(err, repository.ErrGuestbookNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "留言不存在"})
 				return

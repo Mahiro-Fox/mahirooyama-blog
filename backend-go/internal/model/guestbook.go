@@ -40,3 +40,15 @@ type GuestbookUpdateInput struct {
 type GuestbookReplyInput struct {
 	ReplyContent string `json:"replyContent" binding:"required"`
 }
+
+// GuestbookPatch 部分更新留言的类型化补丁（指针字段，nil 表示不更新）。
+type GuestbookPatch struct {
+	Nickname       *string    `json:"nickname"`
+	BgColor        *string    `json:"bgColor"`
+	Contact        *string    `json:"contact"`
+	Content        *string    `json:"content"`
+	ReplyContent   *string    `json:"replyContent"`
+	ReplyAt        *time.Time `json:"replyAt"`
+	IsApproved     *bool      `json:"isApproved"`
+	IsRepliedEmail *bool      `json:"isRepliedEmail"`
+}

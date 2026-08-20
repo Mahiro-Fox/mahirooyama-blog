@@ -7,34 +7,33 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
 )
 
 // ListGuestbook 列出留言。approvedOnly=true 时只返回已审核通过的（访客用）
-func ListGuestbook(ctx context.Context, db *gorm.DB, approvedOnly bool) ([]model.GuestbookEntry, error) {
-	return repository.ListGuestbook(ctx, db, approvedOnly)
+func ListGuestbook(ctx context.Context, store repository.Store, approvedOnly bool) ([]model.GuestbookEntry, error) {
+	return store.ListGuestbook(ctx, approvedOnly)
 }
 
 // ListApprovedGuestbook 公开接口：只返回已审核通过
-func ListApprovedGuestbook(ctx context.Context, db *gorm.DB) ([]model.GuestbookEntry, error) {
-	return repository.ListGuestbook(ctx, db, true)
+func ListApprovedGuestbook(ctx context.Context, store repository.Store) ([]model.GuestbookEntry, error) {
+	return store.ListGuestbook(ctx, true)
 }
 
 // ListAllGuestbook 管理后台：返回全部
-func ListAllGuestbook(ctx context.Context, db *gorm.DB) ([]model.GuestbookEntry, error) {
-	return repository.ListGuestbook(ctx, db, false)
+func ListAllGuestbook(ctx context.Context, store repository.Store) ([]model.GuestbookEntry, error) {
+	return store.ListGuestbook(ctx, false)
 }
 
 // GetGuestbook 查询单条留言
-func GetGuestbook(ctx context.Context, db *gorm.DB, id string) (*model.GuestbookEntry, error) {
-	return repository.GetGuestbook(ctx, db, id)
+func GetGuestbook(ctx context.Context, store repository.Store, id string) (*model.GuestbookEntry, error) {
+	return store.GetGuestbook(ctx, id)
 }
 
 // CreateGuestbook 访客提交留言
-func CreateGuestbook(ctx context.Context, db *gorm.DB, input model.GuestbookCreateInput) (*model.GuestbookEntry, error) {
+func CreateGuestbook(ctx context.Context, store repository.Store, input model.GuestbookCreateInput) (*model.GuestbookEntry, error) {
 	if strings.TrimSpace(input.Nickname) == "" {
 		return nil, errors.New("昵称不能为空")
 	}
@@ -55,70 +54,71 @@ func CreateGuestbook(ctx context.Context, db *gorm.DB, input model.GuestbookCrea
 		IsApproved:                false,
 		IsEmailNotificationEnabled: input.IsEmailNotificationEnabled,
 	}
-	if err := repository.CreateGuestbook(ctx, db, &e); err != nil {
+	if err := store.CreateGuestbook(ctx, &e); err != nil {
 		return nil, err
 	}
 	return &e, nil
 }
 
 // UpdateGuestbook 管理员更新留言（昵称/颜色/联系方式/内容）
-func UpdateGuestbook(ctx context.Context, db *gorm.DB, id string, input model.GuestbookUpdateInput) (*model.GuestbookEntry, error) {
-	if _, err := repository.GetGuestbook(ctx, db, id); err != nil {
+func UpdateGuestbook(ctx context.Context, store repository.Store, id string, input model.GuestbookUpdateInput) (*model.GuestbookEntry, error) {
+	if _, err := store.GetGuestbook(ctx, id); err != nil {
 		return nil, err
 	}
 
-	updates := map[string]any{}
+	patch := &model.GuestbookPatch{}
 	if input.Nickname != nil {
-		updates["nickname"] = *input.Nickname
+		patch.Nickname = input.Nickname
 	}
 	if input.BgColor != nil {
-		updates["bg_color"] = *input.BgColor
+		patch.BgColor = input.BgColor
 	}
 	if input.Contact != nil {
-		updates["contact"] = *input.Contact
+		patch.Contact = input.Contact
 	}
 	if input.Content != nil {
-		updates["content"] = *input.Content
+		patch.Content = input.Content
 	}
 
-	if len(updates) == 0 {
-		return repository.GetGuestbook(ctx, db, id)
+	if patch.Nickname == nil && patch.BgColor == nil && patch.Contact == nil && patch.Content == nil {
+		return store.GetGuestbook(ctx, id)
 	}
-	if err := repository.UpdateGuestbook(ctx, db, id, updates); err != nil {
+	if err := store.UpdateGuestbook(ctx, id, patch); err != nil {
 		return nil, err
 	}
-	return repository.GetGuestbook(ctx, db, id)
+	return store.GetGuestbook(ctx, id)
 }
 
 // ApproveGuestbook 管理员审核留言
-func ApproveGuestbook(ctx context.Context, db *gorm.DB, id string, approve bool) (*model.GuestbookEntry, error) {
-	if _, err := repository.GetGuestbook(ctx, db, id); err != nil {
+func ApproveGuestbook(ctx context.Context, store repository.Store, id string, approve bool) (*model.GuestbookEntry, error) {
+	if _, err := store.GetGuestbook(ctx, id); err != nil {
 		return nil, err
 	}
-	if err := repository.UpdateGuestbook(ctx, db, id, map[string]any{"is_approved": approve}); err != nil {
+	if err := store.UpdateGuestbook(ctx, id, &model.GuestbookPatch{IsApproved: &approve}); err != nil {
 		return nil, err
 	}
-	return repository.GetGuestbook(ctx, db, id)
+	return store.GetGuestbook(ctx, id)
 }
 
 // ReplyGuestbook 管理员回复留言
-func ReplyGuestbook(ctx context.Context, db *gorm.DB, id string, input model.GuestbookReplyInput) (*model.GuestbookEntry, error) {
-	if _, err := repository.GetGuestbook(ctx, db, id); err != nil {
+func ReplyGuestbook(ctx context.Context, store repository.Store, id string, input model.GuestbookReplyInput) (*model.GuestbookEntry, error) {
+	if _, err := store.GetGuestbook(ctx, id); err != nil {
 		return nil, err
 	}
 	now := time.Now()
-	updates := map[string]any{
-		"reply_content":    input.ReplyContent,
-		"reply_at":         now,
-		"is_replied_email": false,
+	repliedEmail := false
+	patch := &model.GuestbookPatch{
+		ReplyContent:   &input.ReplyContent,
+		ReplyAt:        &now,
+		IsRepliedEmail: &repliedEmail,
 	}
-	if err := repository.UpdateGuestbook(ctx, db, id, updates); err != nil {
+	if err := store.UpdateGuestbook(ctx, id, patch); err != nil {
 		return nil, err
 	}
-	return repository.GetGuestbook(ctx, db, id)
+	return store.GetGuestbook(ctx, id)
 }
 
 // DeleteGuestbook 删除留言
-func DeleteGuestbook(ctx context.Context, db *gorm.DB, id string) error {
-	return repository.DeleteGuestbook(ctx, db, id)
+func DeleteGuestbook(ctx context.Context, store repository.Store, id string) error {
+	return store.DeleteGuestbook(ctx, id)
 }

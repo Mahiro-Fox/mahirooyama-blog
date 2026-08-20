@@ -14,8 +14,8 @@ import (
 var ErrGuestbookNotFound = errors.New("guestbook entry not found")
 
 // ListGuestbook 列出留言，可过滤 isApproved；按 created_at 倒序
-func ListGuestbook(ctx context.Context, db *gorm.DB, approvedOnly bool) ([]model.GuestbookEntry, error) {
-	query := db.WithContext(ctx).Model(&model.GuestbookEntry{})
+func (s *GormStore) ListGuestbook(ctx context.Context, approvedOnly bool) ([]model.GuestbookEntry, error) {
+	query := s.db.WithContext(ctx).Model(&model.GuestbookEntry{})
 	if approvedOnly {
 		query = query.Where("is_approved = ?", true)
 	}
@@ -27,9 +27,9 @@ func ListGuestbook(ctx context.Context, db *gorm.DB, approvedOnly bool) ([]model
 }
 
 // GetGuestbook 按 ID 查询单条留言
-func GetGuestbook(ctx context.Context, db *gorm.DB, id string) (*model.GuestbookEntry, error) {
+func (s *GormStore) GetGuestbook(ctx context.Context, id string) (*model.GuestbookEntry, error) {
 	var e model.GuestbookEntry
-	if err := db.WithContext(ctx).First(&e, "id = ?", id).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&e, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrGuestbookNotFound
 		}
@@ -39,19 +39,19 @@ func GetGuestbook(ctx context.Context, db *gorm.DB, id string) (*model.Guestbook
 }
 
 // CreateGuestbook 创建留言
-func CreateGuestbook(ctx context.Context, db *gorm.DB, e *model.GuestbookEntry) error {
-	if err := db.WithContext(ctx).Create(e).Error; err != nil {
+func (s *GormStore) CreateGuestbook(ctx context.Context, e *model.GuestbookEntry) error {
+	if err := s.db.WithContext(ctx).Create(e).Error; err != nil {
 		return fmt.Errorf("create guestbook: %w", err)
 	}
 	return nil
 }
 
-// UpdateGuestbook 按 ID 更新指定字段
-func UpdateGuestbook(ctx context.Context, db *gorm.DB, id string, updates map[string]any) error {
-	result := db.WithContext(ctx).
+// UpdateGuestbook 按 ID 部分更新（类型化补丁，nil 指针字段不更新）
+func (s *GormStore) UpdateGuestbook(ctx context.Context, id string, patch *model.GuestbookPatch) error {
+	result := s.db.WithContext(ctx).
 		Model(&model.GuestbookEntry{}).
 		Where("id = ?", id).
-		Updates(updates)
+		Updates(patch)
 	if result.Error != nil {
 		return fmt.Errorf("update guestbook: %w", result.Error)
 	}
@@ -62,8 +62,8 @@ func UpdateGuestbook(ctx context.Context, db *gorm.DB, id string, updates map[st
 }
 
 // DeleteGuestbook 按 ID 删除留言
-func DeleteGuestbook(ctx context.Context, db *gorm.DB, id string) error {
-	result := db.WithContext(ctx).Where("id = ?", id).Delete(&model.GuestbookEntry{})
+func (s *GormStore) DeleteGuestbook(ctx context.Context, id string) error {
+	result := s.db.WithContext(ctx).Where("id = ?", id).Delete(&model.GuestbookEntry{})
 	if result.Error != nil {
 		return fmt.Errorf("delete guestbook: %w", result.Error)
 	}

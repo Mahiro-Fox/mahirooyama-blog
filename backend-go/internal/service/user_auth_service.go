@@ -6,10 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
-
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/auth"
 	"mahirooyama-blog/backend-go/internal/config"
@@ -41,35 +40,35 @@ type UserVerifyResult struct {
 
 // UserLogin 前台登录：username/email + password → 查 accounts → bcrypt → 删旧会话 → 签发 JWT → 写会话
 // 支持用 username 或 email 登录（先按 username 查，查不到再按 email 查，和 Next 保持一致）
-func UserLogin(ctx context.Context, db *gorm.DB, cfg *config.Config, username, password string) (*UserLoginResult, error) {
+func UserLogin(ctx context.Context, store repository.Store, cfg *config.Config, username, password string) (*UserLoginResult, error) {
 	if cfg.JWTSecret == "" {
 		return nil, errors.New("服务端 JWT_SECRET 未配置")
 	}
 	if strings.TrimSpace(username) == "" {
 		return nil, errors.New("请输入用户名或邮箱")
 	}
-	a, err := repository.GetAccountByUsername(ctx, db, username)
+	a, err := store.GetAccountByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, repository.ErrAccountNotFound) {
-			a, err = repository.GetAccountByEmail(ctx, db, username)
+			a, err = store.GetAccountByEmail(ctx, username)
 		}
 		if err != nil {
 			if errors.Is(err, repository.ErrAccountNotFound) {
-				return nil, errors.New("用户名或密码错误")
+				return nil, fmt.Errorf("%w", ErrInvalidCredentials)
 			}
 			return nil, fmt.Errorf("查账户失败: %w", err)
 		}
 	}
 	if a.PasswordHash == "" {
-		return nil, errors.New("用户名或密码错误")
+		return nil, fmt.Errorf("%w", ErrInvalidCredentials)
 	}
 	if !verifyPassword(ctx, password, a.PasswordHash) {
-		return nil, errors.New("用户名或密码错误")
+		return nil, fmt.Errorf("%w", ErrInvalidCredentials)
 	}
 	now := time.Now()
 	sessionID := auth.NewSessionID()
 	secret := []byte(cfg.JWTSecret)
-	if _, e := repository.DeleteUserSessionsByAccountID(ctx, db, a.ID); e != nil {
+	if _, e := store.DeleteUserSessionsByAccountID(ctx, a.ID); e != nil {
 		return nil, fmt.Errorf("清理旧会话失败: %w", e)
 	}
 	email := ""
@@ -93,7 +92,7 @@ func UserLogin(ctx context.Context, db *gorm.DB, cfg *config.Config, username, p
 		UserAgent:  "",
 		IP:         "",
 	}
-	if e := repository.CreateUserSession(ctx, db, session); e != nil {
+	if e := store.CreateUserSession(ctx, session); e != nil {
 		return nil, fmt.Errorf("写入会话失败: %w", e)
 	}
 	return &UserLoginResult{
@@ -106,7 +105,7 @@ func UserLogin(ctx context.Context, db *gorm.DB, cfg *config.Config, username, p
 }
 
 // UserVerify 前台鉴权：JWT 校验 → 查会话（必要时恢复）→ 更新 last_used_at → 返回最新账户信息
-func UserVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token string) (*UserVerifyResult, error) {
+func UserVerify(ctx context.Context, store repository.Store, cfg *config.Config, token string) (*UserVerifyResult, error) {
 	if strings.TrimSpace(token) == "" || cfg.JWTSecret == "" {
 		return &UserVerifyResult{Success: false, Error: "未登录"}, nil
 	}
@@ -116,7 +115,7 @@ func UserVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token stri
 		return &UserVerifyResult{Success: false, Error: "登录已过期，请重新登录"}, nil
 	}
 
-	session, sessErr := repository.GetUserSessionByToken(ctx, db, token)
+	session, sessErr := store.GetUserSessionByToken(ctx, token)
 	if sessErr != nil && !errors.Is(sessErr, repository.ErrUserSessionNotFound) {
 		return nil, fmt.Errorf("查 user session 失败: %w", sessErr)
 	}
@@ -125,24 +124,20 @@ func UserVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token stri
 		if claims.AccountID == "" || claims.SessionID == "" {
 			return &UserVerifyResult{Success: false, Error: "会话已在其他设备上失效，请重新登录"}, nil
 		}
-		recoverErr := func() error {
-			a, e := repository.GetAccountByID(ctx, db, claims.AccountID)
-			if e != nil {
-				return e
-			}
-			_ = a
-			return repository.CreateUserSession(ctx, db, &model.UserSession{
-				Token:      token,
-				AccountID:  claims.AccountID,
-				SessionID:  claims.SessionID,
-				CreatedAt:  time.Now(),
-				LastUsedAt: time.Now(),
-				ExpiresAt:  time.Unix(claims.ExpiresAtUnix(), 0),
-			})
-		}()
-		if recoverErr == nil {
+		// 恢复会话：JWT 合法但 PG 中无会话，按 JWT 声明重建。
+		// 账户是否存在由下方 GetAccountByID 统一校验，这里不做冗余预查。
+		if e := store.CreateUserSession(ctx, &model.UserSession{
+			Token:      token,
+			AccountID:  claims.AccountID,
+			SessionID:  claims.SessionID,
+			CreatedAt:  time.Now(),
+			LastUsedAt: time.Now(),
+			ExpiresAt:  time.Unix(claims.ExpiresAtUnix(), 0),
+		}); e != nil {
+			log.Printf("user session 恢复失败: %v", e)
+		} else {
 			recovered = true
-			if s, e := repository.GetUserSessionByToken(ctx, db, token); e == nil {
+			if s, e := store.GetUserSessionByToken(ctx, token); e == nil {
 				session = s
 			}
 		}
@@ -151,9 +146,11 @@ func UserVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token stri
 		return &UserVerifyResult{Success: false, Error: "会话已在其他设备上失效，请重新登录"}, nil
 	}
 
-	_ = repository.UpdateUserSessionLastUsedAt(ctx, db, token, time.Now())
+	if e := store.UpdateUserSessionLastUsedAt(ctx, token, time.Now()); e != nil {
+		log.Printf("更新 user session last_used_at 失败: %v", e)
+	}
 
-	a, aErr := repository.GetAccountByID(ctx, db, session.AccountID)
+	a, aErr := store.GetAccountByID(ctx, session.AccountID)
 	if aErr != nil {
 		if errors.Is(aErr, repository.ErrAccountNotFound) {
 			return &UserVerifyResult{Success: false, Error: "账户不存在或已被删除"}, nil
@@ -177,11 +174,11 @@ func UserVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token stri
 }
 
 // UserLogout 前台登出：删除 user_sessions.token
-func UserLogout(ctx context.Context, db *gorm.DB, token string) error {
+func UserLogout(ctx context.Context, store repository.Store, token string) error {
 	if strings.TrimSpace(token) == "" {
 		return nil
 	}
-	err := repository.DeleteUserSessionByToken(ctx, db, token)
+	err := store.DeleteUserSessionByToken(ctx, token)
 	if err != nil && errors.Is(err, repository.ErrUserSessionNotFound) {
 		return nil
 	}
@@ -189,6 +186,6 @@ func UserLogout(ctx context.Context, db *gorm.DB, token string) error {
 }
 
 // CleanupExpiredUserSessions 定时清理过期 user_sessions
-func CleanupExpiredUserSessions(ctx context.Context, db *gorm.DB, now time.Time) (int64, error) {
-	return repository.DeleteExpiredUserSessions(ctx, db, now)
+func CleanupExpiredUserSessions(ctx context.Context, store repository.Store, now time.Time) (int64, error) {
+	return store.DeleteExpiredUserSessions(ctx, now)
 }

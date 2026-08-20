@@ -14,18 +14,18 @@ import (
 var ErrRoleNotFound = errors.New("role not found")
 
 // ListRolePermissions 列出全部角色权限
-func ListRolePermissions(ctx context.Context, db *gorm.DB) ([]model.RolePermission, error) {
+func (s *GormStore) ListRolePermissions(ctx context.Context) ([]model.RolePermission, error) {
 	var rps []model.RolePermission
-	if err := db.WithContext(ctx).Order("role ASC").Find(&rps).Error; err != nil {
+	if err := s.db.WithContext(ctx).Order("role ASC").Find(&rps).Error; err != nil {
 		return nil, fmt.Errorf("list role permissions: %w", err)
 	}
 	return rps, nil
 }
 
 // GetRolePermissions 按角色查询权限
-func GetRolePermissions(ctx context.Context, db *gorm.DB, role string) (*model.RolePermission, error) {
+func (s *GormStore) GetRolePermissions(ctx context.Context, role string) (*model.RolePermission, error) {
 	var rp model.RolePermission
-	if err := db.WithContext(ctx).First(&rp, "role = ?", role).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&rp, "role = ?", role).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrRoleNotFound
 		}
@@ -35,16 +35,16 @@ func GetRolePermissions(ctx context.Context, db *gorm.DB, role string) (*model.R
 }
 
 // UpsertRolePermissions upsert 角色权限
-func UpsertRolePermissions(ctx context.Context, db *gorm.DB, rp *model.RolePermission) error {
-	if err := db.WithContext(ctx).Save(rp).Error; err != nil {
+func (s *GormStore) UpsertRolePermissions(ctx context.Context, rp *model.RolePermission) error {
+	if err := s.db.WithContext(ctx).Save(rp).Error; err != nil {
 		return fmt.Errorf("upsert role permissions: %w", err)
 	}
 	return nil
 }
 
 // DeleteRolePermissions 删除角色权限
-func DeleteRolePermissions(ctx context.Context, db *gorm.DB, role string) error {
-	result := db.WithContext(ctx).Where("role = ?", role).Delete(&model.RolePermission{})
+func (s *GormStore) DeleteRolePermissions(ctx context.Context, role string) error {
+	result := s.db.WithContext(ctx).Where("role = ?", role).Delete(&model.RolePermission{})
 	if result.Error != nil {
 		return fmt.Errorf("delete role permissions: %w", result.Error)
 	}

@@ -6,10 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
-
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/auth"
 	"mahirooyama-blog/backend-go/internal/config"
@@ -42,11 +41,11 @@ type AdminVerifyResult struct {
 }
 
 // AdminLogin 用户名密码 → 查 admin_users → bcrypt → 删旧会话（单设备）→ 签发 JWT → 写会话表
-func AdminLogin(ctx context.Context, db *gorm.DB, cfg *config.Config, username, password string) (*AdminLoginResult, error) {
+func AdminLogin(ctx context.Context, store repository.Store, cfg *config.Config, username, password string) (*AdminLoginResult, error) {
 	if cfg.JWTSecret == "" {
 		return nil, errors.New("服务端 JWT_SECRET 未配置")
 	}
-	user, err := VerifyAdminUser(ctx, db, username, password)
+	user, err := VerifyAdminUser(ctx, store, username, password)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +53,7 @@ func AdminLogin(ctx context.Context, db *gorm.DB, cfg *config.Config, username, 
 	sessionID := auth.NewSessionID()
 	secret := []byte(cfg.JWTSecret)
 	// 单设备登录：删旧会话（先删后建，事务外）
-	if _, e := repository.DeleteAdminSessionsByAdminUserID(ctx, db, user.ID); e != nil {
+	if _, e := store.DeleteAdminSessionsByAdminUserID(ctx, user.ID); e != nil {
 		return nil, fmt.Errorf("清理旧会话失败: %w", e)
 	}
 	token, err := auth.SignAdmin(
@@ -74,7 +73,7 @@ func AdminLogin(ctx context.Context, db *gorm.DB, cfg *config.Config, username, 
 		UserAgent:   "", // 由 Next Action 里的请求上下文填充更方便；不填不影响语义
 		IP:          "",
 	}
-	if e := repository.CreateAdminSession(ctx, db, session); e != nil {
+	if e := store.CreateAdminSession(ctx, session); e != nil {
 		return nil, fmt.Errorf("写入会话失败: %w", e)
 	}
 	return &AdminLoginResult{
@@ -88,7 +87,7 @@ func AdminLogin(ctx context.Context, db *gorm.DB, cfg *config.Config, username, 
 
 // AdminVerify 校验 token：JWT → 查 admin_sessions（必要时自动恢复）→ 更新 last_used_at
 // 失败返回 (*AdminVerifyResult, nil)，Success=false + Error。只有内部错误才返回 (nil, error)。
-func AdminVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token string) (*AdminVerifyResult, error) {
+func AdminVerify(ctx context.Context, store repository.Store, cfg *config.Config, token string) (*AdminVerifyResult, error) {
 	if strings.TrimSpace(token) == "" || cfg.JWTSecret == "" {
 		return &AdminVerifyResult{Success: false, Error: "未登录"}, nil
 	}
@@ -99,34 +98,29 @@ func AdminVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token str
 	}
 
 	// 1) 查会话（存在性校验 + 单设备踢下线判断）
-	session, sessErr := repository.GetAdminSessionByToken(ctx, db, token)
+	session, sessErr := store.GetAdminSessionByToken(ctx, token)
 	if sessErr != nil && !errors.Is(sessErr, repository.ErrAdminSessionNotFound) {
 		return nil, fmt.Errorf("查 admin session 失败: %w", sessErr)
 	}
 	recovered := false
 	if session == nil && cfg.SessionAutoRecover {
-		// 2) 降级：JWT 合法但 PG 中无会话 → 自动恢复（防止升级瞬间全员重登）
+		// 降级：JWT 合法但 PG 中无会话 → 自动恢复（防止升级瞬间全员重登）。
+		// 用户是否存在由下方 GetAdminUserByID 统一校验，这里不做冗余预查。
 		if claims.UserID == "" || claims.SessionID == "" {
 			return &AdminVerifyResult{Success: false, Error: "会话已在其他设备上失效，请重新登录"}, nil
 		}
-		recoverErr := func() error {
-			u, e := repository.GetAdminUserByID(ctx, db, claims.UserID)
-			if e != nil {
-				return e
-			}
-			_ = u
-			return repository.CreateAdminSession(ctx, db, &model.AdminSession{
-				Token:      token,
-				AdminUserID: claims.UserID,
-				SessionID:  claims.SessionID,
-				CreatedAt:  time.Now(),
-				LastUsedAt: time.Now(),
-				ExpiresAt:  time.Unix(claims.ExpiresAtUnix(), 0),
-			})
-		}()
-		if recoverErr == nil {
+		if e := store.CreateAdminSession(ctx, &model.AdminSession{
+			Token:       token,
+			AdminUserID: claims.UserID,
+			SessionID:   claims.SessionID,
+			CreatedAt:   time.Now(),
+			LastUsedAt:  time.Now(),
+			ExpiresAt:   time.Unix(claims.ExpiresAtUnix(), 0),
+		}); e != nil {
+			log.Printf("admin session 恢复失败: %v", e)
+		} else {
 			recovered = true
-			if s, e := repository.GetAdminSessionByToken(ctx, db, token); e == nil {
+			if s, e := store.GetAdminSessionByToken(ctx, token); e == nil {
 				session = s
 			}
 		}
@@ -135,11 +129,13 @@ func AdminVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token str
 		return &AdminVerifyResult{Success: false, Error: "会话已在其他设备上失效，请重新登录"}, nil
 	}
 
-	// 3) 更新 last_used_at（失败不阻挡鉴权通过，避免误杀）
-	_ = repository.UpdateAdminSessionLastUsedAt(ctx, db, token, time.Now())
+	// 3) 更新 last_used_at（失败不阻挡鉴权通过，但记录日志便于排查）
+	if e := store.UpdateAdminSessionLastUsedAt(ctx, token, time.Now()); e != nil {
+		log.Printf("更新 admin session last_used_at 失败: %v", e)
+	}
 
 	// 4) 取「最新用户信息」（避免 JWT 里的 avatar/role 等字段过期）
-	user, userErr := repository.GetAdminUserByID(ctx, db, session.AdminUserID)
+	user, userErr := store.GetAdminUserByID(ctx, session.AdminUserID)
 	if userErr != nil {
 		if errors.Is(userErr, repository.ErrAdminUserNotFound) {
 			return &AdminVerifyResult{Success: false, Error: "用户不存在或已被删除"}, nil
@@ -161,11 +157,11 @@ func AdminVerify(ctx context.Context, db *gorm.DB, cfg *config.Config, token str
 }
 
 // AdminLogout 从 admin_sessions 删除 token
-func AdminLogout(ctx context.Context, db *gorm.DB, token string) error {
+func AdminLogout(ctx context.Context, store repository.Store, token string) error {
 	if strings.TrimSpace(token) == "" {
 		return nil
 	}
-	err := repository.DeleteAdminSessionByToken(ctx, db, token)
+	err := store.DeleteAdminSessionByToken(ctx, token)
 	if err != nil && errors.Is(err, repository.ErrAdminSessionNotFound) {
 		// 不在表中视为已登出，幂等
 		return nil
@@ -174,8 +170,8 @@ func AdminLogout(ctx context.Context, db *gorm.DB, token string) error {
 }
 
 // CleanupExpiredAdminSessions 后台 goroutine 定时执行；返回删除的行数
-func CleanupExpiredAdminSessions(ctx context.Context, db *gorm.DB, now time.Time) (int64, error) {
-	return repository.DeleteExpiredAdminSessions(ctx, db, now)
+func CleanupExpiredAdminSessions(ctx context.Context, store repository.Store, now time.Time) (int64, error) {
+	return store.DeleteExpiredAdminSessions(ctx, now)
 }
 
 // coalesceString 空字符串兜底（纯工具，不暴露给外部）

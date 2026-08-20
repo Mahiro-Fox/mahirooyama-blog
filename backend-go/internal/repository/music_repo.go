@@ -14,40 +14,40 @@ import (
 var ErrSongNotFound = errors.New("song not found")
 
 // ListSongs 列出全部音乐
-func ListSongs(ctx context.Context, db *gorm.DB) ([]model.Song, error) {
+func (s *GormStore) ListSongs(ctx context.Context) ([]model.Song, error) {
 	var songs []model.Song
-	if err := db.WithContext(ctx).Order("id ASC").Find(&songs).Error; err != nil {
+	if err := s.db.WithContext(ctx).Order("id ASC").Find(&songs).Error; err != nil {
 		return nil, fmt.Errorf("list songs: %w", err)
 	}
 	return songs, nil
 }
 
 // GetSong 按 ID 查询单个音乐
-func GetSong(ctx context.Context, db *gorm.DB, id string) (*model.Song, error) {
-	var s model.Song
-	if err := db.WithContext(ctx).First(&s, "id = ?", id).Error; err != nil {
+func (s *GormStore) GetSong(ctx context.Context, id string) (*model.Song, error) {
+	var sng model.Song
+	if err := s.db.WithContext(ctx).First(&sng, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrSongNotFound
 		}
 		return nil, fmt.Errorf("get song: %w", err)
 	}
-	return &s, nil
+	return &sng, nil
 }
 
 // CreateSong 创建音乐
-func CreateSong(ctx context.Context, db *gorm.DB, s *model.Song) error {
-	if err := db.WithContext(ctx).Create(s).Error; err != nil {
+func (s *GormStore) CreateSong(ctx context.Context, song *model.Song) error {
+	if err := s.db.WithContext(ctx).Create(song).Error; err != nil {
 		return fmt.Errorf("create song: %w", err)
 	}
 	return nil
 }
 
-// UpdateSong 按 ID 更新指定字段
-func UpdateSong(ctx context.Context, db *gorm.DB, id string, updates map[string]any) error {
-	result := db.WithContext(ctx).
+// UpdateSong 按 ID 部分更新（类型化补丁，nil 指针字段不更新）
+func (s *GormStore) UpdateSong(ctx context.Context, id string, patch *model.SongPatch) error {
+	result := s.db.WithContext(ctx).
 		Model(&model.Song{}).
 		Where("id = ?", id).
-		Updates(updates)
+		Updates(patch)
 	if result.Error != nil {
 		return fmt.Errorf("update song: %w", result.Error)
 	}
@@ -58,8 +58,8 @@ func UpdateSong(ctx context.Context, db *gorm.DB, id string, updates map[string]
 }
 
 // DeleteSong 按 ID 删除音乐
-func DeleteSong(ctx context.Context, db *gorm.DB, id string) error {
-	result := db.WithContext(ctx).Where("id = ?", id).Delete(&model.Song{})
+func (s *GormStore) DeleteSong(ctx context.Context, id string) error {
+	result := s.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Song{})
 	if result.Error != nil {
 		return fmt.Errorf("delete song: %w", result.Error)
 	}

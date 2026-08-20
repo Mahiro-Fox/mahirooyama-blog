@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
@@ -13,9 +12,9 @@ import (
 )
 
 // ListMomentsHandler GET /api/moments
-func ListMomentsHandler(db *gorm.DB) gin.HandlerFunc {
+func ListMomentsHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		moments, err := service.ListMoments(c.Request.Context(), db)
+		moments, err := service.ListMoments(c.Request.Context(), store)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取碎碎念列表失败"})
 			return
@@ -25,10 +24,10 @@ func ListMomentsHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetMomentHandler GET /api/moments/:id
-func GetMomentHandler(db *gorm.DB) gin.HandlerFunc {
+func GetMomentHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		m, err := service.GetMoment(c.Request.Context(), db, id)
+		m, err := service.GetMoment(c.Request.Context(), store, id)
 		if err != nil {
 			if errors.Is(err, repository.ErrMomentNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "碎碎念不存在"})
@@ -42,7 +41,7 @@ func GetMomentHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // CreateMomentHandler POST /api/moments
-func CreateMomentHandler(db *gorm.DB) gin.HandlerFunc {
+func CreateMomentHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input model.MomentInput
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -52,7 +51,7 @@ func CreateMomentHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		m, err := service.CreateMoment(c.Request.Context(), db, input)
+		m, err := service.CreateMoment(c.Request.Context(), store, input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -62,7 +61,7 @@ func CreateMomentHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // UpdateMomentHandler PUT /api/moments/:id
-func UpdateMomentHandler(db *gorm.DB) gin.HandlerFunc {
+func UpdateMomentHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var input model.MomentUpdate
@@ -73,7 +72,7 @@ func UpdateMomentHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		m, err := service.UpdateMoment(c.Request.Context(), db, id, input)
+		m, err := service.UpdateMoment(c.Request.Context(), store, id, input)
 		if err != nil {
 			if errors.Is(err, repository.ErrMomentNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "碎碎念不存在"})
@@ -87,10 +86,10 @@ func UpdateMomentHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // DeleteMomentHandler DELETE /api/moments/:id
-func DeleteMomentHandler(db *gorm.DB) gin.HandlerFunc {
+func DeleteMomentHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		if err := service.DeleteMoment(c.Request.Context(), db, id); err != nil {
+		if err := service.DeleteMoment(c.Request.Context(), store, id); err != nil {
 			if errors.Is(err, repository.ErrMomentNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "碎碎念不存在"})
 				return

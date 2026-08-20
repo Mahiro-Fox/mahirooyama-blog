@@ -14,8 +14,8 @@ import (
 var ErrTagNotFound = errors.New("tag not found")
 
 // ListTags 列出全部标签，可按 type 过滤
-func ListTags(ctx context.Context, db *gorm.DB, tagType string) ([]model.Tag, error) {
-	query := db.WithContext(ctx).Model(&model.Tag{})
+func (s *GormStore) ListTags(ctx context.Context, tagType string) ([]model.Tag, error) {
+	query := s.db.WithContext(ctx).Model(&model.Tag{})
 	if tagType != "" {
 		query = query.Where("type = ?", tagType)
 	}
@@ -27,9 +27,9 @@ func ListTags(ctx context.Context, db *gorm.DB, tagType string) ([]model.Tag, er
 }
 
 // GetTag 按 (id, type) 查询单个标签
-func GetTag(ctx context.Context, db *gorm.DB, id string, tagType string) (*model.Tag, error) {
+func (s *GormStore) GetTag(ctx context.Context, id string, tagType string) (*model.Tag, error) {
 	var t model.Tag
-	if err := db.WithContext(ctx).
+	if err := s.db.WithContext(ctx).
 		Where("id = ? AND type = ?", id, tagType).
 		First(&t).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -41,19 +41,19 @@ func GetTag(ctx context.Context, db *gorm.DB, id string, tagType string) (*model
 }
 
 // CreateTag 创建标签
-func CreateTag(ctx context.Context, db *gorm.DB, t *model.Tag) error {
-	if err := db.WithContext(ctx).Create(t).Error; err != nil {
+func (s *GormStore) CreateTag(ctx context.Context, t *model.Tag) error {
+	if err := s.db.WithContext(ctx).Create(t).Error; err != nil {
 		return fmt.Errorf("create tag: %w", err)
 	}
 	return nil
 }
 
-// UpdateTag 按 (id, type) 更新指定字段
-func UpdateTag(ctx context.Context, db *gorm.DB, id, tagType string, updates map[string]any) error {
-	result := db.WithContext(ctx).
+// UpdateTag 按 (id, type) 部分更新（类型化补丁，nil 指针字段不更新）
+func (s *GormStore) UpdateTag(ctx context.Context, id, tagType string, patch *model.TagPatch) error {
+	result := s.db.WithContext(ctx).
 		Model(&model.Tag{}).
 		Where("id = ? AND type = ?", id, tagType).
-		Updates(updates)
+		Updates(patch)
 	if result.Error != nil {
 		return fmt.Errorf("update tag: %w", result.Error)
 	}
@@ -64,8 +64,8 @@ func UpdateTag(ctx context.Context, db *gorm.DB, id, tagType string, updates map
 }
 
 // DeleteTag 按 (id, type) 删除标签
-func DeleteTag(ctx context.Context, db *gorm.DB, id, tagType string) error {
-	result := db.WithContext(ctx).
+func (s *GormStore) DeleteTag(ctx context.Context, id, tagType string) error {
+	result := s.db.WithContext(ctx).
 		Where("id = ? AND type = ?", id, tagType).
 		Delete(&model.Tag{})
 	if result.Error != nil {

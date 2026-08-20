@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
 	"mahirooyama-blog/backend-go/internal/model"
 	"mahirooyama-blog/backend-go/internal/repository"
@@ -13,9 +12,9 @@ import (
 )
 
 // ListBugsHandler GET /api/admin/bugs
-func ListBugsHandler(db *gorm.DB) gin.HandlerFunc {
+func ListBugsHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		bugs, err := service.ListBugs(c.Request.Context(), db)
+		bugs, err := service.ListBugs(c.Request.Context(), store)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取 Bug 列表失败"})
 			return
@@ -25,10 +24,10 @@ func ListBugsHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // GetBugHandler GET /api/admin/bugs/:id
-func GetBugHandler(db *gorm.DB) gin.HandlerFunc {
+func GetBugHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		b, err := service.GetBug(c.Request.Context(), db, id)
+		b, err := service.GetBug(c.Request.Context(), store, id)
 		if err != nil {
 			if errors.Is(err, repository.ErrBugNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Bug 报告不存在"})
@@ -43,7 +42,7 @@ func GetBugHandler(db *gorm.DB) gin.HandlerFunc {
 
 // CreateBugHandler POST /api/bugs
 // 前端用户提交，不需要 X-Internal-Secret
-func CreateBugHandler(db *gorm.DB) gin.HandlerFunc {
+func CreateBugHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var input model.BugCreateInput
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -54,7 +53,7 @@ func CreateBugHandler(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		input.UserAgent = c.Request.Header.Get("User-Agent")
-		b, err := service.CreateBug(c.Request.Context(), db, input)
+		b, err := service.CreateBug(c.Request.Context(), store, input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -64,7 +63,7 @@ func CreateBugHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // UpdateBugStatusHandler PATCH /api/admin/bugs/:id/status
-func UpdateBugStatusHandler(db *gorm.DB) gin.HandlerFunc {
+func UpdateBugStatusHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var input model.BugUpdateStatusInput
@@ -75,7 +74,7 @@ func UpdateBugStatusHandler(db *gorm.DB) gin.HandlerFunc {
 			})
 			return
 		}
-		b, err := service.UpdateBugStatus(c.Request.Context(), db, id, input.Status)
+		b, err := service.UpdateBugStatus(c.Request.Context(), store, id, input.Status)
 		if err != nil {
 			if errors.Is(err, repository.ErrBugNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Bug 报告不存在"})
@@ -89,10 +88,10 @@ func UpdateBugStatusHandler(db *gorm.DB) gin.HandlerFunc {
 }
 
 // DeleteBugHandler DELETE /api/admin/bugs/:id
-func DeleteBugHandler(db *gorm.DB) gin.HandlerFunc {
+func DeleteBugHandler(store repository.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
-		if err := service.DeleteBug(c.Request.Context(), db, id); err != nil {
+		if err := service.DeleteBug(c.Request.Context(), store, id); err != nil {
 			if errors.Is(err, repository.ErrBugNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": "Bug 报告不存在"})
 				return
