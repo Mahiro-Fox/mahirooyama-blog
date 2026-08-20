@@ -65,7 +65,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      GO_API_INTERNAL_URL: ${GO_API_INTERNAL_URL}
+      GO_API_INTERNAL_URL: http://backend-go:8080
       GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
       JWT_SECRET: ${JWT_SECRET}
