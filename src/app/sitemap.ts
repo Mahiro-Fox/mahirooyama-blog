@@ -5,19 +5,31 @@ import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getPublicMovies } from '@/actions/admin/movie-actions';
 import { siteConfig } from '@/config/common';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // 每小时最多重新生成一次，其余请求走缓存
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
 
-  const [blogResult, galleryResult, movieResult, allTags] = await Promise.all([
-    getPublicBlogs({ all: true }),
-    getPublicGalleries({ all: true }),
-    getPublicMovies(),
-    tagStore.getAll(),
-  ]);
-  const blogPosts = blogResult.success ? blogResult.data.items : [];
-  const galleryItems = galleryResult.success ? galleryResult.data.items : [];
-  const movieItems = movieResult.success ? movieResult.data : [];
+  const [blogResult, galleryResult, movieResult, tagsResult] =
+    await Promise.allSettled([
+      getPublicBlogs({ all: true }),
+      getPublicGalleries({ all: true }),
+      getPublicMovies(),
+      tagStore.getAll(),
+    ]);
+  const blogPosts =
+    blogResult.status === 'fulfilled' && blogResult.value.success
+      ? blogResult.value.data.items
+      : [];
+  const galleryItems =
+    galleryResult.status === 'fulfilled' && galleryResult.value.success
+      ? galleryResult.value.data.items
+      : [];
+  const movieItems =
+    movieResult.status === 'fulfilled' && movieResult.value.success
+      ? movieResult.value.data
+      : [];
+  const allTags = tagsResult.status === 'fulfilled' ? tagsResult.value : null;
 
   // 博客页
   const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
@@ -37,16 +49,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 标签页
   const tagPages: MetadataRoute.Sitemap = [];
-  Object.entries(allTags).forEach(([type, tags]) => {
-    Object.entries(tags).forEach(([key, value]) => {
-      tagPages.push({
-        url: `${baseUrl}/tag/${type}/${key}`,
-        lastModified: value.lastUpdated,
-        priority: 0.8,
-        changeFrequency: 'weekly',
+  if (allTags) {
+    Object.entries(allTags).forEach(([type, tags]) => {
+      Object.entries(tags).forEach(([key, value]) => {
+        tagPages.push({
+          url: `${baseUrl}/tag/${type}/${key}`,
+          lastModified: value.lastUpdated,
+          priority: 0.8,
+          changeFrequency: 'weekly',
+        });
       });
     });
-  });
+  }
 
   // 电影页
   const moviePages: MetadataRoute.Sitemap = movieItems.map((movie) => ({
