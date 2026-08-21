@@ -15,7 +15,7 @@ export default function SecretPage() {
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 text-center">
-        <h1 className="mb-2 text-4xl font-bold">Secrets</h1>
+        <h1 className="mb-2 text-4xl font-bold">Secret</h1>
       </div>
       <p>
         &nbsp;&nbsp;&nbsp;&nbsp;现实中独自一人，妄想在虚拟世界寻求慰藉，但遇见的人，都被我伤害，所有的一切都在离我而去，我抓不住任何东西，留不住想留的人。想要得到对方的爱，但却不知道如何去爱对方，到最后只会给别人带去痛苦，也给自己带去痛苦。每当看见幸福的场景，我的心都会剧痛，真的好羡慕好羡慕好羡慕。为什么为什么为什么为什么我这么自私，真的真的真的好想去死，好想解脱，好想结束这一切，让我去地狱赎罪吧。
