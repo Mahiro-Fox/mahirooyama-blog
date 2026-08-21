@@ -21,7 +21,6 @@ import { absoluteUrl, formatDate } from '@/utils/utils';
 interface BlogTagPageProps {
   params: Promise<{ slug: string }>;
 }
-export const dynamic = 'force-dynamic';
 // export async function generateStaticParams() {
 //   const tags = await tagStore.getByType('blog');
 //   return i18nConfig.locales.flatMap((locale) =>

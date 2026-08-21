@@ -22,8 +22,6 @@ interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export const dynamic = 'force-dynamic';
-
 // export async function generateStaticParams() {
 //   const allPosts = await getBlogs();
 //   return i18nConfig.locales.flatMap((locale) =>

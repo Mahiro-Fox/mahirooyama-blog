@@ -10,8 +10,6 @@ interface BlogListPageProps {
   params: Promise<{ page: string }>;
 }
 
-export const dynamic = 'force-dynamic';
-
 export default async function BlogListPage({ params }: BlogListPageProps) {
   const { page } = await params;
   const pageNum = Number.parseInt(page);

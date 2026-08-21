@@ -5,8 +5,6 @@ import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getPublicMovies } from '@/actions/admin/movie-actions';
 import { siteConfig } from '@/config/common';
 
-export const revalidate = 3600;
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
 

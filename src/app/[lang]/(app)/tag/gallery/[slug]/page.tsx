@@ -21,7 +21,6 @@ import { absoluteUrl, formatDate } from '@/utils/utils';
 interface GalleryTagPageProps {
   params: Promise<{ slug: string }>;
 }
-export const dynamic = 'force-dynamic';
 // export async function generateStaticParams() {
 //   const tags = await tagStore.getByType('gallery');
 //   return i18nConfig.locales.flatMap((locale) =>
