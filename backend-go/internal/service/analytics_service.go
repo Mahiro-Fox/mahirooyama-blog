@@ -168,7 +168,7 @@ func resolveLocation(ctx context.Context, ip string) model.AnalyticsLocation {
 		return e.loc
 	}
 
-	endpoint := "https://ip-api.com/json/" + clean + "?lang=zh-CN&fields=status,country,regionName,city"
+	endpoint := "http://ip-api.com/json/" + clean + "?lang=zh-CN&fields=status,country,regionName,city"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return loc
