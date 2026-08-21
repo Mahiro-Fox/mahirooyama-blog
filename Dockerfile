@@ -7,9 +7,6 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV GO_API_SHARED_SECRET=$GO_API_SHARED_SECRET
-ENV GO_API_INTERNAL_URL=$GO_API_INTERNAL_URL
-ENV JWT_SECRET=$JWT_SECRET
 RUN corepack enable && pnpm build
 
 FROM node:20-alpine AS runner
