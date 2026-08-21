@@ -11,12 +11,16 @@ jobs:
 
     steps:
       - name: Deploy to server
-        uses: appleboy/ssh-action@v1
+        uses: nekiro/ssh-job@v1.1.0
         with:
+          # Target machine hostname or ip
           host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
+          # Ssh private key used to connect to target machine
           key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
+          # Ssh user
+          user: ${{ secrets.SERVER_USER }}
+          # Bash commands ran on target machine
+          command: |
             cd /home/ubuntu/mahirooyama-blog/
             git pull --rebase
             docker compose up -d --build next-frontend backend-go
