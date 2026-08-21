@@ -1,35 +1,50 @@
 import { tagStore } from '@/store/tag-store';
 import type { MetadataRoute } from 'next';
+import { unstable_cache } from 'next/cache';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
 import { getPublicMovies } from '@/actions/admin/movie-actions';
 import { siteConfig } from '@/config/common';
 
-export const revalidate = 3600; // 每小时最多重新生成一次，其余请求走缓存
+// 路由本身声明为动态,保证构建时绝不执行
+export const dynamic = 'force-dynamic';
+
+// 把实际的数据获取逻辑包一层缓存,1小时内多次请求复用同一份结果
+const getCachedSitemapData = unstable_cache(
+  async () => {
+    const [blogResult, galleryResult, movieResult, tagsResult] =
+      await Promise.allSettled([
+        getPublicBlogs({ all: true }),
+        getPublicGalleries({ all: true }),
+        getPublicMovies(),
+        tagStore.getAll(),
+      ]);
+
+    return {
+      blogPosts:
+        blogResult.status === 'fulfilled' && blogResult.value.success
+          ? blogResult.value.data.items
+          : [],
+      galleryItems:
+        galleryResult.status === 'fulfilled' && galleryResult.value.success
+          ? galleryResult.value.data.items
+          : [],
+      movieItems:
+        movieResult.status === 'fulfilled' && movieResult.value.success
+          ? movieResult.value.data
+          : [],
+      allTags: tagsResult.status === 'fulfilled' ? tagsResult.value : null,
+    };
+  },
+  ['sitemap-data'], // 缓存 key
+  { revalidate: 3600 } // 1小时重新拉取一次
+);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || siteConfig.url;
 
-  const [blogResult, galleryResult, movieResult, tagsResult] =
-    await Promise.allSettled([
-      getPublicBlogs({ all: true }),
-      getPublicGalleries({ all: true }),
-      getPublicMovies(),
-      tagStore.getAll(),
-    ]);
-  const blogPosts =
-    blogResult.status === 'fulfilled' && blogResult.value.success
-      ? blogResult.value.data.items
-      : [];
-  const galleryItems =
-    galleryResult.status === 'fulfilled' && galleryResult.value.success
-      ? galleryResult.value.data.items
-      : [];
-  const movieItems =
-    movieResult.status === 'fulfilled' && movieResult.value.success
-      ? movieResult.value.data
-      : [];
-  const allTags = tagsResult.status === 'fulfilled' ? tagsResult.value : null;
+  const { blogPosts, galleryItems, movieItems, allTags } =
+    await getCachedSitemapData();
 
   // 博客页
   const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
@@ -80,7 +95,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/movies',
     '/image-compressor',
   ];
-
   const staticPages: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
