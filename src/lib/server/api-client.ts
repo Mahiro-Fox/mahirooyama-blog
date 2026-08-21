@@ -13,16 +13,14 @@
 // 因此把检查惰性化，让构建不再依赖它们。
 function getInternalSecret(): string {
   if (!process.env.GO_API_SHARED_SECRET) {
-    console.error('GO_API_SHARED_SECRET 环境变量未配置');
-    return '';
+    throw new Error('GO_API_SHARED_SECRET 环境变量未配置');
   }
   return process.env.GO_API_SHARED_SECRET;
 }
 
 function getBaseUrl(): string {
   if (!process.env.GO_API_INTERNAL_URL) {
-    console.error('GO_API_INTERNAL_URL 环境变量未配置');
-    return 'http://backend-go:8080';
+    throw new Error('GO_API_INTERNAL_URL 环境变量未配置');
   }
   return process.env.GO_API_INTERNAL_URL;
 }
