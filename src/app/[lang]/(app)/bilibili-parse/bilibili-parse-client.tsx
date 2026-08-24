@@ -15,23 +15,10 @@ import {
 import { Input } from '@/components/shadcn-ui/input';
 import { useT } from '@/i18n/dictionary-provider';
 import { formatSize } from '@/utils/utils';
-
-interface ParseResult {
-  title: string;
-  cover: string;
-  mp4Url: string;
-  duration: number;
-  fileSize: number;
-  quality: number;
-  format: string;
-  acceptDescription: string[];
-  supportFormats: Array<{
-    quality: number;
-    format: string;
-    description: string;
-    displayDesc: string;
-  }>;
-}
+import {
+  parseBilibiliVideo,
+  type ParseResult,
+} from '@/actions/app/bilibili-parse';
 
 interface HistoryItem extends ParseResult {
   id: string;
@@ -456,21 +443,14 @@ export default function BilibiliParsePage() {
     setResult(null);
 
     try {
-      const response = await fetch('/api/bilibili-parse', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url }),
-      });
+      const res = await parseBilibiliVideo(url);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || t('bilibili-parse.parse_failed'));
+      if (!res.success) {
+        setError(res.error);
         return;
       }
 
+      const data = res.data;
       setResult(data);
 
       // Add to history
