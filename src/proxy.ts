@@ -87,7 +87,7 @@ export default async function middleware(req: NextRequest) {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-pathname', pathname);
-  requestHeaders.set('x-i18n-rewritten', 'true');
+  requestHeaders.set('x-i18n-rewritten', 'true'); // ★ 新增
 
   const pathnameWithoutLocale = hasLocaleInPath
     ? '/' + pathSegments.slice(1).join('/') || '/'
