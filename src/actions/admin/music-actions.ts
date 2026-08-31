@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goFetch } from '@/lib/server/api-client';
 import { createGoUploadAction } from '@/lib/upload';
@@ -9,6 +10,7 @@ import {
   type ActionResponse,
 } from '@/utils/action-response';
 import { createLogger } from '@/utils/logger';
+import { resolveAbsoluteUrl } from '@/utils/utils';
 
 const logger = createLogger('MusicActions');
 
@@ -192,6 +194,7 @@ export interface UrlCheckResult {
 /**
  * 批量测试所有音乐 URL 是否可访问（HEAD 请求探测）。
  * 探测由服务端发起，避免浏览器 CORS 限制。
+ * 对相对路径（本地静态资源）会基于当前请求 host 自动补全为绝对 URL。
  */
 export async function adminTestAllMusicUrls(): Promise<
   ActionResponse<UrlCheckResult[]>
@@ -211,6 +214,10 @@ export async function adminTestAllMusicUrls(): Promise<
     }
 
     try {
+      // 取当前请求 host，用于解析相对路径链接
+      const h = await headers();
+      const host = h.get('x-forwarded-host') || h.get('host') || undefined;
+
       // 先获取列表
       const songs = await goFetch<Music[]>('/api/music');
 
@@ -226,10 +233,12 @@ export async function adminTestAllMusicUrls(): Promise<
               return { songId: song.id, url, valid: false, error: '链接为空' };
             }
             try {
+              // 相对路径用站点 host 补全后再探测
+              const targetUrl = resolveAbsoluteUrl(url, host);
               // 用 HEAD 请求探测有效性，不下载全量音频
               const controller = new AbortController();
               const timeoutId = setTimeout(() => controller.abort(), 10_000); // 10s 超时
-              const resp = await fetch(url, {
+              const resp = await fetch(targetUrl, {
                 method: 'HEAD',
                 signal: controller.signal,
               });

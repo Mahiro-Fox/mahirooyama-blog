@@ -40,8 +40,29 @@ export function formatDateWithHMS(input: string | number): string {
  * @param path 相对路径
  * @returns 绝对URL
  */
-export function absoluteUrl(path: string): string {
+export function generateAbsoluteUrl(path: string): string {
   return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
+}
+
+/** 判断是否为带 scheme 的绝对 URL */
+export function isAbsoluteUrl(url: string): boolean {
+  return /^[a-z][a-z\d+\-.]*:\/\//i.test(url);
+}
+
+/**
+ * 将可能为相对路径（如 /uploads/music/xxx.ogg）的链接补全为可请求的绝对 URL。
+ * 相对路径属于 Next 前端自身的静态资源，需用当前请求的 host 拼接；
+ * 否则返回原样。
+ */
+export function resolveAbsoluteUrl(
+  url: string,
+  host: string | undefined
+): string {
+  if (isAbsoluteUrl(url)) return url;
+  if (url.startsWith('/') && host) {
+    return generateAbsoluteUrl(url);
+  }
+  return url;
 }
 
 /**
