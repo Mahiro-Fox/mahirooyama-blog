@@ -8,6 +8,7 @@ import {
   type ActionResponse,
 } from '@/utils/action-response';
 import { createLogger } from '@/utils/logger';
+import { convertImagesWebp } from '../../../scripts/convert-to-webp';
 
 const logger = createLogger('UploadFilesActions');
 
@@ -239,6 +240,20 @@ export async function convertImages(): Promise<
   }>
 > {
   return withActionPermission('system:convertImages', async () => {
+    // 运行命令转换图片为 WebP
+    const result = await convertImagesWebp();
+    if (result.success) {
+      return {
+        success: true,
+        message: '转换成功',
+        data: {
+          message: '转换成功',
+          convertedFiles: result.data.success,
+          errorFiles: result.data.failed,
+        },
+      };
+    }
+
     return {
       success: false,
       error: '批量转换功能已迁移到 Go 后端，暂未实现',

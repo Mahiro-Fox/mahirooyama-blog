@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { processAndSaveImage } from '@/utils/image-utils';
 import { formatSize } from '@/utils/utils';
+import { UPLOADS_DIR } from '@/constant/dir';
 
 // 获取脚本所在目录，确保路径正确
 const __filename = fileURLToPath(import.meta.url);
@@ -36,12 +37,13 @@ async function convertToWebp(
     await fs.mkdir(path.dirname(targetPath), { recursive: true });
 
     // 使用 processAndSaveImage 转换
+    // dir 需要是相对于 UPLOADS_DIR 的路径，而非绝对路径
     const buffer = await fs.readFile(filePath);
-    const compressedBuffer = await processAndSaveImage(buffer, {
-      dir: OUTPUT_DIR,
+    const relativeDir = path.relative(UPLOADS_DIR, path.dirname(targetPath));
+    await processAndSaveImage(buffer, {
+      dir: relativeDir,
       fileName: outputFile,
     });
-    await fs.writeFile(targetPath, compressedBuffer.url);
 
     // 验证输出文件
     const outputStats = await fs.stat(targetPath);
@@ -83,9 +85,9 @@ async function convertToWebp(
 async function walkAndConvert(
   currentPath: string,
   targetDir: string
-): Promise<{ success: number; failed: number }> {
-  let success = 0;
-  let failed = 0;
+): Promise<{ success: string[]; failed: string[] }> {
+  const success: string[] = [];
+  const failed: string[] = [];
 
   // 确保输出目录存在
   await fs.mkdir(targetDir, { recursive: true });
@@ -109,8 +111,8 @@ async function walkAndConvert(
         fullPath,
         path.join(targetDir, entry.name)
       );
-      success += subResult.success;
-      failed += subResult.failed;
+      success.push(...subResult.success);
+      failed.push(...subResult.failed);
     } else if (/\.(png|jpg|jpeg)$/i.test(entry.name)) {
       // 检查是否需要转换
       const baseName = path.parse(entry.name).name;
@@ -137,12 +139,12 @@ async function walkAndConvert(
   }
 
   // 顺序处理文件（避免并发导致的文件锁定问题）
-  for (const { fullPath, targetPath } of filesToProcess) {
+  for (const { fullPath, targetPath, baseName } of filesToProcess) {
     const result = await convertToWebp(fullPath, targetPath);
     if (result) {
-      success++;
+      success.push(baseName);
     } else {
-      failed++;
+      failed.push(baseName);
     }
   }
 
@@ -152,7 +154,10 @@ async function walkAndConvert(
 /**
  * 主函数
  */
-async function main() {
+export async function convertImagesWebp(): Promise<
+  | { success: false; error: string }
+  | { success: true; data: { success: string[]; failed: string[] } }
+> {
   console.log('🚀 开始转换图片为 WebP 格式...');
   console.log(`📁 输入目录: ${INPUT_DIR}`);
   console.log(`📁 输出目录: ${OUTPUT_DIR}`);
@@ -163,31 +168,31 @@ async function main() {
     await fs.access(INPUT_DIR);
   } catch {
     console.error(`❌ 输入目录不存在: ${INPUT_DIR}`);
-    process.exit(1);
+    return { success: false, error: `❌ 输入目录不存在: ${INPUT_DIR}` };
   }
 
-  const startTime = Date.now();
-  const result = await walkAndConvert(INPUT_DIR, OUTPUT_DIR);
-  const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+  try {
+    const startTime = Date.now();
+    const result = await walkAndConvert(INPUT_DIR, OUTPUT_DIR);
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
-  console.log('');
-  console.log('📊 转换统计:');
-  console.log(`   成功: ${result.success}`);
-  console.log(`   失败: ${result.failed}`);
-  console.log(`   耗时: ${duration}s`);
+    console.log('');
+    console.log('📊 转换统计:');
+    console.log(`   成功: ${result.success.join(', ')}`);
+    console.log(`   失败: ${result.failed.join(', ')}`);
+    console.log(`   耗时: ${duration}s`);
 
-  if (result.failed > 0) {
-    console.log('');
-    console.log('⚠️  有转换失败的文件，请检查上方错误信息');
-    process.exit(1);
-  } else {
-    console.log('');
-    console.log('🎉 所有图片处理完成！');
+    if (result.failed.length > 0) {
+      console.log('');
+      console.log('⚠️  有转换失败的文件，请检查上方错误信息');
+      process.exit(1);
+    } else {
+      console.log('');
+      console.log('🎉 所有图片处理完成！');
+    }
+    return { success: true, data: result };
+  } catch (err) {
+    console.error('💥 程序执行出错:', err);
+    return { success: false, error: String(err) };
   }
 }
-
-// 执行
-main().catch((err) => {
-  console.error('💥 程序执行出错:', err);
-  process.exit(1);
-});

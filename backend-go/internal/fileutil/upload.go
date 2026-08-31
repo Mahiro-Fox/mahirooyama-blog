@@ -14,8 +14,8 @@ import (
 	"strings"
 )
 
-// 单文件大小上限默认值（10MB），与旧批量上传逻辑保持一致
-const DefaultMaxUploadSize int64 = 10 << 20
+// 单文件大小上限默认值（20MB），与旧批量上传逻辑保持一致
+const DefaultMaxUploadSize int64 = 20 << 20
 
 // SavedFile 单个文件的上传结果（纯数据）
 type SavedFile struct {
