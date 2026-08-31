@@ -343,7 +343,7 @@ function useImageCompressor() {
           originalName.lastIndexOf('.')
         );
         const ext = result.metadata?.format || 'webp';
-        const fileName = `${nameWithoutExt}_converted.${ext}`;
+        const fileName = `${nameWithoutExt}.${ext}`;
 
         // 将 base64 转换为二进制数据
         const base64Data = result.base64!.split(',')[1];

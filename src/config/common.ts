@@ -26,7 +26,7 @@ export const siteConfig = {
   url: 'https://mahirooyama.cn/',
   ogImage: 'https://mahirooyama.cn/uploads/images/avatar/mahirooyama.webp',
   links: {
-    twitter: 'https://twitter.com/MahiroFox',
+    twitter: 'https://x.com/MahiroFox',
     github: 'https://github.com/Mahiro-Fox/mahirooyama-blog',
     vrchat:
       'https://vrchat.com/home/user/usr_f938bc37-4d62-48d8-98eb-955f10f464e0',
