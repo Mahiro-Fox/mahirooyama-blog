@@ -16,7 +16,7 @@ import { BlurredHeroImage } from '@/components/shared/blurred-hero-image';
 import { LinkBadge } from '@/components/shared/link-badge';
 import { siteConfig } from '@/config/common';
 import { author } from '@/lib/author';
-import { absoluteUrl, formatDate } from '@/utils/utils';
+import { formatDate, generateAbsoluteUrl } from '@/utils/utils';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
       title: post.title,
       description: post.description,
       type: 'article',
-      url: absoluteUrl(`/blog/${post.slug}`),
+      url: generateAbsoluteUrl(`/blog/${post.slug}`),
       images: [
         {
           url: siteConfig.ogImage,
@@ -186,7 +186,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* Share Buttons */}
               {/* <div className="py-4">
                 <ArticleShareButtons
-                  url={absoluteUrl(`/blog/${slug}`)}
+                  url={generateAbsoluteUrl(`/blog/${slug}`)}
                   title={post.title}
                   description={post.description}
                   image={thumbnailUrl}

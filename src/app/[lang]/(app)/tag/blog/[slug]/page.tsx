@@ -16,7 +16,7 @@ import {
 import { BrandIcons } from '@/components/shared/brand-icons';
 import { LinkCard } from '@/components/shared/link-card';
 import { siteConfig } from '@/config/common';
-import { absoluteUrl, formatDate } from '@/utils/utils';
+import { formatDate, generateAbsoluteUrl } from '@/utils/utils';
 
 interface BlogTagPageProps {
   params: Promise<{ slug: string }>;
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: BlogTagPageProps) {
       title: `posts with "${tag.name}" tag`,
       description: `post list with "${tag.name}" tag`,
       type: 'article',
-      url: absoluteUrl(`/tag/blog/${slug}`),
+      url: generateAbsoluteUrl(`/tag/blog/${slug}`),
       images: [
         {
           url: siteConfig.ogImage,
