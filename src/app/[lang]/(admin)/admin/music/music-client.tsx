@@ -1,14 +1,16 @@
 'use client';
 
-import { Edit, Music, Music2, Trash2 } from 'lucide-react';
+import { BadgeCheck, Edit, Music, Music2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import {
   adminCreateMusic,
   adminDeleteMusic,
   adminGetMusic,
+  adminTestAllMusicUrls,
   adminUpdateMusic,
   adminUploadMusicFile,
+  type UrlCheckResult,
 } from '@/actions/admin/music-actions';
 import {
   AdminPageLayout,
@@ -74,6 +76,43 @@ export default function MusicClient({
   const [artist, setArtist] = useState('');
   const [url, setUrl] = useState('');
   const [cover, setCover] = useState('');
+
+  // === 链接测试状态 ===
+  const [testingLinks, setTestingLinks] = useState(false);
+  const [invalidUrls, setInvalidUrls] = useState<Map<string, string>>(
+    new Map()
+  );
+
+  // 测试所有音乐链接是否有效
+  const handleTestAllLinks = async () => {
+    setTestingLinks(true);
+    setInvalidUrls(new Map());
+    try {
+      const result = await adminTestAllMusicUrls();
+      if (!result.success) {
+        toast.error(result.error || '测试失败');
+        return;
+      }
+
+      const invalid = new Map<string, string>();
+      for (const item of result.data) {
+        if (item && item.songId && !item.valid) {
+          invalid.set(item.songId, item.error || '链接无效');
+        }
+      }
+      setInvalidUrls(invalid);
+
+      if (invalid.size === 0) {
+        toast.success(`全部 ${result.data.length} 首音乐链接有效`);
+      } else {
+        toast.warning(`发现 ${invalid.size} 首音乐链接无效`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '测试失败');
+    } finally {
+      setTestingLinks(false);
+    }
+  };
 
   // 打开/切换到编辑模式时，从 selectedItem 回填表单
   useEffect(() => {
@@ -149,6 +188,15 @@ export default function MusicClient({
       >
         <div className="flex items-center justify-between">
           <div className="text-muted-foreground">共 {songs.length} 首音乐</div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTestAllLinks}
+            disabled={testingLinks || songs.length === 0}
+          >
+            <BadgeCheck className="h-4 w-4" />
+            {testingLinks ? '测试中...' : '测试全部链接'}
+          </Button>
         </div>
         <div className="mt-4 space-y-4">
           {loading ? (
@@ -161,11 +209,17 @@ export default function MusicClient({
             </div>
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4 xl:grid-cols-3">
-              {songs.map((song) => (
-                <div
-                  key={song.id}
-                  className="hover:bg-accent/50 flex items-center gap-4 rounded-lg border p-4 transition-colors"
-                >
+              {songs.map((song) => {
+                const invalid = invalidUrls.get(song.id);
+                return (
+                  <div
+                    key={song.id}
+                    className={`flex items-center gap-4 rounded-lg border p-4 transition-colors ${
+                      invalid
+                        ? 'border-red-500/60 bg-red-500/10 hover:bg-red-500/15'
+                        : 'hover:bg-accent/50'
+                    }`}
+                  >
                   <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
                     {song.cover ? (
                       <OptimizedImage
@@ -186,6 +240,14 @@ export default function MusicClient({
                     <p className="text-muted-foreground truncate text-sm">
                       {song.artist}
                     </p>
+                    {invalid && (
+                      <p
+                        className="truncate text-xs text-red-600"
+                        title={invalid}
+                      >
+                        链接无效: {invalid}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex gap-2">
@@ -204,8 +266,9 @@ export default function MusicClient({
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
