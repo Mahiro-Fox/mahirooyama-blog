@@ -88,5 +88,7 @@ type MoviePatch struct {
 	Year    *string        `json:"year"`
 	Tags    *pq.StringArray `gorm:"type:text[]" json:"tags"`
 	Summary *string        `json:"summary"`
-	Sources *MovieSources  `json:"sources"`
+	Sources *MovieSources  `gorm:"type:jsonb" json:"sources"`
+	// UpdatedAt 内部字段：更新时刷新时间戳，不出现在 API 请求/响应中
+	UpdatedAt *time.Time `gorm:"type:timestamptz" json:"-"`
 }

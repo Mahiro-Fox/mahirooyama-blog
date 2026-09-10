@@ -55,6 +55,10 @@ func UpdateMovie(ctx context.Context, store repository.Store, id string, input m
 		return store.GetMovie(ctx, id)
 	}
 
+	// 有字段更新时刷新更新时间戳
+	now := time.Now()
+	updates.UpdatedAt = &now
+
 	if err := store.UpdateMovie(ctx, id, updates); err != nil {
 		return nil, err
 	}
