@@ -86,7 +86,7 @@ type MoviePatch struct {
 	Title   *string        `json:"title"`
 	Poster  *string        `json:"poster"`
 	Year    *string        `json:"year"`
-	Tags    *pq.StringArray `json:"tags"`
+	Tags    *pq.StringArray `gorm:"type:text[]" json:"tags"`
 	Summary *string        `json:"summary"`
 	Sources *MovieSources  `json:"sources"`
 }
