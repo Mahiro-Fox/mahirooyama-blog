@@ -15,56 +15,90 @@ from __future__ import annotations
 import ast
 import datetime
 import json
+import re
 import sys
+import urllib.parse
+import urllib.request
+from html.parser import HTMLParser
 from typing import Any, Callable, Dict
+
+# web_fetch 常量
+_WEB_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+)
+_WEB_MAX_BYTES = 1_000_000   # 抓取内容大小上限 1MB
+_WEB_MAX_CHARS = 4000        # 返回给模型的最大字符数
 
 
 # ---------------------------------------------------------------------------
 # 工具实现：每个工具 = schema(JSON Schema) + run(执行函数)
 # ---------------------------------------------------------------------------
+class _TextExtractor(HTMLParser):
+    """用标准库 HTMLParser 提取可读文本，跳过脚本/样式/标签内容。"""
 
-def _calculator_run(args: Dict[str, Any]) -> Dict[str, Any]:
-    """计算数学表达式。使用受限 AST 求值，避免 eval 任意代码。"""
-    expression = args.get("expression")
+    SKIP = {"script", "style", "noscript", "svg", "head", "iframe", "template"}
+    BLOCK = {"p", "div", "br", "li", "h1", "h2", "h3", "h4", "tr", "td", "th"}
 
-    def evaluate(node: ast.AST) -> Any:
-        if isinstance(node, ast.Expression):
-            return evaluate(node.body)
-        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
-            return node.value
-        if isinstance(node, ast.BinOp) and _BINOPS.get(type(node.op)):
-            left, right = evaluate(node.left), evaluate(node.right)
-            return _BINOPS[type(node.op)](left, right)
-        if isinstance(node, ast.UnaryOp) and _UNARYOPS.get(type(node.op)):
-            value = evaluate(node.operand)
-            return _UNARYOPS[type(node.op)](value)
-        raise ValueError(f"不支持的表达式节点: {type(node).__name__}")
+    def __init__(self) -> None:
+        super().__init__()
+        self._skip_depth = 0
+        self.parts: list[str] = []
 
-    if not isinstance(expression, str) or not expression.strip():
-        raise ValueError("缺少表达式：expression 参数必须为非空字符串")
-    value = evaluate(ast.parse(expression.strip(), mode="eval"))
-    return {"result": value}
+    def handle_starttag(self, tag: str, attrs) -> None:
+        if tag in self.SKIP:
+            self._skip_depth += 1
+        if tag in self.BLOCK:
+            self.parts.append("\n")
+
+    def handle_startendtag(self, tag: str, attrs) -> None:
+        if tag == "br":
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in self.SKIP and self._skip_depth > 0:
+            self._skip_depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        if self._skip_depth == 0 and data and data.strip():
+            self.parts.append(data)
 
 
-def _get_current_time_run(_args: Dict[str, Any]) -> Dict[str, Any]:
-    """返回当前时间。"""
-    return {"time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+def _html_to_text(html: str) -> str:
+    parser = _TextExtractor()
+    try:
+        parser.feed(html)
+    except Exception:
+        pass
+    raw = "\n".join(parser.parts)
+    # 压缩行内连续空白与空行
+    lines = [re.sub(r"[ \t]+", " ", ln).strip() for ln in raw.splitlines()]
+    return "\n".join(ln for ln in lines if ln)
 
 
-# 运算器映射（安全求值用）
-_BINOPS: Dict[type, Callable[[Any, Any], Any]] = {
-    ast.Add: lambda a, b: a + b,
-    ast.Sub: lambda a, b: a - b,
-    ast.Mult: lambda a, b: a * b,
-    ast.Div: lambda a, b: a / b,
-    ast.FloorDiv: lambda a, b: a // b,
-    ast.Mod: lambda a, b: a % b,
-    ast.Pow: lambda a, b: a ** b,
-}
-_UNARYOPS: Dict[type, Callable[[Any], Any]] = {
-    ast.UAdd: lambda v: +v,
-    ast.USub: lambda v: -v,
-}
+def _web_fetch_run(args: Dict[str, Any]) -> Dict[str, Any]:
+    """抓取指定网页并返回可读纯文本（社交/攻略/API 均可）。"""
+    url = args.get("url")
+    if not isinstance(url, str) or not url.strip():
+        raise ValueError("缺少 url：url 必须为非空字符串")
+
+    scheme = urllib.parse.urlparse(url).scheme
+    if scheme not in ("http", "https"):
+        raise ValueError(f"仅支持 http/https URL，收到: {scheme}")
+
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": _WEB_USER_AGENT, "Accept": "*/*"},
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:  # redirects 自动跟随
+        raw = resp.read(_WEB_MAX_BYTES)
+        ctype = resp.headers.get("Content-Type", "")
+
+    text = raw.decode("utf-8", errors="replace")
+    body = text if "json" in ctype else _html_to_text(text)
+    body = "\n".join(ln for ln in (re.sub(r"[ \t]+", " ", ln).strip() for ln in body.splitlines()) if ln)
+    return {"url": url, "content_type": ctype, "text": body[:_WEB_MAX_CHARS]}
+
 
 
 # ---------------------------------------------------------------------------
@@ -72,36 +106,29 @@ _UNARYOPS: Dict[type, Callable[[Any], Any]] = {
 # ---------------------------------------------------------------------------
 
 TOOLS: Dict[str, Dict[str, Any]] = {
-    "calculator": {
+    "web_fetch": {
         "schema": {
             "type": "function",
             "function": {
-                "name": "calculator",
-                "description": "计算数学表达式，支持 + - * / // % ** 和括号",
+                "name": "web_fetch",
+                "description": (
+                    "抓取指定网页并提取可读纯文本（含 JSON API）。"
+                    "用于查询游戏攻略 Wiki、百科、VRChat 世界信息等任意外部网页。"
+                    "返回前 4000 字符。"
+                ),
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "expression": {
+                        "url": {
                             "type": "string",
-                            "description": "要计算的数学表达式，例如 23*17",
+                            "description": "要抓取的 http/https 网页地址",
                         }
                     },
-                    "required": ["expression"],
+                    "required": ["url"],
                 },
             },
         },
-        "run": _calculator_run,
-    },
-    "get_current_time": {
-        "schema": {
-            "type": "function",
-            "function": {
-                "name": "get_current_time",
-                "description": "返回当前时间",
-                "parameters": {"type": "object", "properties": {}},
-            },
-        },
-        "run": _get_current_time_run,
+        "run": _web_fetch_run,
     },
 }
 

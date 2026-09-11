@@ -1,7 +1,6 @@
-import crypto from 'crypto';
 import { execFileSync } from 'child_process';
+import crypto from 'crypto';
 import path from 'path';
-import { z } from 'zod';
 import { conversationStore } from '@/store/conversation-store';
 import { deepseek } from '@ai-sdk/deepseek';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
@@ -10,11 +9,12 @@ import {
   createUIMessageStreamResponse,
   generateText,
   LanguageModel,
-  toUIMessageStream,
   ToolLoopAgent,
   ToolSet,
+  toUIMessageStream,
   UIMessage,
 } from 'ai';
+import { z } from 'zod';
 import { DEFAULT_PROVIDER, PROVIDERS, ProviderValue } from '@/config/providers';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { verifyUserAuth } from '@/lib/user-auth';
@@ -62,18 +62,13 @@ function runTool(name: string, args: Record<string, unknown>): unknown {
 // 工具注册表：与 Python 端 TOOLS 保持同名/同参数。
 // 直接构造普通对象并断言成 streamText 接受的 tools 类型，避免 tool() 帮助函数的重载推断歧义。
 const agentTools = {
-  calculator: {
-    description: '计算数学表达式，支持 + - * / // % ** 和括号',
+  web_fetch: {
+    description:
+      '抓取指定网页并提取可读纯文本（含 JSON API），用于查询游戏攻略 Wiki、百科、VRChat 世界等任意外部网页，返回前 4000 字符',
     parameters: z.object({
-      expression: z.string().describe('要计算的数学表达式，例如 23*17'),
+      url: z.string().url().describe('要抓取的 http/https 网页地址'),
     }),
-    execute: async ({ expression }: { expression: string }) =>
-      runTool('calculator', { expression }),
-  },
-  get_current_time: {
-    description: '返回当前时间',
-    parameters: z.object({}),
-    execute: async () => runTool('get_current_time', {}),
+    execute: async ({ url }: { url: string }) => runTool('web_fetch', { url }),
   },
 } as unknown as ToolSet;
 
