@@ -70,8 +70,9 @@ export async function POST(req: Request) {
     provider: ProviderValue;
     model: string;
     conversationId?: string;
+    thinking?: boolean;
   };
-  const { messages, conversationId } = body;
+  const { messages, conversationId, thinking } = body;
 
   const selectedProvider = PROVIDERS.find((p) => p.value === body.provider)
     ? body.provider
@@ -133,6 +134,18 @@ export async function POST(req: Request) {
   const result = streamText({
     model: getModel(body.provider, body.model),
     messages: await convertToModelMessages(messages),
+    // 思考模式仅对 DeepSeek 生效，通过 providerOptions.deepseek 透传到 thinking 参数
+    ...(selectedProvider === 'deepseek'
+      ? {
+          providerOptions: {
+            deepseek: {
+              thinking: {
+                type: thinking === false ? 'disabled' : 'enabled',
+              },
+            },
+          },
+        }
+      : {}),
   });
 
   // === 包装流，注入 conversationId metadata + 持久化 ===
