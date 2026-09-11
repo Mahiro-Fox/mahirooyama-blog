@@ -50,3 +50,6 @@ next-env.d.ts
 
 #docker-compose
 docker-compose.override.yml
+
+# pyhton
+/ai-tools/__pycache__/

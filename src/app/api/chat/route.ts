@@ -1,4 +1,7 @@
 import crypto from 'crypto';
+import { execFileSync } from 'child_process';
+import path from 'path';
+import { z } from 'zod';
 import { conversationStore } from '@/store/conversation-store';
 import { deepseek } from '@ai-sdk/deepseek';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
@@ -7,8 +10,9 @@ import {
   createUIMessageStreamResponse,
   generateText,
   LanguageModel,
-  streamText,
   toUIMessageStream,
+  ToolLoopAgent,
+  ToolSet,
   UIMessage,
 } from 'ai';
 import { DEFAULT_PROVIDER, PROVIDERS, ProviderValue } from '@/config/providers';
@@ -34,6 +38,44 @@ function getModel(provider: ProviderValue, model: string): LanguageModel {
       return deepseek(model);
   }
 }
+
+// === Python 工具执行器 ===
+// LLM 推理由本路由负责；工具计算交给 ai-tools/tools_runner.py 这个纯执行后端。
+const AGENT_PYTHON = process.env.AGENT_PYTHON ?? 'python';
+const TOOLS_RUNNER = path.join(process.cwd(), 'ai-tools', 'tools_runner.py');
+
+function runTool(name: string, args: Record<string, unknown>): unknown {
+  try {
+    const out = execFileSync(
+      AGENT_PYTHON,
+      [TOOLS_RUNNER, '--exec', name, JSON.stringify(args)],
+      { encoding: 'utf-8', timeout: 15000 }
+    );
+    const parsed = JSON.parse(out.trim());
+    if (!parsed.ok) throw new Error(parsed.error ?? `tool ${name} failed`);
+    return parsed.result;
+  } catch (error) {
+    throw new Error(`tool ${name} failed: ${(error as Error).message}`);
+  }
+}
+
+// 工具注册表：与 Python 端 TOOLS 保持同名/同参数。
+// 直接构造普通对象并断言成 streamText 接受的 tools 类型，避免 tool() 帮助函数的重载推断歧义。
+const agentTools = {
+  calculator: {
+    description: '计算数学表达式，支持 + - * / // % ** 和括号',
+    parameters: z.object({
+      expression: z.string().describe('要计算的数学表达式，例如 23*17'),
+    }),
+    execute: async ({ expression }: { expression: string }) =>
+      runTool('calculator', { expression }),
+  },
+  get_current_time: {
+    description: '返回当前时间',
+    parameters: z.object({}),
+    execute: async () => runTool('get_current_time', {}),
+  },
+} as unknown as ToolSet;
 
 export async function generateTitle(
   firstUserMessage: string,
@@ -130,11 +172,17 @@ export async function POST(req: Request) {
     activeConversationId = conversationId || crypto.randomUUID();
   }
 
-  // === 调用模型 ===
-  const result = streamText({
+  // === 定义 Agent：多步工具循环 ===
+  // ai@7 的 streamText 是单步的（工具调用后不再生成文本），多步自动循环需用
+  // ToolLoopAgent：它自动执行“模型→工具→模型...”直到模型不再请求工具。
+  const agent = new ToolLoopAgent({
     model: getModel(body.provider, body.model),
+    ...(selectedProvider === 'deepseek' ? { tools: agentTools } : {}),
+  });
+
+  const result = await agent.stream({
     messages: await convertToModelMessages(messages),
-    // 思考模式仅对 DeepSeek 生效，通过 providerOptions.deepseek 透传到 thinking 参数
+    // 思考模式仅对 DeepSeek 生效，经 providerOptions.deepseek 透传
     ...(selectedProvider === 'deepseek'
       ? {
           providerOptions: {
