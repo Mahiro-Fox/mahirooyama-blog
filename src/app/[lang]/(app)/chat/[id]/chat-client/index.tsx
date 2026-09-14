@@ -33,7 +33,6 @@ interface ChatClientProps {
 const getLocalStorageConfiguration = (isUserAuth: boolean) => {
   const config = localStorage.getItem('chatConfig');
   const defaultConfig = {
-    mode: 'chat',
     thinking: false,
     provider: {
       provider: DEFAULT_PROVIDER,
@@ -45,13 +44,12 @@ const getLocalStorageConfiguration = (isUserAuth: boolean) => {
   try {
     const configObj = JSON.parse(config);
     if (!isUserAuth) {
-      configObj.mode = 'chat';
       if (configObj.provider.provider === 'deepseek')
         configObj.provider = defaultConfig.provider;
     }
     return configObj;
   } catch (error) {
-    toast.error('配置文件格式错误');
+    console.error('配置文件格式错误', error);
     return defaultConfig;
   }
 };
@@ -61,17 +59,14 @@ export function ChatClient({
   initialId,
   initialMessages,
 }: ChatClientProps) {
-  const {
-    mode: configMode,
-    thinking: configThinking,
-    provider: configProvider,
-  } = getLocalStorageConfiguration(isUserAuth);
+  const { thinking: configThinking, provider: configProvider } =
+    getLocalStorageConfiguration(isUserAuth);
   const t = useT();
   const router = useRouter();
   const [input, setInput] = useState('');
   const [provider, setProvider] = useState(configProvider);
   const [thinking, setThinking] = useState(configThinking);
-  const [mode, setMode] = useState<ChatMode>(configMode);
+  const [mode, setMode] = useState<ChatMode>(isUserAuth ? 'agent' : 'chat');
   const [conversationId, setConversationId] = useState<string | undefined>(
     initialId
   );
@@ -83,12 +78,20 @@ export function ChatClient({
     localStorage.setItem(
       'chatConfig',
       JSON.stringify({
-        mode,
         thinking,
         provider,
       })
     );
-  }, [provider, thinking, mode]);
+  }, [provider, thinking]);
+
+  // 登录态变化时对齐模式：未登录 -> 标准对话（Agent 不可用）；登录 -> 默认 Agent。
+  // 注意：不能只依赖 useState 初始值，登录/登出不会重新挂载组件，需在 auth 翻转时纠正。
+  useEffect(() => {
+    setMode(isUserAuth ? 'agent' : 'chat');
+    const { thinking, provider } = getLocalStorageConfiguration(isUserAuth);
+    setThinking(thinking);
+    setProvider(provider);
+  }, [isUserAuth]);
 
   // 标准对话走 /api/chat；Agent 模式走 /api/mastra-chat（Mastra Agent，工具+记忆）
   const transport = useMemo(
@@ -263,6 +266,7 @@ export function ChatClient({
         />
 
         <MessagesPanel
+          isUserAuth={isUserAuth}
           messages={messages}
           status={status}
           error={error}
@@ -275,7 +279,11 @@ export function ChatClient({
             <PromptInputTextarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={t('chat.input_placeholder')}
+              placeholder={t(
+                isUserAuth
+                  ? 'chat.input_placeholder_with_auth'
+                  : 'chat.input_placeholder_no_auth'
+              )}
               disabled={isBusy}
             />
           </PromptInputBody>

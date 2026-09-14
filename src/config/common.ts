@@ -1,5 +1,6 @@
 import {
   Activity,
+  Bot,
   Bug,
   Camera,
   ChevronLeft,
@@ -10,7 +11,6 @@ import {
   ImageIcon,
   Lock,
   LucideIcon,
-  MessageCircleMore,
   MessageSquare,
   Music,
   Shield,
@@ -190,7 +190,7 @@ export const pageRoutesConfig: PageRouteConfig[] = [
   },
   {
     name: 'ai_chat',
-    icon: MessageCircleMore,
+    icon: Bot,
     category: 'tools',
     navHref: '/chat',
     navLabel: 'ai_chat_nav_label',

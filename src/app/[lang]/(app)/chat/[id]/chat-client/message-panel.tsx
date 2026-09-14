@@ -19,12 +19,14 @@ import { MAX_CONTEXT_TOKENS } from '@/lib/tokens';
  * 消息会话区域（含空状态、思考中提示、错误条）
  */
 export function MessagesPanel({
+  isUserAuth,
   messages,
   status,
   error,
   onRetry,
   t,
 }: {
+  isUserAuth: boolean;
   messages: UIMessage[];
   status: ChatStatus;
   error?: Error | null;
@@ -36,8 +38,16 @@ export function MessagesPanel({
       <ConversationContent className="pr-4">
         {messages.length === 0 ? (
           <ConversationEmptyState
-            title={t('chat.start_title')}
-            description={t('chat.start_desc')}
+            title={t(
+              isUserAuth
+                ? 'chat.start_title_with_auth'
+                : 'chat.start_title_no_auth'
+            )}
+            description={t(
+              isUserAuth
+                ? 'chat.start_desc_with_auth'
+                : 'chat.start_desc_no_auth'
+            )}
           />
         ) : (
           messages.map((message) => (
