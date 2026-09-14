@@ -1,7 +1,7 @@
 'use server';
 
 import crypto from 'crypto';
-import { mastra } from '@/mastra';
+import { getMastra } from '@/mastra';
 import { conversationStore } from '@/store/conversation-store';
 import type { UIMessage } from 'ai';
 import { verifyUserAuth } from '@/lib/user-auth';
@@ -28,7 +28,7 @@ export async function runMastraAgent(input: string, prevThreadId?: string) {
   }
   threadId = threadId ?? crypto.randomUUID();
 
-  const agent = mastra.getAgent('assistant');
+  const agent = getMastra().getAgent('assistant');
   const result = await agent.generate(input, {
     memory: { resource, thread: threadId },
   });

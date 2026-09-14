@@ -5,7 +5,7 @@ import {
   type UIMessage,
 } from 'ai';
 import { generateTitle } from '@/app/api/chat/route';
-import { mastra } from '@/mastra';
+import { getMastra } from '@/mastra';
 import { conversationStore } from '@/store/conversation-store';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { verifyUserAuth } from '@/lib/user-auth';
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
   const resource = `user:${userId}`;
 
   // === 调用 Mastra Agent（历史消息为 ai@7 UIMessage，Mastra 直接支持） ===
-  const agent = mastra.getAgent('assistant');
+  const agent = getMastra().getAgent('assistant');
   const result = await agent.stream(messages as never, {
     memory: { resource, thread: activeConversationId },
   });
