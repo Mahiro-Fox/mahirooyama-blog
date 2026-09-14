@@ -20,6 +20,7 @@ import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { ChatHeader } from './chat-header';
 import { MessagesPanel } from './message-panel';
 import { ModelSelector } from './model-selector';
+import { ModeSwitch, type ChatMode } from './mode-switch';
 
 interface ChatClientProps {
   isUserAuth: boolean;
@@ -42,24 +43,29 @@ export function ChatClient({
     model: PROVIDERS.find((p) => p.value === DEFAULT_PROVIDER)?.models[0].value,
   });
   const [thinking, setThinking] = useState(false);
+  const [mode, setMode] = useState<ChatMode>('chat');
   const [conversationId, setConversationId] = useState<string | undefined>(
     initialId
   );
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [listKey, setListKey] = useState(0);
 
+  // 标准对话走 /api/chat；Agent 模式走 /api/mastra-chat（Mastra Agent，工具+记忆）
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: '/api/chat',
-        body: () => ({
-          provider: provider.provider,
-          model: provider.model,
-          conversationId,
-          thinking,
-        }),
+        api: mode === 'agent' ? '/api/mastra-chat' : '/api/chat',
+        body: () =>
+          mode === 'agent'
+            ? { conversationId }
+            : {
+                provider: provider.provider,
+                model: provider.model,
+                conversationId,
+                thinking,
+              },
       }),
-    [provider, conversationId, thinking]
+    [mode, provider, conversationId, thinking]
   );
 
   const {
@@ -234,6 +240,12 @@ export function ChatClient({
             />
           </PromptInputBody>
           <PromptInputFooter>
+            <ModeSwitch
+              mode={mode}
+              onModeChange={setMode}
+              isBusy={isBusy}
+              isUserAuth={isUserAuth}
+            />
             <ModelSelector
               provider={provider}
               onProviderChange={setProvider}
@@ -245,6 +257,7 @@ export function ChatClient({
               input={input}
               onStop={stop}
               t={t}
+              variant={mode === 'agent' ? 'agent' : 'full'}
             />
           </PromptInputFooter>
         </PromptInput>

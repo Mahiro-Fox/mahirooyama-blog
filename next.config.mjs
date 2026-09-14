@@ -2,6 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   devIndicators: false,
+  serverExternalPackages: ['@mastra/core', '@mastra/memory', '@mastra/libsql'],
   typescript: {
     tsconfigPath: 'tsconfig.build.json',
   },

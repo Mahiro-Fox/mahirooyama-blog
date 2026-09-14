@@ -15,7 +15,8 @@ import { PROVIDERS } from '@/config/providers';
 import { useT } from '@/i18n/dictionary-provider';
 
 /**
- * 模型选择器 + 停止/发送按钮
+ * 模型选择器 + 停止/发送按钮。
+ * variant='agent'：隐藏 provider/思考配置，仅保留停止/发送按钮（模式切换由 ModeSwitch 负责）。
  */
 export function ModelSelector({
   provider,
@@ -28,6 +29,7 @@ export function ModelSelector({
   input,
   onStop,
   t,
+  variant = 'full',
 }: {
   provider: { provider: string; model: string | undefined };
   onProviderChange: (provider: {
@@ -42,25 +44,27 @@ export function ModelSelector({
   input: string;
   onStop: () => void;
   t: ReturnType<typeof useT>;
+  variant?: 'full' | 'agent';
 }) {
   return (
     <>
-      <div className="flex items-center gap-2">
-        <Select
-          value={JSON.stringify(provider)}
-          onValueChange={(value) => onProviderChange(JSON.parse(value))}
-          disabled={isBusy}
-        >
-          <SelectTrigger className="cursor-pointer transition-opacity disabled:cursor-not-allowed disabled:opacity-50">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PROVIDERS.map((provider) => {
-              const isLocked = provider.lockedWhenNoAuth && !isUserAuth;
-              return (
-                <SelectGroup key={provider.value}>
-                  <SelectLabel>{provider.label}</SelectLabel>
-                  {provider.models.map((model) => (
+      {variant === 'full' && (
+        <div className="flex items-center gap-2">
+          <Select
+            value={JSON.stringify(provider)}
+            onValueChange={(value) => onProviderChange(JSON.parse(value))}
+            disabled={isBusy}
+          >
+            <SelectTrigger className="cursor-pointer transition-opacity disabled:cursor-not-allowed disabled:opacity-50">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PROVIDERS.map((provider) => {
+                const isLocked = provider.lockedWhenNoAuth && !isUserAuth;
+                return (
+                  <SelectGroup key={provider.value}>
+                    <SelectLabel>{provider.label}</SelectLabel>
+                    {provider.models.map((model) => (
                     <SelectItem
                       key={model.value}
                       value={JSON.stringify({
@@ -103,6 +107,7 @@ export function ModelSelector({
           </Toggle>
         )}
       </div>
+      )}
 
       {status === 'streaming' ? (
         <button

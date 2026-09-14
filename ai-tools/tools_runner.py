@@ -22,6 +22,15 @@ import urllib.request
 from html.parser import HTMLParser
 from typing import Any, Callable, Dict
 
+# 强制 stdout 为 UTF-8：Windows 默认按 GBK 写输出，遇到日文/⌘/emoji 等非
+# GBK 字符会抛 UnicodeEncodeError（网页明明抓到了却写不出去）。统一用 UTF-8，
+# 前端 execFileSync(encoding:'utf-8') 能稳定读到完整 JSON。
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # web_fetch 常量
 _WEB_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
