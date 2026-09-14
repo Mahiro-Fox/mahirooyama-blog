@@ -1,9 +1,21 @@
 'use client';
 
 import { AnimatePresence, m } from 'framer-motion';
-import { Clock, Copy, Download, History, Trash2, Video } from 'lucide-react';
+import {
+  Clock,
+  Copy,
+  Download,
+  History,
+  Trash2,
+  Video,
+  XIcon,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
+import {
+  parseBilibiliVideo,
+  type ParseResult,
+} from '@/actions/app/bilibili-parse';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,
@@ -15,10 +27,6 @@ import {
 import { Input } from '@/components/shadcn-ui/input';
 import { useT } from '@/i18n/dictionary-provider';
 import { formatSize } from '@/utils/utils';
-import {
-  parseBilibiliVideo,
-  type ParseResult,
-} from '@/actions/app/bilibili-parse';
 
 interface HistoryItem extends ParseResult {
   id: string;
@@ -65,14 +73,22 @@ function ParseForm({
         className="flex-1"
       >
         <form onSubmit={onSubmit} className="flex gap-2">
-          <Input
-            type="text"
-            value={url}
-            onChange={(e) => onUrlChange(e.target.value)}
-            placeholder={t('bilibili-parse.enter_url_placeholder')}
-            disabled={loading}
-            className="flex-1"
-          />
+          <div className="relative w-full">
+            <Input
+              type="text"
+              value={url}
+              onChange={(e) => onUrlChange(e.target.value)}
+              placeholder={t('bilibili-parse.enter_url_placeholder')}
+              disabled={loading}
+              className="flex-1"
+            />
+            {url && (
+              <XIcon
+                className="absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 cursor-pointer"
+                onClick={() => onUrlChange('')}
+              />
+            )}
+          </div>
           <Button type="submit" disabled={loading || !url} size="default">
             {loading ? (
               <>
@@ -438,6 +454,12 @@ export default function BilibiliParsePage() {
 
   const handleParse = async (e: React.FormEvent) => {
     e.preventDefault();
+    const urlRegex = /^https?:\/\//;
+    if (!url.trim() || !urlRegex.test(url)) {
+      toast.error(t('bilibili-parse.invalid_url'));
+      return;
+    }
+
     setLoading(true);
     setError('');
     setResult(null);
