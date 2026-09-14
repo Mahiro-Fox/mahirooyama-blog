@@ -73,6 +73,8 @@ services:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       GO_API_INTERNAL_URL: ${GO_API_INTERNAL_URL}
       GO_API_SHARED_SECRET: ${GO_API_SHARED_SECRET}
+      # Mastra 记忆存储连接串：指向 compose 内的 postgres 服务
+      MASTRA_PG_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}
     # 绑定到 127.0.0.1，仅宿主机 nginx 可访问，不对外暴露
     ports:
       - '127.0.0.1:3000:3000'

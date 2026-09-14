@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   PromptInput,
   PromptInputBody,
@@ -19,8 +19,8 @@ import { conversationLocalStorage } from '@/lib/conversation-local-storage';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { ChatHeader } from './chat-header';
 import { MessagesPanel } from './message-panel';
-import { ModelSelector } from './model-selector';
 import { ModeSwitch, type ChatMode } from './mode-switch';
+import { ModelSelector } from './model-selector';
 
 interface ChatClientProps {
   isUserAuth: boolean;
@@ -30,25 +30,65 @@ interface ChatClientProps {
   initialMessages?: UIMessage[];
 }
 
+const getLocalStorageConfiguration = (isUserAuth: boolean) => {
+  const config = localStorage.getItem('chatConfig');
+  const defaultConfig = {
+    mode: 'chat',
+    thinking: false,
+    provider: {
+      provider: DEFAULT_PROVIDER,
+      model: PROVIDERS.find((p) => p.value === DEFAULT_PROVIDER)?.models[0]
+        .value,
+    },
+  };
+  if (!config) return defaultConfig;
+  try {
+    const configObj = JSON.parse(config);
+    if (!isUserAuth) {
+      configObj.mode = 'chat';
+      if (configObj.provider.provider === 'deepseek')
+        configObj.provider = defaultConfig.provider;
+    }
+    return configObj;
+  } catch (error) {
+    toast.error('配置文件格式错误');
+    return defaultConfig;
+  }
+};
+
 export function ChatClient({
   isUserAuth,
   initialId,
   initialMessages,
 }: ChatClientProps) {
+  const {
+    mode: configMode,
+    thinking: configThinking,
+    provider: configProvider,
+  } = getLocalStorageConfiguration(isUserAuth);
   const t = useT();
   const router = useRouter();
   const [input, setInput] = useState('');
-  const [provider, setProvider] = useState({
-    provider: DEFAULT_PROVIDER,
-    model: PROVIDERS.find((p) => p.value === DEFAULT_PROVIDER)?.models[0].value,
-  });
-  const [thinking, setThinking] = useState(false);
-  const [mode, setMode] = useState<ChatMode>('chat');
+  const [provider, setProvider] = useState(configProvider);
+  const [thinking, setThinking] = useState(configThinking);
+  const [mode, setMode] = useState<ChatMode>(configMode);
   const [conversationId, setConversationId] = useState<string | undefined>(
     initialId
   );
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [listKey, setListKey] = useState(0);
+
+  useEffect(() => {
+    // 保存当前配置到 localStorage
+    localStorage.setItem(
+      'chatConfig',
+      JSON.stringify({
+        mode,
+        thinking,
+        provider,
+      })
+    );
+  }, [provider, thinking, mode]);
 
   // 标准对话走 /api/chat；Agent 模式走 /api/mastra-chat（Mastra Agent，工具+记忆）
   const transport = useMemo(
@@ -240,25 +280,27 @@ export function ChatClient({
             />
           </PromptInputBody>
           <PromptInputFooter>
-            <ModeSwitch
-              mode={mode}
-              onModeChange={setMode}
-              isBusy={isBusy}
-              isUserAuth={isUserAuth}
-            />
-            <ModelSelector
-              provider={provider}
-              onProviderChange={setProvider}
-              thinking={thinking}
-              onThinkingChange={setThinking}
-              isUserAuth={isUserAuth}
-              status={status}
-              isBusy={isBusy}
-              input={input}
-              onStop={stop}
-              t={t}
-              variant={mode === 'agent' ? 'agent' : 'full'}
-            />
+            <div className="flex items-center gap-2">
+              <ModeSwitch
+                mode={mode}
+                onModeChange={setMode}
+                isBusy={isBusy}
+                isUserAuth={isUserAuth}
+              />
+              <ModelSelector
+                provider={provider}
+                onProviderChange={setProvider}
+                thinking={thinking}
+                onThinkingChange={setThinking}
+                isUserAuth={isUserAuth}
+                status={status}
+                isBusy={isBusy}
+                input={input}
+                onStop={stop}
+                t={t}
+                variant={mode === 'agent' ? 'agent' : 'full'}
+              />
+            </div>
           </PromptInputFooter>
         </PromptInput>
 
