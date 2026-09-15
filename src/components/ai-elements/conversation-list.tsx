@@ -4,6 +4,12 @@ import { ConversationSummary } from '@/store/conversation-store';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  deleteConversation,
+  getConversation,
+  getMyConversations,
+  renameConversation,
+} from '@/actions/admin/conversation-actions';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Dialog,
@@ -17,13 +23,7 @@ import { useT } from '@/i18n/dictionary-provider';
 import {
   conversationLocalStorage,
   type StoredConversationSummary,
-} from '@/lib/conversation-local-storage';
-import {
-  deleteConversation,
-  getConversation,
-  getMyConversations,
-  renameConversation,
-} from '@/actions/admin/conversation-actions';
+} from '@/lib/ai-chat/conversation-local-storage';
 import { cn } from '@/utils/utils';
 
 interface ConversationListProps {

@@ -40,20 +40,6 @@ function writeAll(data: Record<string, StoredConversation>): void {
   }
 }
 
-function deriveTitle(messages: UIMessage[]): string {
-  const firstUserMessage = messages.find((m) => m.role === 'user');
-  if (!firstUserMessage?.parts) return '新对话';
-
-  for (const part of firstUserMessage.parts) {
-    if (part.type === 'text' && part.text) {
-      const trimmed = part.text.trim();
-      return trimmed.length > 30 ? trimmed.slice(0, 30) + '...' : trimmed;
-    }
-  }
-
-  return '新对话';
-}
-
 export const conversationLocalStorage = {
   create(): StoredConversation {
     const now = new Date().toISOString();
@@ -108,15 +94,14 @@ export const conversationLocalStorage = {
       ? {
           ...existing,
           messages,
-          title:
-            existing.title === '新对话'
-              ? deriveTitle(messages)
-              : existing.title,
+          // 标题不再在此派生（AI 标题由前端 server action 生成后 updateTitle）：
+          // 保留已有标题，未写入则维持"新对话"。
+          title: existing.title === '新对话' ? '新对话' : existing.title,
           updatedAt: now,
         }
       : {
           id: conversationId,
-          title: deriveTitle(messages),
+          title: '新对话',
           createdAt: now,
           updatedAt: now,
           messages,

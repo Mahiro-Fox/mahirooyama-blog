@@ -1,18 +1,15 @@
 import crypto from 'crypto';
+import { getMastra } from '@/mastra';
+import { conversationStore } from '@/store/conversation-store';
 import {
   createUIMessageStream,
   createUIMessageStreamResponse,
   type UIMessage,
 } from 'ai';
-import { generateTitle } from '@/app/api/chat/route';
-import { getMastra } from '@/mastra';
-import { conversationStore } from '@/store/conversation-store';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { verifyUserAuth } from '@/lib/user-auth';
 
 export const runtime = 'nodejs';
-
-const MASTRA_MODEL = 'deepseek-chat';
 
 /**
  * Mastra Agent 流式聊天端点（"Agent 模式"）。
@@ -101,22 +98,6 @@ export async function POST(req: Request) {
           activeConversationId,
           allMessages
         );
-
-        const conv = await conversationStore.get(userId, activeConversationId);
-        if (conv && conv.messages.length === 2) {
-          const firstUserMsg = messages.find((m) => m.role === 'user');
-          const firstUserText =
-            firstUserMsg?.parts?.find((p) => p.type === 'text')?.text ?? '';
-          if (firstUserText) {
-            generateTitle(firstUserText, 'deepseek', MASTRA_MODEL)
-              .then((title) =>
-                conversationStore.updateTitle(userId, activeConversationId, title)
-              )
-              .catch((error) => {
-                console.error('Mastra: 更新标题失败:', error);
-              });
-          }
-        }
       } catch (error) {
         console.error('Mastra: 持久化对话失败:', error);
       }

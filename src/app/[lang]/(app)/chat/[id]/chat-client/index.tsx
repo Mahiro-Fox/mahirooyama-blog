@@ -2,9 +2,10 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { generateConversationTitle } from '@/actions/app/generate-title';
 import {
   PromptInput,
   PromptInputBody,
@@ -15,7 +16,7 @@ import {
 import { Link } from '@/components/shared/link';
 import { DEFAULT_PROVIDER, PROVIDERS } from '@/config/providers';
 import { useT } from '@/i18n/dictionary-provider';
-import { conversationLocalStorage } from '@/lib/conversation-local-storage';
+import { conversationLocalStorage } from '@/lib/ai-chat/conversation-local-storage';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { ChatHeader } from './chat-header';
 import { MessagesPanel } from './message-panel';
@@ -131,15 +132,34 @@ export function ChatClient({
         | undefined;
       const newConvId = metadata?.conversationId;
 
-      // 如果有新的对话ID，更新当前对话ID并刷新列表
+      // 新会话建立时：登录、未登录一致地导航到 /chat/[id]，让路由带 id
       if (newConvId && newConvId !== conversationId) {
-        // 登录态：URL 反映会话 -> 导航到 /chat/[id]；未登录：本地更新即可
-        if (isUserAuth) {
-          router.push(`/chat/${newConvId}`);
-        } else {
-          setConversationId(newConvId);
-        }
+        // router.push(`/chat/${newConvId}`);
+        window.history.replaceState({}, '', `/chat/${newConvId}`);
+        setConversationId(newConvId);
         setListKey((k) => k + 1);
+
+        // 统一生成 AI 标题（server action）：登录用 deepseek，未登录强制 openrouter
+        const firstUserMsg = allMessages.find((m) => m.role === 'user');
+        const firstUserText =
+          firstUserMsg?.parts?.find((p) => p.type === 'text')?.text ?? '';
+        if (firstUserText) {
+          generateConversationTitle({
+            conversationId: newConvId,
+            userMessage: firstUserText,
+          })
+            .then((res) => {
+              if (!res.success) return;
+              if (!res.didUpdateDB) {
+                // 未登录：服务端未落库，标题写回 localStorage，并刷新列表
+                conversationLocalStorage.updateTitle(newConvId, res.title);
+              }
+              setListKey((k) => k + 1);
+            })
+            .catch((err) =>
+              console.error('Error generating conversation title:', err)
+            );
+        }
       }
 
       if (!isUserAuth && newConvId) {
@@ -171,6 +191,21 @@ export function ChatClient({
       }
     },
   });
+
+  // 未登录动态路由 [id]：SSR 未注入 initialMessages，挂载后从 localStorage 恢复会话数据
+  useEffect(() => {
+    if (!isUserAuth && initialId) {
+      const stored = conversationLocalStorage.get(initialId);
+      if (stored) {
+        setMessages(stored.messages);
+        setConversationId(initialId);
+      } else {
+        redirect('/chat');
+      }
+    }
+    // 仅挂载时执行一次；isUserAuth/initialId 以 prop 形式注入，路由切换靠 key 重挂载
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isBusy = status === 'submitted' || status === 'streaming';
 
@@ -221,19 +256,16 @@ export function ChatClient({
   }, [isUserAuth, router, setMessages]);
 
   const handleSelectConversation = useCallback(
-    (id: string, convMessages: UIMessage[]) => {
-      // 登录态：导航到 /chat/[id]，历史由 SSR 加载；未登录：仍本地切换
-      if (isUserAuth) {
-        router.push(`/chat/${id}`);
-        setSidebarOpen(false);
-        return;
-      }
+    (id: string) => {
+      // 登录态：导航到 /chat/[id]，历史由 SSR 加载。
+      // 未登录：同样导航到 /chat/[id]，数据由 hydration effect 从 localStorage 恢复，
+      // 保证登录/未登录路由行为一致。
+      if (conversationId === id) return;
+      router.push(`/chat/${id}`);
       setConversationId(id);
-      setMessages(convMessages);
-      setInput('');
       setSidebarOpen(false);
     },
-    [isUserAuth, router, setMessages]
+    [router]
   );
 
   const handleListChanged = useCallback(() => {
@@ -247,7 +279,7 @@ export function ChatClient({
     }
     setMessages([]);
     setConversationId(undefined);
-  }, [isUserAuth, router, setMessages]);
+  }, [isUserAuth, router, setMessages, setConversationId]);
 
   return (
     <div className="container flex max-h-[calc(100vh-50px)] flex-1 gap-4 p-4 md:max-h-[calc(100vh-160px)] md:p-0">
