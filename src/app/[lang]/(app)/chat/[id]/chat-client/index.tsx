@@ -16,6 +16,7 @@ import {
 import { Link } from '@/components/shared/link';
 import { DEFAULT_PROVIDER, PROVIDERS } from '@/config/providers';
 import { useT } from '@/i18n/dictionary-provider';
+import { useLocale } from '@/i18n/use-locale';
 import { conversationLocalStorage } from '@/lib/ai-chat/conversation-local-storage';
 import { estimateTokens, MAX_CONTEXT_TOKENS } from '@/lib/tokens';
 import { ChatHeader } from './chat-header';
@@ -64,6 +65,7 @@ export function ChatClient({
     getLocalStorageConfiguration(isUserAuth);
   const t = useT();
   const router = useRouter();
+  const locale = useLocale();
   const [input, setInput] = useState('');
   const [provider, setProvider] = useState(configProvider);
   const [thinking, setThinking] = useState(configThinking);
@@ -135,7 +137,7 @@ export function ChatClient({
       // 新会话建立时：登录、未登录一致地导航到 /chat/[id]，让路由带 id
       if (newConvId && newConvId !== conversationId) {
         // router.push(`/chat/${newConvId}`);
-        window.history.replaceState({}, '', `/chat/${newConvId}`);
+        window.history.replaceState({}, '', `/${locale}/chat/${newConvId}`);
         setConversationId(newConvId);
         setListKey((k) => k + 1);
 
