@@ -7,7 +7,7 @@
     "chat.start_desc_no_auth": "Enter the content below to start chatting, press the enter key to send, and after logging in, you can use DeepSeek and unlock Agent mode (supporting memory storage, cat girl character design...)",
     "chat.input_placeholder_no_auth": "say something...",
     "chat.start_title_with_auth": "Start chatting meow~",
-    "chat.start_desc_with_auth": "Hello! I am Mahiro's assistant and website guide Meow~You can ask me information or other questions about the website Meow~Bitter dame!!!",
+    "chat.start_desc_with_auth": "Hello! I am Mahiro's assistant and website guide Meow~You can ask me information or other questions about the website Meow~ no R18 content !!!",
     "chat.input_placeholder_with_auth": "Do you have any questions to ask Meow~",
     "chat.provider": "Provider Type",
     "chat.thinking": "Thinking",

@@ -33,7 +33,7 @@ const handleDownload = (result: ProcessedImageResult) => {
     originalName.lastIndexOf('.')
   );
   const ext = result.metadata?.format || 'webp';
-  link.download = `${nameWithoutExt}_converted.${ext}`;
+  link.download = `${nameWithoutExt}.${ext}`;
 
   document.body.appendChild(link);
   link.click();
