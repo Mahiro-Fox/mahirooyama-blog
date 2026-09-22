@@ -11,7 +11,8 @@ import React, {
 import { throttle } from '@/utils/utils';
 
 export type PlayMode = 'sequential' | 'random' | 'loop';
-interface MusicContextValue {
+
+interface MusicContextState {
   /** 当前播放的歌曲，null 表示没有歌曲 */
   currentMusic: Music | null;
   /** 是否正在播放 */
@@ -30,6 +31,9 @@ interface MusicContextValue {
   playMode: PlayMode;
   /** 当前播放的歌曲索引 */
   currentIndex: number;
+}
+
+interface MusicContextActions {
   /** 播放指定索引的歌曲 */
   play: (index?: number) => void;
   /** 暂停播放 */
@@ -50,7 +54,9 @@ interface MusicContextValue {
   toggleExpand: () => void;
 }
 
-const MusicContext = createContext<MusicContextValue | null>(null);
+type MusicContextValue = MusicContextState & MusicContextActions;
+
+const MusicContext = createContext<MusicContextValue | undefined>(undefined);
 
 export function useMusic() {
   const context = useContext(MusicContext);

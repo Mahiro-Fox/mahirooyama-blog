@@ -1,7 +1,7 @@
 'use client';
 
 import { Languages } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { setLocale } from '@/actions/app/set-locale';
 import {
@@ -28,7 +28,7 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
   const currentLocale = useLocale();
   const [isPending, setIsPending] = useState(false);
-
+  const router = useRouter();
   const handleSwitch = async (targetLocale: string) => {
     setIsPending(true);
     try {
@@ -39,7 +39,7 @@ export function LanguageSwitcher() {
       const targetHref = switchLocaleHref(pathname, targetLocale);
 
       // 3. 页面刷新/跳转 (Next.js 中使用 router.refresh() 配合 push 或直接 location 刷新)
-      window.location.href = targetHref;
+      router.push(targetHref);
     } finally {
       setIsPending(false);
     }
