@@ -1,6 +1,6 @@
 'use client';
 
-import { m } from 'framer-motion';
+import { m } from 'motion/react';
 import { OptimizedImage } from '@/components/shared/optimized-image';
 import { MediaContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';

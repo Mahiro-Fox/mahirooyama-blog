@@ -1,7 +1,7 @@
 'use client';
 
-import { useInView } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
+import { useInView } from 'motion/react';
 import Image from 'next/image';
 import { useCallback, useRef, useState } from 'react';
 import { cn } from '@/utils/utils';

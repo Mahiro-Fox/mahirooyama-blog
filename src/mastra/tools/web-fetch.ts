@@ -1,12 +1,6 @@
-import { execFileSync } from 'child_process';
-import path from 'path';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-
-// 复用项目已有的 Python 纯工具执行器（ai-tools/tools_runner.py），
-// 与现有 /api/chat 的 web_fetch 保持一致，工具计算统一由 Python 侧负责。
-const AGENT_PYTHON = process.env.AGENT_PYTHON ?? 'python';
-const TOOLS_RUNNER = path.join(process.cwd(), 'ai-tools', 'tools_runner.py');
+import { runPythonTool } from '@/lib/ai-chat/python-tool';
 
 export const webFetch = createTool({
   id: 'web_fetch',
@@ -21,16 +15,8 @@ export const webFetch = createTool({
     text: z.string(),
   }),
   execute: async ({ url }) => {
-    const out = execFileSync(
-      AGENT_PYTHON,
-      [TOOLS_RUNNER, '--exec', 'web_fetch', JSON.stringify({ url })],
-      { encoding: 'utf-8', timeout: 15000 }
-    );
-    const parsed = JSON.parse(out.trim());
-    if (!parsed.ok) {
-      throw new Error(parsed.error ?? 'web_fetch 执行失败');
-    }
-    return parsed.result as {
+    const result = await runPythonTool('web_fetch', { url });
+    return result as {
       url: string;
       content_type: string;
       text: string;

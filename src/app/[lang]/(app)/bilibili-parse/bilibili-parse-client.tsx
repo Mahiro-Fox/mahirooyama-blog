@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, m } from 'framer-motion';
 import {
   Clock,
   Copy,
@@ -10,6 +9,7 @@ import {
   Video,
   XIcon,
 } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
 import {

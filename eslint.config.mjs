@@ -17,6 +17,9 @@ const config = [
       '**/out/',
       '**/.next/',
       '**/node_modules/',
+      '**/.agents/',
+      '**/.claude/',
+      '**/.trae/',
     ],
   },
 
@@ -72,6 +75,14 @@ const config = [
     rules: {
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 

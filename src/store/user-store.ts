@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { ADMIN_DEFAULT_PASSWORD } from '@/constant/auth';
 import { goFetch } from '@/lib/server/api-client';
 
@@ -45,6 +46,19 @@ export interface UserResponse {
 // Go 后端返回的 AdminUser（passwordHash 通过 json:"-" 不会返回，因此前端拿不到哈希）
 // 但登录/校验密码必须由 Go 完成，前端不再保留 passwordHash。
 
+// 同一请求内多次按 id 取后台用户（权限检查会重复调用）只打一次 Go。
+const fetchAdminUserById = cache(
+  async (id: string): Promise<UserResponse | null> => {
+    try {
+      return await goFetch<UserResponse>(
+        `/api/admin/users/${encodeURIComponent(id)}`
+      );
+    } catch {
+      return null;
+    }
+  }
+);
+
 export const userStore = {
   // 获取所有用户
   async getAll(): Promise<UserResponse[]> {
@@ -53,13 +67,7 @@ export const userStore = {
 
   // 根据ID获取用户
   async getById(id: string): Promise<UserResponse | null> {
-    try {
-      return await goFetch<UserResponse>(
-        `/api/admin/users/${encodeURIComponent(id)}`
-      );
-    } catch {
-      return null;
-    }
+    return fetchAdminUserById(id);
   },
 
   // 根据用户名获取用户（用于登录前的存在性检查）

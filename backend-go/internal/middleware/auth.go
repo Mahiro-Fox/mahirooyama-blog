@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"crypto/subtle"
 	"net/http"
 	"strings"
 
@@ -11,18 +12,20 @@ import (
 // 试点阶段：Next.js Server Action 转发请求时携带此密钥，Go 侧信任内网调用
 func RequireInternalSecret(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if secret == "" {
-			// 未配置密钥则放行（开发环境）
-			c.Next()
-			return
-		}
 		provided := c.GetHeader("X-Internal-Secret")
-		if provided != secret {
+		if !secretMatches(secret, provided) {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
 			return
 		}
 		c.Next()
 	}
+}
+
+func secretMatches(secret, provided string) bool {
+	if secret == "" || len(secret) != len(provided) {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(secret), []byte(provided)) == 1
 }
 
 // RequirePermission 校验 X-User-Permissions 头是否包含指定权限

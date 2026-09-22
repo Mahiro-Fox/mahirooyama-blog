@@ -26,6 +26,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("加载配置失败: %v", err)
 	}
+	if cfg.InternalSecret == "" {
+		log.Fatal("GO_API_SHARED_SECRET 未配置，拒绝启动")
+	}
 
 	gormDB, err := db.NewGormDB(cfg)
 	if err != nil {
@@ -43,6 +46,16 @@ func main() {
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	// 容器外的 nginx 把真实客户端 IP 放在 X-Forwarded-For。只信任本机和私网代理。
+	if err := r.SetTrustedProxies([]string{
+		"127.0.0.1",
+		"::1",
+		"10.0.0.0/8",
+		"172.16.0.0/12",
+		"192.168.0.0/16",
+	}); err != nil {
+		log.Fatalf("设置可信代理失败: %v", err)
+	}
 	router.RegisterRoutes(r, gormDB, cfg)
 
 	srv := &http.Server{

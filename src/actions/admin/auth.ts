@@ -1,11 +1,7 @@
 'use server';
 
 import { headers } from 'next/headers';
-import {
-  adminLoginViaGo,
-  adminLogoutViaGo,
-  verifyAuth,
-} from '@/lib/admin-auth';
+import { adminLoginViaGo, verifyAuth } from '@/lib/admin-auth';
 import { loginRateLimiter } from '@/lib/rate-limit';
 import { createLogger } from '@/utils/logger';
 

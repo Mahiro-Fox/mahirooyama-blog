@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -28,11 +29,14 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	api := r.Group("/api")
 	internalSecret := cfg.InternalSecret
+	loginLimit := middleware.RateLimit(10, 5*time.Minute)
+	publicWriteLimit := middleware.RateLimit(20, 10*time.Minute)
+	analyticsLimit := middleware.RateLimit(120, time.Minute)
 
 	// —— Auth：后台管理员 ——（登录/鉴权/登出都是公开入口；真正的权限通过 JWT+verify 判定）
 	adminAuth := api.Group("/admin/auth")
 	{
-		adminAuth.POST("/login", handler.AdminLoginHandler(store, cfg))
+		adminAuth.POST("/login", loginLimit, handler.AdminLoginHandler(store, cfg))
 		adminAuth.POST("/verify", handler.AdminVerifyHandler(store, cfg))
 		adminAuth.POST("/logout", handler.AdminLogoutHandler(store, cfg))
 	}
@@ -40,7 +44,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// —— Auth：前台访客 ——
 	userAuth := api.Group("/user/auth")
 	{
-		userAuth.POST("/login", handler.UserLoginHandler(store, cfg))
+		userAuth.POST("/login", loginLimit, handler.UserLoginHandler(store, cfg))
 		userAuth.POST("/verify", handler.UserVerifyHandler(store, cfg))
 		userAuth.POST("/logout", handler.UserLogoutHandler(store, cfg))
 	}
@@ -132,7 +136,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	{
 		guestbook.GET("", handler.ListApprovedGuestbookHandler(store))
 		guestbook.GET("/:id", handler.GetGuestbookHandler(store))
-		guestbook.POST("", handler.CreateGuestbookHandler(store))
+		guestbook.POST("", publicWriteLimit, handler.CreateGuestbookHandler(store))
 	}
 	guestbookAdmin := api.Group("/admin/guestbook", middleware.RequireInternalSecret(internalSecret))
 	{
@@ -147,7 +151,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// bugs 路由
 	bugs := api.Group("/bugs")
 	{
-		bugs.POST("", handler.CreateBugHandler(store))
+		bugs.POST("", publicWriteLimit, handler.CreateBugHandler(store))
 	}
 	bugsAdmin := api.Group("/admin/bugs", middleware.RequireInternalSecret(internalSecret))
 	{
@@ -160,8 +164,8 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// accounts 路由
 	accounts := api.Group("/accounts")
 	{
-		accounts.POST("", handler.CreateAccountHandler(store))
-		accounts.POST("/login", handler.LoginAccountHandler(store))
+		accounts.POST("", publicWriteLimit, handler.CreateAccountHandler(store))
+		accounts.POST("/login", loginLimit, handler.LoginAccountHandler(store))
 		accounts.GET("/:id", handler.GetPublicAccountHandler(store)) // 新：前台公开用户资料（与 Next accounts/:id 对应）
 	}
 	accountsAdmin := api.Group("/admin/accounts", middleware.RequireInternalSecret(internalSecret))
@@ -177,7 +181,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// admin-users 路由
 	usersLogin := api.Group("/admin/users")
 	{
-		usersLogin.POST("/login", handler.LoginAdminUserHandler(store))
+		usersLogin.POST("/login", loginLimit, handler.LoginAdminUserHandler(store))
 	}
 	usersAdmin := api.Group("/admin/users", middleware.RequireInternalSecret(internalSecret))
 	{
@@ -215,7 +219,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// POST 为前端埋点公开入口（nginx /api/* 直达）；GET/DELETE 为后台管理，需内部密钥鉴权
 	analytics := api.Group("/analytics")
 	{
-		analytics.POST("", handler.CreateAnalyticsHandler(store))
+		analytics.POST("", analyticsLimit, handler.CreateAnalyticsHandler(store))
 	}
 	analyticsAdmin := api.Group("/admin/analytics", middleware.RequireInternalSecret(internalSecret))
 	{

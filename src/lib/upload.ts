@@ -1,6 +1,5 @@
 import { Permission } from '@/constant';
 import sharp from 'sharp';
-import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goUploadMultipart } from '@/lib/server/api-client';
 import {
   withActionPermission,
@@ -140,57 +139,57 @@ export function createGoUploadAction<R extends GoUploadResultConfig>(
   config: GoUploadActionConfig<R>
 ): (formData: FormData) => Promise<ActionResponse<GoUploadActionResult<R>>> {
   return async (formData: FormData) => {
-    return withActionPermission(config.permission, async (user) => {
-      // ---- 限流检查 ----
-      const key = config.rateLimitKey.replace('{userId}', String(user.id));
-      if (user.id) {
-        const rateLimit = await serverActionRateLimiter.check(key);
-        if (!rateLimit.success) {
-          return {
-            success: false,
-            error: '操作过于频繁，请稍后再试',
-            resetTime: rateLimit.resetTime,
-          };
-        }
-      }
+    return withActionPermission(
+      config.permission,
+      async (user) => {
+        try {
+          // ---- 解析文件 ----
+          const file = formData.get(config.formField) as File | null;
+          if (!file) {
+            return {
+              success: false,
+              error: `未提供${config.label}文件`,
+            };
+          }
 
-      try {
-        // ---- 解析文件 ----
-        const file = formData.get(config.formField) as File | null;
-        if (!file) {
-          return {
-            success: false,
-            error: `未提供${config.label}文件`,
-          };
-        }
+          // ---- 构造转发 FormData（图片转 WebP 并保留源文件）----
+          const goFormData = new FormData();
+          const { width, height } = await appendGoAssetFile(goFormData, file, {
+            dir: config.dir,
+            quality: config.quality,
+          });
 
-        // ---- 构造转发 FormData（图片转 WebP 并保留源文件）----
-        const goFormData = new FormData();
-        const { width, height } = await appendGoAssetFile(goFormData, file, {
-          dir: config.dir,
-          quality: config.quality,
-        });
+          // ---- 转发到 Go ----
+          const data = await goUploadMultipart<{
+            url: string;
+            width: number;
+            height: number;
+          }>('/api/uploads/asset', goFormData);
 
-        // ---- 转发到 Go ----
-        const data = await goUploadMultipart<{
-          url: string;
-          width: number;
-          height: number;
-        }>('/api/uploads/asset', goFormData);
+          // ---- 构建返回 ----
+          const msg = config.result.message ?? `${config.label}上传成功`;
 
-        // ---- 构建返回 ----
-        const msg = config.result.message ?? `${config.label}上传成功`;
+          if (config.result.kind === 'image-full') {
+            const w = data.width || width;
+            const h = data.height || height;
+            const resultData = {
+              image: {
+                url: data.url,
+                width: w,
+                height: h,
+                ratio: w && h ? w / h : 1,
+              },
+              message: msg,
+            } as GoUploadActionResult<R>;
+            logger.info(`${config.name}上传成功`, {
+              fileName: file.name,
+              userId: user.id,
+            });
+            return { success: true, data: resultData };
+          }
 
-        if (config.result.kind === 'image-full') {
-          const w = data.width || width;
-          const h = data.height || height;
           const resultData = {
-            image: {
-              url: data.url,
-              width: w,
-              height: h,
-              ratio: w && h ? w / h : 1,
-            },
+            url: data.url,
             message: msg,
           } as GoUploadActionResult<R>;
           logger.info(`${config.name}上传成功`, {
@@ -198,23 +197,16 @@ export function createGoUploadAction<R extends GoUploadResultConfig>(
             userId: user.id,
           });
           return { success: true, data: resultData };
+        } catch (error) {
+          logger.error(`${config.name}上传失败`, error);
+          const errorMessage =
+            error instanceof Error ? error.message : '上传失败';
+          return { success: false, error: errorMessage };
         }
-
-        const resultData = {
-          url: data.url,
-          message: msg,
-        } as GoUploadActionResult<R>;
-        logger.info(`${config.name}上传成功`, {
-          fileName: file.name,
-          userId: user.id,
-        });
-        return { success: true, data: resultData };
-      } catch (error) {
-        logger.error(`${config.name}上传失败`, error);
-        const errorMessage =
-          error instanceof Error ? error.message : '上传失败';
-        return { success: false, error: errorMessage };
+      },
+      {
+        rateLimitKey: config.rateLimitKey.replace(/:?\{userId\}/g, ''),
       }
-    });
+    );
   };
 }

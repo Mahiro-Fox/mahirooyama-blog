@@ -1,6 +1,5 @@
-'use server';
-
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 import { ADMIN_SESSION_COOKIE } from '@/constant/auth';
 import { goFetch } from '@/lib/server/api-client';
 
@@ -39,7 +38,7 @@ type AdminLoginResponse = {
  * 保持 verifyAuth() 原返回形状：{success, userId, username, avatar, role, mustChangePassword, loggedInAt, expiresAt, sessionId, error}
  * 不直接在 Next 端验 JWT，避免前后端双份算法维护。
  */
-export async function verifyAuth(): Promise<{
+async function verifyAuthUncached(): Promise<{
   success: boolean;
   error?: string;
   userId?: string;
@@ -82,6 +81,9 @@ export async function verifyAuth(): Promise<{
     return { success: false, error: '登录已过期，请重新登录' };
   }
 }
+
+// 同一请求里 layout、page、action 会多次验登录，按请求去重。
+export const verifyAuth = cache(verifyAuthUncached);
 
 /**
  * 内部辅助：把 go login 返回值写到 admin-session cookie

@@ -1,7 +1,7 @@
 'use client';
 
-import { m } from 'framer-motion';
 import { X } from 'lucide-react';
+import { m } from 'motion/react';
 import * as React from 'react';
 import { cn } from '@/utils/utils';
 

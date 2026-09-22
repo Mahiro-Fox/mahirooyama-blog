@@ -1,5 +1,5 @@
 import { conversationStore } from '@/store/conversation-store';
-import { notFound, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/user-auth';
 import { ChatClient } from './chat-client';
 

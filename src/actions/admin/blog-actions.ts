@@ -3,7 +3,6 @@
 import matter from 'gray-matter';
 import { DEFAULT_BLOG_LIST_LIMIT } from '@/config/limit';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
-import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { goFetch } from '@/lib/server/api-client';
 import { createGoUploadAction } from '@/lib/upload';
 import {
@@ -150,165 +149,137 @@ export async function adminCreateBlog({
   slug: string;
   content: string;
 }): Promise<ActionResponse<void>> {
-  return withActionPermission('blog:create', async (user) => {
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(`blog:${user.id}`);
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
-      }
-    }
+  return withActionPermission(
+    'blog:create',
+    async (user) => {
+      try {
+        if (!slug || !content) {
+          return { success: false, error: '缺少必需字段 (slug, content)' };
+        }
+        const cleanSlug = slug.trim().toLowerCase();
+        const nameCheck = validateSlug(cleanSlug);
+        if (nameCheck) {
+          return { success: false, error: nameCheck.error };
+        }
 
-    try {
-      if (!slug || !content) {
-        return { success: false, error: '缺少必需字段 (slug, content)' };
-      }
-      const cleanSlug = slug.trim().toLowerCase();
-      const nameCheck = validateSlug(cleanSlug);
-      if (nameCheck) {
-        return { success: false, error: nameCheck.error };
-      }
+        // 验证 frontmatter 中 title 和 thumbnail 字段
+        const parsed = matter(content);
+        if (!parsed.data.title) {
+          return {
+            success: false,
+            error: 'mdx 内容缺少必需的字段 (title, thumbnail)',
+          };
+        }
 
-      // 验证 frontmatter 中 title 和 thumbnail 字段
-      const parsed = matter(content);
-      if (!parsed.data.title) {
-        return {
-          success: false,
-          error: 'mdx 内容缺少必需的字段 (title, thumbnail)',
-        };
+        await goFetch(`/api/blog-files`, {
+          method: 'POST',
+          body: JSON.stringify({ slug: cleanSlug, content }),
+        });
+
+        logger.info('创建 MDX 文件成功', { slug: cleanSlug, userId: user.id });
+        return { success: true, data: undefined };
+      } catch (error) {
+        logger.error('创建 MDX 文件失败', error, { slug });
+        const message = error instanceof Error ? error.message : '创建失败';
+        return { success: false, error: message };
       }
-
-      await goFetch(`/api/blog-files`, {
-        method: 'POST',
-        body: JSON.stringify({ slug: cleanSlug, content }),
-      });
-
-      logger.info('创建 MDX 文件成功', { slug: cleanSlug, userId: user.id });
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('创建 MDX 文件失败', error, { slug });
-      const message = error instanceof Error ? error.message : '创建失败';
-      return { success: false, error: message };
-    }
-  });
+    },
+    { rateLimitKey: 'blog' }
+  );
 }
 
 export async function adminUpdateBlog(
   slug: string,
   content: string
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('blog:update', async (user) => {
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(`blog:${user.id}`);
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
+  return withActionPermission(
+    'blog:update',
+    async (user) => {
+      try {
+        const nameCheck = validateSlug(slug);
+        if (nameCheck) {
+          return { success: false, error: nameCheck.error };
+        }
+
+        await goFetch(`/api/blog-files/${slug}`, {
+          method: 'PUT',
+          body: JSON.stringify({ content }),
+        });
+
+        logger.info('更新 MDX 文件成功', { slug, userId: user.id });
+        return { success: true, data: undefined };
+      } catch (error) {
+        logger.error('更新 MDX 文件失败', error, { slug });
+        const message = error instanceof Error ? error.message : '更新失败';
+        return { success: false, error: message };
       }
-    }
-
-    try {
-      const nameCheck = validateSlug(slug);
-      if (nameCheck) {
-        return { success: false, error: nameCheck.error };
-      }
-
-      await goFetch(`/api/blog-files/${slug}`, {
-        method: 'PUT',
-        body: JSON.stringify({ content }),
-      });
-
-      logger.info('更新 MDX 文件成功', { slug, userId: user.id });
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('更新 MDX 文件失败', error, { slug });
-      const message = error instanceof Error ? error.message : '更新失败';
-      return { success: false, error: message };
-    }
-  });
+    },
+    { rateLimitKey: 'blog' }
+  );
 }
 
 export async function adminRenameBlogFile(
   slug: string,
   newSlug: string
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('blog:update', async (user) => {
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(`blog:${user.id}`);
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
+  return withActionPermission(
+    'blog:update',
+    async (user) => {
+      try {
+        const cleanNewSlug = newSlug.trim().toLowerCase();
+        const nameCheck = validateSlug(cleanNewSlug);
+        if (nameCheck) {
+          return { success: false, error: nameCheck.error };
+        }
+
+        await goFetch(`/api/blog-files/${slug}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ newSlug: cleanNewSlug }),
+        });
+
+        logger.info('重命名博客文件成功', {
+          oldSlug: slug,
+          newSlug: cleanNewSlug,
+          userId: user.id,
+        });
+
+        return { success: true, data: undefined };
+      } catch (error) {
+        logger.error('重命名博客文件失败', error, { oldSlug: slug, newSlug });
+        const message = error instanceof Error ? error.message : '重命名失败';
+        return { success: false, error: message };
       }
-    }
-
-    try {
-      const cleanNewSlug = newSlug.trim().toLowerCase();
-      const nameCheck = validateSlug(cleanNewSlug);
-      if (nameCheck) {
-        return { success: false, error: nameCheck.error };
-      }
-
-      await goFetch(`/api/blog-files/${slug}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ newSlug: cleanNewSlug }),
-      });
-
-      logger.info('重命名博客文件成功', {
-        oldSlug: slug,
-        newSlug: cleanNewSlug,
-        userId: user.id,
-      });
-
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('重命名博客文件失败', error, { oldSlug: slug, newSlug });
-      const message = error instanceof Error ? error.message : '重命名失败';
-      return { success: false, error: message };
-    }
-  });
+    },
+    { rateLimitKey: 'blog' }
+  );
 }
 
 export async function adminDeleteBlogFile(
   slug: string
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('blog:delete', async (user) => {
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(`blog:${user.id}`);
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
+  return withActionPermission(
+    'blog:delete',
+    async (user) => {
+      try {
+        const nameCheck = validateSlug(slug);
+        if (nameCheck) {
+          return { success: false, error: nameCheck.error };
+        }
+
+        await goFetch(`/api/blog-files/${slug}`, {
+          method: 'DELETE',
+        });
+
+        logger.info('删除 MDX 文件成功', { slug, userId: user.id });
+        return { success: true, data: undefined };
+      } catch (error) {
+        logger.error('删除 MDX 文件失败', error, { slug });
+        const message = error instanceof Error ? error.message : '删除失败';
+        return { success: false, error: message };
       }
-    }
-
-    try {
-      const nameCheck = validateSlug(slug);
-      if (nameCheck) {
-        return { success: false, error: nameCheck.error };
-      }
-
-      await goFetch(`/api/blog-files/${slug}`, {
-        method: 'DELETE',
-      });
-
-      logger.info('删除 MDX 文件成功', { slug, userId: user.id });
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('删除 MDX 文件失败', error, { slug });
-      const message = error instanceof Error ? error.message : '删除失败';
-      return { success: false, error: message };
-    }
-  });
+    },
+    { rateLimitKey: 'blog' }
+  );
 }
 
 // 上传 MDX 文件（multipart）- 由 blog-client.tsx 的上传按钮调用

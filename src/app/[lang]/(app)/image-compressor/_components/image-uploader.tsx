@@ -1,7 +1,7 @@
 'use client';
 
-import { AnimatePresence, m } from 'framer-motion';
 import { Copy, Image as ImageIcon, Trash, Upload } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import React, { useCallback, useRef, useState } from 'react';

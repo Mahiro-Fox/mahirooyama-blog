@@ -1,15 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { pageRoutesConfig } from '@/config/common';
-import { ADMIN_SESSION_COOKIE } from '@/constant/auth';
+import { USER_SESSION_COOKIE } from '@/constant/auth';
 import { i18nConfig } from '@/i18n/i18n.config';
 
-// —— 登录态判定：proxy 走 edge runtime，不再引入 next-auth。
-// 因为 next-auth 已被移除，proxy 只能做「有没有 admin-session cookie」的粗校验，
-// 真正的 JWT+PG 表会话校验在 Server Action / Server Component 调用 verifyAuth() 完成。
-// 这样能避免 edge 里加载 jose 等重型库，也能与 Go 后端 verify API 保持单一可信源。
-function isAdminLoggedIn(req: NextRequest): boolean {
-  return Boolean(req.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+// proxy 只做「有没有前台 user-session cookie」的粗校验。
+// needAuth 路由是前台页面（如 /secret），登录页是 /signin。
+// 真正的 JWT 校验在 Server Action / Server Component 里调 Go verify。
+function isUserLoggedIn(req: NextRequest): boolean {
+  return Boolean(req.cookies.get(USER_SESSION_COOKIE)?.value);
 }
 
 // 获取需要保护的路由（原实现不动）
@@ -28,17 +27,19 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
+  // 全站只在这里下发 CSP。影视/音乐地址来自内容，connect/media 不能收成固定域名。
   response.headers.set(
     'Content-Security-Policy',
     [
-      "default-src 'self';",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;",
-      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;",
-      "connect-src 'self' *;",
-      "img-src 'self' * blob:;",
-      "media-src 'self' * blob:;",
-    ].join(' ')
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' blob: data: https: http:",
+      "media-src 'self' blob: data: https: http:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://nominatim.openstreetmap.org https: http:",
+      "frame-ancestors 'none'",
+    ].join('; ')
   );
   return response;
 }
@@ -98,7 +99,7 @@ export default async function middleware(req: NextRequest) {
   );
 
   if (isProtectedRoute) {
-    const loggedIn = isAdminLoggedIn(req);
+    const loggedIn = isUserLoggedIn(req);
     const loginPath = `${visibleLocalePrefix}/signin`;
     if (!loggedIn) {
       const loginUrl = new URL(loginPath, req.url);

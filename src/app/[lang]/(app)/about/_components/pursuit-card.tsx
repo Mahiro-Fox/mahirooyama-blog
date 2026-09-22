@@ -1,7 +1,7 @@
 'use client';
 
-import { m } from 'framer-motion';
 import { PlaneTakeoff } from 'lucide-react';
+import { m } from 'motion/react';
 import { PursuitContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
 

@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { serverActionRateLimiter } from '@/lib/rate-limit';
 import { buildQuery, goFetch } from '@/lib/server/api-client';
 import {
   withActionPermission,
@@ -44,104 +43,74 @@ export async function adminGetMovies(): Promise<ActionResponse<Movie[]>> {
 export async function adminCreateMovie(
   input: Omit<Movie, 'created_at' | 'updated_at'>
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('movies:create', async (user) => {
-    // 速率限制检查
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(
-        `movies:${user.id}`
-      );
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
+  return withActionPermission(
+    'movies:create',
+    async (user) => {
+      try {
+        await goFetch('/api/movies', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        });
+
+        logger.info('创建电影成功', { movieId: input.id, userId: user.id });
+        revalidatePath('/', 'layout');
+        return { success: true, data: undefined };
+      } catch (error) {
+        logger.error('创建电影失败', error);
+        return { success: false, error: '创建失败，请稍后重试' };
       }
-    }
-
-    try {
-      await goFetch('/api/movies', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      });
-
-      logger.info('创建电影成功', { movieId: input.id, userId: user.id });
-      revalidatePath('/', 'layout');
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('创建电影失败', error);
-      return { success: false, error: '创建失败，请稍后重试' };
-    }
-  });
+    },
+    { rateLimitKey: 'movies' }
+  );
 }
 
 // PUT - 更新电影
 export async function adminUpdateMovie(
   input: Partial<Omit<Movie, 'created_at' | 'updated_at'>> & { id: string }
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('movies:update', async (user) => {
-    // 速率限制检查
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(
-        `movies:${user.id}`
-      );
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
+  return withActionPermission(
+    'movies:update',
+    async (user) => {
+      try {
+        const { id, ...updates } = input;
+        await goFetch(`/api/movies/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+        });
+
+        logger.info('更新电影成功', { movieId: id, userId: user.id });
+        revalidatePath('/', 'layout');
+        return { success: true, data: undefined };
+      } catch (error) {
+        logger.error('更新电影失败', error, { movieId: input.id });
+        return { success: false, error: '更新失败' };
       }
-    }
-
-    try {
-      const { id, ...updates } = input;
-      await goFetch(`/api/movies/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(updates),
-      });
-
-      logger.info('更新电影成功', { movieId: id, userId: user.id });
-      revalidatePath('/', 'layout');
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('更新电影失败', error, { movieId: input.id });
-      return { success: false, error: '更新失败' };
-    }
-  });
+    },
+    { rateLimitKey: 'movies' }
+  );
 }
 
 // DELETE - 删除电影
 export async function adminDeleteMovie(
   id: string
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('movies:delete', async (user) => {
-    // 速率限制检查
-    if (user.id) {
-      const rateLimit = await serverActionRateLimiter.check(
-        `movies:${user.id}`
-      );
-      if (!rateLimit.success) {
-        return {
-          success: false,
-          error: '操作过于频繁，请稍后再试',
-          resetTime: rateLimit.resetTime,
-        };
+  return withActionPermission(
+    'movies:delete',
+    async (user) => {
+      try {
+        await goFetch(`/api/movies/${id}`, {
+          method: 'DELETE',
+          parseJson: false,
+        });
+
+        logger.info('删除电影成功', { movieId: id, userId: user.id });
+        revalidatePath('/', 'layout');
+        return { success: true, data: undefined };
+      } catch (error) {
+        logger.error('删除电影失败', error, { movieId: id });
+        return { success: false, error: '删除失败' };
       }
-    }
-
-    try {
-      await goFetch(`/api/movies/${id}`, {
-        method: 'DELETE',
-        parseJson: false,
-      });
-
-      logger.info('删除电影成功', { movieId: id, userId: user.id });
-      revalidatePath('/', 'layout');
-      return { success: true, data: undefined };
-    } catch (error) {
-      logger.error('删除电影失败', error, { movieId: id });
-      return { success: false, error: '删除失败' };
-    }
-  });
+    },
+    { rateLimitKey: 'movies' }
+  );
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import { m } from 'framer-motion';
 import { Heart, MapPin } from 'lucide-react';
+import { m } from 'motion/react';
 import { MapContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { m } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import { m } from 'motion/react';
 import { ProfileContent } from '@/config/about';
 import { useT } from '@/i18n/dictionary-provider';
 

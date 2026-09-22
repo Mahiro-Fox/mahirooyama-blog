@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
   ChevronUp,
@@ -9,6 +8,7 @@ import {
   Settings,
   Shield,
 } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
 import React, { useState } from 'react';
 import { Button } from '@/components/shadcn-ui/button';
 import { useT } from '@/i18n/dictionary-provider';
@@ -161,7 +161,7 @@ function FormatSelector({
             </div>
 
             {targetFormat === option.value && (
-              <motion.div
+              <m.div
                 layoutId="activeFormat"
                 className="pointer-events-none absolute inset-0 rounded-xl border-2 border-[var(--primary)]"
                 initial={false}
@@ -269,7 +269,7 @@ function AdvancedOptions({
 
       <AnimatePresence>
         {isAdvancedOpen && (
-          <motion.div
+          <m.div
             initial={{ gridTemplateRows: '0fr', opacity: 0 }}
             animate={{ gridTemplateRows: '1fr', opacity: 1 }}
             exit={{ gridTemplateRows: '0fr', opacity: 0 }}
@@ -303,7 +303,7 @@ function AdvancedOptions({
                     !config.keepMetadata ? 'bg-[var(--primary)]' : 'bg-muted'
                   } ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                 >
-                  <motion.div
+                  <m.div
                     className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-md ${!config.keepMetadata ? 'left-8' : 'left-1'} `}
                     layout
                     transition={{
@@ -343,7 +343,7 @@ function AdvancedOptions({
                     config.convertAnimation ? 'bg-[var(--primary)]' : 'bg-muted'
                   } ${disabled ? 'cursor-not-allowed opacity-50' : ''} `}
                 >
-                  <motion.div
+                  <m.div
                     className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-md ${config.convertAnimation ? 'left-8' : 'left-1'} `}
                     layout
                     transition={{
@@ -447,7 +447,7 @@ function AdvancedOptions({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

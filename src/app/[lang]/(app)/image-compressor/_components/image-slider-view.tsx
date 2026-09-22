@@ -1,7 +1,7 @@
 'use client';
 
-import { AnimatePresence, m } from 'framer-motion';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
 import React, { useEffect, useEffectEvent } from 'react';
 import { useT } from '@/i18n/dictionary-provider';
 import ImageCompare from './image-compare';

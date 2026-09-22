@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, m } from 'framer-motion';
 import {
   AlertCircle,
   CheckCircle,
@@ -10,6 +9,7 @@ import {
   Package,
   XCircle,
 } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
 import React from 'react';
 import { useT } from '@/i18n/dictionary-provider';
 
