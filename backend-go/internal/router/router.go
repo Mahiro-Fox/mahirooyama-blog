@@ -257,6 +257,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 			netease.GET("/playlist", handler.NeteasePlaylistHandler())
 			netease.GET("/lyric", handler.NeteaseLyricHandler())
 			netease.GET("/audio", handler.NeteaseAudioHandler())
+			netease.GET("/qr/key", handler.NeteaseQRKeyHandler())
 		}
 		// QQ 公开读
 		qq := cloudmusic.Group("/qq")
@@ -275,6 +276,8 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		{
 			cookieWrite.PUT("/cookie", handler.PutCloudCookieHandler())
 			cookieWrite.GET("/cookie", handler.GetCloudCookieHandler())
+			// 扫码轮询成功后会把 cookie 写入后端，故与 cookie 写操作一样需要内部密钥
+			cookieWrite.GET("/netease/qr/check", handler.NeteaseQRCheckHandler())
 		}
 	}
 }

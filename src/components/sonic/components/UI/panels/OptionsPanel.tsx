@@ -86,6 +86,7 @@ export function OptionsPanel({
   onDisplaySettingsChange,
   globalSceneSettings,
   onGlobalSceneSettingsChange,
+  onNeteaseLoginSuccess,
 }: {
   onClose: () => void;
   accentHex: string;
@@ -140,6 +141,8 @@ export function OptionsPanel({
   ) => void;
   globalSceneSettings: { rotationSpeed: number };
   onGlobalSceneSettingsChange: (patch: { rotationSpeed?: number }) => void;
+  /** 网易云扫码登录成功回调（透传给账号面板） */
+  onNeteaseLoginSuccess?: (cookie: string) => void | Promise<void>;
 }) {
   const lang = useLanguage();
   const [activeTab, setActiveTab] = useState<OptionsTab>('Meteor');
@@ -232,9 +235,9 @@ export function OptionsPanel({
   };
 
   return (
-    <div className="pointer-events-auto absolute top-[50%] left-4 z-[100] translate-y-[-50%]">
+    <div className="pointer-events-auto absolute top-4 left-4 z-[100]">
       <div
-        className="themed-scrollbar max-h-[75vh] w-[min(840px,calc(100vw-140px))] transform overflow-y-auto rounded-sm border p-8 shadow-2xl transition-all"
+        className="themed-scrollbar max-h-[70vh] w-[min(840px,calc(100vw-140px))] transform overflow-y-auto rounded-sm border p-8 shadow-2xl transition-all"
         style={themedPanelStyle(accentHex, 0.88)}
       >
         <div className="mb-6 flex items-center justify-between">
@@ -381,6 +384,7 @@ export function OptionsPanel({
             updateStatus={updateStatus}
             isCheckingUpdate={isCheckingUpdate}
             onCheckUpdate={onCheckUpdate}
+            onNeteaseLoginSuccess={onNeteaseLoginSuccess}
           />
         ) : activeTab === 'Lyrics' ? (
           <div className="flex flex-col gap-6">

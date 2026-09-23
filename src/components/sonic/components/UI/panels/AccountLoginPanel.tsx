@@ -3,9 +3,24 @@
  * 管理网易云与 QQ 音乐两套登录凭证的填写、保存、清除与有效性状态展示，
  * 并支持桌面端一键登录。
  */
-import { useState } from 'react';
+import QRCode from 'qrcode';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  neteaseQrCheckAction,
+  neteaseQrKeyAction,
+} from '@/actions/sonic/cloudmusic-actions';
 import { t, useLanguage } from '../../../lib/i18n/i18n';
 import { colorWithAlpha, primaryGhostStyle } from '../shared/panelShared';
+
+/** 扫码登录所处的阶段 */
+type QrPhase =
+  | 'idle'
+  | 'loading'
+  | 'waiting'
+  | 'scanned'
+  | 'expired'
+  | 'success'
+  | 'error';
 
 /**
  * 网易云 / QQ 音乐账号登录与凭证管理面板。
@@ -42,6 +57,7 @@ export function AccountLoginPanel({
   updateStatus,
   isCheckingUpdate,
   onCheckUpdate,
+  onNeteaseLoginSuccess,
 }: {
   accentHex: string;
   neteaseCookie: string;
@@ -64,15 +80,91 @@ export function AccountLoginPanel({
   updateStatus: string;
   isCheckingUpdate: boolean;
   onCheckUpdate: () => void | Promise<void>;
+  /** 扫码登录成功后的回调；参数为后端回传的 cookie，调用方负责保存到本地并刷新账号状态 */
+  onNeteaseLoginSuccess?: (cookie: string) => void | Promise<void>;
 }) {
   const lang = useLanguage();
   const [provider, setProvider] = useState<'netease' | 'qq'>('netease');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [qrKey, setQrKey] = useState('');
+  const [qrPhase, setQrPhase] = useState<QrPhase>('idle');
+
+  // 申请 unikey 并渲染二维码；重新申请前清空旧图，避免扫到已失效的码
+  const startQrLogin = useCallback(async () => {
+    setQrPhase('loading');
+    setQrDataUrl('');
+    setQrKey('');
+    const res = await neteaseQrKeyAction();
+    if (!res.ok || !res.unikey) {
+      setQrPhase('error');
+      return;
+    }
+    try {
+      const dataUrl = await QRCode.toDataURL(res.qrContent, {
+        width: 368,
+        margin: 1,
+      });
+      setQrDataUrl(dataUrl);
+      setQrKey(res.unikey);
+      setQrPhase('waiting');
+    } catch {
+      setQrPhase('error');
+    }
+  }, []);
+
+  // 切到网易云且尚未登录时，自动开启一次扫码流程
+  useEffect(() => {
+    if (provider !== 'netease' || isNeteaseCookieValid) return;
+    if (qrPhase !== 'idle') return;
+    void startQrLogin();
+  }, [provider, isNeteaseCookieValid, qrPhase, startQrLogin]);
+
+  // 轮询扫码状态：802 已扫码待确认 / 803 授权成功 / 800 二维码过期
+  useEffect(() => {
+    if (provider !== 'netease') return;
+    if (qrPhase !== 'waiting' && qrPhase !== 'scanned') return;
+    if (!qrKey) return;
+    const timer = setInterval(async () => {
+      const res = await neteaseQrCheckAction(qrKey);
+      if (res.code === 802) {
+        setQrPhase('scanned');
+      } else if (res.code === 803) {
+        setQrPhase('success');
+        await onNeteaseLoginSuccess?.(res.cookie);
+      } else if (res.code === 800) {
+        setQrPhase('expired');
+      }
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [provider, qrPhase, qrKey, onNeteaseLoginSuccess]);
+
+  // 退出登录后重置扫码状态，便于再次扫码
+  useEffect(() => {
+    if (!isNeteaseCookieValid && qrPhase === 'success') setQrPhase('idle');
+  }, [isNeteaseCookieValid, qrPhase]);
+
   const isDesktop = Boolean(window.sonicDesktop?.isDesktop);
   const activeValid =
     provider === 'netease' ? isNeteaseCookieValid : isQQCookieValid;
   const activeStatus = provider === 'netease' ? cookieStatus : qqCookieStatus;
   const isSyncing =
     provider === 'netease' ? isSyncingNeteaseCookie : isSyncingQQCookie;
+
+  // 扫码状态提示文案（QQ 暂不支持扫码，仍走手动粘贴 Cookie）
+  const getHint = (phase: QrPhase) => {
+    const map: Record<QrPhase, string> = {
+      waiting: t('ui.text.346', lang),
+      loading: t('ui.text.347', lang),
+      scanned: t('ui.text.349', lang),
+      expired: t('ui.text.350', lang),
+      success: t('ui.text.351', lang),
+      error: t('ui.text.352', lang),
+      idle: t('ui.text.348', lang),
+    };
+    return map[phase] || map.idle;
+  };
+
+  const showQr = provider === 'netease' && Boolean(qrDataUrl) && !activeValid;
 
   return (
     <div className="grid gap-5">
@@ -122,23 +214,49 @@ export function AccountLoginPanel({
 
         <div className="grid place-items-center py-4">
           <div
-            className="grid h-[184px] w-[184px] place-items-center rounded-[20px] border text-center"
+            className="relative grid h-[184px] w-[184px] place-items-center overflow-hidden rounded-[20px] border text-center"
             style={{
               borderColor: colorWithAlpha(accentHex, 0.22),
               backgroundColor: colorWithAlpha(accentHex, 0.06),
             }}
           >
-            <div>
-              <div
-                className="text-[26px] font-semibold tracking-[0.12em]"
-                style={{ color: accentHex }}
-              >
-                {provider === 'netease' ? 'NE' : 'QQ'}
+            {showQr ? (
+              <>
+                <img
+                  src={qrDataUrl}
+                  alt={t('ui.text.348', lang)}
+                  className="h-full w-full bg-white object-contain p-2"
+                />
+                {qrPhase === 'scanned' && (
+                  <div className="absolute inset-0 grid place-items-center bg-black/65 px-4 text-[11px] leading-relaxed text-white/85">
+                    {t('ui.text.349', lang)}
+                  </div>
+                )}
+                {qrPhase === 'expired' && (
+                  <button
+                    type="button"
+                    onClick={() => void startQrLogin()}
+                    className="absolute inset-0 grid cursor-pointer place-items-center bg-black/70 px-4 text-[11px] leading-relaxed text-white/85"
+                  >
+                    {t('ui.text.350', lang)}
+                  </button>
+                )}
+              </>
+            ) : (
+              <div>
+                <div
+                  className="text-[26px] font-semibold tracking-[0.12em]"
+                  style={{ color: accentHex }}
+                >
+                  {provider === 'netease' ? 'NE' : 'QQ'}
+                </div>
+                <div className="mt-2 text-[11px] text-white/38">
+                  {activeValid
+                    ? t('ui.text.313', lang)
+                    : t('ui.text.314', lang)}
+                </div>
               </div>
-              <div className="mt-2 text-[11px] text-white/38">
-                {activeValid ? t('ui.text.313', lang) : t('ui.text.314', lang)}
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -149,7 +267,9 @@ export function AccountLoginPanel({
               activeStatus ||
               (activeValid
                 ? t('ui.text.316', lang)
-                : `扫码登录${provider === 'netease' ? t('ui.text.317', lang) : t('ui.text.318', lang)}`)}
+                : provider === 'netease'
+                  ? getHint(qrPhase)
+                  : `扫码登录${t('ui.text.318', lang)}`)}
         </div>
 
         <div className="mt-4 flex flex-wrap justify-center gap-2">

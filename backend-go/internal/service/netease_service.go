@@ -4,6 +4,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -532,4 +534,98 @@ func NeteaseLyric(ctx context.Context, client *http.Client, id any) (lyric strin
 		translated, _ = tlrc["lyric"].(string)
 	}
 	return lyric, translated
+}
+
+// --- 扫码登录 ---
+
+// neteaseQRBase 网易云扫码登录接口基址
+const neteaseQRBase = "https://music.163.com/api/login/qrcode"
+
+// NeteaseQRKey 申请扫码登录用的 unikey。
+// 二维码内容为 https://music.163.com/login?codekey={unikey}，有效期约 5 分钟。
+// unikey 为空表示申请失败，此时 code 为上游返回码（862 通常代表出口 IP 被风控）。
+func NeteaseQRKey(ctx context.Context, client *http.Client) (unikey string, code int) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, neteaseQRBase+"/unikey", strings.NewReader("type=1"))
+	if err != nil {
+		return "", 0
+	}
+	req.Header = CreateNeteaseHeaders("", http.Header{
+		"Content-Type": []string{"application/x-www-form-urlencoded"},
+	})
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", 0
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", 0
+	}
+	data := map[string]any{}
+	_ = json.Unmarshal(body, &data)
+	unikey, _ = data["unikey"].(string)
+	return unikey, int(ToInt64(data["code"]))
+}
+
+// NeteaseQRCheck 轮询扫码状态。
+// code 语义：800 二维码已过期 / 801 等待扫码 / 802 已扫码待确认 / 803 授权成功。
+// code 为 803 时会从响应头 Set-Cookie 中提取登录凭证并以 cookie 返回。
+func NeteaseQRCheck(ctx context.Context, client *http.Client, key string) (code int, cookie string, message string) {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return 801, "", ""
+	}
+	form := url.Values{}
+	form.Set("key", key)
+	form.Set("type", "1")
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, neteaseQRBase+"/client/login", strings.NewReader(form.Encode()))
+	if err != nil {
+		return 801, "", ""
+	}
+	req.Header = CreateNeteaseHeaders("", http.Header{
+		"Content-Type": []string{"application/x-www-form-urlencoded"},
+	})
+	resp, err := client.Do(req)
+	if err != nil {
+		return 801, "", ""
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 801, "", ""
+	}
+	data := map[string]any{}
+	_ = json.Unmarshal(body, &data)
+	code = int(ToInt64(data["code"]))
+	message, _ = data["message"].(string)
+	if code == 803 {
+		cookie = collectNeteaseSetCookies(resp.Header)
+	}
+	return code, cookie, message
+}
+
+// collectNeteaseSetCookies 把响应头中的 Set-Cookie 汇总为可直接复用的 cookie 串。
+// 扫码成功时上游会下发 MUSIC_U、__csrf 等多个 cookie，这里取各条的 name=value 并以 "; " 连接，
+// 与手动粘贴 cookie 的格式保持一致。
+func collectNeteaseSetCookies(header http.Header) string {
+	parts := make([]string, 0, 8)
+	seen := make(map[string]bool, 8)
+	for _, raw := range header.Values("Set-Cookie") {
+		pair := raw
+		if idx := strings.Index(pair, ";"); idx >= 0 {
+			pair = pair[:idx]
+		}
+		pair = strings.TrimSpace(pair)
+		eq := strings.Index(pair, "=")
+		if pair == "" || eq <= 0 {
+			continue
+		}
+		name := pair[:eq]
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		parts = append(parts, pair)
+	}
+	return strings.Join(parts, "; ")
 }

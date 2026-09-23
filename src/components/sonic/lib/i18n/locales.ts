@@ -1387,4 +1387,28 @@ export const locales: Record<string, { zh: string; en: string }> = {
     zh: '无法打开官方发布页',
     en: 'Could not open the official release page',
   },
+  'ui.text.347': {
+    zh: '正在生成二维码…',
+    en: 'Generating QR code…',
+  },
+  'ui.text.348': {
+    zh: '请用网易云音乐 App 扫码登录',
+    en: 'Scan with the Netease Cloud Music app to log in',
+  },
+  'ui.text.349': {
+    zh: '已扫码，请在手机上确认',
+    en: 'Scanned — please confirm on your phone',
+  },
+  'ui.text.350': {
+    zh: '二维码已过期，点击刷新',
+    en: 'QR code expired — click to refresh',
+  },
+  'ui.text.351': {
+    zh: '扫码登录成功，账号已同步',
+    en: 'Login successful, account synchronized',
+  },
+  'ui.text.352': {
+    zh: '二维码生成失败，请稍后重试',
+    en: 'Failed to generate QR code, please try again later',
+  },
 };

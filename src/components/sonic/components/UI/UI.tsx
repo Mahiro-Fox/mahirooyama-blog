@@ -490,6 +490,16 @@ export function UI({
     }
   };
 
+  // 网易云扫码登录成功：cookie 已由后端写入并持久化，这里同步本地存储并刷新有效性状态
+  const handleNeteaseQrLoginSuccess = async (cookie: string) => {
+    const normalized = cookie.trim();
+    if (!normalized) return;
+    setNeteaseCookie(normalized);
+    writeNeteaseCookieStorage(normalized);
+    await syncNeteaseCookie(normalized, { silent: true });
+    setCookieStatus(t('ui.text.351', lang));
+  };
+
   const syncQQCookie = async (
     cookie: string,
     options: { silent?: boolean } = {}
@@ -1989,6 +1999,7 @@ export function UI({
             onDisplaySettingsChange={setDisplaySettings}
             globalSceneSettings={globalSceneSettings}
             onGlobalSceneSettingsChange={onGlobalSceneSettingsChange}
+            onNeteaseLoginSuccess={handleNeteaseQrLoginSuccess}
           />
         )}
       </div>

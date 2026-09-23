@@ -113,3 +113,36 @@ func NeteaseAudioHandler() gin.HandlerFunc {
 		}
 	}
 }
+
+// NeteaseQRKeyHandler GET /api/cloudmusic/netease/qr/key
+// 申请扫码登录的 unikey，并直接给出二维码内容供前端渲染图片。
+func NeteaseQRKeyHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		unikey, code := service.NeteaseQRKey(c.Request.Context(), cloudClient())
+		if unikey == "" {
+			c.JSON(http.StatusBadGateway, gin.H{"error": "网易云二维码生成失败", "code": code})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"unikey":    unikey,
+			"qrContent": "https://music.163.com/login?codekey=" + unikey,
+			"code":      code,
+		})
+	}
+}
+
+// NeteaseQRCheckHandler GET /api/cloudmusic/netease/qr/check?key=
+// 轮询扫码状态；code=803 时把上游下发的 cookie 写入后端单例并持久化，同时回传规范化后的 cookie，
+// 供前端保存到本地存储以保持界面状态与后续请求一致（与手动粘贴 cookie 的效果相同）。
+func NeteaseQRCheckHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := c.Query("key")
+		code, cookie, message := service.NeteaseQRCheck(c.Request.Context(), cloudClient(), key)
+		payload := gin.H{"code": code, "message": message, "saved": false}
+		if code == 803 && cookie != "" {
+			payload["cookie"] = service.SetNeteaseCookie(cookie)
+			payload["saved"] = true
+		}
+		c.JSON(http.StatusOK, payload)
+	}
+}
