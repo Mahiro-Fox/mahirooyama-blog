@@ -541,17 +541,31 @@ func NeteaseLyric(ctx context.Context, client *http.Client, id any) (lyric strin
 // neteaseQRBase 网易云扫码登录接口基址
 const neteaseQRBase = "https://music.163.com/api/login/qrcode"
 
+// neteaseQRHeaders 构造扫码接口请求头。
+// 扫码接口对请求特征较敏感：默认的 "Mozilla/5.0" 过于简陋，会明显提高被风控的概率
+// （上游会返回 8821「需要行为验证码验证」）。这里用完整浏览器 UA 并补齐 Origin/Accept-Language，
+// 尽量贴近真实网页登录。注意用 Set 覆盖而不用 Add，避免出现重复的 User-Agent。
+func neteaseQRHeaders() http.Header {
+	h := CreateNeteaseHeaders("", nil)
+	h.Set("Content-Type", "application/x-www-form-urlencoded")
+	h.Set(
+		"User-Agent",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+	)
+	h.Set("Origin", "https://music.163.com")
+	h.Set("Accept-Language", "zh-CN,zh;q=0.9")
+	return h
+}
+
 // NeteaseQRKey 申请扫码登录用的 unikey。
 // 二维码内容为 https://music.163.com/login?codekey={unikey}，有效期约 5 分钟。
-// unikey 为空表示申请失败，此时 code 为上游返回码（862 通常代表出口 IP 被风控）。
+// unikey 为空表示申请失败，此时 code 为上游返回码。
 func NeteaseQRKey(ctx context.Context, client *http.Client) (unikey string, code int) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, neteaseQRBase+"/unikey", strings.NewReader("type=1"))
 	if err != nil {
 		return "", 0
 	}
-	req.Header = CreateNeteaseHeaders("", http.Header{
-		"Content-Type": []string{"application/x-www-form-urlencoded"},
-	})
+	req.Header = neteaseQRHeaders()
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", 0
@@ -568,7 +582,9 @@ func NeteaseQRKey(ctx context.Context, client *http.Client) (unikey string, code
 }
 
 // NeteaseQRCheck 轮询扫码状态。
-// code 语义：800 二维码已过期 / 801 等待扫码 / 802 已扫码待确认 / 803 授权成功。
+// code 语义：800 二维码已过期 / 801 等待扫码 / 802 已扫码待确认 / 803 授权成功；
+// 8821 表示上游要求行为验证码验证（风控拦截，多因出口 IP 请求特征异常或短时间频繁操作），
+// 此时应停止轮询，等待风控解除或改用 cookie 登录。
 // code 为 803 时会从响应头 Set-Cookie 中提取登录凭证并以 cookie 返回。
 func NeteaseQRCheck(ctx context.Context, client *http.Client, key string) (code int, cookie string, message string) {
 	key = strings.TrimSpace(key)
@@ -582,9 +598,7 @@ func NeteaseQRCheck(ctx context.Context, client *http.Client, key string) (code 
 	if err != nil {
 		return 801, "", ""
 	}
-	req.Header = CreateNeteaseHeaders("", http.Header{
-		"Content-Type": []string{"application/x-www-form-urlencoded"},
-	})
+	req.Header = neteaseQRHeaders()
 	resp, err := client.Do(req)
 	if err != nil {
 		return 801, "", ""

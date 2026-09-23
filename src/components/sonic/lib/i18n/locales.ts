@@ -1411,4 +1411,8 @@ export const locales: Record<string, { zh: string; en: string }> = {
     zh: '二维码生成失败，请稍后重试',
     en: 'Failed to generate QR code, please try again later',
   },
+  'ui.text.353': {
+    zh: '网易云要求行为验证，扫码登录暂时不可用。请稍后再试，或改用下方 Cookie 登录',
+    en: 'Netease requires captcha verification, so QR login is unavailable. Try again later or paste a cookie below.',
+  },
 };
