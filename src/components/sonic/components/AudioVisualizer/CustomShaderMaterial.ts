@@ -1,5 +1,9 @@
-import * as THREE from "three";
-import { shaderMaterial } from "@react-three/drei";
+/**
+ * Three.js 自定义着色器材质集合。
+ * 导出地图地形、浮动方块与专辑封面三套 shaderMaterial，供 3D 场景按音频数据驱动顶点/颜色变化。
+ */
+import { shaderMaterial } from '@react-three/drei';
+import * as THREE from 'three';
 
 const terrainFragmentShader = `
     uniform float uTime;

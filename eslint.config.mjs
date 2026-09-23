@@ -18,6 +18,7 @@ const config = [
       '**/.next/',
       '**/node_modules/',
       '**/.agents/',
+      '**/plugins-src/',
       '**/.claude/',
       '**/.trae/',
     ],

@@ -1,7 +1,15 @@
+/**
+ * 音频调试面板。
+ * 以 8 个频段（SubBass～Air）的柱状图实时展示频谱能量与节拍检测结果，用于调参和排查音频问题。
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import './AudioDebugger.css';
-import { engine } from '../../lib/AudioEngine';
-import { createBeatTimelineState, getBeatLampValue, stepBeatTimeline } from '../../lib/beatDetector';
+import { engine } from '../../lib/audio/AudioEngine';
+import {
+  createBeatTimelineState,
+  getBeatLampValue,
+  stepBeatTimeline,
+} from '../../lib/audio/beatDetector';
 
 interface AudioDebuggerProps {
   onClose: () => void;
@@ -14,13 +22,24 @@ const BANDS = [
   { name: 'Mid', start: 8, end: 18, color: '#33cc33', key: 'mid' },
   { name: 'HighMid', start: 19, end: 46, color: '#33cccc', key: 'highMid' },
   { name: 'Presence', start: 47, end: 93, color: '#3366ff', key: 'presence' },
-  { name: 'Brilliance', start: 94, end: 186, color: '#9933ff', key: 'brilliance' },
+  {
+    name: 'Brilliance',
+    start: 94,
+    end: 186,
+    color: '#9933ff',
+    key: 'brilliance',
+  },
   { name: 'Air', start: 187, end: 372, color: '#ff33cc', key: 'air' },
 ];
 
+/**
+ * 实时频谱与节拍调试面板。
+ *
+ * @param onClose 关闭面板的回调
+ */
 export function AudioDebugger({ onClose }: AudioDebuggerProps) {
   const [detectorSensitivity, setDetectorSensitivity] = useState(
-    () => engine.getBeatDetectorSettings().sensitivity,
+    () => engine.getBeatDetectorSettings().sensitivity
   );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bandBarsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -36,7 +55,9 @@ export function AudioDebugger({ onClose }: AudioDebuggerProps) {
   const beatTimelineStateRef = useRef(createBeatTimelineState());
   const lastUpdateTime = useRef<number>(0);
 
-  const handleDetectorSensitivityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDetectorSensitivityChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const sensitivity = Number(event.target.value);
     setDetectorSensitivity(sensitivity);
     engine.setBeatDetectorSettings({ sensitivity });
@@ -74,25 +95,48 @@ export function AudioDebugger({ onClose }: AudioDebuggerProps) {
 
       if (!lastUpdateTime.current || now - lastUpdateTime.current > 30) {
         const vals = [
-          audioData.subBass, audioData.bass, audioData.lowMid, audioData.mid,
-          audioData.highMid, audioData.presence, audioData.brilliance, audioData.air,
+          audioData.subBass,
+          audioData.bass,
+          audioData.lowMid,
+          audioData.mid,
+          audioData.highMid,
+          audioData.presence,
+          audioData.brilliance,
+          audioData.air,
         ];
 
         for (let i = 0; i < BANDS.length; i++) {
           const val = vals[i] || 0;
-          if (bandBarsRef.current[i]) bandBarsRef.current[i]!.style.width = `${Math.min(100, val * 100)}%`;
-          if (bandValuesRef.current[i]) bandValuesRef.current[i]!.innerText = val.toFixed(2);
+          if (bandBarsRef.current[i])
+            bandBarsRef.current[i]!.style.width =
+              `${Math.min(100, val * 100)}%`;
+          if (bandValuesRef.current[i])
+            bandValuesRef.current[i]!.innerText = val.toFixed(2);
         }
 
-        const fluxScale = Math.max(0.08, audioData.kickThreshold * 2.2, audioData.kickFlux);
-        if (kickLevelBarRef.current) kickLevelBarRef.current.style.width = `${Math.min(100, audioData.kickLevel * 100)}%`;
-        if (kickFluxBarRef.current) kickFluxBarRef.current.style.width = `${Math.min(100, (audioData.kickFlux / fluxScale) * 100)}%`;
-        if (kickThresholdRef.current) kickThresholdRef.current.style.left = `${Math.min(100, (audioData.kickThreshold / fluxScale) * 100)}%`;
-        if (kickEnvelopeBarRef.current) kickEnvelopeBarRef.current.style.width = `${Math.min(100, audioData.kickEnvelope * 100)}%`;
-        if (kickWindowRef.current) kickWindowRef.current.innerText = `${audioData.kickWindowName} (${audioData.kickWindowStart}-${audioData.kickWindowEnd})`;
-        if (kickConfidenceRef.current) kickConfidenceRef.current.innerText = audioData.kickConfidence.toFixed(2);
+        const fluxScale = Math.max(
+          0.08,
+          audioData.kickThreshold * 2.2,
+          audioData.kickFlux
+        );
+        if (kickLevelBarRef.current)
+          kickLevelBarRef.current.style.width = `${Math.min(100, audioData.kickLevel * 100)}%`;
+        if (kickFluxBarRef.current)
+          kickFluxBarRef.current.style.width = `${Math.min(100, (audioData.kickFlux / fluxScale) * 100)}%`;
+        if (kickThresholdRef.current)
+          kickThresholdRef.current.style.left = `${Math.min(100, (audioData.kickThreshold / fluxScale) * 100)}%`;
+        if (kickEnvelopeBarRef.current)
+          kickEnvelopeBarRef.current.style.width = `${Math.min(100, audioData.kickEnvelope * 100)}%`;
+        if (kickWindowRef.current)
+          kickWindowRef.current.innerText = `${audioData.kickWindowName} (${audioData.kickWindowStart}-${audioData.kickWindowEnd})`;
+        if (kickConfidenceRef.current)
+          kickConfidenceRef.current.innerText =
+            audioData.kickConfidence.toFixed(2);
 
-        const beatLamp = getBeatLampValue({ now, lastBeatAt: beatTimelineStateRef.current.lastBeatAt });
+        const beatLamp = getBeatLampValue({
+          now,
+          lastBeatAt: beatTimelineStateRef.current.lastBeatAt,
+        });
         if (kickBeatLampRef.current) {
           kickBeatLampRef.current.classList.toggle('is-active', beatLamp > 0);
           kickBeatLampRef.current.innerText = beatLamp > 0 ? 'BEAT' : 'READY';
@@ -121,7 +165,12 @@ export function AudioDebugger({ onClose }: AudioDebuggerProps) {
             }
           }
           ctx.fillStyle = barColor;
-          ctx.fillRect(i * barWidth, height - value * height, Math.max(1, barWidth - 0.5), value * height);
+          ctx.fillRect(
+            i * barWidth,
+            height - value * height,
+            Math.max(1, barWidth - 0.5),
+            value * height
+          );
         }
       }
 
@@ -142,41 +191,67 @@ export function AudioDebugger({ onClose }: AudioDebuggerProps) {
           <h3>Audio Frequency Debugger</h3>
           <div className="detector-pill">Realtime Kick Detector</div>
         </div>
-        <button className="close-btn" onClick={onClose}>x</button>
+        <button className="close-btn" onClick={onClose}>
+          x
+        </button>
       </div>
 
       <div className="audio-debugger-canvas-container">
-        <canvas ref={canvasRef} width={500} height={120} className="audio-debugger-canvas" />
+        <canvas
+          ref={canvasRef}
+          width={500}
+          height={120}
+          className="audio-debugger-canvas"
+        />
       </div>
 
       <div className="audio-debugger-bands">
         {BANDS.map((band, i) => (
           <div key={band.key} className="band-item">
-            <div className="band-label" style={{ color: band.color }}>{band.name}</div>
+            <div className="band-label" style={{ color: band.color }}>
+              {band.name}
+            </div>
             <div className="band-bar-container">
               <div
-                ref={(el) => { bandBarsRef.current[i] = el; }}
+                ref={(el) => {
+                  bandBarsRef.current[i] = el;
+                }}
                 className="band-bar"
                 style={{ width: '0%', backgroundColor: band.color }}
               />
             </div>
-            <div ref={(el) => { bandValuesRef.current[i] = el; }} className="band-value">0.00</div>
+            <div
+              ref={(el) => {
+                bandValuesRef.current[i] = el;
+              }}
+              className="band-value"
+            >
+              0.00
+            </div>
           </div>
         ))}
       </div>
 
       <div className="kick-monitor">
         <div className="kick-monitor-head">
-          <div ref={kickBeatLampRef} className="beat-lamp">READY</div>
+          <div ref={kickBeatLampRef} className="beat-lamp">
+            READY
+          </div>
           <div className="kick-meta">
-            <div>Active <span ref={kickWindowRef}>Classic (1-4)</span></div>
-            <div>Confidence <span ref={kickConfidenceRef}>0.00</span></div>
+            <div>
+              Active <span ref={kickWindowRef}>Classic (1-4)</span>
+            </div>
+            <div>
+              Confidence <span ref={kickConfidenceRef}>0.00</span>
+            </div>
           </div>
         </div>
 
         <div className="kick-meter-row">
           <span>Level</span>
-          <div className="kick-meter"><div ref={kickLevelBarRef} className="kick-meter-fill level" /></div>
+          <div className="kick-meter">
+            <div ref={kickLevelBarRef} className="kick-meter-fill level" />
+          </div>
         </div>
         <div className="kick-meter-row">
           <span>Flux</span>
@@ -187,7 +262,12 @@ export function AudioDebugger({ onClose }: AudioDebuggerProps) {
         </div>
         <div className="kick-meter-row">
           <span>Envelope</span>
-          <div className="kick-meter"><div ref={kickEnvelopeBarRef} className="kick-meter-fill envelope" /></div>
+          <div className="kick-meter">
+            <div
+              ref={kickEnvelopeBarRef}
+              className="kick-meter-fill envelope"
+            />
+          </div>
         </div>
 
         <div className="detector-sensitivity">
@@ -215,7 +295,8 @@ export function AudioDebugger({ onClose }: AudioDebuggerProps) {
       </div>
 
       <div className="debugger-hint">
-        Press `~` key to toggle this panel. Kick ticks show confirmed realtime onsets.
+        Press `~` key to toggle this panel. Kick ticks show confirmed realtime
+        onsets.
       </div>
     </div>
   );

@@ -1,26 +1,36 @@
+/**
+ * Sonic 应用根组件。
+ * 持有主题、地面均衡器、歌词、显示等全局设置的读写状态，并把它们下发给 UI 与 3D 场景，
+ * 同时维护歌词/封面可见性、调试面板开关等跨组件共享状态。
+ */
 'use client';
 
 import './index.css';
 import { Canvas } from '@react-three/fiber';
-import { UI } from './components/UI/UI';
-import { MapScene } from './components/AudioVisualizer/MapScene';
-import { AudioDebugger } from './components/AudioDebugger/AudioDebugger';
 import { useEffect, useState } from 'react';
-import {
-  readGroundEqSettingsStorage,
-  writeGroundEqSettingsStorage,
-  type StoredGroundEqSettings,
-} from './lib/groundEqSettings';
+import { AudioDebugger } from './components/AudioDebugger/AudioDebugger';
+import { MapScene } from './components/AudioVisualizer/MapScene';
+import { UI } from './components/UI/UI';
 import {
   DEFAULT_CAMERA_POSITION,
   GLOBAL_SCENE_SETTINGS_STORAGE_KEY,
   readGlobalSceneSettingsStorage,
   type GlobalSceneSettings,
-} from './lib/sceneDefaults';
+} from './lib/scene/sceneDefaults';
+import {
+  readGroundEqSettingsStorage,
+  writeGroundEqSettingsStorage,
+  type StoredGroundEqSettings,
+} from './lib/settings/groundEqSettings';
+import {
+  readLyricsSettingsStorage,
+  writeLyricsSettingsStorage,
+  type LyricsSettings,
+} from './lib/settings/lyricsSettings';
 import {
   BUILT_IN_THEME_IDS,
-  CUSTOM_THEME_ID,
   createCustomThemeColors,
+  CUSTOM_THEME_ID,
   readActiveCustomThemeStorage,
   readActiveThemeStorage,
   readCustomThemeStorage,
@@ -32,8 +42,7 @@ import {
   writeThemeRotationStorage,
   type CustomThemeSettings,
   type ThemeRotationSettings,
-} from './lib/themes';
-import { readLyricsSettingsStorage, writeLyricsSettingsStorage, type LyricsSettings } from './lib/lyricsSettings';
+} from './lib/theme/themes';
 
 function readInitialCustomThemeState() {
   const presets = readCustomThemeStorage();
@@ -43,20 +52,27 @@ function readInitialCustomThemeState() {
   };
 }
 
+/** Sonic 播放器应用根组件：集中管理主题与各项设置状态，组合 UI 与 3D 可视化场景。 */
 export default function App() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
   const [theme, setTheme] = useState(readActiveThemeStorage);
-  const [groundEqSettings, setGroundEqSettings] = useState<StoredGroundEqSettings>(readGroundEqSettingsStorage);
-  const [customThemeState, setCustomThemeState] = useState(readInitialCustomThemeState);
-  const [lyricsSettings, setLyricsSettings] = useState<LyricsSettings>(readLyricsSettingsStorage);
+  const [groundEqSettings, setGroundEqSettings] =
+    useState<StoredGroundEqSettings>(readGroundEqSettingsStorage);
+  const [customThemeState, setCustomThemeState] = useState(
+    readInitialCustomThemeState
+  );
+  const [lyricsSettings, setLyricsSettings] = useState<LyricsSettings>(
+    readLyricsSettingsStorage
+  );
   const [showDebugger, setShowDebugger] = useState(false);
   const [currentLyricsText, setCurrentLyricsText] = useState('');
   const [lyricsVisible, setLyricsVisible] = useState(true);
   const [coverVisible, setCoverVisible] = useState(true);
-  const [globalSceneSettings, setGlobalSceneSettings] = useState<GlobalSceneSettings>(readGlobalSceneSettingsStorage);
+  const [globalSceneSettings, setGlobalSceneSettings] =
+    useState<GlobalSceneSettings>(readGlobalSceneSettingsStorage);
 
   // Track current song to pass cover to 3D scene
   const [currentSong, setCurrentSong] = useState<any | null>(null);
@@ -66,19 +82,32 @@ export default function App() {
 
   const customThemes = customThemeState.presets;
   const activeCustomThemeId = customThemeState.activeId;
-  const activeCustomTheme = customThemes.find((preset) => preset.id === activeCustomThemeId) || customThemes[0];
-  const availableRotationThemeIds = [...BUILT_IN_THEME_IDS, ...customThemes.map((preset) => preset.id)];
-  const [themeRotation, setThemeRotation] = useState<ThemeRotationSettings>(() => readThemeRotationStorage(availableRotationThemeIds));
+  const activeCustomTheme =
+    customThemes.find((preset) => preset.id === activeCustomThemeId) ||
+    customThemes[0];
+  const availableRotationThemeIds = [
+    ...BUILT_IN_THEME_IDS,
+    ...customThemes.map((preset) => preset.id),
+  ];
+  const [themeRotation, setThemeRotation] = useState<ThemeRotationSettings>(
+    () => readThemeRotationStorage(availableRotationThemeIds)
+  );
 
   useEffect(() => {
-    localStorage.setItem(GLOBAL_SCENE_SETTINGS_STORAGE_KEY, JSON.stringify(globalSceneSettings));
+    localStorage.setItem(
+      GLOBAL_SCENE_SETTINGS_STORAGE_KEY,
+      JSON.stringify(globalSceneSettings)
+    );
   }, [globalSceneSettings]);
 
   const updateGlobalSceneSettings = (patch: { rotationSpeed?: number }) => {
-    setGlobalSceneSettings(prev => ({ ...prev, ...patch }));
+    setGlobalSceneSettings((prev) => ({ ...prev, ...patch }));
   };
 
-  const resolvedTheme = theme === CUSTOM_THEME_ID ? createCustomThemeColors(activeCustomTheme) : (themes[theme] || themes['ink-wash']);
+  const resolvedTheme =
+    theme === CUSTOM_THEME_ID
+      ? createCustomThemeColors(activeCustomTheme)
+      : themes[theme] || themes['ink-wash'];
   const sceneRotationSpeed = globalSceneSettings.rotationSpeed;
 
   const updateTheme = (themeId: string) => {
@@ -98,7 +127,10 @@ export default function App() {
     }
   };
 
-  const updateCustomThemes = (settings: CustomThemeSettings[], activeId = activeCustomThemeId) => {
+  const updateCustomThemes = (
+    settings: CustomThemeSettings[],
+    activeId = activeCustomThemeId
+  ) => {
     setCustomThemeState({ presets: settings, activeId });
     writeCustomThemeStorage(settings);
     writeActiveCustomThemeStorage(activeId);
@@ -117,8 +149,13 @@ export default function App() {
   useEffect(() => {
     const normalized = readThemeRotationStorage(availableRotationThemeIds);
     setThemeRotation((current) => {
-      const nextThemeIds = current.themeIds.filter((id) => availableRotationThemeIds.includes(id));
-      const next = { ...current, themeIds: nextThemeIds.length ? nextThemeIds : normalized.themeIds };
+      const nextThemeIds = current.themeIds.filter((id) =>
+        availableRotationThemeIds.includes(id)
+      );
+      const next = {
+        ...current,
+        themeIds: nextThemeIds.length ? nextThemeIds : normalized.themeIds,
+      };
       writeThemeRotationStorage(next, availableRotationThemeIds);
       return next;
     });
@@ -128,9 +165,13 @@ export default function App() {
     if (!themeRotation.enabled || themeRotation.themeIds.length < 2) return;
 
     const timer = window.setInterval(() => {
-      const currentThemeId = theme === CUSTOM_THEME_ID ? activeCustomThemeId : theme;
+      const currentThemeId =
+        theme === CUSTOM_THEME_ID ? activeCustomThemeId : theme;
       const currentIndex = themeRotation.themeIds.indexOf(currentThemeId);
-      const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % themeRotation.themeIds.length : 0;
+      const nextIndex =
+        currentIndex >= 0
+          ? (currentIndex + 1) % themeRotation.themeIds.length
+          : 0;
       activateThemeId(themeRotation.themeIds[nextIndex]);
     }, themeRotation.intervalSeconds * 1000);
 
@@ -160,7 +201,10 @@ export default function App() {
   }
 
   return (
-    <div className="relative min-h-[100dvh] w-screen overflow-hidden text-[#94a3b8] font-sans selection:bg-blue-500/30 transition-colors duration-1000" style={{ backgroundColor: backdropColor }}>
+    <div
+      className="relative min-h-[calc(100dvh-64px)] w-screen overflow-hidden font-sans text-[#94a3b8] transition-colors duration-1000 selection:bg-blue-500/30"
+      style={{ backgroundColor: backdropColor }}
+    >
       <UI
         theme={theme}
         resolvedTheme={resolvedTheme}
@@ -182,15 +226,19 @@ export default function App() {
         onCoverVisibilityChange={setCoverVisible}
         isPerspectiveEditMode={isPerspectiveEditMode}
         onPerspectiveEditModeChange={setIsPerspectiveEditMode}
-        onResetCamera={() => setResetCameraTrigger(prev => prev + 1)}
+        onResetCamera={() => setResetCameraTrigger((prev) => prev + 1)}
       />
       <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: DEFAULT_CAMERA_POSITION, fov: 45 }}>
-          <MapScene 
-            themeColors={resolvedTheme} 
-            groundEqSettings={groundEqSettings} 
-            rotationSpeed={sceneRotationSpeed} 
-            coverUrl={coverVisible ? (currentSong?.cover || currentSong?.picUrl || '') : ''}
+          <MapScene
+            themeColors={resolvedTheme}
+            groundEqSettings={groundEqSettings}
+            rotationSpeed={sceneRotationSpeed}
+            coverUrl={
+              coverVisible
+                ? currentSong?.cover || currentSong?.picUrl || ''
+                : ''
+            }
             lyricsText={currentLyricsText || null}
             lyricsSettings={lyricsSettings}
             lyricsVisible={lyricsVisible}

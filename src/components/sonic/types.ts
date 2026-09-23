@@ -1,3 +1,7 @@
+/**
+ * Sonic 的公共类型定义。
+ * 包含音频分析数据（AudioData/RippleEvent）、曲目信息、云端歌曲与歌单等跨模块共享的类型。
+ */
 export interface AudioData {
   // Legacy base
   bass: number;
@@ -6,12 +10,12 @@ export interface AudioData {
   energy: number;
 
   // Granular bands
-  subBass: number;   // 20-60Hz
-  lowMid: number;    // 140-300Hz
-  highMid: number;   // 800-2kHz
-  presence: number;  // 2-4kHz
-  brilliance: number;// 4-8kHz
-  air: number;       // 8-16kHz
+  subBass: number; // 20-60Hz
+  lowMid: number; // 140-300Hz
+  highMid: number; // 800-2kHz
+  presence: number; // 2-4kHz
+  brilliance: number; // 4-8kHz
+  air: number; // 8-16kHz
 
   // Timbral Metrics
   warmth: number;
