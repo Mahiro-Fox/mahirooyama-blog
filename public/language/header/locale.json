@@ -60,6 +60,9 @@
     "midi_admin_title": "MIDI Management",
     "midi_admin_description": "Manage MIDI music files",
 
+    "sonic_nav_label": "Sonic Player",
+    "sonic_nav_description": "3D audio visualizer music player with cloud music",
+
     "bilibili_parse_nav_label": "Bilibili Parser",
     "bilibili_parse_nav_description": "Parse Bilibili video links",
 
@@ -168,6 +171,9 @@
     "midi_nav_description": "VRChat 中文吧自动钢琴工具",
     "midi_admin_title": "MIDI 管理",
     "midi_admin_description": "管理 MIDI 音乐文件",
+
+    "sonic_nav_label": "Sonic播放器",
+    "sonic_nav_description": "3D音频可视化音乐播放器，支持云音乐",
 
     "bilibili_parse_nav_label": "B站解析",
     "bilibili_parse_nav_description": "解析B站视频链接",

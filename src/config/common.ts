@@ -1,5 +1,6 @@
 import {
   Activity,
+  AudioWaveform,
   Bot,
   Bug,
   Camera,
@@ -171,6 +172,14 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     adminHref: '/admin/midi',
     adminTitle: 'midi_admin_title',
     adminDescription: 'midi_admin_description',
+  },
+  {
+    name: 'sonic',
+    icon: AudioWaveform,
+    category: 'tools',
+    navHref: '/sonic',
+    navLabel: 'sonic_nav_label',
+    navDescription: 'sonic_nav_description',
   },
   {
     name: 'bilibili_parse',

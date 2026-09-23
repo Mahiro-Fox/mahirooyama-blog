@@ -12,6 +12,7 @@ import (
 	"mahirooyama-blog/backend-go/internal/handler"
 	"mahirooyama-blog/backend-go/internal/middleware"
 	"mahirooyama-blog/backend-go/internal/repository"
+	"mahirooyama-blog/backend-go/internal/service"
 )
 
 // RegisterRoutes 注册所有路由（接收 Config，让 auth 处理器能读 JWT 相关配置）
@@ -22,6 +23,9 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 
 	// 数据访问单一入口。handler 层只依赖 Store 接口，便于后续注入 mock 写单测。
 	store := repository.NewStore(db)
+
+	// 云音乐 cookie 持久化初始化（幂等）
+	service.InitCloudCookie(cfg.DataDir)
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -237,5 +241,40 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		conversations.GET("/:id", handler.GetConversationHandler(store))
 		conversations.PATCH("/:id", handler.UpdateConversationTitleHandler(store))
 		conversations.DELETE("/:id", handler.DeleteConversationHandler(store))
+	}
+
+	// —— 云音乐（网易云 / QQ）——所有公开读无需鉴权；cookie 写入需内部密钥 ——
+	cloudmusic := api.Group("/cloudmusic")
+	{
+		// 网易云公开读
+		netease := cloudmusic.Group("/netease")
+		{
+			netease.GET("/search", handler.NeteaseSearchHandler())
+			netease.GET("/playable", handler.NeteasePlayableHandler())
+			netease.GET("/account", handler.NeteaseAccountHandler())
+			netease.GET("/daily", handler.NeteaseDailyHandler())
+			netease.GET("/playlists", handler.NeteasePlaylistsHandler())
+			netease.GET("/playlist", handler.NeteasePlaylistHandler())
+			netease.GET("/lyric", handler.NeteaseLyricHandler())
+			netease.GET("/audio", handler.NeteaseAudioHandler())
+		}
+		// QQ 公开读
+		qq := cloudmusic.Group("/qq")
+		{
+			qq.GET("/search", handler.QQSearchHandler())
+			qq.GET("/songurl", handler.QQSongURLHandler())
+			qq.GET("/profile", handler.QQProfileHandler())
+			qq.GET("/user/playlists", handler.QQUserPlaylistsHandler())
+			qq.GET("/playlist/tracks", handler.QQPlaylistTracksHandler())
+			qq.GET("/lyric", handler.QQLyricHandler())
+			qq.GET("/cover", handler.QQCoverHandler())
+			qq.GET("/audio", handler.QQAudioHandler())
+		}
+		// cookie 读/写均需内部密钥（对应 Next Server Action 转发）
+		cookieWrite := cloudmusic.Group("", middleware.RequireInternalSecret(internalSecret))
+		{
+			cookieWrite.PUT("/cookie", handler.PutCloudCookieHandler())
+			cookieWrite.GET("/cookie", handler.GetCloudCookieHandler())
+		}
 	}
 }

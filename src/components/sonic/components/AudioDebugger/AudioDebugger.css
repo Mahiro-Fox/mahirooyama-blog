@@ -1,0 +1,373 @@
+.audio-debugger-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 500px;
+  background: rgba(10, 15, 25, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  color: white;
+  z-index: 9999;
+  font-family: monospace;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.audio-debugger-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.audio-debugger-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #a0c0ff;
+}
+
+.audio-debugger-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detector-pill {
+  border-radius: 4px;
+  border: 1px solid rgba(255, 51, 102, 0.35);
+  background: rgba(255, 51, 102, 0.12);
+  color: #ff9bb8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  text-transform: uppercase;
+}
+
+.audio-debugger-close {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.audio-debugger-close:hover {
+  color: white;
+}
+
+.audio-debugger-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.audio-debugger-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.audio-debugger-bands {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.band-item {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 4px 8px;
+  gap: 8px;
+}
+
+.band-label {
+  width: 70px;
+  font-size: 11px;
+  color: #aaa;
+}
+
+.band-bar-container {
+  flex-grow: 1;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.band-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.05s linear;
+}
+
+.band-value {
+  width: 30px;
+  font-size: 11px;
+  text-align: right;
+  color: #fff;
+}
+
+.debugger-hint {
+  font-size: 10px;
+  color: #666;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.audio-debugger-triggers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+}
+
+.trigger-item {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 6px 8px;
+  gap: 6px;
+}
+
+.trigger-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+.trigger-controls {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 10px;
+  color: #aaa;
+  gap: 8px;
+}
+
+.trigger-controls label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trigger-controls input[type="range"] {
+  width: 60px;
+  height: 4px;
+}
+
+.trigger-bar-container {
+  position: relative;
+  flex-grow: 1;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+}
+
+.trigger-bar-energy {
+  height: 100%;
+  background-color: #ff3366;
+  border-radius: 4px;
+  transition: width 0.05s linear;
+}
+
+.trigger-bar-thresh {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background-color: #fff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+  transition: left 0.1s linear;
+  z-index: 2;
+}
+
+.kick-monitor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+}
+
+.kick-monitor-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.beat-lamp {
+  width: 74px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  transition: transform 80ms linear, background-color 80ms linear, color 80ms linear, box-shadow 80ms linear;
+}
+
+.beat-lamp.is-active {
+  transform: scale(1.06);
+  border-color: rgba(255, 51, 102, 0.9);
+  background: #ff3366;
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255, 51, 102, 0.65);
+}
+
+.kick-meta {
+  display: grid;
+  gap: 3px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.kick-meta span {
+  color: #fff;
+  font-weight: 700;
+}
+
+.kick-meter-row {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+}
+
+.kick-meter {
+  position: relative;
+  height: 11px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.kick-meter-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  transition: width 0.05s linear;
+}
+
+.kick-meter-fill.level {
+  background: #ff6690;
+}
+
+.kick-meter-fill.flux {
+  background: #ff3366;
+}
+
+.kick-meter-fill.envelope {
+  background: #ffd166;
+}
+
+.kick-threshold {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+}
+
+.detector-sensitivity {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.detector-sensitivity-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+}
+
+.detector-sensitivity-head strong {
+  color: #fff;
+  font-size: 12px;
+}
+
+.detector-sensitivity-control {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 68px;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 10px;
+}
+
+.detector-sensitivity-control span:last-child {
+  text-align: right;
+}
+
+.detector-sensitivity-control input[type="range"] {
+  width: 100%;
+  accent-color: #ff3366;
+  cursor: pointer;
+}
+
+.beat-timeline-label {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.beat-timeline {
+  position: relative;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.06) 0,
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px,
+      transparent 12.5%
+    ),
+    rgba(0, 0, 0, 0.35);
+}
+
+.beat-tick {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 3px;
+  border-radius: 999px;
+  background: #ff3366;
+  box-shadow: 0 0 10px rgba(255, 51, 102, 0.75);
+}

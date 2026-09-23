@@ -46,7 +46,7 @@ services:
     ports:
       - '127.0.0.1:8080:8080'
     volumes:
-      - ./data:/data:ro
+      - ./data:/app/data:ro
       - ./uploads:/app/uploads
     depends_on:
       postgres:
