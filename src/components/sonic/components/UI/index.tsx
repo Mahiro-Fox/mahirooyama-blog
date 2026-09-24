@@ -1236,7 +1236,11 @@ export function UI({
 
         engine.init();
         engine.loadUrl(
-          buildQQPlaybackUrl('/api/qq/audio', qqSong, playbackQualitySettings)
+          buildQQPlaybackUrl(
+            '/api/cloudmusic/qq/audio',
+            qqSong,
+            playbackQualitySettings
+          )
         );
         engine.play();
         setSearchStatus('');
@@ -1369,7 +1373,7 @@ export function UI({
       engine.init();
       engine.loadUrl(
         buildQQPlaybackUrl(
-          '/api/qq/audio',
+          '/api/cloudmusic/qq/audio',
           { mid, mediaMid },
           playbackQualitySettings
         )

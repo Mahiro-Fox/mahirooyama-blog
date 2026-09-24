@@ -93,7 +93,7 @@ export class AudioEngine {
   private userVolumeNode: GainNode | null = null;
   private userVolumeValue: number = 1;
   private inputMode: AudioInputMode = 'player';
-  public audioElement: HTMLAudioElement;
+  private audioElementInstance: HTMLAudioElement | null = null;
 
   private dataArray: Uint8Array<ArrayBuffer> = new Uint8Array(512);
 
@@ -119,22 +119,33 @@ export class AudioEngine {
   public onBeat?: (strength: number, type: 'kick' | 'snare') => void;
 
   constructor() {
-    this.audioElement = new Audio();
-    this.audioElement.crossOrigin = 'anonymous';
+    // 构造函数保持与浏览器 API 无关：模块顶层会创建单例 engine，
+    // 服务端渲染/构建期同样会执行模块顶层代码，此时 Audio 并不存在。
+    // 真正的音频元素在首次访问 audioElement 时惰性创建。
     this.scheduleFrameCacheInvalidation();
+  }
 
-    // Attempt to handle ended events
-    this.audioElement.addEventListener('ended', () => {
-      this.isPlaying = false;
-    });
+  /** 音频元素：惰性创建，避免模块在服务端被求值时引用浏览器全局 Audio。 */
+  public get audioElement(): HTMLAudioElement {
+    if (!this.audioElementInstance) {
+      const element = new Audio();
+      element.crossOrigin = 'anonymous';
 
-    this.audioElement.addEventListener('play', () => {
-      this.isPlaying = true;
-    });
+      element.addEventListener('ended', () => {
+        this.isPlaying = false;
+      });
 
-    this.audioElement.addEventListener('pause', () => {
-      this.isPlaying = false;
-    });
+      element.addEventListener('play', () => {
+        this.isPlaying = true;
+      });
+
+      element.addEventListener('pause', () => {
+        this.isPlaying = false;
+      });
+
+      this.audioElementInstance = element;
+    }
+    return this.audioElementInstance;
   }
 
   private scheduleFrameCacheInvalidation() {

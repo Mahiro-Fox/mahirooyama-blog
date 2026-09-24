@@ -5,12 +5,15 @@ import { getDictionary } from '@/i18n/dictionary';
 import { DictionaryProvider } from '@/i18n/dictionary-provider';
 import { getCurrentUser } from '@/lib/user-auth';
 
-interface AppLayoutProps {
+interface BareLayoutProps {
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }
 
-export default async function AppLayout({ children, params }: AppLayoutProps) {
+export default async function BareLayout({
+  children,
+  params,
+}: BareLayoutProps) {
   const { lang } = await params;
   const [navDictionary, frontendUser] = await Promise.all([
     getDictionary(lang, 'header'),
