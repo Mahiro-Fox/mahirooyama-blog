@@ -3,6 +3,7 @@
  * 有封面地址时渲染图片，否则回退为音符占位图，统一各处封面的边框与圆角样式。
  */
 import { ListMusic } from 'lucide-react';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 import { useLanguage } from '../../../lib/i18n/i18n';
 
 /**
@@ -29,12 +30,14 @@ export function CoverArt({
 
   if (src) {
     return (
-      <img
+      <OptimizedImage
         src={src}
         alt={`${title} album cover`}
         className={`${baseClass} object-cover`}
-        loading="lazy"
-        draggable={false}
+        priority={true}
+        width={48}
+        height={48}
+        unoptimized
       />
     );
   }

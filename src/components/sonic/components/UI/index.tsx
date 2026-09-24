@@ -1,9 +1,8 @@
-﻿/**
+/**
  * Sonic 播放器主界面组件（本目录的入口）。
  * 集中持有播放状态、搜索结果、云音乐歌单、本地歌单、登录凭证等状态与业务逻辑，
  * 再把渲染工作分发给 shared/common/layout/panels 下的子组件。
  */
-import { ChevronLeft } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   loadCloudPayload,
@@ -74,26 +73,22 @@ import type {
 } from '../../types';
 import { useAudioInputController } from './hooks/useAudioInputController';
 import { useUpdateController } from './hooks/useUpdateController';
-import { BrandMark } from './layout/BrandMark';
 import {
   DesktopTitleDragRegion,
   DesktopWindowControls,
 } from './layout/DesktopChrome';
 import { FloatingPanels } from './layout/FloatingPanels';
 import { PlayerBar } from './layout/PlayerBar';
-import { PlaylistsColumn } from './layout/PlaylistsColumn';
 import { SidebarLeft } from './layout/SidebarLeft';
-import { TracksColumn } from './layout/TracksColumn';
+import { SidebarRight } from './layout/SidebarRight';
 import { ClockDisplay } from './panels/ClockDisplay';
 import { LyricsDisplay } from './panels/LyricsDisplay';
 import { OptionsPanel } from './panels/OptionsPanel';
 import { SplashScreen } from './panels/SplashScreen';
 import { UpdatePromptModal } from './panels/UpdatePromptModal';
 import {
-  colorWithAlpha,
   readableAccentColor,
   relativeLuminanceFromHex,
-  themedPanelStyle,
 } from './shared/panelShared';
 import {
   applyStoredTriggerConfig,
@@ -1620,14 +1615,14 @@ export function UI({
     : 'rgba(255, 255, 255, 0.34)';
   const sideNavTextColor = 'rgba(255, 255, 255, 0.72)';
   const sideNavActiveColor = 'rgba(255, 255, 255, 0.94)';
-  const _brandColor = isMobileSideNavOpen
-    ? sideNavActiveColor
-    : isLightSurface
-      ? readableAccent
-      : 'rgba(255, 255, 255, 0.96)';
-  const _brandShadow = isLightSurface
-    ? '0 1px 0 rgba(255,255,255,0.72), 0 10px 26px rgba(15,23,42,0.16)'
-    : `0 10px 28px ${colorWithAlpha(accentHex, 0.18)}`;
+  // const _brandColor = isMobileSideNavOpen
+  //   ? sideNavActiveColor
+  //   : isLightSurface
+  //     ? readableAccent
+  //     : 'rgba(255, 255, 255, 0.96)';
+  // const _brandShadow = isLightSurface
+  //   ? '0 1px 0 rgba(255,255,255,0.72), 0 10px 26px rgba(15,23,42,0.16)'
+  //   : `0 10px 28px ${colorWithAlpha(accentHex, 0.18)}`;
 
   const lastPointerUpTime = useRef<number>(0);
 
@@ -1734,6 +1729,7 @@ export function UI({
         <SidebarLeft
           accentHex={accentHex}
           closeFloatingPanels={closeFloatingPanels}
+          displaySettings={displaySettings}
           fileInputRef={fileInputRef}
           handleFileChange={handleFileChange}
           isFullscreen={isFullscreen}
@@ -1751,90 +1747,46 @@ export function UI({
           openOptionsPanel={openOptionsPanel}
           openPlaylistPanel={openPlaylistPanel}
           openSearchPanel={openSearchPanel}
+          readableAccent={readableAccent}
           setIsMobileSideNavOpen={setIsMobileSideNavOpen}
           sideNavActiveColor={sideNavActiveColor}
           toggleFullscreen={toggleFullscreen}
         />
 
-        {/* Sidebar Right */}
-        <div
-          className={`side-nav-trigger-right pointer-events-auto absolute top-0 right-0 z-[60] h-full transition-all ${isRightSidebarOpen ? 'is-mobile-open-right' : ''}`}
-          onMouseEnter={(e) => {
-            if (e.buttons !== 0) return;
-            if (Date.now() - lastPointerUpTime.current < 100) return;
-            setIsRightSidebarOpen(true);
-          }}
-          onMouseLeave={() => setIsRightSidebarOpen(false)}
-        >
-          {displaySettings.showRightIcon && (
-            <button
-              onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-              className={`pointer-events-auto absolute top-[50%] right-2 z-50 translate-y-[-50%] cursor-pointer transition-opacity hover:opacity-100 ${isRightSidebarOpen ? 'opacity-0' : 'opacity-40'}`}
-              style={{
-                color: isRightSidebarOpen
-                  ? sideNavActiveColor
-                  : isLightSurface
-                    ? readableAccent
-                    : 'rgba(255, 255, 255, 0.96)',
-              }}
-            >
-              <ChevronLeft size={24} />
-            </button>
-          )}
-
-          <aside
-            className={`side-nav-panel-right pointer-events-auto absolute top-0 right-0 z-[61] flex h-full transition-transform duration-300 ${isRightSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}
-            style={{
-              ...themedPanelStyle(accentHex, isLightSurface ? 0.82 : 0.7),
-              borderLeft: `1px solid ${colorWithAlpha(accentHex, isLightSurface ? 0.26 : 0.18)}`,
-              boxShadow: `-16px 0 50px rgba(0,0,0,${isLightSurface ? 0.18 : 0.2})`,
-            }}
-          >
-            <div className="flex h-full w-[540px]">
-              <PlaylistsColumn
-                accentHex={accentHex}
-                activeRightSidebarSelection={activeRightSidebarSelection}
-                fetchedNeteasePlaylists={fetchedNeteasePlaylists}
-                fetchedQQPlaylists={fetchedQQPlaylists}
-                isNeteaseCookieValid={isNeteaseCookieValid}
-                isQQCookieValid={isQQCookieValid}
-                loadDailyRecommendations={loadDailyRecommendations}
-                loadLikedSongs={loadLikedSongs}
-                loadNeteasePlaylistSongs={loadNeteasePlaylistSongs}
-                pinnedNeteasePlaylists={pinnedNeteasePlaylists}
-                pinnedQQPlaylists={pinnedQQPlaylists}
-                playlists={playlists}
-                setActivePlaylistId={setActivePlaylistId}
-                setActiveRightSidebarSelection={setActiveRightSidebarSelection}
-                setPinnedNeteasePlaylists={setPinnedNeteasePlaylists}
-                setPinnedQQPlaylists={setPinnedQQPlaylists}
-                setShowAllNetease={setShowAllNetease}
-                setShowAllQQ={setShowAllQQ}
-                showAllNetease={showAllNetease}
-                showAllQQ={showAllQQ}
-                surfaceHex={surfaceHex}
-              />
-
-              <TracksColumn
-                activePlaylist={activePlaylist}
-                activeRightSidebarSelection={activeRightSidebarSelection}
-                currentSongId={currentSongId}
-                formatTime={formatTime}
-                loadNeteaseSong={loadNeteaseSong}
-                neteaseCloudSongs={neteaseCloudSongs}
-              />
-            </div>
-          </aside>
-        </div>
-
-        <BrandMark
+        <SidebarRight
+          accentHex={accentHex}
+          activePlaylist={activePlaylist}
+          activeRightSidebarSelection={activeRightSidebarSelection}
           displaySettings={displaySettings}
+          fetchedNeteasePlaylists={fetchedNeteasePlaylists}
+          fetchedQQPlaylists={fetchedQQPlaylists}
+          formatTime={formatTime}
           isLightSurface={isLightSurface}
-          isMobileSideNavOpen={isMobileSideNavOpen}
-          openMobileSideNav={openMobileSideNav}
+          isNeteaseCookieValid={isNeteaseCookieValid}
+          isQQCookieValid={isQQCookieValid}
+          isRightSidebarOpen={isRightSidebarOpen}
+          lastPointerUpTime={lastPointerUpTime}
+          loadDailyRecommendations={loadDailyRecommendations}
+          loadLikedSongs={loadLikedSongs}
+          loadNeteasePlaylistSongs={loadNeteasePlaylistSongs}
+          loadNeteaseSong={loadNeteaseSong}
+          currentSongId={currentSongId}
+          neteaseCloudSongs={neteaseCloudSongs}
+          pinnedNeteasePlaylists={pinnedNeteasePlaylists}
+          pinnedQQPlaylists={pinnedQQPlaylists}
+          playlists={playlists}
           readableAccent={readableAccent}
-          setIsMobileSideNavOpen={setIsMobileSideNavOpen}
+          setActivePlaylistId={setActivePlaylistId}
+          setActiveRightSidebarSelection={setActiveRightSidebarSelection}
+          setPinnedNeteasePlaylists={setPinnedNeteasePlaylists}
+          setPinnedQQPlaylists={setPinnedQQPlaylists}
+          setIsRightSidebarOpen={setIsRightSidebarOpen}
+          setShowAllNetease={setShowAllNetease}
+          setShowAllQQ={setShowAllQQ}
+          showAllNetease={showAllNetease}
+          showAllQQ={showAllQQ}
           sideNavActiveColor={sideNavActiveColor}
+          surfaceHex={surfaceHex}
         />
         <FloatingPanels
           accentHex={accentHex}

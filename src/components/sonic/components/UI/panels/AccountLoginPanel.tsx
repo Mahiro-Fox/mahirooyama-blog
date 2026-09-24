@@ -9,6 +9,7 @@ import {
   neteaseQrCheckAction,
   neteaseQrKeyAction,
 } from '@/actions/sonic/cloudmusic-actions';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 import { t, useLanguage } from '../../../lib/i18n/i18n';
 import { colorWithAlpha, primaryGhostStyle } from '../shared/panelShared';
 
@@ -302,8 +303,9 @@ export function AccountLoginPanel({
           >
             {showQr && qr ? (
               <>
-                <img
+                <OptimizedImage
                   src={qr.dataUrl}
+                  unoptimized
                   alt={t('ui.text.348', lang)}
                   className="h-full w-full bg-white object-contain p-2"
                 />

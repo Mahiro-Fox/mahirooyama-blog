@@ -3,8 +3,10 @@
  * 悬浮在画面左缘，提供可视化/设置/搜索/云音乐/歌单/音频输入等入口，底部含示例与本地文件导入，
  * 另含全屏与透视编辑模式的开关。
  */
+import { ChevronRight } from 'lucide-react';
 import React from 'react';
 import { setLanguage, t, useLanguage } from '../../../lib/i18n/i18n';
+import { type DisplaySettings } from '../../../lib/settings/displaySettings';
 import { colorWithAlpha, themedPanelStyle } from '../shared/panelShared';
 import { type CloudProvider } from '../shared/uiTypes';
 
@@ -15,6 +17,7 @@ import { type CloudProvider } from '../shared/uiTypes';
 export function SidebarLeft({
   accentHex,
   closeFloatingPanels,
+  displaySettings,
   fileInputRef,
   handleFileChange,
   isFullscreen,
@@ -32,12 +35,14 @@ export function SidebarLeft({
   openOptionsPanel,
   openPlaylistPanel,
   openSearchPanel,
+  readableAccent,
   setIsMobileSideNavOpen,
   sideNavActiveColor,
   toggleFullscreen,
 }: {
   accentHex: string;
   closeFloatingPanels: () => void;
+  displaySettings: DisplaySettings;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isFullscreen: boolean;
@@ -55,6 +60,7 @@ export function SidebarLeft({
   openOptionsPanel: () => void;
   openPlaylistPanel: () => void;
   openSearchPanel: () => void;
+  readableAccent: string;
   setIsMobileSideNavOpen: React.Dispatch<React.SetStateAction<boolean>>;
   sideNavActiveColor: string;
   toggleFullscreen: () => Promise<void>;
@@ -64,7 +70,7 @@ export function SidebarLeft({
     <>
       {/* Sidebar Left */}
       <div
-        className={`side-nav-trigger pointer-events-auto absolute top-0 left-0 z-[60] h-full transition-all ${isMobileSideNavOpen ? 'is-mobile-open' : ''}`}
+        className={`side-nav-trigger-left pointer-events-auto absolute top-0 left-0 z-[60] h-full transition-all ${isMobileSideNavOpen ? 'is-mobile-open' : ''}`}
         onMouseEnter={(e) => {
           // Do not open side nav if user is dragging (holding mouse button)
           if (e.buttons !== 0) return;
@@ -200,6 +206,35 @@ export function SidebarLeft({
             onChange={handleFileChange}
           />
         </aside>
+
+        {displaySettings.showLeftIcon && (
+          <button
+            type="button"
+            className={`brand-mark pointer-events-auto absolute top-[50%] left-2 z-50 translate-y-[-50%] cursor-pointer transition-opacity hover:opacity-100 ${isMobileSideNavOpen ? 'opacity-0' : 'opacity-40'}`}
+            aria-label={
+              isMobileSideNavOpen
+                ? t('ui.text.85', lang)
+                : t('ui.text.86', lang)
+            }
+            aria-expanded={isMobileSideNavOpen}
+            onClick={() => {
+              if (isMobileSideNavOpen) {
+                setIsMobileSideNavOpen(false);
+              } else {
+                openMobileSideNav();
+              }
+            }}
+            style={{
+              color: isMobileSideNavOpen
+                ? sideNavActiveColor
+                : isLightSurface
+                  ? readableAccent
+                  : 'rgba(255, 255, 255, 0.96)',
+            }}
+          >
+            <ChevronRight size={24} />
+          </button>
+        )}
       </div>
     </>
   );

@@ -129,7 +129,7 @@ export function PlayerBar({
         </div>
 
         <div
-          className={`player-panel pointer-events-auto absolute left-1/2 flex w-[900px] max-w-[90vw] -translate-x-1/2 items-center gap-6 rounded-2xl border border-white/10 px-6 py-3 backdrop-blur-[22px] transition-all duration-300 ${
+          className={`player-panel pointer-events-auto absolute left-1/2 flex w-full max-w-[60vw] -translate-x-1/2 flex-col items-center gap-6 rounded-2xl border border-white/10 px-6 py-3 backdrop-blur-[22px] transition-all duration-300 lg:flex-row ${
             displaySettings.showBottomPlayer || isBottomPanelOpen
               ? 'bottom-[20px] translate-y-0 opacity-100'
               : '-bottom-[20px] translate-y-full opacity-0'
@@ -149,7 +149,7 @@ export function PlayerBar({
             />
           </div>
 
-          <div className="flex w-[200px] min-w-0 shrink-0 flex-col justify-center">
+          <div className="flex w-full max-w-[200px] min-w-0 shrink-0 flex-col items-center justify-center lg:items-start">
             <MarqueeTitle title={trackName} />
             <div className="mt-1 text-[10px] leading-4 tracking-[0.14em] text-white/45 uppercase">
               {songSourceLabel(currentSong)}
@@ -303,7 +303,7 @@ export function PlayerBar({
                   setVolume(val);
                   window.localStorage.setItem('sonic-volume', val.toString());
                 }}
-                className="aspect-auto h-1 w-12 cursor-pointer appearance-none rounded-full bg-white/20 accent-current opacity-0 transition-opacity group-hover:opacity-100"
+                className="aspect-auto h-1 w-12 cursor-pointer appearance-none rounded-full bg-white/20 accent-current transition-opacity"
                 style={{ accentColor: accentHex }}
               />
             </div>

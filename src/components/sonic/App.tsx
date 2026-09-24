@@ -10,7 +10,7 @@ import { Canvas } from '@react-three/fiber';
 import { useEffect, useState } from 'react';
 import { AudioDebugger } from './components/AudioDebugger/AudioDebugger';
 import { MapScene } from './components/AudioVisualizer/MapScene';
-import { UI } from './components/UI/UI';
+import { UI } from './components/UI';
 import {
   DEFAULT_CAMERA_POSITION,
   GLOBAL_SCENE_SETTINGS_STORAGE_KEY,
@@ -203,7 +203,7 @@ export default function App() {
 
   return (
     <div
-      className="relative min-h-[calc(100dvh-64px)] w-screen overflow-hidden font-sans text-[#94a3b8] transition-colors duration-1000 selection:bg-blue-500/30"
+      className="relative min-h-[calc(100vh-48px)] w-screen overflow-hidden font-sans text-[#94a3b8] transition-colors duration-1000 selection:bg-blue-500/30 md:min-h-[calc(100vh-64px)]"
       style={{ backgroundColor: backdropColor }}
     >
       <UI

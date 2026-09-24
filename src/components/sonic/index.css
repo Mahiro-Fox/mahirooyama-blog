@@ -170,12 +170,12 @@ canvas {
 }
 
 .side-nav-trigger-right.is-mobile-open-right {
-  width: min(90vw, 540px);
+  width: min(80vw, 540px);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .side-nav-trigger-right:hover {
-    width: min(90vw, 540px);
+    width: min(80vw, 540px);
   }
 
   .side-nav-trigger-right:hover .side-nav-panel-right {
@@ -271,94 +271,5 @@ canvas {
   }
   100% {
     transform: translate3d(calc(-50% - 21px), 0, 0);
-  }
-}
-
-@media (max-width: 600px) {
-  .player-panel {
-    align-items: center;
-    bottom: 12px;
-    flex-wrap: nowrap;
-    gap: 10px;
-    left: 12px;
-    padding: 10px 12px;
-    right: 12px;
-    top: auto;
-    width: auto;
-    z-index: 58;
-    transform: none;
-  }
-
-  .player-panel-cover-wrap {
-    min-height: 52px;
-  }
-
-  .player-panel-cover {
-    height: 44px;
-    width: 44px;
-  }
-
-  .player-panel-header {
-    align-items: center;
-    flex: 1 1 auto;
-    gap: 10px;
-    margin-bottom: 0;
-    min-width: 0;
-  }
-
-  .player-panel-title {
-    flex: 1 1 auto;
-    font-size: 14px;
-    letter-spacing: 0;
-    line-height: 1.2;
-    min-width: 0;
-  }
-
-  .player-panel-title-marquee {
-    font-size: 14px;
-    height: 18px;
-    letter-spacing: 0;
-    line-height: 18px;
-  }
-
-  .player-panel-theme {
-    flex: 0 0 auto;
-  }
-
-  .player-panel-meta,
-  .player-panel-progress,
-  .player-panel-time,
-  .player-panel-volume {
-    display: none !important;
-  }
-
-  .player-panel-controls {
-    flex: 0 0 auto;
-    gap: 0;
-    grid-template-columns: minmax(0, 1fr);
-    justify-content: flex-end;
-  }
-
-  .player-panel-actions {
-    gap: 12px;
-  }
-
-  .player-panel-actions button {
-    align-items: center;
-    display: inline-flex;
-    justify-content: center;
-  }
-
-  .mobile-hide-aux-ui {
-    display: none !important;
-  }
-
-  .side-nav-panel {
-    padding: 20px 10px;
-  }
-
-  .side-nav-panel button {
-    font-size: 14px !important;
-    min-height: 46px;
   }
 }

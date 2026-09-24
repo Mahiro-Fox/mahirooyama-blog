@@ -5,6 +5,7 @@
  */
 import { ChevronDown, ChevronUp, ListMusic, Pin } from 'lucide-react';
 import React from 'react';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 import { t, useLanguage } from '../../../lib/i18n/i18n';
 import type { CloudPlaylistSummary, SavedPlaylist } from '../../../types';
 import { colorWithAlpha } from '../shared/panelShared';
@@ -81,7 +82,7 @@ export function PlaylistsColumn({
     <>
       {/* Playlists Column */}
       <div
-        className="flex h-full w-[200px] flex-col border-r"
+        className="flex h-full w-full max-w-[40%] flex-col border-r"
         style={{ borderColor: colorWithAlpha(accentHex, 0.18) }}
       >
         <div className="shrink-0 p-5 text-[10px] tracking-[0.2em] text-white/50 uppercase">
@@ -113,9 +114,10 @@ export function PlaylistsColumn({
                 >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded bg-white/10">
                     {playlist.songs[0]?.cover ? (
-                      <img
+                      <OptimizedImage
                         src={playlist.songs[0].cover}
                         className="h-full w-full object-cover"
+                        alt={`${playlist.name} album cover`}
                       />
                     ) : (
                       <ListMusic size={14} className="text-white/40" />
@@ -221,9 +223,11 @@ export function PlaylistsColumn({
                         >
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded bg-white/10">
                             {playlist.cover ? (
-                              <img
+                              <OptimizedImage
                                 src={playlist.cover}
                                 className="h-full w-full object-cover"
+                                alt={`${playlist.name} album cover`}
+                                unoptimized
                               />
                             ) : (
                               <ListMusic size={14} className="text-white/40" />
@@ -353,9 +357,10 @@ export function PlaylistsColumn({
                         >
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded bg-white/10">
                             {playlist.cover ? (
-                              <img
+                              <OptimizedImage
                                 src={playlist.cover}
                                 className="h-full w-full object-cover"
+                                alt={`${playlist.name} album cover`}
                               />
                             ) : (
                               <ListMusic size={14} className="text-white/40" />

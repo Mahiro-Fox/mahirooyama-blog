@@ -3,6 +3,7 @@
  * 根据当前选中的来源（本地歌单或云端歌单/推荐）展示对应曲目，支持点击播放与高亮当前曲目。
  */
 import { ListMusic, Play } from 'lucide-react';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 import type { NeteaseSong, SavedPlaylist } from '../../../types';
 import { songIdentity } from '../shared/uiHelpers';
 import { type RightSidebarSelection } from '../shared/uiTypes';
@@ -73,9 +74,11 @@ export function TracksColumn({
                 </div>
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded bg-white/10">
                   {song.cover ? (
-                    <img
+                    <OptimizedImage
                       src={song.cover}
                       className="h-full w-full object-cover"
+                      alt={`${song.name} album cover`}
+                      unoptimized
                     />
                   ) : (
                     <ListMusic size={14} className="text-white/40" />
