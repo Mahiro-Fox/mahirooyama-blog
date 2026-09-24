@@ -1,4 +1,5 @@
 import { ImagePreviewProvider } from '@/context/image-preview-provider';
+import { RouteLoadingProvider } from '@/context/route-loading-provider';
 import { domAnimation, LazyMotion, MotionConfig } from 'motion/react';
 import { Toaster } from '@/components/shadcn-ui/sonner';
 import { TailwindIndicator } from '@/components/shared/tailwind-indicator';
@@ -49,12 +50,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
         {/* LazyMotion + m.*：按需加载动画特性，避免打包完整 motion 的 ~30kb（use-lazy-motion） */}
         <MotionConfig reducedMotion="user">
           <LazyMotion features={domAnimation}>
-            <ImagePreviewProvider>
-              {children}
-              <WebVitals />
-              <TailwindIndicator />
-              <Toaster position="top-center" />
-            </ImagePreviewProvider>
+            <RouteLoadingProvider>
+              <ImagePreviewProvider>
+                {children}
+                <WebVitals />
+                <TailwindIndicator />
+                <Toaster position="top-center" />
+              </ImagePreviewProvider>
+            </RouteLoadingProvider>
           </LazyMotion>
         </MotionConfig>
       </body>

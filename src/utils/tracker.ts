@@ -13,7 +13,7 @@ const ANALYTICS_API_URL = '/api/analytics';
  */
 export function trackEvent(
   eventName: string,
-  properties: Record<string, any> = {}
+  properties: Record<string, unknown> = {}
 ) {
   // 确保只在客户端执行
   if (typeof window === 'undefined') {
