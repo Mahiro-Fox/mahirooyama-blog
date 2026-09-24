@@ -161,8 +161,7 @@ export class AudioEngine {
   public init() {
     if (this.audioCtx) return;
 
-    // @ts-ignore
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const AudioContext = window.AudioContext;
     this.audioCtx = new AudioContext();
 
     this.analyser = this.audioCtx.createAnalyser();
@@ -196,10 +195,14 @@ export class AudioEngine {
   private disconnectPlayerChain() {
     try {
       this.fadeNode?.disconnect();
-    } catch {}
+    } catch {
+      console.error('Error disconnecting fade node');
+    }
     try {
       this.userVolumeNode?.disconnect();
-    } catch {}
+    } catch {
+      console.error('Error disconnecting user volume node');
+    }
   }
 
   private connectPlayerSource() {
@@ -584,7 +587,7 @@ export class AudioEngine {
       brillianceSum = 0,
       airSum = 0;
     let jumpVolatilitySum = 0;
-    let fluxScore = 0;
+    // const fluxScore = 0;
     const now = performance.now();
     const kickDeltaSeconds =
       this.lastKickAnalysisTime > 0
@@ -704,8 +707,8 @@ export class AudioEngine {
     const air = airSum / 186;
 
     // Precise band isolation for better beat detection
-    const kickEnergy = (subBassSum + bassSum) / 4;
-    const snareEnergy = (midSum + highMidSum) / 39;
+    // const kickEnergy = (subBassSum + bassSum) / 4;
+    // const snareEnergy = (midSum + highMidSum) / 39;
 
     // Legacy mapping for compatibility
     const oldBass = (subBassSum + bassSum + lowMidSum) / 8;

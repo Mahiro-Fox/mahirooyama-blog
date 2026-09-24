@@ -72,7 +72,7 @@ export function readPlaybackQualitySettingsStorage(): PlaybackQualitySettings {
   try {
     const raw = window.localStorage.getItem(PLAYBACK_QUALITY_STORAGE_KEY);
     return normalizePlaybackQualitySettings(raw ? JSON.parse(raw) : null);
-  } catch (error) {
+  } catch {
     return DEFAULT_PLAYBACK_QUALITY_SETTINGS;
   }
 }

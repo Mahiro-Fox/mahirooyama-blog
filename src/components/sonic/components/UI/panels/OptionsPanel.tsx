@@ -10,7 +10,7 @@ import {
   type PresetTransferPackage,
 } from '../../../lib/api/presetTransfer';
 import { t, useLanguage } from '../../../lib/i18n/i18n';
-import { type DisplaySettings } from '../../../lib/settings/displaySettings';
+import { type ClockSettings, type DisplaySettings } from '../../../lib/settings/displaySettings';
 import { type StoredGroundEqSettings } from '../../../lib/settings/groundEqSettings';
 import {
   DEFAULT_MAX_CHARS_PER_LINE,
@@ -19,7 +19,10 @@ import {
   MAX_CHARS_PER_LINE_MIN,
   SPATIAL_ORBIT_OFFSET_MAX,
   SPATIAL_ORBIT_OFFSET_MIN,
+  type LyricStyleConfig,
+  type LyricsPosition,
   type LyricsSettings,
+  type LyricsTriggerBand,
 } from '../../../lib/settings/lyricsSettings';
 import { type PlaybackQualitySettings } from '../../../lib/settings/playbackQuality';
 import {
@@ -170,7 +173,7 @@ export function OptionsPanel({
   };
 
   const currentStyleConfig = lyricsSettings[lyricsSettings.style] ||
-    (lyricsSettings as any)['songyancai'] || {
+    lyricsSettings.songyancai || {
       activeFontSize: 32,
       inactiveFontSize: 18,
       fontColor: '#ffffff',
@@ -184,7 +187,7 @@ export function OptionsPanel({
       maxCharsPerLine: DEFAULT_MAX_CHARS_PER_LINE,
       spatialOrbitOffset: DEFAULT_SPATIAL_ORBIT_OFFSET,
     };
-  const updateConfig = (updates: any) =>
+  const updateConfig = (updates: Partial<LyricStyleConfig>) =>
     onLyricsSettingsChange({
       ...lyricsSettings,
       [lyricsSettings.style]: { ...currentStyleConfig, ...updates },
@@ -467,7 +470,7 @@ export function OptionsPanel({
                         className="w-full rounded-sm border border-white/10 bg-black/40 px-3 py-2 text-[12px] text-white/80 outline-none focus:border-white/30"
                         value={currentStyleConfig.position}
                         onChange={(e) =>
-                          updateConfig({ position: e.target.value as any })
+                          updateConfig({ position: e.target.value as LyricsPosition })
                         }
                       >
                         <option value="top-left">
@@ -505,7 +508,7 @@ export function OptionsPanel({
                         className="w-full rounded-sm border border-white/10 bg-black/40 px-3 py-2 text-[12px] text-white/80 outline-none focus:border-white/30"
                         value={currentStyleConfig.triggerBand}
                         onChange={(e) =>
-                          updateConfig({ triggerBand: e.target.value as any })
+                          updateConfig({ triggerBand: e.target.value as LyricsTriggerBand })
                         }
                       >
                         <option value="subBass">
@@ -1069,7 +1072,7 @@ export function OptionsPanel({
                       onClick={() =>
                         onDisplaySettingsChange((s) => ({
                           ...s,
-                          clock: { ...s.clock, position: pos as any },
+                          clock: { ...s.clock, position: pos as ClockSettings['position'] },
                         }))
                       }
                     >

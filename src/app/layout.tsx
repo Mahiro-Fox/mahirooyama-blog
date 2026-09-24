@@ -6,6 +6,7 @@ import { fontVariables } from '@/lib/fonts';
 import { cn } from '@/utils/utils';
 import '@/styles/globals.css';
 import '@/styles/theme.css';
+import Script from 'next/script';
 import { WebVitals } from '@/components/shared/web-vitals';
 import { defaultTheme, THEME_STORAGE_KEY, themes } from '@/config/themes';
 
@@ -36,7 +37,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <Script id="theme-init-script">{themeInitScript}</Script>
       </head>
       <body
         className={cn(

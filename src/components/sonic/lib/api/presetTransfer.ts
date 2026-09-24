@@ -92,20 +92,21 @@ function readJsonStorage(key: string) {
   return JSON.parse(raw);
 }
 
-function normalizeSong(value: any): TransferSong | null {
-  const id = Number(value?.id);
-  const name = String(value?.name || '').trim();
+function normalizeSong(value: unknown): TransferSong | null {
+  const v = value as Record<string, unknown>;
+  const id = Number(v?.id);
+  const name = String(v?.name || '').trim();
   if (!Number.isFinite(id) || !name) return null;
 
   return {
     id,
     name,
-    artist: String(value?.artist || ''),
-    album: String(value?.album || ''),
-    duration: Number.isFinite(Number(value?.duration))
-      ? Number(value.duration)
+    artist: String(v?.artist || ''),
+    album: String(v?.album || ''),
+    duration: Number.isFinite(Number(v?.duration))
+      ? Number(v.duration)
       : 0,
-    fee: Number.isFinite(Number(value?.fee)) ? Number(value.fee) : 0,
+    fee: Number.isFinite(Number(v?.fee)) ? Number(v.fee) : 0,
   };
 }
 
@@ -114,13 +115,14 @@ export function normalizeTransferPlaylists(value: unknown): TransferPlaylist[] {
     return [{ id: 'favorites', name: 'Favorites', songs: [] }];
   }
 
-  const playlists = value.map((playlist: any, index) => {
-    const songs = Array.isArray(playlist?.songs)
-      ? (playlist.songs.map(normalizeSong).filter(Boolean) as TransferSong[])
+  const playlists = value.map((playlist, index) => {
+    const p = playlist as Record<string, unknown>;
+    const songs = Array.isArray(p?.songs)
+      ? (p.songs.map(normalizeSong).filter(Boolean) as TransferSong[])
       : [];
     return {
-      id: String(playlist?.id || `playlist-${Date.now()}-${index}`),
-      name: String(playlist?.name || 'Playlist'),
+      id: String(p?.id || `playlist-${Date.now()}-${index}`),
+      name: String(p?.name || 'Playlist'),
       songs,
     };
   });
@@ -149,17 +151,18 @@ function normalizeActiveCustomThemeId(
     : customThemes[0]?.id || defaultCustomThemeSettings.id;
 }
 
-function normalizeTriggerSettings(value: any): StoredTriggerSettings {
+function normalizeTriggerSettings(value: unknown): StoredTriggerSettings {
+  const v = value as Record<string, unknown>;
   return {
-    Pulse: normalizeTriggerConfig(value?.Pulse),
-    Meteor: normalizeTriggerConfig(value?.Meteor),
+    Pulse: normalizeTriggerConfig(v?.Pulse as Parameters<typeof normalizeTriggerConfig>[0]),
+    Meteor: normalizeTriggerConfig(v?.Meteor as Parameters<typeof normalizeTriggerConfig>[0]),
   };
 }
 
 export function normalizePresetTransferPackage(
   value: unknown
 ): PresetTransferPackage {
-  const input = value as any;
+  const input = value as Record<string, unknown>;
   if (
     !input ||
     input.app !== 'sonic-topography' ||
@@ -169,15 +172,16 @@ export function normalizePresetTransferPackage(
     throw new Error('这个文件不是可用的 Sonic Topography 预设文件');
   }
 
+  const data = input.data as Record<string, unknown>;
   const customThemesRaw =
-    Array.isArray(input.data.customThemes) && input.data.customThemes.length > 0
-      ? input.data.customThemes
+    Array.isArray(data.customThemes) && data.customThemes.length > 0
+      ? data.customThemes
       : [defaultCustomThemeSettings];
-  const customThemes = customThemesRaw.map((preset: any) =>
-    normalizeCustomThemeSettings(preset)
+  const customThemes = customThemesRaw.map((preset) =>
+    normalizeCustomThemeSettings(preset as Parameters<typeof normalizeCustomThemeSettings>[0])
   );
   const activeCustomThemeId = normalizeActiveCustomThemeId(
-    input.data.activeCustomThemeId,
+    data.activeCustomThemeId,
     customThemes
   );
   const availableThemeIds = [
@@ -190,31 +194,31 @@ export function normalizePresetTransferPackage(
     version: PRESET_TRANSFER_VERSION,
     exportedAt: String(input.exportedAt || new Date().toISOString()),
     data: {
-      playlists: normalizeTransferPlaylists(input.data.playlists),
-      triggerSettings: normalizeTriggerSettings(input.data.triggerSettings),
-      groundEqSettings: normalizeGroundEqSettings(input.data.groundEqSettings),
+      playlists: normalizeTransferPlaylists(data.playlists),
+      triggerSettings: normalizeTriggerSettings(data.triggerSettings),
+      groundEqSettings: normalizeGroundEqSettings(data.groundEqSettings as Parameters<typeof normalizeGroundEqSettings>[0]),
       customThemes,
       activeCustomThemeId,
-      activeThemeId: normalizeActiveThemeId(input.data.activeThemeId),
+      activeThemeId: normalizeActiveThemeId(data.activeThemeId),
       themeRotation: normalizeThemeRotationSettings(
-        input.data.themeRotation || defaultThemeRotationSettings,
+        data.themeRotation || defaultThemeRotationSettings,
         availableThemeIds
       ),
     },
   };
 
-  const cookie = normalizeNeteaseCookie(input.data.neteaseCookie);
+  const cookie = normalizeNeteaseCookie(data.neteaseCookie as string | null | undefined);
   if (cookie) normalized.data.neteaseCookie = cookie;
 
-  const qqCookie = normalizeQQCookie(input.data.qqCookie);
+  const qqCookie = normalizeQQCookie(data.qqCookie as string | null | undefined);
   if (qqCookie) normalized.data.qqCookie = qqCookie;
 
-  if (input.data.displaySettings) {
-    normalized.data.displaySettings = input.data.displaySettings;
+  if (data.displaySettings) {
+    normalized.data.displaySettings = data.displaySettings as DisplaySettings;
   }
-  if (input.data.lyricsSettings) {
+  if (data.lyricsSettings) {
     normalized.data.lyricsSettings = normalizeLyricsSettings(
-      input.data.lyricsSettings
+      data.lyricsSettings
     );
   }
 
@@ -226,7 +230,7 @@ export function createPresetTransferPackage(
 ): PresetTransferPackage {
   const customThemes = (
     readJsonStorage(CUSTOM_THEME_STORAGE_KEY) as unknown[] | undefined
-  )?.map((preset: any) => normalizeCustomThemeSettings(preset)) || [
+  )?.map((preset) => normalizeCustomThemeSettings(preset as Parameters<typeof normalizeCustomThemeSettings>[0])) || [
     defaultCustomThemeSettings,
   ];
   const activeCustomThemeId = normalizeActiveCustomThemeId(

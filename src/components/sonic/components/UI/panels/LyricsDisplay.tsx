@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { engine } from '../../../lib/audio/AudioEngine';
 import { wrapLyricTextLines } from '../../../lib/lyrics/lyricLineWrapping';
-import { parseLRC } from '../../../lib/lyrics/lyrics';
+import { parseLRC, type LyricLine } from '../../../lib/lyrics/lyrics';
 import {
   type LyricsStyleType,
   type LyricStyleConfig,
@@ -286,7 +286,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({
 };
 
 const DynamicBounceLyrics: React.FC<{
-  lyrics: any[];
+  lyrics: LyricLine[];
   activeIndex: number;
   lyricsSettings: MergedLyricsConfig;
   accentHex: string;

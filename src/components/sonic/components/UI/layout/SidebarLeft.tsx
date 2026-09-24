@@ -190,10 +190,6 @@ export function SidebarLeft({
             >
               {t('nav.lang_toggle', lang)}
             </button>
-
-            <div className="pointer-events-none mt-4 text-[14px] font-black tracking-[-1px] opacity-40 select-none">
-              AJIN.
-            </div>
           </div>
           <input
             type="file"

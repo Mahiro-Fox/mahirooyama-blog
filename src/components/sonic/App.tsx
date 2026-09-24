@@ -43,6 +43,7 @@ import {
   type CustomThemeSettings,
   type ThemeRotationSettings,
 } from './lib/theme/themes';
+import { type NeteaseSong } from './types';
 
 function readInitialCustomThemeState() {
   const presets = readCustomThemeStorage();
@@ -75,7 +76,7 @@ export default function App() {
     useState<GlobalSceneSettings>(readGlobalSceneSettingsStorage);
 
   // Track current song to pass cover to 3D scene
-  const [currentSong, setCurrentSong] = useState<any | null>(null);
+  const [currentSong, setCurrentSong] = useState<NeteaseSong | null>(null);
 
   const [isPerspectiveEditMode, setIsPerspectiveEditMode] = useState(false);
   const [resetCameraTrigger, setResetCameraTrigger] = useState(0);
@@ -234,11 +235,7 @@ export default function App() {
             themeColors={resolvedTheme}
             groundEqSettings={groundEqSettings}
             rotationSpeed={sceneRotationSpeed}
-            coverUrl={
-              coverVisible
-                ? currentSong?.cover || currentSong?.picUrl || ''
-                : ''
-            }
+            coverUrl={coverVisible ? currentSong?.cover || '' : ''}
             lyricsText={currentLyricsText || null}
             lyricsSettings={lyricsSettings}
             lyricsVisible={lyricsVisible}

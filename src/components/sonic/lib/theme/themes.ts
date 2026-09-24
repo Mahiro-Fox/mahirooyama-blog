@@ -116,10 +116,10 @@ function clampRotationInterval(value: unknown) {
 export function normalizeCustomThemeSettings(
   value: Partial<CustomThemeSettings> | null | undefined
 ): CustomThemeSettings {
-  const legacyValue = value as
-    | (Partial<CustomThemeSettings> & { showThemeButton?: unknown })
-    | null
-    | undefined;
+  // const legacyValue = value as
+  //   | (Partial<CustomThemeSettings> & { showThemeButton?: unknown })
+  //   | null
+  //   | undefined;
   const background = normalizeHexColor(
     value?.background,
     defaultCustomThemeSettings.background

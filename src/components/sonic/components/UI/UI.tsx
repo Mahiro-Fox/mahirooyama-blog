@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sonic 播放器主界面组件（本目录的入口）。
  * 集中持有播放状态、搜索结果、云音乐歌单、本地歌单、登录凭证等状态与业务逻辑，
  * 再把渲染工作分发给 shared/common/layout/panels 下的子组件。
@@ -149,7 +149,7 @@ export function UI({
     skipThisUpdateVersion,
   } = useUpdateController(lang);
   const currentStyleConfig = lyricsSettings[lyricsSettings.style] ||
-    (lyricsSettings as any)['songyancai'] || {
+    lyricsSettings['songyancai'] || {
       activeFontSize: 32,
       inactiveFontSize: 18,
       fontColor: '#ffffff',

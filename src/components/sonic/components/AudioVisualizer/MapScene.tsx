@@ -7,7 +7,14 @@
 import { OrbitControls } from '@react-three/drei';
 import { extend, ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  type ComponentRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { engine } from '../../lib/audio/AudioEngine';
 import {
   CAMERA_STATE_STORAGE_KEY,
@@ -87,6 +94,36 @@ type CoverShaderMaterialInstance = THREE.ShaderMaterial & {
   uPulse: number;
 };
 
+type FloatingBlockShaderMaterialInstance = THREE.ShaderMaterial & {
+  uTime: number;
+  uPulse: number;
+  uSubBass: number;
+  uBass: number;
+  uLowMid: number;
+  uMid: number;
+  uHighMid: number;
+  uPresence: number;
+  uBrilliance: number;
+  uAir: number;
+  uWarmth: number;
+  uBrightness: number;
+  uSharpness: number;
+  uSmoothness: number;
+  uDensity: number;
+  uSpectralCentroid: number;
+  uEnergy: number;
+  uAmplitude: number;
+  uBaseColor1: THREE.Color;
+  uBaseColor2: THREE.Color;
+  uFogColor: THREE.Color;
+  uCoolCore: THREE.Color;
+  uCoolEdge: THREE.Color;
+  uWarmCore: THREE.Color;
+  uWarmEdge: THREE.Color;
+  uRippleColor: THREE.Color;
+  uGlowIntensity: number;
+};
+
 /**
  * 3D 音频可视化主场景组件。
  *
@@ -124,7 +161,7 @@ export function MapScene({
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const materialRef = useRef<MapShaderMaterialInstance>(null);
   const floatingBlockMeshRef = useRef<THREE.InstancedMesh>(null);
-  const floatingBlockMatRef = useRef<any>(null);
+  const floatingBlockMatRef = useRef<FloatingBlockShaderMaterialInstance>(null);
   const visualPlatterRef = useRef<THREE.Group>(null);
   const platterRotationRef = useRef(0);
   const localPointRef = useRef(new THREE.Vector3());
@@ -184,7 +221,7 @@ export function MapScene({
     )
   );
 
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
 
   const [coverTexture, setCoverTexture] = useState<THREE.Texture | null>(null);
 
@@ -323,12 +360,20 @@ export function MapScene({
 
   // Ripples logic
   // We keep a ring buffer of 10 ripples
-  const ripplesRef = useRef(
+  type RippleBufferEntry = {
+    pos: THREE.Vector2;
+    time: number;
+    strength: number;
+    isActive: number;
+    rippleType: number;
+  };
+  const ripplesRef = useRef<RippleBufferEntry[]>(
     new Array(10).fill(null).map(() => ({
       pos: new THREE.Vector2(),
       time: -100,
       strength: 0,
       isActive: 0,
+      rippleType: 0,
     }))
   );
   const rippleIndex = useRef(0);
@@ -346,7 +391,7 @@ export function MapScene({
       strength,
       isActive: 1,
       rippleType: isWhite ? 1 : 0,
-    } as any;
+    };
     rippleIndex.current = (idx + 1) % 10;
   };
 
@@ -917,7 +962,7 @@ export function MapScene({
         {floatingBlocksEnabled && (
           <instancedMesh
             ref={floatingBlockMeshRef}
-            args={[undefined as any, undefined as any, floatingBlocks.length]}
+            args={[undefined, undefined, floatingBlocks.length]}
           >
             <boxGeometry args={[1, 1, 1]} />
             {/* @ts-ignore */}
@@ -930,7 +975,7 @@ export function MapScene({
 
         <instancedMesh
           ref={meteorMeshRef}
-          args={[undefined as any, undefined as any, MAX_METEORS]}
+          args={[undefined, undefined, MAX_METEORS]}
           frustumCulled={false}
         >
           <boxGeometry args={[0.4, 1.2, 0.4]} />
@@ -943,7 +988,7 @@ export function MapScene({
 
         <instancedMesh
           ref={particleMeshRef}
-          args={[undefined as any, undefined as any, MAX_PARTICLES]}
+          args={[undefined, undefined, MAX_PARTICLES]}
           frustumCulled={false}
         >
           <boxGeometry args={[0.8, 0.8, 0.8]} />

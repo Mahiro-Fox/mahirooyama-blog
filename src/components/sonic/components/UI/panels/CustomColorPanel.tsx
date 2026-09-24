@@ -3,7 +3,7 @@
  * 允许逐项调整背景、波纹、强调色等主题色值，并实时预览；
  * 另导出 ThrottledColorInput / ThrottledRangeInput 两个带节流的输入控件（避免拖拽时高频写状态）。
  */
-import { Lock, Unlock } from 'lucide-react';
+import { CheckIcon, Lock, Unlock } from 'lucide-react';
 import React from 'react';
 import { t, useLanguage } from '../../../lib/i18n/i18n';
 import {
@@ -36,7 +36,7 @@ export function ThrottledColorInput({
 }) {
   const [localValue, setLocalValue] = React.useState(value);
   const lastUpdateRef = React.useRef(0);
-  const timeoutRef = React.useRef<any>(null);
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     setLocalValue(value);
@@ -88,10 +88,18 @@ export function ThrottledRangeInput({
   onChange,
   className,
   style,
-}: any) {
+}: {
+  min?: string | number;
+  max?: string | number;
+  step?: string | number;
+  value: number;
+  onChange: (val: number) => void;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   const [localValue, setLocalValue] = React.useState(value);
   const lastUpdateRef = React.useRef(0);
-  const timeoutRef = React.useRef<any>(null);
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     setLocalValue(value);
@@ -364,16 +372,18 @@ export function CustomColorPanel({
             return (
               <button
                 key={item.id}
-                onClick={() => toggleRotationTheme(item.id)}
+                onClick={() => onThemeChange(item.id)}
                 className={`flex items-center justify-between gap-3 rounded-sm border px-3 py-2 text-left transition-colors ${
                   isSelected
                     ? 'bg-white/[0.06]'
                     : 'border-white/10 bg-white/[0.02] hover:bg-white/5'
                 }`}
                 style={
-                  isSelected
-                    ? { borderColor: colorWithAlpha(accentHex, 0.38) }
-                    : undefined
+                  theme === item.id
+                    ? { backgroundColor: colorWithAlpha(accentHex, 0.8) }
+                    : isSelected
+                      ? { borderColor: colorWithAlpha(accentHex, 0.38) }
+                      : undefined
                 }
               >
                 <span className="min-w-0">
@@ -381,9 +391,9 @@ export function CustomColorPanel({
                     {item.name}
                   </span>
                   <span className="mt-2 flex gap-1">
-                    {item.colors.map((color) => (
+                    {item.colors.map((color, index) => (
                       <span
-                        key={`${item.id}-${color}`}
+                        key={`${item.id}-${color}-${index}`}
                         className="h-2.5 w-5 rounded-[1px]"
                         style={{ backgroundColor: color }}
                       />
@@ -391,14 +401,18 @@ export function CustomColorPanel({
                   </span>
                 </span>
                 <span
-                  className="h-4 w-4 shrink-0 rounded-sm border"
+                  className="shrink-0 rounded-sm border p-1"
+                  onClick={() => toggleRotationTheme(item.id)}
                   style={{
                     borderColor: isSelected
                       ? accentHex
                       : 'rgba(255,255,255,0.18)',
-                    backgroundColor: isSelected ? accentHex : 'transparent',
                   }}
-                />
+                >
+                  {isSelected && (
+                    <CheckIcon className="size-2" color={accentHex} />
+                  )}
+                </span>
               </button>
             );
           })}
@@ -438,9 +452,9 @@ export function CustomColorPanel({
                     preset.cool,
                     preset.warm,
                     preset.accent,
-                  ].map((color) => (
+                  ].map((color, index) => (
                     <span
-                      key={color}
+                      key={`${color}-${index}`}
                       className="h-2.5 w-5 rounded-[1px]"
                       style={{ backgroundColor: color }}
                     />

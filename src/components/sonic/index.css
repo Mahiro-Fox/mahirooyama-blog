@@ -1,4 +1,4 @@
-@font-face {
+/* @font-face {
   font-family: 'SourceHanSansCN';
   src: url('/fonts/SourceHanSansCN-Heavy.otf') format('opentype');
   font-weight: normal;
@@ -9,7 +9,7 @@
 @theme {
   --font-sans: 'SourceHanSansCN', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
-}
+} */
 
 html.desktop-shell-root {
   background: transparent;

@@ -38,7 +38,5 @@ export function writeLastPlayedStorage(state: LastPlayedState) {
 }
 
 export function clearLastPlayedStorage() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {}
+  localStorage.removeItem(STORAGE_KEY);
 }

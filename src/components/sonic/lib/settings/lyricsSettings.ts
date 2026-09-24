@@ -102,45 +102,46 @@ export const DEFAULT_LYRICS_SETTINGS: LyricsSettings = {
 const STORAGE_KEY = 'sonic_topography_lyrics_settings';
 
 function normalizeStyleConfig(
-  value: any,
+  value: unknown,
   fallback: LyricStyleConfig = DEFAULT_STYLE_CONFIG
 ): LyricStyleConfig {
+  const v = (value ?? {}) as Record<string, unknown>;
   return {
-    activeFontSize: Number.isFinite(Number(value?.activeFontSize))
-      ? Number(value.activeFontSize)
+    activeFontSize: Number.isFinite(Number(v?.activeFontSize))
+      ? Number(v.activeFontSize)
       : fallback.activeFontSize,
-    inactiveFontSize: Number.isFinite(Number(value?.inactiveFontSize))
-      ? Number(value.inactiveFontSize)
+    inactiveFontSize: Number.isFinite(Number(v?.inactiveFontSize))
+      ? Number(v.inactiveFontSize)
       : fallback.inactiveFontSize,
     maxCharsPerLine: clampMaxCharsPerLine(
-      value?.maxCharsPerLine,
+      v?.maxCharsPerLine,
       MAX_CHARS_PER_LINE_MIN,
       MAX_CHARS_PER_LINE_MAX,
       fallback.maxCharsPerLine
     ),
-    fontColor: value?.fontColor ?? fallback.fontColor,
-    glowColor: value?.glowColor ?? fallback.glowColor,
-    followThemeGlow: value?.followThemeGlow ?? fallback.followThemeGlow,
-    karaokeColor: value?.karaokeColor ?? fallback.karaokeColor,
+    fontColor: (v?.fontColor as string) ?? fallback.fontColor,
+    glowColor: (v?.glowColor as string) ?? fallback.glowColor,
+    followThemeGlow: (v?.followThemeGlow as boolean) ?? fallback.followThemeGlow,
+    karaokeColor: (v?.karaokeColor as string) ?? fallback.karaokeColor,
     followThemeKaraoke:
-      value?.followThemeKaraoke ?? fallback.followThemeKaraoke,
-    position: value?.position ?? fallback.position,
-    triggerBand: value?.triggerBand ?? fallback.triggerBand,
-    fontFamily: value?.fontFamily ?? fallback.fontFamily,
+      (v?.followThemeKaraoke as boolean) ?? fallback.followThemeKaraoke,
+    position: (v?.position as LyricsPosition) ?? fallback.position,
+    triggerBand: (v?.triggerBand as LyricsTriggerBand) ?? fallback.triggerBand,
+    fontFamily: (v?.fontFamily as LyricsFontFamily) ?? fallback.fontFamily,
     spatialOrbitOffset: Math.max(
       SPATIAL_ORBIT_OFFSET_MIN,
       Math.min(
         SPATIAL_ORBIT_OFFSET_MAX,
-        Number.isFinite(Number(value?.spatialOrbitOffset))
-          ? Number(value.spatialOrbitOffset)
+        Number.isFinite(Number(v?.spatialOrbitOffset))
+          ? Number(v.spatialOrbitOffset)
           : fallback.spatialOrbitOffset
       )
     ),
   };
 }
 
-export function normalizeLyricsSettings(value: any): LyricsSettings {
-  const parsed = value || {};
+export function normalizeLyricsSettings(value: unknown): LyricsSettings {
+  const parsed = (value ?? {}) as Record<string, unknown>;
   if (parsed.activeFontSize !== undefined) {
     const oldConfig = normalizeStyleConfig(parsed);
     return {
