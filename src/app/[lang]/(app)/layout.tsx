@@ -1,5 +1,6 @@
 import { MusicProvider } from '@/context/music-provider';
 import { getPublicMusic } from '@/actions/admin/music-actions';
+import { AuthModalProvider } from '@/components/auth/auth-modal-provider';
 import { FloatActions } from '@/components/layout/float-actions';
 import { GlobalMusicPlayer } from '@/components/layout/global-music-player';
 import { SiteFooter } from '@/components/layout/site-footer';
@@ -83,12 +84,14 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
     navDictionary,
     footerDictionary,
     homeDictionary,
+    loginDictionary,
     frontendUser,
     musicRes,
   ] = await Promise.all([
     getDictionary(lang, 'header'),
     getDictionary(lang, 'footer'),
     getDictionary(lang, 'home'),
+    getDictionary(lang, 'login'),
     getCurrentUser(),
     getPublicMusic(),
   ]);
@@ -101,20 +104,24 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
           ...navDictionary,
           ...footerDictionary,
           ...homeDictionary,
+          ...loginDictionary,
         }}
       >
         <MusicProvider playlist={songs} initialIndex={randomIndex}>
-          {/* ── 顶部滚动进度条 ── */}
-          {/* <ScrollProgress /> */}
-          <SiteHeader initialUserAuth={frontendUser} />
-          <main className="flex flex-1 flex-col">{children}</main>
-          <SiteFooter />
-          {/* 自动埋点组件 */}
-          <PageTracker />
-          {/* 浮动操作组件 */}
-          <FloatActions />
-          {/* 全局音乐播放器组件 */}
-          <GlobalMusicPlayer />
+          {/* 全局登录/注册弹窗：header、chat 等就地打开 */}
+          <AuthModalProvider>
+            {/* ── 顶部滚动进度条 ── */}
+            {/* <ScrollProgress /> */}
+            <SiteHeader initialUserAuth={frontendUser} />
+            <main className="flex flex-1 flex-col">{children}</main>
+            <SiteFooter />
+            {/* 自动埋点组件 */}
+            <PageTracker />
+            {/* 浮动操作组件 */}
+            <FloatActions />
+            {/* 全局音乐播放器组件 */}
+            <GlobalMusicPlayer />
+          </AuthModalProvider>
         </MusicProvider>
       </DictionaryProvider>
     </div>

@@ -16,7 +16,7 @@ const (
 type Account struct {
 	ID           string          `gorm:"primaryKey;type:text" json:"id"`
 	Username     string          `gorm:"type:text;not null;uniqueIndex" json:"username"`
-	Email        *string         `gorm:"type:text" json:"email"`
+	Email        string          `gorm:"type:text;not null;uniqueIndex" json:"email"`
 	Provider     AccountProvider `gorm:"type:text;not null;default:'credentials';index" json:"provider"`
 	PasswordHash string          `gorm:"type:text;not null" json:"-"`
 	CreatedAt    time.Time       `gorm:"not null;default:now();index" json:"createdAt"`
@@ -27,14 +27,15 @@ type Account struct {
 type PublicAccountDTO struct {
 	ID          string          `json:"id"`
 	Username    string          `json:"username"`
-	Email       *string         `json:"email"`
+	Email       string          `json:"email"`
 	Provider    AccountProvider `json:"provider"`
 	CreatedAt   time.Time       `json:"createdAt"`
 }
 
-// AccountCreateInput 注册入参
+// AccountCreateInput 注册入参（username / email 均为必填）
 type AccountCreateInput struct {
 	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
 

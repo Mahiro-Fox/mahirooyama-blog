@@ -34,18 +34,30 @@ func GetAccountByEmail(ctx context.Context, store repository.Store, email string
 	return store.GetAccountByEmail(ctx, email)
 }
 
-// CreateAccount 创建前台账户（密码会被 bcrypt hash）
+// CreateAccount 创建前台账户（密码会被 bcrypt hash；username / email 均必填且全局唯一）
 func CreateAccount(ctx context.Context, store repository.Store, input model.AccountCreateInput) (*model.Account, error) {
-	if strings.TrimSpace(input.Username) == "" {
+	username := strings.TrimSpace(input.Username)
+	email := strings.TrimSpace(input.Email)
+	if username == "" {
 		return nil, errors.New("用户名不能为空")
+	}
+	if email == "" {
+		return nil, errors.New("邮箱不能为空")
 	}
 	if len(input.Password) < 6 {
 		return nil, errors.New("密码长度不能少于 6 位")
 	}
 
 	// 用户名唯一性检查
-	if _, err := store.GetAccountByUsername(ctx, input.Username); err == nil {
+	if _, err := store.GetAccountByUsername(ctx, username); err == nil {
 		return nil, repository.ErrAccountUsernameTaken
+	} else if !errors.Is(err, repository.ErrAccountNotFound) {
+		return nil, err
+	}
+
+	// 邮箱唯一性检查
+	if _, err := store.GetAccountByEmail(ctx, email); err == nil {
+		return nil, repository.ErrAccountEmailTaken
 	} else if !errors.Is(err, repository.ErrAccountNotFound) {
 		return nil, err
 	}
@@ -58,8 +70,8 @@ func CreateAccount(ctx context.Context, store repository.Store, input model.Acco
 	now := time.Now()
 	a := model.Account{
 		ID:           uuid.NewString(),
-		Username:     strings.TrimSpace(input.Username),
-		Email:        nil,
+		Username:     username,
+		Email:        email,
 		Provider:     model.AccountProviderCredentials,
 		PasswordHash: string(hash),
 		CreatedAt:    now,
@@ -124,13 +136,13 @@ func UpdateAccount(ctx context.Context, store repository.Store, id string, input
 		}
 	}
 
-	// email 校验（允许传 nil 或空串以清空 email）
+	// email 校验（必填，不允许清空；非空时需全局唯一，排除自身）
 	if input.Email != nil {
 		trimmed := strings.TrimSpace(*input.Email)
 		if trimmed == "" {
-			empty := ""
-			patch.Email = &empty
-		} else if trimmed != derefString(a.Email) {
+			return nil, errors.New("邮箱不能为空")
+		}
+		if trimmed != a.Email {
 			existing, lookupErr := store.GetAccountByEmail(ctx, trimmed)
 			if lookupErr == nil && existing.ID != a.ID {
 				return nil, repository.ErrAccountEmailTaken
@@ -146,14 +158,6 @@ func UpdateAccount(ctx context.Context, store repository.Store, id string, input
 		return nil, err
 	}
 	return store.GetAccountByID(ctx, id)
-}
-
-// derefString 安全解引用 *string，nil 返回空串
-func derefString(p *string) string {
-	if p == nil {
-		return ""
-	}
-	return *p
 }
 
 // UpdateAccountPassword 更新前台账户密码

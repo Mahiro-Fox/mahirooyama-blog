@@ -13,7 +13,7 @@ import {
   PromptInputMessage,
   PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input';
-import { Link } from '@/components/shared/link';
+import { useAuthModal } from '@/components/auth/auth-modal-provider';
 import { DEFAULT_PROVIDER, PROVIDERS } from '@/config/providers';
 import { useT } from '@/i18n/dictionary-provider';
 import { useLocale } from '@/i18n/use-locale';
@@ -66,6 +66,7 @@ export function ChatClient({
   const t = useT();
   const router = useRouter();
   const locale = useLocale();
+  const authModal = useAuthModal();
   const [input, setInput] = useState('');
   const [provider, setProvider] = useState(configProvider);
   const [thinking, setThinking] = useState(configThinking);
@@ -348,12 +349,13 @@ export function ChatClient({
 
         {!isUserAuth && (
           <div className="text-muted-foreground mx-auto mb-4 text-center text-xs">
-            <Link
-              href="/signin?redirect=/chat"
+            <button
+              type="button"
+              onClick={() => authModal?.openAuthModal()}
               className="text-primary hover:underline"
             >
               {t('chat.deepseek_login')}
-            </Link>
+            </button>
             {' · '}
             {t('chat.deepseek_desc')}
           </div>

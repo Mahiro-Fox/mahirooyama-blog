@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -69,6 +70,28 @@ func GetPublicAccountHandler(store repository.Store) gin.HandlerFunc {
 	}
 }
 
+// CheckAccountEmailExistsHandler GET /api/accounts/exists?email=
+// 公开端点：判断邮箱是否已注册。仅返回 exists 布尔，不泄露账户信息。
+func CheckAccountEmailExistsHandler(store repository.Store) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		email := strings.TrimSpace(c.Query("email"))
+		if email == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "缺少 email 参数"})
+			return
+		}
+		_, err := service.GetAccountByEmail(c.Request.Context(), store, email)
+		switch {
+		case err == nil:
+			c.JSON(http.StatusOK, gin.H{"exists": true})
+		case errors.Is(err, repository.ErrAccountNotFound):
+			c.JSON(http.StatusOK, gin.H{"exists": false})
+		default:
+			log.Printf("check account email internal error: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败，请稍后重试"})
+		}
+	}
+}
+
 // CreateAccountHandler POST /api/accounts
 // 前台注册接口（不需要 X-Internal-Secret）
 func CreateAccountHandler(store repository.Store) gin.HandlerFunc {
@@ -83,11 +106,14 @@ func CreateAccountHandler(store repository.Store) gin.HandlerFunc {
 		}
 		a, err := service.CreateAccount(c.Request.Context(), store, input)
 		if err != nil {
-			if errors.Is(err, repository.ErrAccountUsernameTaken) {
+			switch {
+			case errors.Is(err, repository.ErrAccountUsernameTaken):
 				c.JSON(http.StatusConflict, gin.H{"error": "用户名已被占用"})
-				return
+			case errors.Is(err, repository.ErrAccountEmailTaken):
+				c.JSON(http.StatusConflict, gin.H{"error": "邮箱已被占用"})
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			}
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		// 注册接口对外仍返回不含密码哈希的精简 DTO
@@ -149,11 +175,14 @@ func CreateAccountAdminHandler(store repository.Store) gin.HandlerFunc {
 		}
 		a, err := service.CreateAccount(c.Request.Context(), store, input)
 		if err != nil {
-			if errors.Is(err, repository.ErrAccountUsernameTaken) {
-				c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
-				return
+			switch {
+			case errors.Is(err, repository.ErrAccountUsernameTaken):
+				c.JSON(http.StatusConflict, gin.H{"error": "用户名已被占用"})
+			case errors.Is(err, repository.ErrAccountEmailTaken):
+				c.JSON(http.StatusConflict, gin.H{"error": "邮箱已被占用"})
+			default:
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			}
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(http.StatusCreated, a)

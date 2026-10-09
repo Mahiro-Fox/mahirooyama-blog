@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { userLogout } from '@/actions/app/user-auth';
+import { useAuthModal } from '@/components/auth/auth-modal-provider';
 import { Search } from '@/components/layout/site-header/search';
 import { Button } from '@/components/shadcn-ui/button';
 import {
@@ -54,6 +55,7 @@ export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
   const t = useT();
   const pathname = usePathname();
   const router = useRouter();
+  const authModal = useAuthModal();
   const isActive = (href: string) => pathname === href;
   const [currentUser, setCurrentUser] = useState<SiteHeaderUser | null>(
     initialUserAuth
@@ -248,15 +250,20 @@ export function SiteHeader({ initialUserAuth = null }: SiteHeaderProps) {
               </DropdownMenu>
             ) : (
               <Button
-                asChild
                 size="sm"
                 variant="ghost"
                 className="h-8 shadow-none"
+                onClick={() => {
+                  // (app) 布局内就地打开弹窗；(bare) 等无 Provider 时退回独立登录页
+                  if (authModal) {
+                    authModal.openAuthModal();
+                  } else {
+                    router.push('/signin');
+                  }
+                }}
               >
-                <Link href="/signin">
-                  <User className="mr-1 h-4 w-4" />
-                  {t('user_menu.signin')}
-                </Link>
+                <User className="mr-1 h-4 w-4" />
+                {t('user_menu.signin')}
               </Button>
             )}
           </div>

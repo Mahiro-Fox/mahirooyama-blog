@@ -36,6 +36,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	loginLimit := middleware.RateLimit(10, 5*time.Minute)
 	publicWriteLimit := middleware.RateLimit(20, 10*time.Minute)
 	analyticsLimit := middleware.RateLimit(120, time.Minute)
+	emailCheckLimit := middleware.RateLimit(30, time.Minute)
 
 	// —— Auth：后台管理员 ——（登录/鉴权/登出都是公开入口；真正的权限通过 JWT+verify 判定）
 	adminAuth := api.Group("/admin/auth")
@@ -170,6 +171,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	{
 		accounts.POST("", publicWriteLimit, handler.CreateAccountHandler(store))
 		accounts.POST("/login", loginLimit, handler.LoginAccountHandler(store))
+		accounts.GET("/exists", emailCheckLimit, handler.CheckAccountEmailExistsHandler(store)) // 邮箱是否已注册（注册引导用）
 		accounts.GET("/:id", handler.GetPublicAccountHandler(store)) // 新：前台公开用户资料（与 Next accounts/:id 对应）
 	}
 	accountsAdmin := api.Group("/admin/accounts", middleware.RequireInternalSecret(internalSecret))
