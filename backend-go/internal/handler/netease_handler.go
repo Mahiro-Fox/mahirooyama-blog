@@ -108,7 +108,8 @@ func NeteaseAudioHandler() gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": "网易云无可播放地址"})
 			return
 		}
-		if err := service.StreamAudio(c.Request.Context(), cloudClient(), c.Writer, u); err != nil {
+		rangeHeader := c.GetHeader("Range")
+		if err := service.StreamAudio(c.Request.Context(), cloudClient(), c.Writer, u, rangeHeader); err != nil {
 			return
 		}
 	}

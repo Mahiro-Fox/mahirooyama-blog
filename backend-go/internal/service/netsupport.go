@@ -182,15 +182,18 @@ func audioContentType(audioURL, upstreamType string) string {
 	return "audio/mpeg"
 }
 
-// StreamAudio 代理音频流：转发上游 Range，回填上游状态码与响应头并流式转发响应体。
+// StreamAudio 代理音频流：转发浏览器 Range 头到上游，回填上游状态码与响应头并流式转发响应体。
 // referer 用于部分上游校验来源。
-func StreamAudio(ctx context.Context, client *http.Client, w http.ResponseWriter, audioURL string) error {
+func StreamAudio(ctx context.Context, client *http.Client, w http.ResponseWriter, audioURL string, rangeHeader string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, audioURL, nil)
 	if err != nil {
 		return err
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 	req.Header.Set("Referer", "https://y.qq.com/")
+	if rangeHeader != "" {
+		req.Header.Set("Range", rangeHeader)
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

@@ -976,21 +976,41 @@ export function UI({
     };
     initEngine();
 
+    // seek 期间暂停 currentTime / duration 的覆盖，避免与用户拖动竞争
+    let isSeeking = false;
+    const onSeeking = () => {
+      isSeeking = true;
+    };
+    const onSeeked = () => {
+      isSeeking = false;
+    };
+    engine.audioElement.addEventListener('seeking', onSeeking);
+    engine.audioElement.addEventListener('seeked', onSeeked);
+
     const poll = () => {
       const nextIsPlaying = engine.isPlaying;
-      const nextCurrentTime = engine.audioElement.currentTime || 0;
-      const nextDuration = engine.audioElement.duration || 0;
+      const rawCurrentTime = engine.audioElement.currentTime;
+      const rawDuration = engine.audioElement.duration;
       const nextVolume = engine.getVolume();
 
       setIsPlaying((current) =>
         current === nextIsPlaying ? current : nextIsPlaying
       );
-      setCurrentTime((current) =>
-        Math.abs(current - nextCurrentTime) < 0.05 ? current : nextCurrentTime
-      );
-      setDuration((current) =>
-        Math.abs(current - nextDuration) < 0.05 ? current : nextDuration
-      );
+
+      // currentTime 仅在有效且未处于 seek 中时才更新，避免 NaN/临时 0 覆盖用户拖动值
+      if (!isSeeking && isFinite(rawCurrentTime) && rawCurrentTime >= 0) {
+        setCurrentTime((current) =>
+          Math.abs(current - rawCurrentTime) < 0.05 ? current : rawCurrentTime
+        );
+      }
+
+      // duration 仅在有效且大于 0 时才更新
+      if (isFinite(rawDuration) && rawDuration > 0) {
+        setDuration((current) =>
+          Math.abs(current - rawDuration) < 0.05 ? current : rawDuration
+        );
+      }
+
       setVolume((current) =>
         Math.abs(current - nextVolume) < 0.005 ? current : nextVolume
       );
@@ -998,7 +1018,11 @@ export function UI({
     poll();
     const intervalId = window.setInterval(poll, 100);
 
-    return () => window.clearInterval(intervalId);
+    return () => {
+      window.clearInterval(intervalId);
+      engine.audioElement.removeEventListener('seeking', onSeeking);
+      engine.audioElement.removeEventListener('seeked', onSeeked);
+    };
   }, []);
 
   useEffect(() => {

@@ -122,7 +122,7 @@ func QQAudioHandler() gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": "No playable QQ url for this song", "message": result.Message})
 			return
 		}
-		// Range 头在 StreamAudio 内部根据上游返回 206 透传
-		_ = service.StreamAudio(c.Request.Context(), cloudClient(), c.Writer, result.URL)
+		rangeHeader := c.GetHeader("Range")
+		_ = service.StreamAudio(c.Request.Context(), cloudClient(), c.Writer, result.URL, rangeHeader)
 	}
 }
