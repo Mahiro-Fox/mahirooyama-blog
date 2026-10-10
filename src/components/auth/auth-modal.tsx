@@ -27,7 +27,6 @@ import { OptimizedImage } from '@/components/shared/optimized-image';
 import { siteConfig } from '@/config/common';
 import { useT } from '@/i18n/dictionary-provider';
 import type { PhotoItem } from '@/lib/photos';
-import { cn } from '@/utils/utils';
 
 /** 弹窗步骤：邮箱 → （已注册）密码 | （未注册）验证码 → 设置密码 */
 type AuthStep = 'email' | 'password' | 'code' | 'setPassword';
@@ -280,25 +279,21 @@ export function AuthModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          'bg-background/90 relative overflow-hidden rounded-2xl border-0 p-6 shadow-[0_24px_70px_-24px_var(--auth-glow)] backdrop-blur-xl sm:w-full sm:max-w-3xl',
-          hasPhotos ? 'md:py-8 md:pr-8 md:pl-[46%]' : 'md:py-8'
-        )}
-      >
+      <DialogContent className="bg-background/90 relative flex gap-6 overflow-hidden rounded-2xl border-0 p-6 shadow-[0_24px_70px_-24px_var(--auth-glow)] sm:max-w-xl">
+        <DialogClose onClick={() => onOpenChange(false)} />
         {/* 二次元霓虹辉光 */}
         <div
-          className="bg-[var(--auth-grad-from)] pointer-events-none absolute -top-20 -right-12 h-44 w-44 rounded-full opacity-30 blur-3xl"
+          className="pointer-events-none absolute -top-20 -right-12 h-44 w-44 rounded-full bg-[var(--auth-grad-from)] opacity-30 blur-3xl"
           aria-hidden
         />
         <div
-          className="bg-[var(--auth-grad-to)] pointer-events-none absolute -bottom-20 -left-12 h-44 w-44 rounded-full opacity-30 blur-3xl"
+          className="pointer-events-none absolute -bottom-20 -left-12 h-44 w-44 rounded-full bg-[var(--auth-grad-to)] opacity-30 blur-3xl"
           aria-hidden
         />
 
         {/* 左侧写真轮播（小屏隐藏，表单自动占满整宽） */}
         {hasPhotos && (
-          <div className="absolute inset-y-0 left-0 hidden w-[42%] overflow-hidden md:block">
+          <div className="inset-y-0 left-0 hidden aspect-[9/16] w-[42%] overflow-hidden sm:block">
             <FadeCarousel
               className="h-full w-full max-w-none rounded-none"
               random
@@ -322,184 +317,188 @@ export function AuthModal({
           </div>
         )}
 
-        <DialogClose
-          className="text-foreground/70 hover:text-foreground hover:bg-foreground/10 top-3 right-3 rounded-full p-1.5 transition"
-          onClick={() => onOpenChange(false)}
-        />
-        <DialogHeader className="relative space-y-1">
-          <DialogTitle className="text-center text-2xl font-bold">
-            {titleByStep[step]}
-          </DialogTitle>
-          <DialogDescription className="text-center">
-            {descByStep[step]}
-          </DialogDescription>
-          {/* 渐变装饰线 */}
-          <div
-            className="from-[var(--auth-grad-from)] to-[var(--auth-grad-to)] mx-auto mt-2 h-1 w-12 rounded-full bg-gradient-to-r"
-            aria-hidden
-          />
-        </DialogHeader>
+        <div className="flex flex-1 flex-col justify-center">
+          <DialogHeader className="relative space-y-1">
+            <DialogTitle className="text-center text-2xl font-bold">
+              {titleByStep[step]}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {descByStep[step]}
+            </DialogDescription>
+            {/* 渐变装饰线 */}
+            <div
+              className="mx-auto mt-2 h-1 w-12 rounded-full bg-gradient-to-r from-[var(--auth-grad-from)] to-[var(--auth-grad-to)]"
+              aria-hidden
+            />
+          </DialogHeader>
 
-        <div className="relative mt-4 [&_input]:h-10 [&_input]:rounded-xl [&_input]:bg-foreground/5">
-          {step === 'email' && (
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="auth-email">{t('auth.email')}</Label>
-                <Input
-                  id="auth-email"
-                  type="email"
-                  autoFocus
-                  placeholder={t('auth.enter_email')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-              </div>
-              <Button
-                type="submit"
-                className={GRADIENT_BUTTON}
-                disabled={loading || !email}
-              >
-                {loading ? t('auth.checking') : t('auth.continue')}
-              </Button>
-            </form>
-          )}
+          <div className="[&_input]:bg-foreground/5 relative mt-4 [&_input]:h-10 [&_input]:rounded-xl">
+            {step === 'email' && (
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="auth-email">{t('auth.email')}</Label>
+                  <Input
+                    id="auth-email"
+                    type="email"
+                    autoFocus
+                    placeholder={t('auth.enter_email')}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className={GRADIENT_BUTTON}
+                  disabled={loading || !email}
+                >
+                  {loading ? t('auth.checking') : t('auth.continue')}
+                </Button>
+              </form>
+            )}
 
-          {step === 'password' && (
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="auth-password">{t('auth.password')}</Label>
-                <Input
-                  id="auth-password"
-                  type="password"
-                  autoFocus
-                  placeholder={t('auth.enter_password')}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                />
-              </div>
-              <Button
-                type="submit"
-                className={GRADIENT_BUTTON}
-                disabled={loading || !password || rateLimitIn > 0}
-              >
-                {rateLimitIn > 0
-                  ? `${t('auth.wait_in').replace('{{seconds}}', String(rateLimitIn))}`
-                  : loading
-                    ? t('auth.signing_in')
-                    : t('auth.signin')}
-              </Button>
-              <BackButton
-                onClick={() => setStep('email')}
-                label={t('auth.back')}
-              />
-            </form>
-          )}
-
-          {step === 'code' && (
-            <form onSubmit={handleCodeSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="auth-code">{t('auth.code')}</Label>
-                <Input
-                  id="auth-code"
-                  type="text"
-                  inputMode="numeric"
-                  autoFocus
-                  maxLength={6}
-                  placeholder={t('auth.enter_code')}
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  required
-                  autoComplete="one-time-code"
-                />
-              </div>
-              <Button
-                type="submit"
-                className={GRADIENT_BUTTON}
-                disabled={loading || code.length !== 6}
-              >
-                {loading ? t('auth.verifying') : t('auth.verify')}
-              </Button>
-              <div className="flex items-center justify-between text-sm">
+            {step === 'password' && (
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="auth-password">{t('auth.password')}</Label>
+                  <Input
+                    id="auth-password"
+                    type="password"
+                    autoFocus
+                    placeholder={t('auth.enter_password')}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className={GRADIENT_BUTTON}
+                  disabled={loading || !password || rateLimitIn > 0}
+                >
+                  {rateLimitIn > 0
+                    ? `${t('auth.wait_in').replace('{{seconds}}', String(rateLimitIn))}`
+                    : loading
+                      ? t('auth.signing_in')
+                      : t('auth.signin')}
+                </Button>
                 <BackButton
-                  onClick={() => {
-                    setError('');
-                    setStep('email');
-                  }}
+                  onClick={() => setStep('email')}
                   label={t('auth.back')}
                 />
-                <button
-                  type="button"
-                  className="text-primary disabled:text-muted-foreground hover:underline disabled:no-underline"
-                  disabled={loading || resendIn > 0}
-                  onClick={handleResend}
+              </form>
+            )}
+
+            {step === 'code' && (
+              <form onSubmit={handleCodeSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="auth-code">{t('auth.code')}</Label>
+                  <Input
+                    id="auth-code"
+                    type="text"
+                    inputMode="numeric"
+                    autoFocus
+                    maxLength={6}
+                    placeholder={t('auth.enter_code')}
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                    required
+                    autoComplete="one-time-code"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className={GRADIENT_BUTTON}
+                  disabled={loading || code.length !== 6}
                 >
-                  {resendIn > 0
-                    ? t('auth.resend_in').replace(
-                        '{{seconds}}',
-                        String(resendIn)
-                      )
-                    : t('auth.resend')}
-                </button>
-              </div>
-            </form>
-          )}
+                  {loading ? t('auth.verifying') : t('auth.verify')}
+                </Button>
+                <div className="flex items-center justify-between text-sm">
+                  <BackButton
+                    onClick={() => {
+                      setError('');
+                      setStep('email');
+                    }}
+                    label={t('auth.back')}
+                  />
+                  <button
+                    type="button"
+                    className="text-primary disabled:text-muted-foreground hover:underline disabled:no-underline"
+                    disabled={loading || resendIn > 0}
+                    onClick={handleResend}
+                  >
+                    {resendIn > 0
+                      ? t('auth.resend_in').replace(
+                          '{{seconds}}',
+                          String(resendIn)
+                        )
+                      : t('auth.resend')}
+                  </button>
+                </div>
+              </form>
+            )}
 
-          {step === 'setPassword' && (
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="auth-username">{t('auth.username')}</Label>
-                <Input
-                  id="auth-username"
-                  type="text"
-                  autoFocus
-                  placeholder={t('auth.enter_username')}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  autoComplete="username"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="auth-new-password">
-                  {t('auth.new_password')}
-                </Label>
-                <Input
-                  id="auth-new-password"
-                  type="password"
-                  placeholder={t('auth.enter_new_password')}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="auth-confirm-password">
-                  {t('auth.confirm_password')}
-                </Label>
-                <Input
-                  id="auth-confirm-password"
-                  type="password"
-                  placeholder={t('auth.enter_confirm_password')}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
-              <Button type="submit" className={GRADIENT_BUTTON} disabled={loading}>
-                {loading ? t('auth.registering') : t('auth.register')}
-              </Button>
-            </form>
-          )}
+            {step === 'setPassword' && (
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="auth-username">{t('auth.username')}</Label>
+                  <Input
+                    id="auth-username"
+                    type="text"
+                    autoFocus
+                    placeholder={t('auth.enter_username')}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                    autoComplete="username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="auth-new-password">
+                    {t('auth.new_password')}
+                  </Label>
+                  <Input
+                    id="auth-new-password"
+                    type="password"
+                    placeholder={t('auth.enter_new_password')}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="auth-confirm-password">
+                    {t('auth.confirm_password')}
+                  </Label>
+                  <Input
+                    id="auth-confirm-password"
+                    type="password"
+                    placeholder={t('auth.enter_confirm_password')}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className={GRADIENT_BUTTON}
+                  disabled={loading}
+                >
+                  {loading ? t('auth.registering') : t('auth.register')}
+                </Button>
+              </form>
+            )}
 
-          {error && (
-            <p className="text-destructive mt-3 text-center text-sm">{error}</p>
-          )}
+            {error && (
+              <p className="text-destructive mt-3 text-center text-sm">
+                {error}
+              </p>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
