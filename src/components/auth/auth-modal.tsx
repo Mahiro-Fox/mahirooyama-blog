@@ -279,7 +279,7 @@ export function AuthModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background/90 relative flex gap-6 overflow-hidden rounded-2xl border-0 p-6 shadow-[0_24px_70px_-24px_var(--auth-glow)] sm:max-w-xl">
+      <DialogContent className="bg-background/90 relative flex overflow-hidden rounded-2xl border-0 p-0 shadow-[0_24px_70px_-24px_var(--auth-glow)] sm:max-w-xl">
         <DialogClose onClick={() => onOpenChange(false)} />
         {/* 二次元霓虹辉光 */}
         <div
@@ -317,7 +317,7 @@ export function AuthModal({
           </div>
         )}
 
-        <div className="flex flex-1 flex-col justify-center">
+        <div className="flex flex-1 flex-col justify-center p-6">
           <DialogHeader className="relative space-y-1">
             <DialogTitle className="text-center text-2xl font-bold">
               {titleByStep[step]}

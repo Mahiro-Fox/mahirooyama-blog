@@ -55,8 +55,8 @@ export const getAllPhotos = cache(
     if (!photos.length) {
       return null;
     }
-    const landscapeImages = photos.filter((photo) => photo.ratio > 1.5);
-    const portraitImages = photos.filter((photo) => photo.ratio <= 1.5);
+    const landscapeImages = photos.filter((photo) => photo.ratio > 1);
+    const portraitImages = photos.filter((photo) => photo.ratio <= 1);
     return ratio === 'landscape' ? landscapeImages : portraitImages;
   }
 );
