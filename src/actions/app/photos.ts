@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { getPhotos, PhotoItem } from '@/lib/photos';
 
 interface PhotosResponse {
@@ -42,3 +43,20 @@ export async function getPhotosAction(
     },
   };
 }
+
+export const getAllPhotos = cache(
+  async ({
+    ratio = 'landscape',
+  }: {
+    ratio?: 'landscape' | 'portrait';
+  }): Promise<PhotoItem[] | null> => {
+    const photos = await getPhotos();
+
+    if (!photos.length) {
+      return null;
+    }
+    const landscapeImages = photos.filter((photo) => photo.ratio > 1);
+    const portraitImages = photos.filter((photo) => photo.ratio <= 1);
+    return ratio === 'landscape' ? landscapeImages : portraitImages;
+  }
+);

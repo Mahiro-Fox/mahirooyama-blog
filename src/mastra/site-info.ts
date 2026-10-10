@@ -32,6 +32,7 @@ const siteInfo: SiteInfo = {
     { name: '影视收藏', route: '/movies', summary: '私人影视收藏库，含海报、标签、简介与播放链接。' },
     { name: '留言墙', route: '/guestbook', summary: '访客留言与互动。' },
     { name: 'MIDI', route: '/midi', summary: 'VRChat 中文吧自动钢琴工具。' },
+    { name: 'Sonic播放器', route: '/sonic', summary: '3D 音频可视化音乐播放器，支持网易云与 QQ 云音乐搜索、播放与歌单。' },
     { name: 'B站解析', route: '/bilibili-parse', summary: '解析 B 站视频链接。' },
     { name: '图片转换压缩', route: '/image-compressor', summary: '在线图片压缩与格式转换工具。' },
     { name: 'AI 聊天', route: '/chat', summary: '与 AI 模型聊天（你正用于回答的页面）。' },

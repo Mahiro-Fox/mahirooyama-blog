@@ -480,7 +480,7 @@ func migrateAccountsFull(ctx context.Context, db *gorm.DB, path string) (int, er
 				"last_updated": lastUpd,
 				"provider":     provider,
 			}
-			if existing.Email == nil && l.Email != nil && strings.TrimSpace(*l.Email) != "" {
+			if existing.Email == "" && l.Email != nil && strings.TrimSpace(*l.Email) != "" {
 				updates["email"] = strings.TrimSpace(*l.Email)
 			}
 			if strings.TrimSpace(existing.PasswordHash) == "" && strings.TrimSpace(l.PasswordHash) != "" {
@@ -492,10 +492,16 @@ func migrateAccountsFull(ctx context.Context, db *gorm.DB, path string) (int, er
 				}
 			}
 		} else if errIsNotFound(findErr) {
+			email := cleanEmailString(l.Email)
+			// email 现为必填，无邮箱的历史账户无法再迁移
+			if email == "" {
+				log.Printf("warn: 跳过无邮箱账户 id=%s username=%s（email 为必填）", id, l.Username)
+				continue
+			}
 			a := model.Account{
 				ID:           id,
 				Username:     strings.TrimSpace(l.Username),
-				Email:        cleanEmailPtr(l.Email),
+				Email:        email,
 				Provider:     provider,
 				PasswordHash: l.PasswordHash,
 				CreatedAt:    created,
@@ -512,15 +518,12 @@ func migrateAccountsFull(ctx context.Context, db *gorm.DB, path string) (int, er
 	return count, nil
 }
 
-func cleanEmailPtr(in *string) *string {
+// cleanEmailString 归一化可选邮箱为字符串（nil / 空串统一返回 ""）
+func cleanEmailString(in *string) string {
 	if in == nil {
-		return nil
+		return ""
 	}
-	v := strings.TrimSpace(*in)
-	if v == "" {
-		return nil
-	}
-	return &v
+	return strings.TrimSpace(*in)
 }
 
 func errIsNotFound(err error) bool {

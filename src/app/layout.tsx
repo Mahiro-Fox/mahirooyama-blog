@@ -1,4 +1,5 @@
 import { ImagePreviewProvider } from '@/context/image-preview-provider';
+import { RouteLoadingProvider } from '@/context/route-loading-provider';
 import { domAnimation, LazyMotion, MotionConfig } from 'motion/react';
 import { Toaster } from '@/components/shadcn-ui/sonner';
 import { TailwindIndicator } from '@/components/shared/tailwind-indicator';
@@ -6,6 +7,7 @@ import { fontVariables } from '@/lib/fonts';
 import { cn } from '@/utils/utils';
 import '@/styles/globals.css';
 import '@/styles/theme.css';
+import Script from 'next/script';
 import { WebVitals } from '@/components/shared/web-vitals';
 import { defaultTheme, THEME_STORAGE_KEY, themes } from '@/config/themes';
 
@@ -36,7 +38,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <Script id="theme-init-script">{themeInitScript}</Script>
       </head>
       <body
         className={cn(
@@ -48,12 +50,14 @@ export default function RootLayout({ children }: RootLayoutProps) {
         {/* LazyMotion + m.*：按需加载动画特性，避免打包完整 motion 的 ~30kb（use-lazy-motion） */}
         <MotionConfig reducedMotion="user">
           <LazyMotion features={domAnimation}>
-            <ImagePreviewProvider>
-              {children}
-              <WebVitals />
-              <TailwindIndicator />
-              <Toaster position="top-center" />
-            </ImagePreviewProvider>
+            <RouteLoadingProvider>
+              <ImagePreviewProvider>
+                {children}
+                <WebVitals />
+                <TailwindIndicator />
+                <Toaster position="top-center" />
+              </ImagePreviewProvider>
+            </RouteLoadingProvider>
           </LazyMotion>
         </MotionConfig>
       </body>

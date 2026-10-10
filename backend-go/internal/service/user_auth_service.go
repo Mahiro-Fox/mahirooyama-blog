@@ -71,13 +71,9 @@ func UserLogin(ctx context.Context, store repository.Store, cfg *config.Config, 
 	if _, e := store.DeleteUserSessionsByAccountID(ctx, a.ID); e != nil {
 		return nil, fmt.Errorf("清理旧会话失败: %w", e)
 	}
-	email := ""
-	if a.Email != nil {
-		email = *a.Email
-	}
 	token, err := auth.SignUser(
 		secret, cfg.UserIssuer, cfg.SessionTTLSeconds,
-		a.ID, a.Username, email, sessionID, now,
+		a.ID, a.Username, a.Email, sessionID, now,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("签发 JWT 失败: %w", err)
@@ -157,15 +153,11 @@ func UserVerify(ctx context.Context, store repository.Store, cfg *config.Config,
 		}
 		return nil, fmt.Errorf("查 account 失败: %w", aErr)
 	}
-	email := ""
-	if a.Email != nil {
-		email = *a.Email
-	}
 	return &UserVerifyResult{
 		Success:          true,
 		AccountID:        a.ID,
 		Username:         a.Username,
-		Email:            email,
+		Email:            a.Email,
 		LoggedInAt:       claims.LoggedInAt,
 		ExpiresAt:        claims.ExpiresAtUnix(),
 		SessionID:        session.SessionID,

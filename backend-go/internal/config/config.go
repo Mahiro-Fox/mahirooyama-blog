@@ -16,6 +16,7 @@ type Config struct {
 	DBName            string
 	InternalSecret    string
 	UploadsDir        string
+	DataDir           string
 	// 登录 & JWT
 	JWTSecret         string
 	AdminCookieName   string
@@ -47,6 +48,7 @@ func LoadFromEnv() (*Config, error) {
 		DBName:            getenv("DB_NAME", "mahiro"),
 		InternalSecret:    getenv("GO_API_SHARED_SECRET", ""),
 		UploadsDir:        getenv("UPLOADS_DIR", "./uploads"),
+		DataDir:           getenv("DATA_DIR", "./data"),
 		JWTSecret:         getenv("JWT_SECRET", ""),
 		AdminCookieName:   getenv("ADMIN_COOKIE_NAME", "admin-session"),
 		UserCookieName:    getenv("USER_COOKIE_NAME", "user-session"),

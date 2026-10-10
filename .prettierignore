@@ -4,6 +4,7 @@ build/
 dist/
 out/
 coverage/
+plugins-src/
 
 # Dependencies
 node_modules/

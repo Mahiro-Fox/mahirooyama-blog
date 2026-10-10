@@ -7,7 +7,7 @@ import { tagStore } from '@/store/tag-store';
 import { ChevronDown } from 'lucide-react';
 import { getPublicBlogs } from '@/actions/admin/blog-actions';
 import { getPublicGalleries } from '@/actions/admin/gallery-actions';
-import { getHomeBannerImages } from '@/actions/app/home-banner';
+import { getAllPhotos } from '@/actions/app/photos';
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { PartialViewCarousel } from '@/components/shared/partial-view-carousel';
 import { VermilionThread } from '@/components/shared/vermilion-thread';
@@ -16,7 +16,7 @@ export default async function IndexPage() {
   const [blogResult, galleryResult, bannerData, tags] = await Promise.all([
     getPublicBlogs({ all: true }),
     getPublicGalleries(),
-    getHomeBannerImages(),
+    getAllPhotos({ ratio: 'landscape' }),
     tagStore.getAll(),
   ]);
   const allPosts = blogResult.success ? blogResult.data.items : [];

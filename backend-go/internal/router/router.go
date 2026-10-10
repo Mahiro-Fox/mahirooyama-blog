@@ -12,6 +12,7 @@ import (
 	"mahirooyama-blog/backend-go/internal/handler"
 	"mahirooyama-blog/backend-go/internal/middleware"
 	"mahirooyama-blog/backend-go/internal/repository"
+	"mahirooyama-blog/backend-go/internal/service"
 )
 
 // RegisterRoutes 注册所有路由（接收 Config，让 auth 处理器能读 JWT 相关配置）
@@ -23,6 +24,9 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	// 数据访问单一入口。handler 层只依赖 Store 接口，便于后续注入 mock 写单测。
 	store := repository.NewStore(db)
 
+	// 云音乐 cookie 持久化初始化（幂等）
+	service.InitCloudCookie(cfg.DataDir)
+
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
@@ -32,6 +36,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	loginLimit := middleware.RateLimit(10, 5*time.Minute)
 	publicWriteLimit := middleware.RateLimit(20, 10*time.Minute)
 	analyticsLimit := middleware.RateLimit(120, time.Minute)
+	emailCheckLimit := middleware.RateLimit(30, time.Minute)
 
 	// —— Auth：后台管理员 ——（登录/鉴权/登出都是公开入口；真正的权限通过 JWT+verify 判定）
 	adminAuth := api.Group("/admin/auth")
@@ -166,6 +171,7 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 	{
 		accounts.POST("", publicWriteLimit, handler.CreateAccountHandler(store))
 		accounts.POST("/login", loginLimit, handler.LoginAccountHandler(store))
+		accounts.GET("/exists", emailCheckLimit, handler.CheckAccountEmailExistsHandler(store)) // 邮箱是否已注册（注册引导用）
 		accounts.GET("/:id", handler.GetPublicAccountHandler(store)) // 新：前台公开用户资料（与 Next accounts/:id 对应）
 	}
 	accountsAdmin := api.Group("/admin/accounts", middleware.RequireInternalSecret(internalSecret))
@@ -237,5 +243,43 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		conversations.GET("/:id", handler.GetConversationHandler(store))
 		conversations.PATCH("/:id", handler.UpdateConversationTitleHandler(store))
 		conversations.DELETE("/:id", handler.DeleteConversationHandler(store))
+	}
+
+	// —— 云音乐（网易云 / QQ）——所有公开读无需鉴权；cookie 写入需内部密钥 ——
+	cloudmusic := api.Group("/cloudmusic")
+	{
+		// 网易云公开读
+		netease := cloudmusic.Group("/netease")
+		{
+			netease.GET("/search", handler.NeteaseSearchHandler())
+			netease.GET("/playable", handler.NeteasePlayableHandler())
+			netease.GET("/account", handler.NeteaseAccountHandler())
+			netease.GET("/daily", handler.NeteaseDailyHandler())
+			netease.GET("/playlists", handler.NeteasePlaylistsHandler())
+			netease.GET("/playlist", handler.NeteasePlaylistHandler())
+			netease.GET("/lyric", handler.NeteaseLyricHandler())
+			netease.GET("/audio", handler.NeteaseAudioHandler())
+			netease.GET("/qr/key", handler.NeteaseQRKeyHandler())
+		}
+		// QQ 公开读
+		qq := cloudmusic.Group("/qq")
+		{
+			qq.GET("/search", handler.QQSearchHandler())
+			qq.GET("/songurl", handler.QQSongURLHandler())
+			qq.GET("/profile", handler.QQProfileHandler())
+			qq.GET("/user/playlists", handler.QQUserPlaylistsHandler())
+			qq.GET("/playlist/tracks", handler.QQPlaylistTracksHandler())
+			qq.GET("/lyric", handler.QQLyricHandler())
+			qq.GET("/cover", handler.QQCoverHandler())
+			qq.GET("/audio", handler.QQAudioHandler())
+		}
+		// cookie 读/写均需内部密钥（对应 Next Server Action 转发）
+		cookieWrite := cloudmusic.Group("", middleware.RequireInternalSecret(internalSecret))
+		{
+			cookieWrite.PUT("/cookie", handler.PutCloudCookieHandler())
+			cookieWrite.GET("/cookie", handler.GetCloudCookieHandler())
+			// 扫码轮询成功后会把 cookie 写入后端，故与 cookie 写操作一样需要内部密钥
+			cookieWrite.GET("/netease/qr/check", handler.NeteaseQRCheckHandler())
+		}
 	}
 }

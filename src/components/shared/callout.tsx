@@ -2,8 +2,10 @@ import {
   AlertTriangleIcon,
   FileTextIcon,
   InfoIcon,
+  LucideProps,
   XCircleIcon,
 } from 'lucide-react';
+import { ForwardRefExoticComponent, RefAttributes } from 'react';
 import { cn } from '@/utils/utils';
 
 type CalloutType = 'info' | 'note' | 'warning' | 'danger';
@@ -18,7 +20,9 @@ interface CalloutProps {
 const calloutStyles: Record<
   CalloutType,
   {
-    icon: React.ElementType;
+    icon: ForwardRefExoticComponent<
+      Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>
+    >;
     title: string;
     containerClasses: string;
     iconClasses: string;

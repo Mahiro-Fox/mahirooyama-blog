@@ -64,6 +64,13 @@
   --brand-line: oklch(0.708 0.241 142.5);
   --brand-pinterest: oklch(0.505 0.202 25.8);
   --brand-x: oklch(0.28 0.015 60);
+
+  /* 登录/注册弹窗 — 二次元渐变点缀（樱粉 → 藤紫 → 天青）
+   * 仅在此处定义，各主题未覆盖时共用；如需随主题变化可在对应 [data-theme] 中覆盖 */
+  --auth-grad-from: oklch(0.82 0.115 358);
+  --auth-grad-via: oklch(0.8 0.11 300);
+  --auth-grad-to: oklch(0.85 0.095 226);
+  --auth-glow: oklch(0.82 0.115 358 / 0.45);
 }
 
 /* ── 青瓷 Celadon ──

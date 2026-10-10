@@ -25,3 +25,4 @@ backend-go
 data
 uploads
 coverage
+plugin-src
