@@ -21,7 +21,13 @@ import {
 } from '@/components/shadcn-ui/dialog';
 import { Input } from '@/components/shadcn-ui/input';
 import { Label } from '@/components/shadcn-ui/label';
+import { FadeCarousel } from '@/components/shared/fade-carousel';
+import { imageSizes } from '@/components/shared/image-sizes';
+import { OptimizedImage } from '@/components/shared/optimized-image';
+import { siteConfig } from '@/config/common';
 import { useT } from '@/i18n/dictionary-provider';
+import type { PhotoItem } from '@/lib/photos';
+import { cn } from '@/utils/utils';
 
 /** 弹窗步骤：邮箱 → （已注册）密码 | （未注册）验证码 → 设置密码 */
 type AuthStep = 'email' | 'password' | 'code' | 'setPassword';
@@ -33,6 +39,8 @@ interface AuthModalProps {
   redirectTo?: string;
   /** 成功回调（在关闭弹窗之前调用），供父级做额外处理 */
   onSuccess?: () => void;
+  /** 左侧写真轮播的竖构图图片；为空时隐藏左侧面板、表单占满整宽 */
+  photos?: PhotoItem[] | null;
 }
 
 // 后端返回的稳定机器码 → i18n key
@@ -56,14 +64,24 @@ const ERROR_KEYS: Record<string, string> = {
 
 const RESEND_SECONDS = 60; // 与后端重发节流保持一致
 
+// 主按钮统一渐变样式（樱粉 → 藤紫 → 天青，取自二次元主题变量）
+const GRADIENT_BUTTON =
+  'w-full border-0 bg-gradient-to-r from-[var(--auth-grad-from)] via-[var(--auth-grad-via)] to-[var(--auth-grad-to)] text-white shadow-md hover:opacity-90';
+
 export function AuthModal({
   open,
   onOpenChange,
   redirectTo,
   onSuccess,
+  photos,
 }: AuthModalProps) {
   const t = useT();
   const router = useRouter();
+  const hasPhotos = !!photos?.length;
+  const carouselItems = (photos ?? []).map((photo) => ({
+    id: photo.id,
+    image: photo.src,
+  }));
 
   const [step, setStep] = useState<AuthStep>('email');
   const [email, setEmail] = useState('');
@@ -262,18 +280,67 @@ export function AuthModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:w-full sm:max-w-sm">
-        <DialogClose onClick={() => onOpenChange(false)} />
-        <DialogHeader className="space-y-1">
+      <DialogContent
+        className={cn(
+          'bg-background/90 relative overflow-hidden rounded-2xl border-0 p-6 shadow-[0_24px_70px_-24px_var(--auth-glow)] backdrop-blur-xl sm:w-full sm:max-w-3xl',
+          hasPhotos ? 'md:py-8 md:pr-8 md:pl-[46%]' : 'md:py-8'
+        )}
+      >
+        {/* 二次元霓虹辉光 */}
+        <div
+          className="bg-[var(--auth-grad-from)] pointer-events-none absolute -top-20 -right-12 h-44 w-44 rounded-full opacity-30 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="bg-[var(--auth-grad-to)] pointer-events-none absolute -bottom-20 -left-12 h-44 w-44 rounded-full opacity-30 blur-3xl"
+          aria-hidden
+        />
+
+        {/* 左侧写真轮播（小屏隐藏，表单自动占满整宽） */}
+        {hasPhotos && (
+          <div className="absolute inset-y-0 left-0 hidden w-[42%] overflow-hidden md:block">
+            <FadeCarousel
+              className="h-full w-full max-w-none rounded-none"
+              random
+              arrow={false}
+              indicator={false}
+              autoPlayInterval={8000}
+              items={carouselItems}
+              itemRender={(item, { index }) => (
+                <OptimizedImage
+                  key={item.id}
+                  src={item.image}
+                  alt={siteConfig.name}
+                  fill
+                  priority={index === 0}
+                  sizes={imageSizes.hero}
+                />
+              )}
+            />
+            {/* 右侧渐隐，与表单区自然融合 */}
+            <div className="via-background/30 to-background/90 pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent" />
+          </div>
+        )}
+
+        <DialogClose
+          className="text-foreground/70 hover:text-foreground hover:bg-foreground/10 top-3 right-3 rounded-full p-1.5 transition"
+          onClick={() => onOpenChange(false)}
+        />
+        <DialogHeader className="relative space-y-1">
           <DialogTitle className="text-center text-2xl font-bold">
             {titleByStep[step]}
           </DialogTitle>
           <DialogDescription className="text-center">
             {descByStep[step]}
           </DialogDescription>
+          {/* 渐变装饰线 */}
+          <div
+            className="from-[var(--auth-grad-from)] to-[var(--auth-grad-to)] mx-auto mt-2 h-1 w-12 rounded-full bg-gradient-to-r"
+            aria-hidden
+          />
         </DialogHeader>
 
-        <div className="mt-4">
+        <div className="relative mt-4 [&_input]:h-10 [&_input]:rounded-xl [&_input]:bg-foreground/5">
           {step === 'email' && (
             <form onSubmit={handleEmailSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -291,7 +358,7 @@ export function AuthModal({
               </div>
               <Button
                 type="submit"
-                className="w-full"
+                className={GRADIENT_BUTTON}
                 disabled={loading || !email}
               >
                 {loading ? t('auth.checking') : t('auth.continue')}
@@ -316,7 +383,7 @@ export function AuthModal({
               </div>
               <Button
                 type="submit"
-                className="w-full"
+                className={GRADIENT_BUTTON}
                 disabled={loading || !password || rateLimitIn > 0}
               >
                 {rateLimitIn > 0
@@ -351,7 +418,7 @@ export function AuthModal({
               </div>
               <Button
                 type="submit"
-                className="w-full"
+                className={GRADIENT_BUTTON}
                 disabled={loading || code.length !== 6}
               >
                 {loading ? t('auth.verifying') : t('auth.verify')}
@@ -424,7 +491,7 @@ export function AuthModal({
                   autoComplete="new-password"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className={GRADIENT_BUTTON} disabled={loading}>
                 {loading ? t('auth.registering') : t('auth.register')}
               </Button>
             </form>

@@ -1,5 +1,6 @@
 import { MusicProvider } from '@/context/music-provider';
 import { getPublicMusic } from '@/actions/admin/music-actions';
+import { getAllPhotos } from '@/actions/app/photos';
 import { AuthModalProvider } from '@/components/auth/auth-modal-provider';
 import { FloatActions } from '@/components/layout/float-actions';
 import { GlobalMusicPlayer } from '@/components/layout/global-music-player';
@@ -85,6 +86,7 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
     footerDictionary,
     homeDictionary,
     loginDictionary,
+    authPhotos,
     frontendUser,
     musicRes,
   ] = await Promise.all([
@@ -92,6 +94,8 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
     getDictionary(lang, 'footer'),
     getDictionary(lang, 'home'),
     getDictionary(lang, 'login'),
+    // 登录弹窗左侧写真轮播（竖构图）
+    getAllPhotos({ ratio: 'portrait' }),
     getCurrentUser(),
     getPublicMusic(),
   ]);
@@ -109,7 +113,7 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
       >
         <MusicProvider playlist={songs} initialIndex={randomIndex}>
           {/* 全局登录/注册弹窗：header、chat 等就地打开 */}
-          <AuthModalProvider>
+          <AuthModalProvider photos={authPhotos}>
             {/* ── 顶部滚动进度条 ── */}
             {/* <ScrollProgress /> */}
             <SiteHeader initialUserAuth={frontendUser} />

@@ -1,42 +1,16 @@
-'use client';
+import { getAllPhotos } from '@/actions/app/photos';
+import { SignInModal } from './signin-modal';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useRef, useState } from 'react';
-import { AuthModal } from '@/components/auth/auth-modal';
-
-/**
- * 独立登录页：落地即打开登录/注册弹窗。
- * 关闭弹窗（未登录成功）→ 返回首页；登录成功 → 跳转 redirect 参数目标。
- */
-function SignInModal() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/';
-  const [open, setOpen] = useState(true);
-  const succeeded = useRef(false);
-
-  return (
-    <AuthModal
-      open={open}
-      redirectTo={redirect}
-      onSuccess={() => {
-        succeeded.current = true;
-      }}
-      onOpenChange={(next) => {
-        setOpen(next);
-        // 用户主动关闭且未登录成功：回首页
-        if (!next && !succeeded.current) {
-          router.replace('/');
-        }
-      }}
-    />
-  );
+interface SignInPageProps {
+  searchParams: Promise<{ redirect?: string }>;
 }
 
-export default function SignInPage() {
-  return (
-    <Suspense fallback={null}>
-      <SignInModal />
-    </Suspense>
-  );
+/**
+ * 独立登录页（服务端）：取竖构图写真供弹窗左侧轮播使用，
+ * 实际交互交给客户端组件。
+ */
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  const { redirect } = await searchParams;
+  const photos = await getAllPhotos({ ratio: 'portrait' });
+  return <SignInModal redirectTo={redirect || '/'} photos={photos} />;
 }
