@@ -3,11 +3,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { userStore } from '@/store/user-store';
-import type { UserResponse, UserRole } from '@/types/user';
 import { AVATAR_DIR } from '@/constant/dir';
 import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
-import { goUploadMultipart, goAuthHeaders } from '@/lib/server/api-client';
+import { goAuthHeaders, goUploadMultipart } from '@/lib/server/api-client';
 import { appendGoAssetFile } from '@/lib/upload';
 import {
   consumeRateLimit,

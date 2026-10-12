@@ -5,7 +5,6 @@ import {
   type TagType,
 } from '@/constant';
 import { goFetch, withGoAuth } from '@/lib/server/api-client';
-import type { ActionContext } from '@/types/auth';
 
 /**
  * 标签存储

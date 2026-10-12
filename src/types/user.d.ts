@@ -5,10 +5,10 @@
  */
 
 // 用户角色类型
-export type UserRole = 'super_admin' | 'user';
+type UserRole = 'super_admin' | 'user';
 
 // 用户数据接口（含密码哈希，仅服务端使用）
-export interface User {
+interface User {
   id: string;
   username: string;
   avatar: string;
@@ -19,7 +19,7 @@ export interface User {
 }
 
 // 创建用户请求接口
-export interface CreateUserRequest {
+interface CreateUserRequest {
   username: string;
   password: string;
   role: UserRole;
@@ -27,7 +27,7 @@ export interface CreateUserRequest {
 }
 
 // 更新用户请求接口
-export interface UpdateUserRequest {
+interface UpdateUserRequest {
   username?: string;
   password?: string;
   avatar?: string;
@@ -36,7 +36,7 @@ export interface UpdateUserRequest {
 }
 
 // 用户响应（不含密码）
-export interface UserResponse {
+interface UserResponse {
   id: string;
   username: string;
   avatar: string;

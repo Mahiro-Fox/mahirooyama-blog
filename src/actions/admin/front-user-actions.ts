@@ -1,7 +1,6 @@
 'use server';
 
 import { accountStore } from '@/store/account-store';
-import type { Account } from '@/types/account';
 import {
   withActionPermission,
   type ActionResponse,

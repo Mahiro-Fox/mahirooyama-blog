@@ -1,6 +1,5 @@
 import type { Permission } from '@/constant';
 import { rolePermissionStore } from '@/store/role-permission-store';
-import type { UserResponse, UserRole } from '@/types/user';
 import { NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/admin-auth';
 

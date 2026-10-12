@@ -1,7 +1,6 @@
 'use client';
 
 import { Permission } from '@/constant';
-import type { UserResponse } from '@/types/user';
 import { KeyRound, Loader2, Shield, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';

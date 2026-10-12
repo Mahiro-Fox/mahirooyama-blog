@@ -4,8 +4,6 @@ import {
   type Permission,
 } from '@/constant';
 import { goFetch, withGoAuth } from '@/lib/server/api-client';
-import type { ActionContext } from '@/types/auth';
-import type { UserRole } from '@/types/user';
 
 /**
  * 角色权限配置存储
@@ -55,7 +53,7 @@ async function readRolePermissions(): Promise<Record<UserRole, Permission[]>> {
     cachedRolePermissions = await loadFromGo();
   } catch {
     // Go 后端不可用时回退默认值
-    cachedRolePermissions = { ...DEFAULT_ROLE_PERMISSIONS };
+    cachedRolePermissions = structuredClone(DEFAULT_ROLE_PERMISSIONS);
   }
   return cachedRolePermissions;
 }

@@ -2,7 +2,6 @@
 
 import { ALL_PERMISSIONS, Permission } from '@/constant';
 import { rolePermissionStore } from '@/store/role-permission-store';
-import { UserRole } from '@/types/user';
 import {
   withActionPermission,
   type ActionResponse,
@@ -47,11 +46,7 @@ export async function adminUpdateRolePermissions(input: {
         return { success: false, error: '不能修改超级管理员的权限' };
       }
 
-      await rolePermissionStore.updateRole(
-        input.role,
-        input.permissions,
-        ctx
-      );
+      await rolePermissionStore.updateRole(input.role, input.permissions, ctx);
 
       logger.info('更新角色权限成功', { role: input.role, userId: user.id });
       return { success: true, data: undefined };

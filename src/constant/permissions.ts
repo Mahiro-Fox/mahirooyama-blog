@@ -1,5 +1,3 @@
-import { type UserRole } from '@/types/user';
-
 /**
  * RBAC 权限系统
  * 权限命名规范: <模块>:<操作>
@@ -179,7 +177,11 @@ export const ALL_PERMISSIONS: {
   {
     group: '后台用户管理',
     permissions: [
-      { value: 'users:read', label: '查看用户', description: '查看后台用户列表' },
+      {
+        value: 'users:read',
+        label: '查看用户',
+        description: '查看后台用户列表',
+      },
       {
         value: 'users:create',
         label: '创建用户',

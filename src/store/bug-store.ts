@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import { BUGS_FILE } from '@/constant';
-import type { BugReport, BugStatus } from '@/types/bug';
 import { ensureFileInitialized, writeFileAtomic } from '@/utils/file-utils';
 
 /**

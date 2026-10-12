@@ -1,11 +1,5 @@
 import { ADMIN_DEFAULT_PASSWORD } from '@/constant/auth';
 import { goFetch, withGoAuth } from '@/lib/server/api-client';
-import type { ActionContext } from '@/types/auth';
-import type {
-  CreateUserRequest,
-  UpdateUserRequest,
-  UserResponse,
-} from '@/types/user';
 
 /**
  * 后台用户（admin_users）Store
@@ -23,10 +17,7 @@ export const userStore = {
   },
 
   // 根据ID获取用户
-  async getById(
-    id: string,
-    ctx?: ActionContext
-  ): Promise<UserResponse | null> {
+  async getById(id: string, ctx?: ActionContext): Promise<UserResponse | null> {
     try {
       return await goFetch<UserResponse>(
         `/api/admin/users/${encodeURIComponent(id)}`,

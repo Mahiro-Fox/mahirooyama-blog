@@ -1,6 +1,5 @@
 'use client';
 
-import type { Account, AccountProvider } from '@/types/account';
 import {
   KeyRound,
   Loader2,
@@ -76,25 +75,13 @@ function FrontUsersList({
 }) {
   const renderActions = (account: Account) => (
     <div className="flex justify-end gap-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onEditAccount(account)}
-      >
+      <Button variant="ghost" size="sm" onClick={() => onEditAccount(account)}>
         <Pencil className="mr-2 h-4 w-4" /> 编辑
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onEditPassword(account)}
-      >
+      <Button variant="ghost" size="sm" onClick={() => onEditPassword(account)}>
         <KeyRound className="mr-2 h-4 w-4" /> 改密
       </Button>
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={() => onDelete(account)}
-      >
+      <Button variant="destructive" size="sm" onClick={() => onDelete(account)}>
         <Trash2 className="mr-2 h-4 w-4" /> 删除
       </Button>
     </div>
@@ -106,7 +93,7 @@ function FrontUsersList({
       header: '用户名',
       render: (account) => (
         <div className="flex items-center gap-2">
-          <UserCircle className="h-8 w-8 text-muted-foreground" />
+          <UserCircle className="text-muted-foreground h-8 w-8" />
           <div>
             <div className="font-medium">{account.username}</div>
             <div className="text-muted-foreground text-xs">
@@ -122,7 +109,7 @@ function FrontUsersList({
       render: (account) =>
         account.email ? (
           <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-muted-foreground" />
+            <Mail className="text-muted-foreground h-4 w-4" />
             <span className="text-sm">{account.email}</span>
           </div>
         ) : (
@@ -452,10 +439,7 @@ function EditPasswordDialog({
             <Button type="button" variant="outline" onClick={onCancel}>
               取消
             </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || isOAuth}
-            >
+            <Button type="submit" disabled={isSubmitting || isOAuth}>
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}{' '}
@@ -529,9 +513,7 @@ export default function FrontUsersClient({
   const [editConfirmPassword, setEditConfirmPassword] = useState('');
 
   // 删除对话框
-  const [deletingAccount, setDeletingAccount] = useState<Account | null>(
-    null
-  );
+  const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const refreshAccounts = async () => {
@@ -569,9 +551,7 @@ export default function FrontUsersClient({
       setNewPassword('');
       await refreshAccounts();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : '创建前台用户失败'
-      );
+      toast.error(error instanceof Error ? error.message : '创建前台用户失败');
     } finally {
       setIsSubmitting(false);
     }
@@ -628,9 +608,7 @@ export default function FrontUsersClient({
       closeEditDialog();
       await refreshAccounts();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : '更新前台用户失败'
-      );
+      toast.error(error instanceof Error ? error.message : '更新前台用户失败');
     } finally {
       setIsSubmitting(false);
     }
@@ -704,9 +682,7 @@ export default function FrontUsersClient({
       setDeletingAccount(null);
       await refreshAccounts();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : '删除前台用户失败'
-      );
+      toast.error(error instanceof Error ? error.message : '删除前台用户失败');
     } finally {
       setIsSubmitting(false);
     }

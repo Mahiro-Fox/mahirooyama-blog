@@ -1,10 +1,4 @@
 import { goFetch, withGoAuth } from '@/lib/server/api-client';
-import type { ActionContext } from '@/types/auth';
-import type {
-  Account,
-  CreateAccountRequest,
-  UpdateAccountRequest,
-} from '@/types/account';
 
 /**
  * 前台用户（accounts）Store

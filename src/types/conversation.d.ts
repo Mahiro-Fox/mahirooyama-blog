@@ -6,7 +6,7 @@ import type { UIMessage } from 'ai';
  * 数据落盘在 Go 后端 /api/conversations，取数逻辑见 src/store/conversation-store.ts。
  */
 
-export interface Conversation {
+interface Conversation {
   id: string;
   userId: string;
   title: string;
@@ -15,7 +15,7 @@ export interface Conversation {
   messages: UIMessage[];
 }
 
-export interface ConversationSummary {
+interface ConversationSummary {
   id: string;
   title: string;
   updatedAt: string;

@@ -4,9 +4,9 @@
  * 取数逻辑见 src/store/bug-store.ts。
  */
 
-export type BugStatus = 'pending' | 'resolved';
+type BugStatus = 'pending' | 'resolved';
 
-export interface BugReport {
+interface BugReport {
   id: string;
   createdAt: string;
   content: string;

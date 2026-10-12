@@ -1,5 +1,3 @@
-import type { ActionContext } from '@/types/auth';
-
 /**
  * Go 后端 API 客户端
  *
@@ -80,9 +78,7 @@ function parseGoErrorField(body: string): string | undefined {
  * 供 goUploadMultipart 这类只接受 headers 的调用点使用。
  */
 export function goAuthHeaders(ctx?: ActionContext): Record<string, string> {
-  return ctx?.authToken
-    ? { Authorization: `Bearer ${ctx.authToken}` }
-    : {};
+  return ctx?.authToken ? { Authorization: `Bearer ${ctx.authToken}` } : {};
 }
 
 /**
