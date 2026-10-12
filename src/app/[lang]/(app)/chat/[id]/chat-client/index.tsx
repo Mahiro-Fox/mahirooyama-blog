@@ -33,7 +33,6 @@ interface ChatClientProps {
 }
 
 const getLocalStorageConfiguration = (isUserAuth: boolean) => {
-  const config = localStorage.getItem('chatConfig');
   const defaultConfig = {
     thinking: false,
     provider: {
@@ -42,6 +41,8 @@ const getLocalStorageConfiguration = (isUserAuth: boolean) => {
         .value,
     },
   };
+  if (typeof window === 'undefined') return defaultConfig;
+  const config = localStorage.getItem('chatConfig');
   if (!config) return defaultConfig;
   try {
     const configObj = JSON.parse(config);
