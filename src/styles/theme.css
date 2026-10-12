@@ -71,6 +71,10 @@
   --auth-grad-via: oklch(0.8 0.11 300);
   --auth-grad-to: oklch(0.85 0.095 226);
   --auth-glow: oklch(0.82 0.115 358 / 0.45);
+
+  /* 全屏着色器背景的遮罩不透明度 — 深色主题在下方覆写为更高值，
+   * 因为 shader 输出偏亮，压在深底上会显得“发光”。 */
+  --ground-veil-alpha: 90%;
 }
 
 /* ── 青瓷 Celadon ──
@@ -144,6 +148,7 @@
   --brand-line: oklch(0.708 0.241 142.5);
   --brand-pinterest: oklch(0.505 0.202 25.8);
   --brand-x: oklch(0.88 0.012 80);
+  --ground-veil-alpha: 80%;
 }
 
 /* ── 森林 Forest ──
@@ -217,6 +222,7 @@
   --brand-line: oklch(0.708 0.241 142.5);
   --brand-pinterest: oklch(0.505 0.202 25.8);
   --brand-x: oklch(0.9 0.012 310);
+  --ground-veil-alpha: 80%;
 }
 /* ════════════════════════════════════════════════════════════════
  *  新增博客主题
@@ -392,6 +398,7 @@
   --brand-line: oklch(0.708 0.241 142.5);
   --brand-pinterest: oklch(0.505 0.202 25.8);
   --brand-x: oklch(0.88 0.018 235);
+  --ground-veil-alpha: 80%;
 }
 
 /* ────────────────────────────────────────────────────────────────
@@ -447,4 +454,5 @@
   --brand-line: oklch(0.708 0.241 142.5);
   --brand-pinterest: oklch(0.505 0.202 25.8);
   --brand-x: oklch(0.89 0.018 325);
+  --ground-veil-alpha: 80%;
 }

@@ -1,3 +1,4 @@
+import { ShaderBackground } from '@/app/[lang]/(app)/_components/shader-background';
 import { MusicProvider } from '@/context/music-provider';
 import { getPublicMusic } from '@/actions/admin/music-actions';
 import { getAllPhotos } from '@/actions/app/photos';
@@ -103,6 +104,8 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
   const randomIndex = Math.floor(Math.random() * songs.length); // 随机音乐索引
   return (
     <div className="bg-background relative z-10 flex min-h-svh flex-col">
+      {/* 全屏着色器背景 — 作为首个子元素，负 z-index 落在根 div 背景之上、内容之下 */}
+      <ShaderBackground />
       <DictionaryProvider
         dictionary={{
           ...navDictionary,
