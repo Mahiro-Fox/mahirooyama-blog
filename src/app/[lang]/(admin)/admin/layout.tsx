@@ -1,4 +1,4 @@
-import type { UserRole } from '@/store/user-store';
+import type { UserRole } from '@/types/user';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';

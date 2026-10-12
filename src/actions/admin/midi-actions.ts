@@ -3,7 +3,7 @@
 import path from 'path';
 import { MIDI_DIR } from '@/constant/dir';
 import { getMidis, readMidiFile } from '@/lib/midi';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
 import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
@@ -19,12 +19,12 @@ export async function adminGetMidiFiles(): Promise<
 > {
   return withActionPermission(
     'midi:read',
-    async () => {
+    async (_user, ctx) => {
       try {
         const data = await goFetch<{
           files: MidiAdminFile[];
           success: boolean;
-        }>('/api/midi');
+        }>('/api/midi', withGoAuth(ctx));
         return { success: true, data: data.files ?? [] };
       } catch (error) {
         logger.error('获取 MIDI 文件列表失败', error);
@@ -54,11 +54,11 @@ export async function adminDeleteMidiFile(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'midi:delete',
-    async (user) => {
+    async (user, ctx) => {
       try {
-        await goFetch(`/api/midi/${encodeURIComponent(slug)}`, {
+        await goFetch(`/api/midi/${encodeURIComponent(slug)}`, withGoAuth(ctx, {
           method: 'DELETE',
-        });
+        }));
         logger.info('删除 MIDI 文件成功', { slug, userId: user.id });
         return { success: true, data: undefined };
       } catch (error) {
@@ -78,16 +78,16 @@ export async function adminRenameMidiFile(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'midi:update',
-    async (user) => {
+    async (user, ctx) => {
       if (!newName || newName.trim() === '') {
         return { success: false, error: '新名称不能为空' };
       }
 
       try {
-        await goFetch(`/api/midi/${encodeURIComponent(oldSlug)}`, {
+        await goFetch(`/api/midi/${encodeURIComponent(oldSlug)}`, withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify({ newName: newName.trim() }),
-        });
+        }));
         logger.info('重命名 MIDI 文件成功', {
           oldSlug,
           newName,

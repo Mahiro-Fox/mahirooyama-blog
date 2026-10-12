@@ -1,10 +1,7 @@
 'use server';
 
-import {
-  conversationStore,
-  type Conversation,
-  type ConversationSummary,
-} from '@/store/conversation-store';
+import { conversationStore } from '@/store/conversation-store';
+import type { Conversation, ConversationSummary } from '@/types/conversation';
 import { createLogger } from '@/utils/logger';
 import { verifyUserAuth } from '@/lib/user-auth';
 

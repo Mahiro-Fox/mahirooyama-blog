@@ -1,6 +1,7 @@
 'use server';
 
-import { accountStore, type Account } from '@/store/account-store';
+import { accountStore } from '@/store/account-store';
+import type { Account } from '@/types/account';
 import {
   withActionPermission,
   type ActionResponse,
@@ -18,9 +19,9 @@ const logger = createLogger('FrontUserActions');
 
 // 读取列表
 export async function adminGetFrontUsers(): Promise<ActionResponse<Account[]>> {
-  return withActionPermission('accounts:read', async (admin) => {
+  return withActionPermission('accounts:read', async (admin, ctx) => {
     try {
-      const accounts = await accountStore.getAll();
+      const accounts = await accountStore.getAll(ctx);
       return { success: true, data: accounts };
     } catch (error) {
       logger.error('获取前台用户列表失败', error, { adminId: admin.id });
@@ -36,7 +37,7 @@ export async function adminCreateFrontUser(input: {
 }): Promise<ActionResponse<Account>> {
   return withActionPermission(
     'accounts:create',
-    async (admin) => {
+    async (admin, ctx) => {
       if (!input.username?.trim() || !input.password) {
         return { success: false, error: '用户名和密码不能为空' };
       }
@@ -45,10 +46,13 @@ export async function adminCreateFrontUser(input: {
       }
 
       try {
-        const account = await accountStore.create({
-          username: input.username.trim(),
-          password: input.password,
-        });
+        const account = await accountStore.create(
+          {
+            username: input.username.trim(),
+            password: input.password,
+          },
+          ctx
+        );
         logger.info('创建前台用户成功', {
           username: input.username,
           adminId: admin.id,
@@ -78,7 +82,7 @@ export async function adminUpdateFrontUser(input: {
 }): Promise<ActionResponse<Account>> {
   return withActionPermission(
     'accounts:update',
-    async (admin) => {
+    async (admin, ctx) => {
       if (!input.id) {
         return { success: false, error: '缺少用户 ID' };
       }
@@ -88,10 +92,14 @@ export async function adminUpdateFrontUser(input: {
       }
 
       try {
-        const updated = await accountStore.update(input.id, {
-          username: input.username?.trim(),
-          email: input.email,
-        });
+        const updated = await accountStore.update(
+          input.id,
+          {
+            username: input.username?.trim(),
+            email: input.email,
+          },
+          ctx
+        );
         if (!updated) {
           return { success: false, error: '前台用户不存在或更新失败' };
         }
@@ -122,7 +130,7 @@ export async function adminUpdateFrontUserPassword(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'accounts:updatePassword',
-    async (admin) => {
+    async (admin, ctx) => {
       if (!input.id) {
         return { success: false, error: '缺少用户 ID' };
       }
@@ -133,7 +141,11 @@ export async function adminUpdateFrontUserPassword(input: {
         return { success: false, error: '密码长度不能少于 6 位' };
       }
 
-      const ok = await accountStore.updatePassword(input.id, input.password);
+      const ok = await accountStore.updatePassword(
+        input.id,
+        input.password,
+        ctx
+      );
       if (!ok) {
         return { success: false, error: '前台用户不存在或更新失败' };
       }
@@ -153,12 +165,12 @@ export async function adminDeleteFrontUser(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'accounts:delete',
-    async (admin) => {
+    async (admin, ctx) => {
       if (!input.id) {
         return { success: false, error: '缺少用户 ID' };
       }
 
-      const ok = await accountStore.delete(input.id);
+      const ok = await accountStore.delete(input.id, ctx);
       if (!ok) {
         return { success: false, error: '前台用户不存在或删除失败' };
       }

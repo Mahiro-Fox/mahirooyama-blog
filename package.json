@@ -113,7 +113,7 @@
     "importOrder": [
       "^react$",
       "^@/actions/(.*)$",
-      "^@/app/api/(.*)$",
+      "^@/app/next-api/(.*)$",
       "^@/components/(.*)$",
       "^@/config/(.*)$",
       "^@/constant/(.*)$",

@@ -1261,7 +1261,7 @@ export function UI({
         engine.init();
         engine.loadUrl(
           buildQQPlaybackUrl(
-            '/api/cloudmusic/qq/audio',
+            '/next-api/cloudmusic/qq/audio',
             qqSong,
             playbackQualitySettings
           )
@@ -1290,7 +1290,7 @@ export function UI({
       engine.init();
       engine.loadUrl(
         buildNeteasePlaybackUrl(
-          '/api/cloudmusic/netease/audio',
+          '/next-api/cloudmusic/netease/audio',
           song.id,
           playbackQualitySettings
         )
@@ -1397,7 +1397,7 @@ export function UI({
       engine.init();
       engine.loadUrl(
         buildQQPlaybackUrl(
-          '/api/cloudmusic/qq/audio',
+          '/next-api/cloudmusic/qq/audio',
           { mid, mediaMid },
           playbackQualitySettings
         )
@@ -1406,7 +1406,7 @@ export function UI({
       engine.init();
       engine.loadUrl(
         buildNeteasePlaybackUrl(
-          '/api/cloudmusic/netease/audio',
+          '/next-api/cloudmusic/netease/audio',
           song.id,
           playbackQualitySettings
         )

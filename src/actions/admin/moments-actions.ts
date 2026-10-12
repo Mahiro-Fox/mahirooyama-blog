@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
 import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
@@ -13,9 +13,9 @@ const logger = createLogger('MomentsActions');
 
 // GET - 获取所有碎碎念
 export async function adminGetMoments(): Promise<ActionResponse<Moment[]>> {
-  return withActionPermission('moments:read', async () => {
+  return withActionPermission('moments:read', async (_user, ctx) => {
     try {
-      const moments = await goFetch<Moment[]>('/api/moments');
+      const moments = await goFetch<Moment[]>('/api/moments', withGoAuth(ctx));
       return { success: true, data: moments };
     } catch (error) {
       logger.error('获取碎碎念列表失败', error);
@@ -45,7 +45,7 @@ export async function adminCreateMoment(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'moments:create',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const { content, image, moodEmoji, location } = input;
 
@@ -56,7 +56,7 @@ export async function adminCreateMoment(input: {
           return { success: false, error: '内容不能超过200字' };
         }
 
-        await goFetch('/api/moments', {
+        await goFetch('/api/moments', withGoAuth(ctx, {
           method: 'POST',
           body: JSON.stringify({
             content: content.trim(),
@@ -64,7 +64,7 @@ export async function adminCreateMoment(input: {
             moodEmoji: moodEmoji?.trim() || '',
             location: location?.trim() || '',
           }),
-        });
+        }));
 
         logger.info('创建碎碎念成功', { userId: user.id });
         revalidatePath('/', 'layout');
@@ -90,7 +90,7 @@ export async function adminUpdateMoment(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'moments:update',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const { content, image, moodEmoji, location } = input;
         const body: Record<string, unknown> = {};
@@ -108,10 +108,10 @@ export async function adminUpdateMoment(
         if (moodEmoji !== undefined) body.moodEmoji = moodEmoji.trim();
         if (location !== undefined) body.location = location.trim();
 
-        await goFetch(`/api/moments/${encodeURIComponent(id)}`, {
+        await goFetch(`/api/moments/${encodeURIComponent(id)}`, withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify(body),
-        });
+        }));
 
         logger.info('更新碎碎念成功', { momentId: id, userId: user.id });
         revalidatePath('/', 'layout');
@@ -131,12 +131,12 @@ export async function adminDeleteMoment(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'moments:delete',
-    async (user) => {
+    async (user, ctx) => {
       try {
-        await goFetch(`/api/moments/${encodeURIComponent(id)}`, {
+        await goFetch(`/api/moments/${encodeURIComponent(id)}`, withGoAuth(ctx, {
           method: 'DELETE',
           parseJson: false,
-        });
+        }));
 
         logger.info('删除碎碎念成功', { momentId: id, userId: user.id });
         revalidatePath('/', 'layout');

@@ -1,4 +1,4 @@
-import { type UserRole } from '@/store/user-store';
+import { type UserRole } from '@/types/user';
 
 /**
  * RBAC 权限系统

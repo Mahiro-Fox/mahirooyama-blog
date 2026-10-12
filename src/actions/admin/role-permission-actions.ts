@@ -2,7 +2,7 @@
 
 import { ALL_PERMISSIONS, Permission } from '@/constant';
 import { rolePermissionStore } from '@/store/role-permission-store';
-import { UserRole } from '@/store/user-store';
+import { UserRole } from '@/types/user';
 import {
   withActionPermission,
   type ActionResponse,
@@ -35,7 +35,7 @@ export async function adminUpdateRolePermissions(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'users:updateRole',
-    async (user) => {
+    async (user, ctx) => {
       if (!input.role || !Array.isArray(input.permissions)) {
         return {
           success: false,
@@ -47,7 +47,11 @@ export async function adminUpdateRolePermissions(input: {
         return { success: false, error: '不能修改超级管理员的权限' };
       }
 
-      await rolePermissionStore.updateRole(input.role, input.permissions);
+      await rolePermissionStore.updateRole(
+        input.role,
+        input.permissions,
+        ctx
+      );
 
       logger.info('更新角色权限成功', { role: input.role, userId: user.id });
       return { success: true, data: undefined };
@@ -61,8 +65,8 @@ export async function adminResetRolePermissions(): Promise<
 > {
   return withActionPermission(
     'users:updateRole',
-    async (user) => {
-      await rolePermissionStore.resetToDefault();
+    async (user, ctx) => {
+      await rolePermissionStore.resetToDefault(ctx);
       const permissions = await rolePermissionStore.getAll();
 
       logger.warn('重置角色权限为默认值', { userId: user.id });

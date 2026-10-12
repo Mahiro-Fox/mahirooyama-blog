@@ -1,9 +1,9 @@
 'use server';
 
-import { BugReport, BugStatus } from '@/store/bug-store';
+import type { BugReport, BugStatus } from '@/types/bug';
 import { headers } from 'next/headers';
 import { apiRateLimiter } from '@/lib/rate-limit';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
 import {
   withActionPermission,
   type ActionResponse,
@@ -74,9 +74,9 @@ export async function submitBugReport(input: {
 export async function adminGetBugReports(): Promise<
   ActionResponse<BugReport[]>
 > {
-  return withActionPermission('bugs:read', async () => {
+  return withActionPermission('bugs:read', async (_user, ctx) => {
     try {
-      const bugs = await goFetch<BugReport[]>('/api/admin/bugs');
+      const bugs = await goFetch<BugReport[]>('/api/admin/bugs', withGoAuth(ctx));
       return { success: true, data: bugs };
     } catch (error) {
       logger.error('获取 BUG 列表失败', error);
@@ -92,12 +92,12 @@ export async function adminUpdateBugStatus(
   id: string,
   status: BugStatus
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('bugs:update', async (user) => {
+  return withActionPermission('bugs:update', async (user, ctx) => {
     try {
-      await goFetch(`/api/admin/bugs/${encodeURIComponent(id)}/status`, {
+      await goFetch(`/api/admin/bugs/${encodeURIComponent(id)}/status`, withGoAuth(ctx, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
-      });
+      }));
 
       logger.info('更新 BUG 状态成功', { id, status, adminId: user.id });
       return { success: true, data: undefined };
@@ -114,12 +114,12 @@ export async function adminUpdateBugStatus(
 export async function adminDeleteBugReport(
   id: string
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('bugs:delete', async (user) => {
+  return withActionPermission('bugs:delete', async (user, ctx) => {
     try {
-      await goFetch(`/api/admin/bugs/${encodeURIComponent(id)}`, {
+      await goFetch(`/api/admin/bugs/${encodeURIComponent(id)}`, withGoAuth(ctx, {
         method: 'DELETE',
         parseJson: false,
-      });
+      }));
 
       logger.info('删除 BUG 报告成功', { id, adminId: user.id });
       return { success: true, data: undefined };

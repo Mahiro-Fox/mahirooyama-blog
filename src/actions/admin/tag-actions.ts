@@ -27,7 +27,7 @@ export async function adminCreateTag(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'tag:create',
-    async (user) => {
+    async (user, ctx) => {
       if (!input.id || !input.name || !input.type) {
         return { success: false, error: '缺少必填字段: id, name, type' };
       }
@@ -41,13 +41,16 @@ export async function adminCreateTag(input: {
         return { success: false, error: '标签 ID 已存在' };
       }
 
-      await tagStore.create({
-        id: input.id,
-        name: input.name,
-        icon: input.icon || 'default',
-        type: input.type,
-        description: input.description,
-      });
+      await tagStore.create(
+        {
+          id: input.id,
+          name: input.name,
+          icon: input.icon || 'default',
+          type: input.type,
+          description: input.description,
+        },
+        ctx
+      );
 
       logger.info('创建标签成功', {
         tagId: input.id,
@@ -70,12 +73,17 @@ export async function adminUpdateTag(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'tag:update',
-    async (user) => {
-      const updated = await tagStore.update(input.id, input.type, {
-        name: input.name,
-        icon: input.icon,
-        description: input.description,
-      });
+    async (user, ctx) => {
+      const updated = await tagStore.update(
+        input.id,
+        input.type,
+        {
+          name: input.name,
+          icon: input.icon,
+          description: input.description,
+        },
+        ctx
+      );
 
       if (!updated) {
         return { success: false, error: '标签不存在' };
@@ -99,8 +107,8 @@ export async function adminDeleteTag(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'tag:delete',
-    async (user) => {
-      const ok = await tagStore.delete(input.id, input.type);
+    async (user, ctx) => {
+      const ok = await tagStore.delete(input.id, input.type, ctx);
       if (!ok) {
         return { success: false, error: '标签不存在' };
       }
@@ -120,8 +128,8 @@ export async function adminDeleteTag(input: {
 export async function adminResetTags(): Promise<ActionResponse<TagsData>> {
   return withActionPermission(
     'tag:reset',
-    async (user) => {
-      const tags = await tagStore.resetToDefault();
+    async (user, ctx) => {
+      const tags = await tagStore.resetToDefault(ctx);
       logger.warn('重置标签为默认值', { userId: user.id });
       revalidatePath('/', 'layout');
       return { success: true, data: tags };

@@ -3,7 +3,7 @@
 import matter from 'gray-matter';
 import { DEFAULT_BLOG_LIST_LIMIT } from '@/config/limit';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
 import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
@@ -107,9 +107,12 @@ export async function getPublicBlog(
 }
 
 export async function adminGetBlogs(): Promise<ActionResponse<AdminBlog[]>> {
-  return withActionPermission('blog:read', async () => {
+  return withActionPermission('blog:read', async (_user, ctx) => {
     try {
-      const result = await goFetch<{ items: AdminBlog[] }>('/api/blog-files');
+      const result = await goFetch<{ items: AdminBlog[] }>(
+        '/api/blog-files',
+        withGoAuth(ctx)
+      );
       const posts = result.items;
 
       posts.sort(
@@ -129,10 +132,11 @@ export async function adminGetBlogs(): Promise<ActionResponse<AdminBlog[]>> {
 export async function adminGetBlog(
   slug: string
 ): Promise<ActionResponse<string>> {
-  return withActionPermission('blog:read', async () => {
+  return withActionPermission('blog:read', async (_user, ctx) => {
     try {
       const result = await goFetch<{ content: string }>(
-        `/api/blog-files/${slug}`
+        `/api/blog-files/${slug}`,
+        withGoAuth(ctx)
       );
       return { success: true, data: result.content };
     } catch (error) {
@@ -151,7 +155,7 @@ export async function adminCreateBlog({
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'blog:create',
-    async (user) => {
+    async (user, ctx) => {
       try {
         if (!slug || !content) {
           return { success: false, error: '缺少必需字段 (slug, content)' };
@@ -171,10 +175,10 @@ export async function adminCreateBlog({
           };
         }
 
-        await goFetch(`/api/blog-files`, {
+        await goFetch(`/api/blog-files`, withGoAuth(ctx, {
           method: 'POST',
           body: JSON.stringify({ slug: cleanSlug, content }),
-        });
+        }));
 
         logger.info('创建 MDX 文件成功', { slug: cleanSlug, userId: user.id });
         return { success: true, data: undefined };
@@ -194,17 +198,17 @@ export async function adminUpdateBlog(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'blog:update',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const nameCheck = validateSlug(slug);
         if (nameCheck) {
           return { success: false, error: nameCheck.error };
         }
 
-        await goFetch(`/api/blog-files/${slug}`, {
+        await goFetch(`/api/blog-files/${slug}`, withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify({ content }),
-        });
+        }));
 
         logger.info('更新 MDX 文件成功', { slug, userId: user.id });
         return { success: true, data: undefined };
@@ -224,7 +228,7 @@ export async function adminRenameBlogFile(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'blog:update',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const cleanNewSlug = newSlug.trim().toLowerCase();
         const nameCheck = validateSlug(cleanNewSlug);
@@ -232,10 +236,10 @@ export async function adminRenameBlogFile(
           return { success: false, error: nameCheck.error };
         }
 
-        await goFetch(`/api/blog-files/${slug}`, {
+        await goFetch(`/api/blog-files/${slug}`, withGoAuth(ctx, {
           method: 'PATCH',
           body: JSON.stringify({ newSlug: cleanNewSlug }),
-        });
+        }));
 
         logger.info('重命名博客文件成功', {
           oldSlug: slug,
@@ -259,16 +263,16 @@ export async function adminDeleteBlogFile(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'blog:delete',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const nameCheck = validateSlug(slug);
         if (nameCheck) {
           return { success: false, error: nameCheck.error };
         }
 
-        await goFetch(`/api/blog-files/${slug}`, {
+        await goFetch(`/api/blog-files/${slug}`, withGoAuth(ctx, {
           method: 'DELETE',
-        });
+        }));
 
         logger.info('删除 MDX 文件成功', { slug, userId: user.id });
         return { success: true, data: undefined };

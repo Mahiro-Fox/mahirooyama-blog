@@ -2,7 +2,7 @@
 
 import { DEFAULT_GALLERY_LIST_LIMIT } from '@/config/limit';
 import { paginateItems, PaginationResult } from '@/lib/pagination';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
 import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
@@ -87,10 +87,11 @@ export async function getPublicGallery(
 export async function adminGetGalleries(): Promise<
   ActionResponse<AdminGallery[]>
 > {
-  return withActionPermission('gallery:read', async () => {
+  return withActionPermission('gallery:read', async (_user, ctx) => {
     try {
       const result = await goFetch<{ items: AdminGallery[] }>(
-        '/api/gallery-files'
+        '/api/gallery-files',
+        withGoAuth(ctx)
       );
       const images = result.items;
 
@@ -110,10 +111,11 @@ export async function adminGetGalleries(): Promise<
 export async function adminGetGallery(
   slug: string
 ): Promise<ActionResponse<AdminGallery>> {
-  return withActionPermission('gallery:read', async () => {
+  return withActionPermission('gallery:read', async (_user, ctx) => {
     try {
       const result = await goFetch<{ data: AdminGallery }>(
-        `/api/gallery-files/${slug}`
+        `/api/gallery-files/${slug}`,
+        withGoAuth(ctx)
       );
       return {
         success: true,
@@ -132,7 +134,7 @@ export async function adminCreateGallery(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'gallery:create',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const { slug, content } = input;
         if (!slug || !content) {
@@ -145,10 +147,10 @@ export async function adminCreateGallery(input: {
           return { success: false, error: nameCheck.error };
         }
 
-        await goFetch('/api/gallery-files', {
+        await goFetch('/api/gallery-files', withGoAuth(ctx, {
           method: 'POST',
           body: JSON.stringify({ slug: cleanSlug, content }),
-        });
+        }));
 
         logger.info('创建图库文件成功', { slug: cleanSlug, userId: user.id });
         return { success: true, data: undefined };
@@ -168,12 +170,12 @@ export async function adminUpdateGallery(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'gallery:update',
-    async (user) => {
+    async (user, ctx) => {
       try {
-        await goFetch(`/api/gallery-files/${slug}`, {
+        await goFetch(`/api/gallery-files/${slug}`, withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify({ content }),
-        });
+        }));
 
         logger.info('更新图库文件成功', { slug, userId: user.id });
         return { success: true, data: undefined };
@@ -193,7 +195,7 @@ export async function adminRenameGalleryFile(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'gallery:update',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const cleanNewSlug = newSlug.trim().toLowerCase();
         const nameCheck = validateSlug(cleanNewSlug);
@@ -201,10 +203,10 @@ export async function adminRenameGalleryFile(
           return { success: false, error: nameCheck.error };
         }
 
-        await goFetch(`/api/gallery-files/${slug}`, {
+        await goFetch(`/api/gallery-files/${slug}`, withGoAuth(ctx, {
           method: 'PATCH',
           body: JSON.stringify({ newSlug: cleanNewSlug }),
-        });
+        }));
 
         logger.info('重命名图库文件成功', {
           slug,
@@ -227,16 +229,16 @@ export async function adminDeleteGalleryFile(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'gallery:delete',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const nameCheck = validateSlug(slug);
         if (nameCheck) {
           return { success: false, error: nameCheck.error };
         }
 
-        await goFetch(`/api/gallery-files/${slug}`, {
+        await goFetch(`/api/gallery-files/${slug}`, withGoAuth(ctx, {
           method: 'DELETE',
-        });
+        }));
 
         logger.info('删除图库文件成功', { slug, userId: user.id });
         return { success: true, data: undefined };

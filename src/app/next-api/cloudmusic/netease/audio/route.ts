@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/cloudmusic/netease/audio?id=&br=
+ * GET /next-api/cloudmusic/netease/audio?id=&br=
  * 转发网易云音频流（浏览器 <audio> 直连，支持 Range）。
  */
 export async function GET(request: NextRequest) {

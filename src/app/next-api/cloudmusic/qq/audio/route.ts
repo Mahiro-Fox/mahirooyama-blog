@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/cloudmusic/qq/audio?mid=&mediaMid=&quality=
+ * GET /next-api/cloudmusic/qq/audio?mid=&mediaMid=&quality=
  * 转发 QQ 音频流（浏览器 <audio> 直连，支持 Range）。
  */
 export async function GET(request: NextRequest) {

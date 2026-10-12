@@ -3,7 +3,7 @@
 import { siteConfig } from '@/config/common';
 import { notifyReply } from '@/lib/email-send/notify-reply';
 import { serverActionRateLimiter } from '@/lib/rate-limit';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
 import {
   withActionPermission,
   type ActionResponse,
@@ -16,9 +16,12 @@ const logger = createLogger('GuestbookActions');
 export async function adminGetGuestbookEntries(): Promise<
   ActionResponse<Guestbook[]>
 > {
-  return withActionPermission('guestbook:read', async () => {
+  return withActionPermission('guestbook:read', async (_user, ctx) => {
     try {
-      const entries = await goFetch<Guestbook[]>('/api/admin/guestbook');
+      const entries = await goFetch<Guestbook[]>(
+        '/api/admin/guestbook',
+        withGoAuth(ctx)
+      );
       return { success: true, data: entries };
     } catch (error) {
       logger.error('获取留言列表失败', error);
@@ -103,7 +106,7 @@ export async function adminUpdateGuestbook(
     content?: string;
   }
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('guestbook:update', async (user) => {
+  return withActionPermission('guestbook:update', async (user, ctx) => {
     try {
       const { nickname, bgColor, contact, content } = input;
       const body: Record<string, string> = {};
@@ -133,10 +136,10 @@ export async function adminUpdateGuestbook(
         body.content = content.trim();
       }
 
-      await goFetch(`/api/admin/guestbook/${encodeURIComponent(id)}`, {
+      await goFetch(`/api/admin/guestbook/${encodeURIComponent(id)}`, withGoAuth(ctx, {
         method: 'PUT',
         body: JSON.stringify(body),
-      });
+      }));
 
       logger.info('管理员更新留言成功', { entryId: id, adminId: user.id });
       return { success: true, data: undefined };
@@ -152,16 +155,19 @@ export async function adminReplyGuestbook(
   id: string,
   replyContent: string
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('guestbook:update', async (user) => {
+  return withActionPermission('guestbook:update', async (user, ctx) => {
     try {
       if (!replyContent || replyContent.trim().length === 0) {
         return { success: false, error: '回复内容不能为空' };
       }
 
-      await goFetch(`/api/admin/guestbook/${encodeURIComponent(id)}/reply`, {
-        method: 'POST',
-        body: JSON.stringify({ replyContent: replyContent.trim() }),
-      });
+      await goFetch(
+        `/api/admin/guestbook/${encodeURIComponent(id)}/reply`,
+        withGoAuth(ctx, {
+          method: 'POST',
+          body: JSON.stringify({ replyContent: replyContent.trim() }),
+        })
+      );
 
       logger.info('管理员回复留言成功', { entryId: id, adminId: user.id });
       return { success: true, data: undefined };
@@ -221,12 +227,15 @@ export async function adminApproveGuestbook(
   id: string,
   isApproved: boolean
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('guestbook:approve', async (user) => {
+  return withActionPermission('guestbook:approve', async (user, ctx) => {
     try {
-      await goFetch(`/api/admin/guestbook/${encodeURIComponent(id)}/approve`, {
-        method: 'PATCH',
-        body: JSON.stringify({ approved: isApproved }),
-      });
+      await goFetch(
+        `/api/admin/guestbook/${encodeURIComponent(id)}/approve`,
+        withGoAuth(ctx, {
+          method: 'PATCH',
+          body: JSON.stringify({ approved: isApproved }),
+        })
+      );
 
       logger.info('管理员审核留言成功', {
         entryId: id,
@@ -245,12 +254,12 @@ export async function adminApproveGuestbook(
 export async function adminDeleteGuestbook(
   id: string
 ): Promise<ActionResponse<void>> {
-  return withActionPermission('guestbook:delete', async (user) => {
+  return withActionPermission('guestbook:delete', async (user, ctx) => {
     try {
-      await goFetch(`/api/admin/guestbook/${encodeURIComponent(id)}`, {
+      await goFetch(`/api/admin/guestbook/${encodeURIComponent(id)}`, withGoAuth(ctx, {
         method: 'DELETE',
         parseJson: false,
-      });
+      }));
 
       logger.info('管理员删除留言成功', { entryId: id, adminId: user.id });
       return { success: true, data: undefined };

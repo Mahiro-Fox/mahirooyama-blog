@@ -1,7 +1,12 @@
 'use server';
 
 import { pathCacheStore } from '@/store/path-cache-store';
-import { goFetch, goUploadMultipart } from '@/lib/server/api-client';
+import {
+  goFetch,
+  goUploadMultipart,
+  goAuthHeaders,
+  withGoAuth,
+} from '@/lib/server/api-client';
 import { appendGoAssetFile } from '@/lib/upload';
 import {
   withActionPermission,
@@ -56,7 +61,7 @@ export async function adminUploadFiles(formData: FormData): Promise<
     }[];
   }>
 > {
-  return withActionPermission('files:upload', async (user) => {
+  return withActionPermission('files:upload', async (user, ctx) => {
     try {
       const pathValue = formData.get('path') as string | null;
       const relativePath = pathValue ?? '';
@@ -84,7 +89,8 @@ export async function adminUploadFiles(formData: FormData): Promise<
 
           const data = await goUploadMultipart<{ url: string }>(
             '/api/uploads/asset',
-            goFormData
+            goFormData,
+            { headers: goAuthHeaders(ctx) }
           );
           results.push({
             name: file.name,
@@ -131,7 +137,7 @@ export async function adminUploadFiles(formData: FormData): Promise<
 export async function adminGetUploadFiles(
   relativePath?: string
 ): Promise<ActionResponse<FileListResponse>> {
-  return withActionPermission('files:read', async (user) => {
+  return withActionPermission('files:read', async (user, ctx) => {
     let finalRelativePath = relativePath;
 
     if (finalRelativePath === undefined && user.id) {
@@ -145,7 +151,10 @@ export async function adminGetUploadFiles(
       const query = finalRelativePath
         ? `?path=${encodeURIComponent(finalRelativePath)}`
         : '';
-      const data = await goFetch<FileListResponse>(`/api/upload-files${query}`);
+      const data = await goFetch<FileListResponse>(
+        `/api/upload-files${query}`,
+        withGoAuth(ctx)
+      );
       return { success: true, data };
     } catch (error) {
       logger.error('获取文件列表失败', error, { relativePath });
@@ -159,7 +168,7 @@ export async function createFolder(
   relativePath: string,
   folderName: string
 ): Promise<ActionResponse<{ folderName: string; message: string }>> {
-  return withActionPermission('files:manageFolder', async (user) => {
+  return withActionPermission('files:manageFolder', async (user, ctx) => {
     if (!folderName || folderName.trim() === '') {
       return { success: false, error: '文件夹名称不能为空' };
     }
@@ -167,10 +176,10 @@ export async function createFolder(
     try {
       const data = await goFetch<{ message: string; folderName: string }>(
         '/api/upload-files/folder',
-        {
+        withGoAuth(ctx, {
           method: 'POST',
           body: JSON.stringify({ relativePath, folderName: folderName.trim() }),
-        }
+        })
       );
       logger.info('创建文件夹成功', {
         relativePath,
@@ -189,10 +198,13 @@ export async function createFolder(
 export async function deleteFile(
   filePath: string
 ): Promise<ActionResponse<{ message: string }>> {
-  return withActionPermission('files:delete', async (user) => {
+  return withActionPermission('files:delete', async (user, ctx) => {
     try {
       const query = `?path=${encodeURIComponent(filePath)}`;
-      await goFetch(`/api/upload-files${query}`, { method: 'DELETE' });
+      await goFetch(
+        `/api/upload-files${query}`,
+        withGoAuth(ctx, { method: 'DELETE' })
+      );
       logger.info('删除文件成功', { filePath, userId: user.id });
       return { success: true, data: { message: '删除成功' } };
     } catch (error) {
@@ -208,7 +220,7 @@ export async function renameFile(
   oldPath: string,
   newName: string
 ): Promise<ActionResponse<{ message: string; newName: string }>> {
-  return withActionPermission('files:update', async (user) => {
+  return withActionPermission('files:update', async (user, ctx) => {
     if (!newName || newName.trim() === '') {
       return { success: false, error: '新名称不能为空' };
     }
@@ -216,10 +228,10 @@ export async function renameFile(
     try {
       const data = await goFetch<{ message: string; newName: string }>(
         '/api/upload-files',
-        {
+        withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify({ oldPath, newName: newName.trim() }),
-        }
+        })
       );
       logger.info('重命名文件成功', { oldPath, newName, userId: user.id });
       return { success: true, data };

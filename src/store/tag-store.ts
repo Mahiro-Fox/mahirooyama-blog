@@ -4,10 +4,14 @@ import {
   type TagsData,
   type TagType,
 } from '@/constant';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
+import type { ActionContext } from '@/types/auth';
 
 /**
  * 标签存储
+ *
+ * 只负责取数：读接口 /api/tags 公开无需身份；写接口 /api/admin/tags 需要身份，
+ * 调用方（Server Action）显式把 ctx 传入，方法内部用 withGoAuth 透传 Bearer 令牌。
  * 数据持久化由 Go 后端管理，本地仅做缓存与类型转换。
  */
 
@@ -78,17 +82,23 @@ export const tagStore = {
   },
 
   // 创建标签
-  async create(tag: Omit<Tag, 'lastUpdated'>): Promise<Tag> {
-    await goFetch('/api/admin/tags', {
-      method: 'POST',
-      body: JSON.stringify({
-        id: tag.id,
-        name: tag.name,
-        icon: tag.icon || 'default',
-        type: tag.type,
-        description: tag.description || '',
-      }),
-    });
+  async create(
+    tag: Omit<Tag, 'lastUpdated'>,
+    ctx?: ActionContext
+  ): Promise<Tag> {
+    await goFetch(
+      '/api/admin/tags',
+      withGoAuth(ctx, {
+        method: 'POST',
+        body: JSON.stringify({
+          id: tag.id,
+          name: tag.name,
+          icon: tag.icon || 'default',
+          type: tag.type,
+          description: tag.description || '',
+        }),
+      })
+    );
     cachedTags = null;
     return {
       ...tag,
@@ -100,7 +110,8 @@ export const tagStore = {
   async update(
     id: string,
     type: TagType,
-    updates: Partial<Omit<Tag, 'id' | 'type' | 'lastUpdated'>>
+    updates: Partial<Omit<Tag, 'id' | 'type' | 'lastUpdated'>>,
+    ctx?: ActionContext
   ): Promise<Tag | null> {
     const body: Record<string, string> = {};
     if (updates.name !== undefined) body.name = updates.name;
@@ -111,10 +122,10 @@ export const tagStore = {
     try {
       const row = await goFetch<GoTagRow>(
         `/api/admin/tags/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,
-        {
+        withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify(body),
-        }
+        })
       );
       cachedTags = null;
       return {
@@ -131,14 +142,18 @@ export const tagStore = {
   },
 
   // 删除标签
-  async delete(id: string, type: TagType): Promise<boolean> {
+  async delete(
+    id: string,
+    type: TagType,
+    ctx?: ActionContext
+  ): Promise<boolean> {
     try {
       await goFetch(
         `/api/admin/tags/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,
-        {
+        withGoAuth(ctx, {
           method: 'DELETE',
           parseJson: false,
-        }
+        })
       );
       cachedTags = null;
       return true;
@@ -148,7 +163,7 @@ export const tagStore = {
   },
 
   // 重置为默认标签（逐个写入默认值，再刷新缓存）
-  async resetToDefault(): Promise<TagsData> {
+  async resetToDefault(ctx?: ActionContext): Promise<TagsData> {
     const defaults = getDefaultTags();
     // 先删除现有的全部
     const current = await readTags();
@@ -156,23 +171,26 @@ export const tagStore = {
       for (const id of Object.keys(current[type])) {
         await goFetch(
           `/api/admin/tags/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,
-          { method: 'DELETE', parseJson: false }
+          withGoAuth(ctx, { method: 'DELETE', parseJson: false })
         );
       }
     }
     // 再创建默认值
     for (const type of ['blog', 'gallery'] as TagType[]) {
       for (const tag of Object.values(defaults[type])) {
-        await goFetch('/api/admin/tags', {
-          method: 'POST',
-          body: JSON.stringify({
-            id: tag.id,
-            name: tag.name,
-            icon: tag.icon,
-            type: tag.type,
-            description: tag.description || '',
-          }),
-        });
+        await goFetch(
+          '/api/admin/tags',
+          withGoAuth(ctx, {
+            method: 'POST',
+            body: JSON.stringify({
+              id: tag.id,
+              name: tag.name,
+              icon: tag.icon,
+              type: tag.type,
+              description: tag.description || '',
+            }),
+          })
+        );
       }
     }
     cachedTags = null;

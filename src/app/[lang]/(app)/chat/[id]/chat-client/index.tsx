@@ -97,11 +97,11 @@ export function ChatClient({
     setProvider(provider);
   }, [isUserAuth]);
 
-  // 标准对话走 /api/chat；Agent 模式走 /api/mastra-chat（Mastra Agent，工具+记忆）
+  // 标准对话走 /next-api/chat；Agent 模式走 /next-api/mastra-chat（Mastra Agent，工具+记忆）
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: mode === 'agent' ? '/api/mastra-chat' : '/api/chat',
+        api: mode === 'agent' ? '/next-api/mastra-chat' : '/next-api/chat',
         body: () =>
           mode === 'agent'
             ? { conversationId }

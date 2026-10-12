@@ -5,7 +5,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/cloudmusic/qq/cover?id=&size=
+ * GET /next-api/cloudmusic/qq/cover?id=&size=
  * 转发 QQ 专辑封面图（浏览器 <img> 直连，强缓存）。
  */
 export async function GET(request: NextRequest) {

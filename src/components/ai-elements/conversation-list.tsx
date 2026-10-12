@@ -1,6 +1,6 @@
 'use client';
 
-import { ConversationSummary } from '@/store/conversation-store';
+import { ConversationSummary } from '@/types/conversation';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCallback, useEffect, useRef, useState } from 'react';

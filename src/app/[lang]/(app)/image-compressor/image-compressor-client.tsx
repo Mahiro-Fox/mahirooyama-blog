@@ -237,7 +237,7 @@ function useImageCompressor() {
       formData.append('options', JSON.stringify(config));
 
       // 发送请求
-      const response = await fetch('/api/image/process', {
+      const response = await fetch('/next-api/image/process', {
         method: 'POST',
         body: formData,
       });

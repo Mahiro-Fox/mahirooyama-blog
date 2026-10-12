@@ -1,6 +1,6 @@
 'use client';
 
-import type { UserRole } from '@/store/user-store';
+import type { UserRole } from '@/types/user';
 import { Loader2, LogOut, Menu, RefreshCw, Shield, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';

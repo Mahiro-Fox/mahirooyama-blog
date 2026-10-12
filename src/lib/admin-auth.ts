@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { ADMIN_SESSION_COOKIE } from '@/constant/auth';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, GoApiError } from '@/lib/server/api-client';
 
 type AdminVerifyResponse = {
   success: boolean;
@@ -132,21 +132,9 @@ export async function adminLoginViaGo(
       },
     };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err ?? '');
-    if (msg.includes('返回 401')) {
-      const body = (() => {
-        try {
-          const idx = msg.indexOf('返回 401:');
-          if (idx < 0) return '';
-          const raw = msg.slice(idx + '返回 401:'.length).trim();
-          if (!raw) return '';
-          const json = JSON.parse(raw) as { error?: string };
-          return json.error ?? '';
-        } catch {
-          return '';
-        }
-      })();
-      return { success: false, error: body || '用户名或密码错误' };
+    // 类型化错误：401 表示账号或密码错误，其余统一提示稍后重试
+    if (err instanceof GoApiError && err.status === 401) {
+      return { success: false, error: err.code || '用户名或密码错误' };
     }
     return { success: false, error: '登录失败，请稍后重试' };
   }

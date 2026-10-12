@@ -3,7 +3,7 @@ import type { ProviderValue } from '@/config/providers';
 import { getModel } from './model';
 
 // === 标题生成 ===
-// 从 src/app/api/chat/route.ts 抽出，供 API route 与标题 server action 复用（服务端专用，不加 'use server'）。
+// 从 src/app/next-api/chat/route.ts 抽出，供 API route 与标题 server action 复用（服务端专用，不加 'use server'）。
 export async function generateTitle(
   firstUserMessage: string,
   provider: ProviderValue,

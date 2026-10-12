@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { sendVerificationCode } from '@/lib/email-send/verification-code';
 import { loginRateLimiter, serverActionRateLimiter } from '@/lib/rate-limit';
-import { buildQuery, goFetch } from '@/lib/server/api-client';
+import { buildQuery, goFetch, GoApiError } from '@/lib/server/api-client';
 import {
   checkVerificationCode,
   clearVerification,
@@ -72,8 +72,8 @@ export async function userLogin(
     try {
       loginRes = await userLoginViaGo(username, password);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err ?? '');
-      if (msg.includes('返回 401')) {
+      // 类型化错误：401 表示用户名或密码错误
+      if (err instanceof GoApiError && err.status === 401) {
         return { success: false, error: 'Invalid username or password' };
       }
       throw err;

@@ -1,83 +1,54 @@
-import { cache } from 'react';
 import { ADMIN_DEFAULT_PASSWORD } from '@/constant/auth';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
+import type { ActionContext } from '@/types/auth';
+import type {
+  CreateUserRequest,
+  UpdateUserRequest,
+  UserResponse,
+} from '@/types/user';
 
-// 用户角色类型
-export type UserRole = 'super_admin' | 'user';
+/**
+ * 后台用户（admin_users）Store
+ *
+ * 只负责取数：每次读写都通过 goFetch 转发到 Go 后端 /api/admin/users。
+ * 这些端点需要身份，调用方（Server Action）显式把 ctx 传入，方法内部用 withGoAuth
+ * 透传 Authorization: Bearer <token>；页面/Route Handler 不传时退化为无身份请求。
+ *
+ * 类型定义见 src/types/user.ts。
+ */
+export const userStore = {
+  // 获取所有用户
+  async getAll(ctx?: ActionContext): Promise<UserResponse[]> {
+    return goFetch<UserResponse[]>('/api/admin/users', withGoAuth(ctx));
+  },
 
-// 用户数据接口（含密码哈希，仅服务端使用）
-export interface User {
-  id: string;
-  username: string;
-  avatar: string;
-  passwordHash: string;
-  role: UserRole;
-  lastUpdated: string;
-  mustChangePassword?: boolean;
-}
-
-// 创建用户请求接口
-export interface CreateUserRequest {
-  username: string;
-  password: string;
-  role: UserRole;
-  mustChangePassword?: boolean;
-}
-
-// 更新用户请求接口
-export interface UpdateUserRequest {
-  username?: string;
-  password?: string;
-  avatar?: string;
-  role?: UserRole;
-  mustChangePassword?: boolean;
-}
-
-// 用户响应（不含密码）
-export interface UserResponse {
-  id: string;
-  username: string;
-  avatar: string;
-  role: UserRole;
-  lastUpdated: string;
-  mustChangePassword?: boolean;
-}
-
-// Go 后端返回的 AdminUser（passwordHash 通过 json:"-" 不会返回，因此前端拿不到哈希）
-// 但登录/校验密码必须由 Go 完成，前端不再保留 passwordHash。
-
-// 同一请求内多次按 id 取后台用户（权限检查会重复调用）只打一次 Go。
-const fetchAdminUserById = cache(
-  async (id: string): Promise<UserResponse | null> => {
+  // 根据ID获取用户
+  async getById(
+    id: string,
+    ctx?: ActionContext
+  ): Promise<UserResponse | null> {
     try {
       return await goFetch<UserResponse>(
-        `/api/admin/users/${encodeURIComponent(id)}`
+        `/api/admin/users/${encodeURIComponent(id)}`,
+        withGoAuth(ctx)
       );
     } catch {
       return null;
     }
-  }
-);
-
-export const userStore = {
-  // 获取所有用户
-  async getAll(): Promise<UserResponse[]> {
-    return goFetch<UserResponse[]>('/api/admin/users');
-  },
-
-  // 根据ID获取用户
-  async getById(id: string): Promise<UserResponse | null> {
-    return fetchAdminUserById(id);
   },
 
   // 根据用户名获取用户（用于登录前的存在性检查）
   // 注意：Go 端没有公开按用户名查询的接口，这里通过 getAll 查找
-  async getByUsername(username: string): Promise<UserResponse | null> {
-    const users = await this.getAll();
+  async getByUsername(
+    username: string,
+    ctx?: ActionContext
+  ): Promise<UserResponse | null> {
+    const users = await this.getAll(ctx);
     return users.find((u) => u.username === username) || null;
   },
 
   // 验证用户密码（登录用，由 Go 端校验）
+  // 登录端点无需身份（此时尚未登录），故不接收 ctx
   async verifyPassword(
     username: string,
     password: string
@@ -94,21 +65,28 @@ export const userStore = {
   },
 
   // 创建用户
-  async create(request: CreateUserRequest): Promise<UserResponse> {
-    return goFetch<UserResponse>('/api/admin/users', {
-      method: 'POST',
-      body: JSON.stringify({
-        username: request.username,
-        password: request.password,
-        role: request.role,
-      }),
-    });
+  async create(
+    request: CreateUserRequest,
+    ctx?: ActionContext
+  ): Promise<UserResponse> {
+    return goFetch<UserResponse>(
+      '/api/admin/users',
+      withGoAuth(ctx, {
+        method: 'POST',
+        body: JSON.stringify({
+          username: request.username,
+          password: request.password,
+          role: request.role,
+        }),
+      })
+    );
   },
 
   // 更新用户
   async update(
     id: string,
-    request: UpdateUserRequest
+    request: UpdateUserRequest,
+    ctx?: ActionContext
   ): Promise<UserResponse | null> {
     const body: Record<string, unknown> = {};
     if (request.username !== undefined) body.username = request.username;
@@ -117,25 +95,28 @@ export const userStore = {
 
     if (request.password !== undefined) {
       // 改密走专门的 password 端点
-      await goFetch(`/api/admin/users/${encodeURIComponent(id)}/password`, {
-        method: 'PUT',
-        body: JSON.stringify({ password: request.password }),
-        parseJson: false,
-      });
+      await goFetch(
+        `/api/admin/users/${encodeURIComponent(id)}/password`,
+        withGoAuth(ctx, {
+          method: 'PUT',
+          body: JSON.stringify({ password: request.password }),
+          parseJson: false,
+        })
+      );
     }
 
     // 没有字段需要更新时直接返回当前用户
     if (Object.keys(body).length === 0) {
-      return this.getById(id);
+      return this.getById(id, ctx);
     }
 
     try {
       return await goFetch<UserResponse>(
         `/api/admin/users/${encodeURIComponent(id)}`,
-        {
+        withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify(body),
-        }
+        })
       );
     } catch {
       return null;
@@ -143,12 +124,12 @@ export const userStore = {
   },
 
   // 删除用户
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, ctx?: ActionContext): Promise<boolean> {
     try {
-      await goFetch(`/api/admin/users/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        parseJson: false,
-      });
+      await goFetch(
+        `/api/admin/users/${encodeURIComponent(id)}`,
+        withGoAuth(ctx, { method: 'DELETE', parseJson: false })
+      );
       return true;
     } catch {
       return false;

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
 import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
@@ -24,9 +24,9 @@ export async function getPublicMusic(): Promise<ActionResponse<Music[]>> {
 }
 
 export async function adminGetMusic(): Promise<ActionResponse<Music[]>> {
-  return withActionPermission('music:read', async () => {
+  return withActionPermission('music:read', async (_user, ctx) => {
     try {
-      const songs = await goFetch<Music[]>('/api/music');
+      const songs = await goFetch<Music[]>('/api/music', withGoAuth(ctx));
       return { success: true, data: songs };
     } catch (error) {
       logger.error('获取音乐列表失败', error);
@@ -43,7 +43,7 @@ export async function adminCreateMusic(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'music:create',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const { name, artist, url, cover } = input;
 
@@ -57,7 +57,7 @@ export async function adminCreateMusic(input: {
           return { success: false, error: '歌曲链接不能为空' };
         }
 
-        await goFetch('/api/music', {
+        await goFetch('/api/music', withGoAuth(ctx, {
           method: 'POST',
           body: JSON.stringify({
             name: name.trim(),
@@ -65,7 +65,7 @@ export async function adminCreateMusic(input: {
             url: url.trim(),
             cover: cover.trim() || '',
           }),
-        });
+        }));
 
         logger.info('创建音乐成功', { userId: user.id });
         revalidatePath('/', 'layout');
@@ -85,7 +85,7 @@ export async function adminUpdateMusic(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'music:update',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const body: Record<string, string> = {};
         if (input.name !== undefined) {
@@ -110,10 +110,10 @@ export async function adminUpdateMusic(
           body.cover = input.cover.trim() || '';
         }
 
-        await goFetch(`/api/music/${encodeURIComponent(id)}`, {
+        await goFetch(`/api/music/${encodeURIComponent(id)}`, withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify(body),
-        });
+        }));
 
         logger.info('更新音乐成功', { songId: id, userId: user.id });
         revalidatePath('/', 'layout');
@@ -132,12 +132,12 @@ export async function adminDeleteMusic(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'music:delete',
-    async (user) => {
+    async (user, ctx) => {
       try {
-        await goFetch(`/api/music/${encodeURIComponent(id)}`, {
+        await goFetch(`/api/music/${encodeURIComponent(id)}`, withGoAuth(ctx, {
           method: 'DELETE',
           parseJson: false,
-        });
+        }));
 
         logger.info('删除音乐成功', { songId: id, userId: user.id });
         revalidatePath('/', 'layout');
@@ -179,14 +179,14 @@ export async function adminTestAllMusicUrls(): Promise<
 > {
   return withActionPermission(
     'music:read',
-    async () => {
+    async (_user, ctx) => {
       try {
         // 取当前请求 host，用于解析相对路径链接
         const h = await headers();
         const host = h.get('x-forwarded-host') || h.get('host') || undefined;
 
         // 先获取列表
-        const songs = await goFetch<Music[]>('/api/music');
+        const songs = await goFetch<Music[]>('/api/music', withGoAuth(ctx));
 
         // 并行探测（限制并发 5 个，避免占太多连接）
         const results: UrlCheckResult[] = [];

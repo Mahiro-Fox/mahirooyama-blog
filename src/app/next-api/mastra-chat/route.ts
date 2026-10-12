@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 
 /**
  * Mastra Agent 流式聊天端点（"Agent 模式"）。
- * 与 /api/chat 输出同一套 ai@7 UIMessage 流协议，前端 useChat 可无差别消费。
+ * 与 /next-api/chat 输出同一套 ai@7 UIMessage 流协议，前端 useChat 可无差别消费。
  * 走 Mastra agent（calculator/web_fetch 工具 + Memory），记忆按 resource(用户)+thread(会话) 隔离。
  */
 export async function POST(req: Request) {
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   };
   const { messages, conversationId } = body;
 
-  // === Token 校验（与 /api/chat 一致） ===
+  // === Token 校验（与 /next-api/chat 一致） ===
   if (estimateTokens(messages) > MAX_CONTEXT_TOKENS) {
     return Response.json(
       {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // === 鉴权（Agent 走 DeepSeek，需登录，对齐 /api/chat 对 deepseek 的强制要求） ===
+  // === 鉴权（Agent 走 DeepSeek，需登录，对齐 /next-api/chat 对 deepseek 的强制要求） ===
   const auth = await verifyUserAuth();
   if (!auth.success) {
     return Response.json(

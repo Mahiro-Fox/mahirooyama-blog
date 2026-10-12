@@ -1,19 +1,12 @@
 import fs from 'fs/promises';
 import { BUGS_FILE } from '@/constant';
+import type { BugReport, BugStatus } from '@/types/bug';
 import { ensureFileInitialized, writeFileAtomic } from '@/utils/file-utils';
 
-export type BugStatus = 'pending' | 'resolved';
-
-export interface BugReport {
-  id: string;
-  createdAt: string;
-  content: string;
-  status: BugStatus;
-  contact?: string;
-  userAgent?: string;
-  url?: string;
-}
-
+/**
+ * BUG 报告存储（本地 JSON 文件）
+ * 类型定义见 src/types/bug.ts。
+ */
 export const bugStore = {
   async getBugs(): Promise<BugReport[]> {
     await ensureFileInitialized(BUGS_FILE);

@@ -55,7 +55,7 @@ const DEFAULT_OPTIONS: ImageProcessOptions = {
 };
 
 /**
- * POST /api/image/process
+ * POST /next-api/image/process
  *
  * 接收 multipart/form-data 表单数据，处理单张或多张图片
  *
@@ -286,7 +286,7 @@ export async function POST(
 }
 
 /**
- * GET /api/image/process
+ * GET /next-api/image/process
  *
  * 返回 API 使用说明
  */

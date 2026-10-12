@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { buildQuery, goFetch } from '@/lib/server/api-client';
+import { buildQuery, goFetch, withGoAuth } from '@/lib/server/api-client';
 import {
   withActionPermission,
   type ActionResponse,
@@ -28,9 +28,9 @@ export async function getPublicMovies(
 
 // GET - 获取所有电影（管理后台）
 export async function adminGetMovies(): Promise<ActionResponse<Movie[]>> {
-  return withActionPermission('movies:read', async () => {
+  return withActionPermission('movies:read', async (_user, ctx) => {
     try {
-      const movies = await goFetch<Movie[]>('/api/movies');
+      const movies = await goFetch<Movie[]>('/api/movies', withGoAuth(ctx));
       return { success: true, data: movies };
     } catch (error) {
       logger.error('获取电影列表失败', error);
@@ -45,12 +45,15 @@ export async function adminCreateMovie(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'movies:create',
-    async (user) => {
+    async (user, ctx) => {
       try {
-        await goFetch('/api/movies', {
-          method: 'POST',
-          body: JSON.stringify(input),
-        });
+        await goFetch(
+          '/api/movies',
+          withGoAuth(ctx, {
+            method: 'POST',
+            body: JSON.stringify(input),
+          })
+        );
 
         logger.info('创建电影成功', { movieId: input.id, userId: user.id });
         revalidatePath('/', 'layout');
@@ -70,13 +73,16 @@ export async function adminUpdateMovie(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'movies:update',
-    async (user) => {
+    async (user, ctx) => {
       try {
         const { id, ...updates } = input;
-        await goFetch(`/api/movies/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify(updates),
-        });
+        await goFetch(
+          `/api/movies/${id}`,
+          withGoAuth(ctx, {
+            method: 'PUT',
+            body: JSON.stringify(updates),
+          })
+        );
 
         logger.info('更新电影成功', { movieId: id, userId: user.id });
         revalidatePath('/', 'layout');
@@ -96,12 +102,12 @@ export async function adminDeleteMovie(
 ): Promise<ActionResponse<void>> {
   return withActionPermission(
     'movies:delete',
-    async (user) => {
+    async (user, ctx) => {
       try {
-        await goFetch(`/api/movies/${id}`, {
-          method: 'DELETE',
-          parseJson: false,
-        });
+        await goFetch(
+          `/api/movies/${id}`,
+          withGoAuth(ctx, { method: 'DELETE', parseJson: false })
+        );
 
         logger.info('删除电影成功', { movieId: id, userId: user.id });
         revalidatePath('/', 'layout');

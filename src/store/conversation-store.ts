@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import type { UIMessage } from 'ai';
 import { goFetch } from '@/lib/server/api-client';
+import type { Conversation, ConversationSummary } from '@/types/conversation';
 
 /**
  * 对话存储（Go/PostgreSQL 版）
@@ -10,23 +11,12 @@ import { goFetch } from '@/lib/server/api-client';
  * 会话标题由统一标题 server action（src/actions/app/generate-title.ts）在创建时生成，
  * 本模块不再自行推导（删除了原来的 deriveTitle 首句逻辑）。
  *
+ * 身份：Go 端 /api/conversations 仅需内部密钥，用户隔离通过显式透传的 userId 参数完成
+ * （Next 侧已先用 user-session 校验登录，再传 userId），故本模块方法不接收 ActionContext。
+ *
  * 注意：本模块仅用于 Server 端（API route / Server Action）。
+ * 类型定义见 src/types/conversation.ts。
  */
-
-export interface Conversation {
-  id: string;
-  userId: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  messages: UIMessage[];
-}
-
-export interface ConversationSummary {
-  id: string;
-  title: string;
-  updatedAt: string;
-}
 
 const UUID_V4_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

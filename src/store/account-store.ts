@@ -1,4 +1,10 @@
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
+import type { ActionContext } from '@/types/auth';
+import type {
+  Account,
+  CreateAccountRequest,
+  UpdateAccountRequest,
+} from '@/types/account';
 
 /**
  * 前台用户（accounts）Store
@@ -8,38 +14,11 @@ import { goFetch } from '@/lib/server/api-client';
  * - 管理端：GET/POST /api/admin/accounts、GET/PUT/DELETE /api/admin/accounts/:id、PUT /api/admin/accounts/:id/password
  *
  * 本 Store 仅封装管理端调用，供后台「前台用户管理」页面使用。
+ * 管理端端点需要身份，调用方（Server Action）显式把 ctx 传入，方法内部用 withGoAuth 透传。
  * 前台登录/注册流程直接走 /api/user/auth 与 /api/accounts，不经过此 Store。
+ *
+ * 类型定义见 src/types/account.ts。
  */
-
-export type AccountProvider = 'credentials' | 'google';
-
-export interface Account {
-  id: string;
-  username: string;
-  email: string | null;
-  provider: AccountProvider;
-  createdAt: string;
-  lastUpdated: string;
-}
-
-export interface CreateAccountRequest {
-  username: string;
-  password: string;
-}
-
-export interface UpdateAccountRequest {
-  username?: string;
-  email?: string | null;
-}
-
-export interface AccountResponse {
-  id: string;
-  username: string;
-  email: string | null;
-  provider: AccountProvider;
-  createdAt: string;
-  lastUpdated: string;
-}
 
 function encodeId(id: string): string {
   return encodeURIComponent(id);
@@ -47,15 +26,16 @@ function encodeId(id: string): string {
 
 export const accountStore = {
   /** 获取全部前台账户 */
-  async getAll(): Promise<Account[]> {
-    return goFetch<Account[]>('/api/admin/accounts');
+  async getAll(ctx?: ActionContext): Promise<Account[]> {
+    return goFetch<Account[]>('/api/admin/accounts', withGoAuth(ctx));
   },
 
   /** 按 ID 获取前台账户 */
-  async getById(id: string): Promise<Account | null> {
+  async getById(id: string, ctx?: ActionContext): Promise<Account | null> {
     try {
       return await goFetch<Account>(
-        `/api/admin/accounts/${encodeId(id)}`
+        `/api/admin/accounts/${encodeId(id)}`,
+        withGoAuth(ctx)
       );
     } catch {
       return null;
@@ -63,20 +43,27 @@ export const accountStore = {
   },
 
   /** 创建前台账户（管理端） */
-  async create(request: CreateAccountRequest): Promise<Account> {
-    return goFetch<Account>('/api/admin/accounts', {
-      method: 'POST',
-      body: JSON.stringify({
-        username: request.username,
-        password: request.password,
-      }),
-    });
+  async create(
+    request: CreateAccountRequest,
+    ctx?: ActionContext
+  ): Promise<Account> {
+    return goFetch<Account>(
+      '/api/admin/accounts',
+      withGoAuth(ctx, {
+        method: 'POST',
+        body: JSON.stringify({
+          username: request.username,
+          password: request.password,
+        }),
+      })
+    );
   },
 
   /** 更新前台账户基本信息（username / email） */
   async update(
     id: string,
-    request: UpdateAccountRequest
+    request: UpdateAccountRequest,
+    ctx?: ActionContext
   ): Promise<Account | null> {
     const body: Record<string, unknown> = {};
     if (request.username !== undefined) body.username = request.username;
@@ -84,16 +71,16 @@ export const accountStore = {
     if (request.email !== undefined) body.email = request.email;
 
     if (Object.keys(body).length === 0) {
-      return this.getById(id);
+      return this.getById(id, ctx);
     }
 
     try {
       return await goFetch<Account>(
         `/api/admin/accounts/${encodeId(id)}`,
-        {
+        withGoAuth(ctx, {
           method: 'PUT',
           body: JSON.stringify(body),
-        }
+        })
       );
     } catch {
       return null;
@@ -101,13 +88,20 @@ export const accountStore = {
   },
 
   /** 修改前台账户密码 */
-  async updatePassword(id: string, password: string): Promise<boolean> {
+  async updatePassword(
+    id: string,
+    password: string,
+    ctx?: ActionContext
+  ): Promise<boolean> {
     try {
-      await goFetch(`/api/admin/accounts/${encodeId(id)}/password`, {
-        method: 'PUT',
-        body: JSON.stringify({ password }),
-        parseJson: false,
-      });
+      await goFetch(
+        `/api/admin/accounts/${encodeId(id)}/password`,
+        withGoAuth(ctx, {
+          method: 'PUT',
+          body: JSON.stringify({ password }),
+          parseJson: false,
+        })
+      );
       return true;
     } catch {
       return false;
@@ -115,12 +109,12 @@ export const accountStore = {
   },
 
   /** 删除前台账户 */
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, ctx?: ActionContext): Promise<boolean> {
     try {
-      await goFetch(`/api/admin/accounts/${encodeId(id)}`, {
-        method: 'DELETE',
-        parseJson: false,
-      });
+      await goFetch(
+        `/api/admin/accounts/${encodeId(id)}`,
+        withGoAuth(ctx, { method: 'DELETE', parseJson: false })
+      );
       return true;
     } catch {
       return false;

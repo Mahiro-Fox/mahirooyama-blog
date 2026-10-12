@@ -5,7 +5,7 @@ import {
   type ActionResponse,
 } from '@/utils/action-response';
 import { createLogger } from '@/utils/logger';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
 
 const logger = createLogger('AnalyticsActions');
 
@@ -46,10 +46,11 @@ export async function adminGetAnalyticsLogs(): Promise<
     stats: AnalyticsStats;
   }>
 > {
-  return withActionPermission('analytics:read', async () => {
+  return withActionPermission('analytics:read', async (_user, ctx) => {
     try {
       const data = await goFetch<{ logs: AnalyticsLog[]; stats: AnalyticsStats }>(
-        '/api/admin/analytics'
+        '/api/admin/analytics',
+        withGoAuth(ctx)
       );
       return { success: true, data };
     } catch (error) {
@@ -71,13 +72,13 @@ export async function deleteExpiredAnalyticsLogs(): Promise<
     deletedLogs: number;
   }>
 > {
-  return withActionPermission('analytics:delete', async () => {
+  return withActionPermission('analytics:delete', async (_user, ctx) => {
     try {
       const data = await goFetch<{
         deletedFiles: number;
         deletedLogs: number;
         message?: string;
-      }>('/api/admin/analytics', { method: 'DELETE' });
+      }>('/api/admin/analytics', withGoAuth(ctx, { method: 'DELETE' }));
 
       const message = data?.message ?? `成功删除 ${data?.deletedLogs ?? 0} 条过期记录`;
       logger.info(message);

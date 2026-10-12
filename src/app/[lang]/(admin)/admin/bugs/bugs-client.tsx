@@ -1,6 +1,6 @@
 'use client';
 
-import { type BugReport, type BugStatus } from '@/store/bug-store';
+import { type BugReport, type BugStatus } from '@/types/bug';
 import { CheckCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import {

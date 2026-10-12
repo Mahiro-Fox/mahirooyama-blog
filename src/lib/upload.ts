@@ -1,6 +1,6 @@
 import { Permission } from '@/constant';
 import sharp from 'sharp';
-import { goUploadMultipart } from '@/lib/server/api-client';
+import { goUploadMultipart, goAuthHeaders } from '@/lib/server/api-client';
 import {
   withActionPermission,
   type ActionResponse,
@@ -141,7 +141,7 @@ export function createGoUploadAction<R extends GoUploadResultConfig>(
   return async (formData: FormData) => {
     return withActionPermission(
       config.permission,
-      async (user) => {
+      async (user, ctx) => {
         try {
           // ---- 解析文件 ----
           const file = formData.get(config.formField) as File | null;
@@ -164,7 +164,7 @@ export function createGoUploadAction<R extends GoUploadResultConfig>(
             url: string;
             width: number;
             height: number;
-          }>('/api/uploads/asset', goFormData);
+          }>('/api/uploads/asset', goFormData, { headers: goAuthHeaders(ctx) });
 
           // ---- 构建返回 ----
           const msg = config.result.message ?? `${config.label}上传成功`;

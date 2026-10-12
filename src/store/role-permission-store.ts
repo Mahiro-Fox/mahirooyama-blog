@@ -3,11 +3,15 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
   type Permission,
 } from '@/constant';
-import type { UserRole } from '@/store/user-store';
-import { goFetch } from '@/lib/server/api-client';
+import { goFetch, withGoAuth } from '@/lib/server/api-client';
+import type { ActionContext } from '@/types/auth';
+import type { UserRole } from '@/types/user';
 
 /**
  * 角色权限配置存储
+ *
+ * 只负责取数：读接口 /api/admin/role-permissions 带内存缓存（首次加载后不再打 Go）；
+ * 写接口需要身份，调用方（Server Action）显式把 ctx 传入，方法内部用 withGoAuth 透传。
  * 数据持久化由 Go 后端管理，本地保留内存缓存与权限定义常量。
  */
 
@@ -84,14 +88,21 @@ export const rolePermissionStore = {
    * @param role 角色
    * @param permissions 权限列表
    */
-  async updateRole(role: UserRole, permissions: Permission[]): Promise<void> {
+  async updateRole(
+    role: UserRole,
+    permissions: Permission[],
+    ctx?: ActionContext
+  ): Promise<void> {
     if (role === 'super_admin') {
       throw new Error('不能修改超级管理员的权限');
     }
-    await goFetch('/api/admin/role-permissions', {
-      method: 'PUT',
-      body: JSON.stringify({ role, permissions }),
-    });
+    await goFetch(
+      '/api/admin/role-permissions',
+      withGoAuth(ctx, {
+        method: 'PUT',
+        body: JSON.stringify({ role, permissions }),
+      })
+    );
     // 刷新缓存
     cachedRolePermissions = null;
   },
@@ -99,15 +110,21 @@ export const rolePermissionStore = {
   /**
    * 批量更新角色权限配置
    */
-  async updateAll(permissions: Record<UserRole, Permission[]>): Promise<void> {
+  async updateAll(
+    permissions: Record<UserRole, Permission[]>,
+    ctx?: ActionContext
+  ): Promise<void> {
     const newPermissions = { ...permissions };
     newPermissions.super_admin = ['*'];
     for (const [role, perms] of Object.entries(newPermissions)) {
       if (role === 'super_admin') continue;
-      await goFetch('/api/admin/role-permissions', {
-        method: 'PUT',
-        body: JSON.stringify({ role, permissions: perms }),
-      });
+      await goFetch(
+        '/api/admin/role-permissions',
+        withGoAuth(ctx, {
+          method: 'PUT',
+          body: JSON.stringify({ role, permissions: perms }),
+        })
+      );
     }
     cachedRolePermissions = null;
   },
@@ -127,16 +144,19 @@ export const rolePermissionStore = {
   },
 
   /**
-   * 重置为默认配置（删除 Go 端记录，让加载时使用 DEFAULT_ROLE_PERMISSIONS）
+   * 重置为默认配置（逐角色写回默认值）
    */
-  async resetToDefault(): Promise<void> {
+  async resetToDefault(ctx?: ActionContext): Promise<void> {
     // 逐角色更新为默认值
     for (const [role, perms] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
       if (role === 'super_admin') continue;
-      await goFetch('/api/admin/role-permissions', {
-        method: 'PUT',
-        body: JSON.stringify({ role, permissions: perms }),
-      });
+      await goFetch(
+        '/api/admin/role-permissions',
+        withGoAuth(ctx, {
+          method: 'PUT',
+          body: JSON.stringify({ role, permissions: perms }),
+        })
+      );
     }
     cachedRolePermissions = null;
   },

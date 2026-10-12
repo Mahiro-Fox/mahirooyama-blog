@@ -2,14 +2,16 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { UserResponse, UserRole, userStore } from '@/store/user-store';
+import { userStore } from '@/store/user-store';
+import type { UserResponse, UserRole } from '@/types/user';
 import { AVATAR_DIR } from '@/constant/dir';
 import { verifyAuth } from '@/lib/admin-auth';
 import { requirePermission } from '@/lib/permissions';
-import { goUploadMultipart } from '@/lib/server/api-client';
+import { goUploadMultipart, goAuthHeaders } from '@/lib/server/api-client';
 import { appendGoAssetFile } from '@/lib/upload';
 import {
   consumeRateLimit,
+  getAdminActionContext,
   withActionPermission,
   type ActionResponse,
 } from '@/utils/action-response';
@@ -18,8 +20,8 @@ import { createLogger } from '@/utils/logger';
 const logger = createLogger('UserActions');
 
 export async function adminGetUsers(): Promise<ActionResponse<UserResponse[]>> {
-  return withActionPermission('users:read', async () => {
-    const users = await userStore.getAll();
+  return withActionPermission('users:read', async (_user, ctx) => {
+    const users = await userStore.getAll(ctx);
     return { success: true, data: users };
   });
 }
@@ -31,7 +33,7 @@ export async function adminCreateUser(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'users:create',
-    async (user) => {
+    async (user, ctx) => {
       if (!input.username || !input.password || !input.role) {
         return { success: false, error: '缺少必要字段' };
       }
@@ -40,11 +42,14 @@ export async function adminCreateUser(input: {
         return { success: false, error: '无效的角色类型' };
       }
 
-      await userStore.create({
-        username: input.username,
-        password: input.password,
-        role: input.role,
-      });
+      await userStore.create(
+        {
+          username: input.username,
+          password: input.password,
+          role: input.role,
+        },
+        ctx
+      );
 
       logger.info('创建用户成功', {
         username: input.username,
@@ -71,8 +76,11 @@ export async function adminUploadAvatar(
     const limited = await consumeRateLimit(userId, 'user');
     if (limited) return limited;
 
+    // 自定义流程不走 withActionPermission，这里显式取身份上下文用于透传
+    const ctx = await getAdminActionContext();
+
     // 3. 获取用户信息
-    const user = await userStore.getById(userId);
+    const user = await userStore.getById(userId, ctx);
     if (!user) {
       return { success: false, error: '用户不存在' };
     }
@@ -93,7 +101,7 @@ export async function adminUploadAvatar(
       url: string;
       width: number;
       height: number;
-    }>('/api/uploads/asset', goFormData);
+    }>('/api/uploads/asset', goFormData, { headers: goAuthHeaders(ctx) });
     const avatarUrl = uploadData.url;
 
     // 5. 删除旧头像（如果不是默认头像）
@@ -108,7 +116,7 @@ export async function adminUploadAvatar(
     }
 
     // 6. 更新用户头像路径
-    await userStore.update(userId, { avatar: avatarUrl });
+    await userStore.update(userId, { avatar: avatarUrl }, ctx);
 
     logger.info('更新头像成功', { userId });
     return {
@@ -131,14 +139,14 @@ export async function adminDeleteUser(input: {
 }): Promise<ActionResponse<void>> {
   return withActionPermission(
     'users:delete',
-    async (user) => {
+    async (user, ctx) => {
       const currentUser = user;
 
       if (currentUser.id === input.id) {
         return { success: false, error: '不能删除自己' };
       }
 
-      const deleted = await userStore.delete(input.id);
+      const deleted = await userStore.delete(input.id, ctx);
       if (!deleted) {
         return { success: false, error: '用户不存在' };
       }
@@ -167,6 +175,9 @@ export async function adminUpdateUserPassword(input: {
     const limited = await consumeRateLimit(currentUser.userId, 'user');
     if (limited) return limited;
 
+    // 自定义流程不走 withActionPermission，这里显式取身份上下文用于透传
+    const ctx = await getAdminActionContext();
+
     if (!input.password) {
       return { success: false, error: '请提供新密码' };
     }
@@ -191,9 +202,11 @@ export async function adminUpdateUserPassword(input: {
       }
     }
 
-    const updated = await userStore.update(input.id, {
-      password: input.password,
-    });
+    const updated = await userStore.update(
+      input.id,
+      { password: input.password },
+      ctx
+    );
     if (!updated) {
       return { success: false, error: '目标用户不存在' };
     }

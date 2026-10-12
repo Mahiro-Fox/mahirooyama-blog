@@ -11,7 +11,7 @@ const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-// 从 src/app/api/chat/route.ts 抽出，供 API route 与标题 server action 复用。
+// 从 src/app/next-api/chat/route.ts 抽出，供 API route 与标题 server action 复用。
 export function getModel(
   provider: ProviderValue,
   model: string

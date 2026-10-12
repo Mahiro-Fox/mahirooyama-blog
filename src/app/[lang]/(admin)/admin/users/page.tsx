@@ -1,6 +1,7 @@
 import { userStore } from '@/store/user-store';
 import { redirect } from 'next/navigation';
 import { requirePermission } from '@/lib/permissions';
+import { getAdminActionContext } from '@/utils/action-response';
 import UsersClient from './users-client';
 
 export default async function UsersPage() {
@@ -11,7 +12,9 @@ export default async function UsersPage() {
   }
 
   const currentUser = permissionCheck.user;
-  const users = await userStore.getAll();
+  // Go 端 GET /api/admin/users 需要会话，显式透传身份
+  const ctx = await getAdminActionContext();
+  const users = await userStore.getAll(ctx);
 
   return (
     <UsersClient

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Account, AccountProvider } from '@/store/account-store';
+import type { Account, AccountProvider } from '@/types/account';
 import {
   KeyRound,
   Loader2,
