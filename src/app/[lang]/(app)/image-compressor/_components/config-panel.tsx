@@ -278,7 +278,7 @@ function AdvancedOptions({
           >
             <div className="min-h-0 space-y-4 overflow-hidden pt-4">
               {/* 元数据处理 */}
-              <div className="bg-surface flex items-center justify-between rounded-xl p-4">
+              <div className="flex items-center justify-between rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-[var(--primary)]/10 p-2">
                     <Shield className="h-5 w-5 text-[var(--primary)]" />
@@ -316,7 +316,7 @@ function AdvancedOptions({
               </div>
 
               {/* 动图转换 */}
-              <div className="bg-surface flex items-center justify-between rounded-xl p-4">
+              <div className="flex items-center justify-between rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-[var(--primary)]/10 p-2">
                     <Film className="h-5 w-5 text-[var(--primary)]" />
@@ -356,7 +356,7 @@ function AdvancedOptions({
               </div>
 
               {/* 调整尺寸 */}
-              <div className="bg-surface space-y-4 rounded-xl p-4">
+              <div className="space-y-4 rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-[var(--primary)]/10 p-2">
                     <Maximize2 className="h-5 w-5 text-[var(--primary)]" />
@@ -486,7 +486,7 @@ export default function ConfigPanel({
   };
 
   return (
-    <div className="bg-card border-border space-y-6 rounded-2xl border p-6">
+    <div className="border-border space-y-6 rounded-2xl border p-6">
       <ConfigHeader onReset={resetConfig} t={t} />
 
       <FormatSelector

@@ -169,7 +169,7 @@ export function MidiPlayerClient({ initialFiles }: MidiPlayerClientProps) {
         )}
       </div>
 
-      <div className="bg-card overflow-hidden rounded-lg border">
+      <div className="overflow-hidden rounded-lg border">
         <div className="grid grid-cols-[1fr_auto_auto] gap-4 border-b px-4 py-3 text-sm font-medium">
           <div>{t('midi.name')}</div>
           <div className="text-right">{t('midi.duration')}</div>

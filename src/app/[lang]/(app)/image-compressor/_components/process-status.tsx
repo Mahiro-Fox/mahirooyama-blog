@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, m } from 'motion/react';
 import React from 'react';
+import { OptimizedImage } from '@/components/shared/optimized-image';
 import { useT } from '@/i18n/dictionary-provider';
 
 /**
@@ -107,7 +108,7 @@ export default function ProcessStatus({
   }
 
   return (
-    <div className="bg-card border-border space-y-6 rounded-2xl border p-6">
+    <div className="border-border space-y-6 rounded-2xl border p-6">
       {/* 处理进度 */}
       {isProcessing && (
         <m.div
@@ -224,14 +225,16 @@ export default function ProcessStatus({
                   transition={{ delay: index * 0.05 }}
                   className={`rounded-xl border p-4 transition-all duration-200 ${
                     result.success
-                      ? 'border-border bg-surface hover:border-[var(--primary)]/40'
+                      ? 'border-border hover:border-[var(--primary)]/40'
                       : 'border-destructive/30 bg-destructive/5'
                   } `}
                 >
                   <div className="flex items-start gap-4">
                     {/* 缩略图 */}
                     <div className="bg-muted h-16 w-16 shrink-0 overflow-hidden rounded-lg">
-                      <img
+                      <OptimizedImage
+                        fill
+                        unoptimized
                         src={result.originalPreview}
                         alt={result.originalName}
                         className="h-full w-full object-cover"

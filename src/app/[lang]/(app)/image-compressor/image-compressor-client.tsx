@@ -60,7 +60,7 @@ function ImageCompressorHeader({
 }: ImageCompressorHeaderProps) {
   const t = useT();
   return (
-    <div className="border-border bg-card/60 border-b backdrop-blur-sm">
+    <div className="border-border border-b">
       <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
@@ -96,7 +96,7 @@ function ImageCompressorHeader({
 function ImageCompressorFooter() {
   const t = useT();
   return (
-    <div className="border-border bg-card/40 mt-16 border-t backdrop-blur-sm">
+    <div className="border-border mt-16 border-t">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="text-muted-foreground flex items-center justify-between text-sm">
           <p>{t('image-compressor.privacy_notice')}</p>
@@ -466,7 +466,7 @@ export default function ImageCompressorClient() {
   } = useImageCompressor();
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="min-h-screen">
       {/* 头部 */}
       <ImageCompressorHeader
         uploadedFiles={uploadedFiles}

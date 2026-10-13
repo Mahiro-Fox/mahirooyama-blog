@@ -122,7 +122,7 @@ function EmptyUploadArea({
         className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-300 ease-out ${
           isDragging
             ? 'scale-[1.02] border-[var(--primary)] bg-[var(--primary)]/8'
-            : 'border-border bg-card hover:border-[var(--primary)]/50'
+            : 'border-border hover:border-[var(--primary)]/50'
         } ${disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : ''} `}
       >
         <input
