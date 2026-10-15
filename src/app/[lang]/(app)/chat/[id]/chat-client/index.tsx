@@ -249,14 +249,12 @@ export function ChatClient({
 
   // 新建对话
   const handleNewConversation = useCallback(() => {
-    // 登录态：跳到新对话页 /chat；未登录：本地清空会话
-    if (isUserAuth) {
-      router.push('/chat');
-      return;
-    }
     setMessages([]);
     setConversationId(undefined);
     setInput('');
+
+    // 登录态：跳到新对话页 /chat；未登录：本地清空会话
+    if (isUserAuth) router.push('/chat');
   }, [isUserAuth, router, setMessages]);
 
   const handleSelectConversation = useCallback(
@@ -277,12 +275,9 @@ export function ChatClient({
   }, []);
 
   const handleDeletedCurrent = useCallback(() => {
-    if (isUserAuth) {
-      router.push('/chat');
-      return;
-    }
     setMessages([]);
     setConversationId(undefined);
+    if (isUserAuth) router.push('/chat');
   }, [isUserAuth, router, setMessages, setConversationId]);
 
   return (
