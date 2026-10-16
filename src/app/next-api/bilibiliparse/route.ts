@@ -196,5 +196,5 @@ export async function GET(request: NextRequest) {
       { status: outcome.status }
     );
   }
-  return NextResponse.json(outcome);
+  return NextResponse.redirect(outcome.data.mp4Url, 302);
 }
