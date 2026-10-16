@@ -17,6 +17,8 @@ export interface AtlasInfo {
   texture: THREE.Texture;
   /** 成功加载并写入图集的照片数，着色器的 aTexIndex 落在 [0, count) */
   count: number;
+  /** 图集格子下标 → 原始 items 下标（失败的图会被剔除，两者不一定相等） */
+  itemIndices: number[];
   columns: number;
   rows: number;
   tile: number;
@@ -71,7 +73,8 @@ function drawCover(
 
 /**
  * 并行加载所有照片并拼成图集。
- * 加载失败的图片会被剔除（不占格子），因此图集里的下标是连续的。
+ * 加载失败的图片会被剔除（不占格子），因此图集里的下标是连续的，
+ * 同时返回「图集格子下标 → items 下标」的映射供 caption 取标题。
  */
 export async function buildAtlas(
   sources: string[]
@@ -79,12 +82,15 @@ export async function buildAtlas(
   if (sources.length === 0) return null;
 
   const images = await Promise.all(sources.map(loadImage));
-  const loaded = images.filter(
-    (image): image is HTMLImageElement => image !== null
-  );
-  if (loaded.length === 0) return null;
+  const available = images
+    .map((image, index) => ({ image, index }))
+    .filter(
+      (entry): entry is { image: HTMLImageElement; index: number } =>
+        entry.image !== null
+    );
+  if (available.length === 0) return null;
 
-  const layout = atlasLayout(loaded.length);
+  const layout = atlasLayout(available.length);
   const canvas = document.createElement('canvas');
   canvas.width = layout.edge;
   canvas.height = layout.edge;
@@ -94,12 +100,12 @@ export async function buildAtlas(
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  loaded.forEach((image, index) => {
+  available.forEach((entry, slot) => {
     drawCover(
       ctx,
-      image,
-      (index % layout.columns) * layout.tile,
-      Math.floor(index / layout.columns) * layout.tile,
+      entry.image,
+      (slot % layout.columns) * layout.tile,
+      Math.floor(slot / layout.columns) * layout.tile,
       layout.tile
     );
   });
@@ -114,5 +120,10 @@ export async function buildAtlas(
   texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.needsUpdate = true;
 
-  return { texture, count: loaded.length, ...layout };
+  return {
+    texture,
+    count: available.length,
+    itemIndices: available.map((entry) => entry.index),
+    ...layout,
+  };
 }

@@ -31,6 +31,17 @@ export const KIND_EMPTY = 0;
 export const KIND_PHOTO = 1;
 export const KIND_ACCENT = 2;
 
+/** 四壁编号：地板 / 天花板 / 左墙 / 右墙（与着色器、命中测试共用同一套约定） */
+export const SIDE_FLOOR = 0;
+export const SIDE_CEILING = 1;
+export const SIDE_LEFT = 2;
+export const SIDE_RIGHT = 3;
+
+/** 一行的实例数：四壁 × 车道 */
+function rowBlock(lanes: number) {
+  return SIDE_COUNT * lanes;
+}
+
 /** 由雾强度推出「远端淡到不可见」所需行数，雾越弱池子越长 */
 export function rowsForFog(fog: number): number {
   const falloff = 0.16 * Math.max(fog, 0.01);
@@ -136,44 +147,63 @@ export function instanceIndex(
   return (slot * SIDE_COUNT + side) * lanes + lane;
 }
 
+/** 复用同一组临时量，避免在初始化循环里反复分配 */
+const TILE_POSITION = new THREE.Vector3();
+const TILE_QUATERNION = new THREE.Quaternion();
+const TILE_EULER = new THREE.Euler();
+const TILE_SCALE = new THREE.Vector3();
+
+/**
+ * 写一格的世界变换：位置 + 朝向 + 缩放。
+ * 四壁朝向：地板法线朝上、天花板朝下、左右墙朝内。
+ * 飞到镜前的焦点瓦片也用同一套变换，保证起飞姿态与墙上那格完全一致。
+ */
+export function composeTileMatrix(
+  out: THREE.Matrix4,
+  side: number,
+  lane: number,
+  z: number,
+  lanes: number,
+  gap: number
+) {
+  const half = lanes / 2;
+  const size = CELL - gap;
+  const offset = (lane + 0.5 - half) * CELL;
+
+  if (side === SIDE_FLOOR) {
+    TILE_POSITION.set(offset, -half, z);
+    TILE_EULER.set(-Math.PI / 2, 0, 0);
+  } else if (side === SIDE_CEILING) {
+    TILE_POSITION.set(offset, half, z);
+    TILE_EULER.set(Math.PI / 2, 0, 0);
+  } else if (side === SIDE_LEFT) {
+    TILE_POSITION.set(-half, offset, z);
+    TILE_EULER.set(0, Math.PI / 2, 0);
+  } else {
+    TILE_POSITION.set(half, offset, z);
+    TILE_EULER.set(0, -Math.PI / 2, 0);
+  }
+
+  TILE_QUATERNION.setFromEuler(TILE_EULER);
+  TILE_SCALE.set(size, size, 1);
+  return out.compose(TILE_POSITION, TILE_QUATERNION, TILE_SCALE);
+}
+
 /**
  * 写一次实例矩阵：z = -slot 固定，前进的小数部分交给 mesh.position.z。
- * 四壁朝向：地板法线朝上、天花板朝下、左右墙朝内。
  */
 export function fillTileMatrices(
   mesh: THREE.InstancedMesh,
   lanes: number,
   gap: number
 ) {
-  const rows = Math.floor(mesh.count / (SIDE_COUNT * lanes));
-  const side = CELL - gap;
-  const half = lanes / 2;
-
+  const rows = Math.floor(mesh.count / rowBlock(lanes));
   const matrix = new THREE.Matrix4();
-  const position = new THREE.Vector3();
-  const scale = new THREE.Vector3(side, side, 1);
-  const quaternion = new THREE.Quaternion();
-  const euler = new THREE.Euler();
 
   for (let slot = 0; slot < rows; slot += 1) {
     for (let face = 0; face < SIDE_COUNT; face += 1) {
       for (let lane = 0; lane < lanes; lane += 1) {
-        const offset = (lane + 0.5 - half) * CELL;
-        if (face === 0) {
-          position.set(offset, -half, -slot);
-          euler.set(-Math.PI / 2, 0, 0);
-        } else if (face === 1) {
-          position.set(offset, half, -slot);
-          euler.set(Math.PI / 2, 0, 0);
-        } else if (face === 2) {
-          position.set(-half, offset, -slot);
-          euler.set(0, Math.PI / 2, 0);
-        } else {
-          position.set(half, offset, -slot);
-          euler.set(0, -Math.PI / 2, 0);
-        }
-        quaternion.setFromEuler(euler);
-        matrix.compose(position, quaternion, scale);
+        composeTileMatrix(matrix, face, lane, -slot, lanes, gap);
         mesh.setMatrixAt(instanceIndex(rows, lanes, slot, face, lane), matrix);
       }
     }
@@ -189,50 +219,200 @@ export interface CellContentParams {
   photoCount: number;
 }
 
+export interface CellContent {
+  kind: number;
+  texIndex: number;
+  seed: number;
+}
+
 /**
- * 按 base 重算整池内容。
+ * 单格内容的纯函数判定。
  * photoFill 与 accentFill 都是「占全部格子的比例」，各自独立掷骰，同一格冲突时照片优先；
  * 没有可用照片时照片格降级成空格，避免采样到未就绪的图集。
+ *
+ * 命中测试与内容写入共用这一个函数，这样「点到的」与「看到的」永远一致，
+ * 不需要去读实例缓冲。
  */
+export function cellContentAt(
+  index: number,
+  lane: number,
+  side: number,
+  params: CellContentParams
+): CellContent {
+  const { photoFill, accentFill, seed, photoCount } = params;
+  const grain = hash01(index, lane, side, seed + 5501);
+
+  if (photoCount > 0 && hash01(index, lane, side, seed) < photoFill) {
+    return {
+      kind: KIND_PHOTO,
+      texIndex: Math.floor(hash01(index, lane, side, seed + 977) * photoCount),
+      seed: grain,
+    };
+  }
+  if (hash01(index, lane, side, seed + 3301) < accentFill) {
+    return { kind: KIND_ACCENT, texIndex: 0, seed: grain };
+  }
+  return { kind: KIND_EMPTY, texIndex: 0, seed: grain };
+}
+
+/** 写入一行（同一 index 的四壁 × lanes 格） */
+function writeTunnelRow(
+  assets: TunnelAssets,
+  slot: number,
+  index: number,
+  params: CellContentParams
+) {
+  const { lanes } = assets;
+  const kindArray = assets.kind.array as Float32Array;
+  const texIndexArray = assets.texIndex.array as Float32Array;
+  const seedArray = assets.cellSeed.array as Float32Array;
+
+  for (let face = 0; face < SIDE_COUNT; face += 1) {
+    for (let lane = 0; lane < lanes; lane += 1) {
+      const at = instanceIndex(assets.rows, lanes, slot, face, lane);
+      const content = cellContentAt(index, lane, face, params);
+      kindArray[at] = content.kind;
+      texIndexArray[at] = content.texIndex;
+      seedArray[at] = content.seed;
+    }
+  }
+}
+
+function markContentDirty(assets: TunnelAssets) {
+  assets.kind.needsUpdate = true;
+  assets.texIndex.needsUpdate = true;
+  assets.cellSeed.needsUpdate = true;
+}
+
+/** 按 base 重算整池内容 */
 export function assignTunnelCells(
   assets: TunnelAssets,
   base: number,
   params: CellContentParams
 ) {
+  for (let slot = 0; slot < assets.rows; slot += 1) {
+    writeTunnelRow(assets, slot, base + slot, params);
+  }
+  markContentDirty(assets);
+}
+
+/**
+ * base 一次跨过多个整数时的增量回收：把仍在池里的行整块平移，只补新进入的行。
+ * 新 slot 的 index 为 base + slot，因此新 slot s 与旧 slot (s + delta) 内容相同，
+ * 用 copyWithin 一次搬完（它内部按 memmove 处理重叠，方向安全）。
+ * 步长超过池长或方向为负时退回整池重算，逻辑简单且只发生在极端情况。
+ */
+export function advanceTunnelCells(
+  assets: TunnelAssets,
+  base: number,
+  delta: number,
+  params: CellContentParams
+) {
+  const step = Math.trunc(delta);
+  if (step === 0) return;
+
   const { rows, lanes } = assets;
+  if (step < 0 || step >= rows) {
+    assignTunnelCells(assets, base, params);
+    return;
+  }
+
+  const block = rowBlock(lanes);
   const kindArray = assets.kind.array as Float32Array;
   const texIndexArray = assets.texIndex.array as Float32Array;
   const seedArray = assets.cellSeed.array as Float32Array;
-  const { photoFill, accentFill, seed, photoCount } = params;
 
-  for (let slot = 0; slot < rows; slot += 1) {
-    const index = base + slot;
-    for (let face = 0; face < SIDE_COUNT; face += 1) {
-      for (let lane = 0; lane < lanes; lane += 1) {
-        const at = instanceIndex(rows, lanes, slot, face, lane);
-        const wantsPhoto = hash01(index, lane, face, seed) < photoFill && photoCount > 0;
-        const wantsAccent =
-          !wantsPhoto && hash01(index, lane, face, seed + 3301) < accentFill;
-        if (wantsPhoto) {
-          kindArray[at] = KIND_PHOTO;
-          texIndexArray[at] = Math.floor(
-            hash01(index, lane, face, seed + 977) * photoCount
-          );
-        } else if (wantsAccent) {
-          kindArray[at] = KIND_ACCENT;
-          texIndexArray[at] = 0;
-        } else {
-          kindArray[at] = KIND_EMPTY;
-          texIndexArray[at] = 0;
-        }
-        seedArray[at] = hash01(index, lane, face, seed + 5501);
-      }
+  kindArray.copyWithin(0, step * block, rows * block);
+  texIndexArray.copyWithin(0, step * block, rows * block);
+  seedArray.copyWithin(0, step * block, rows * block);
+
+  for (let slot = rows - step; slot < rows; slot += 1) {
+    writeTunnelRow(assets, slot, base + slot, params);
+  }
+  markContentDirty(assets);
+}
+
+export interface TunnelRay {
+  x: number;
+  y: number;
+  z: number;
+  dx: number;
+  dy: number;
+  dz: number;
+}
+
+export interface TunnelHit {
+  /** 命中的壁面编号 */
+  side: number;
+  /** 命中的车道 */
+  lane: number;
+  /** 命中瓦片的内容 index（base + slot） */
+  index: number;
+  /** 命中点在隧道内的世界坐标 */
+  x: number;
+  y: number;
+  z: number;
+}
+
+/**
+ * 解析法命中判定：射线与 x = ±half / y = ±half 四个平面求交，取最近的有效命中。
+ * 「有效」指另一个坐标落在 [-half, half] 内，且交点在相机前方。
+ * 比 raycaster 便宜得多，也不会受实例缓冲影响。
+ */
+export function hitTunnel(
+  ray: TunnelRay,
+  lanes: number,
+  travel: number
+): TunnelHit | null {
+  const half = lanes / 2;
+  let best = Number.POSITIVE_INFINITY;
+  let side = -1;
+  let lane = -1;
+  let hx = 0;
+  let hy = 0;
+  let hz = 0;
+
+  const EPSILON = 1e-6;
+
+  // 地板（y = -half）与天花板（y = +half）：车道沿 x 排布
+  if (Math.abs(ray.dy) > EPSILON) {
+    for (let sign = -1; sign <= 1; sign += 2) {
+      const t = (sign * half - ray.y) / ray.dy;
+      if (t <= EPSILON || t >= best) continue;
+      const x = ray.x + t * ray.dx;
+      if (x < -half || x > half) continue;
+      best = t;
+      side = sign < 0 ? SIDE_FLOOR : SIDE_CEILING;
+      lane = clampLane(Math.floor(x + half), lanes);
+      hx = x;
+      hy = sign * half;
+      hz = ray.z + t * ray.dz;
     }
   }
 
-  assets.kind.needsUpdate = true;
-  assets.texIndex.needsUpdate = true;
-  assets.cellSeed.needsUpdate = true;
+  // 左墙（x = -half）与右墙（x = +half）：车道沿 y 排布
+  if (Math.abs(ray.dx) > EPSILON) {
+    for (let sign = -1; sign <= 1; sign += 2) {
+      const t = (sign * half - ray.x) / ray.dx;
+      if (t <= EPSILON || t >= best) continue;
+      const y = ray.y + t * ray.dy;
+      if (y < -half || y > half) continue;
+      best = t;
+      side = sign < 0 ? SIDE_LEFT : SIDE_RIGHT;
+      lane = clampLane(Math.floor(y + half), lanes);
+      hx = sign * half;
+      hy = y;
+      hz = ray.z + t * ray.dz;
+    }
+  }
+
+  if (side < 0) return null;
+  // 世界 z 与 index 的关系：z = travel - index（整数部分已由内容回收承担）
+  return { side, lane, index: Math.round(travel - hz), x: hx, y: hy, z: hz };
+}
+
+function clampLane(value: number, lanes: number) {
+  return Math.min(lanes - 1, Math.max(0, value));
 }
 
 /** 把图集尺寸写进 uniform（图集就绪／替换时调用） */

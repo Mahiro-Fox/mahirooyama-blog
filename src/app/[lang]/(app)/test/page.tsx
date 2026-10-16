@@ -8,7 +8,8 @@ export default async function TestPage() {
   return (
     <TunnelPreview
       items={photos.map((photo) => ({
-        src: photo.src,
+        // 本地 dev 由临时取证路由提供（nginx 不在场时 /uploads/* 会 404）
+        src: photo.src.replace('/uploads/', '/next-api/dev-assets/'),
         alt: photo.alt,
         title: photo.filename,
       }))}

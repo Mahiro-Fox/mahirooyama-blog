@@ -1,24 +1,36 @@
 'use client';
 
 import { Canvas, useThree } from '@react-three/fiber';
-import { useEffect, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import type { PerspectiveCamera } from 'three';
 import { cn } from '@/utils/utils';
-import { TunnelScene, type PassageGalleryItem } from './passage-gallery-scene';
+import {
+  TunnelScene,
+  type PassageGalleryItem,
+  type PointerInput,
+} from './passage-gallery-scene';
 
 /**
  * 照片隧道（passage-gallery）。
  *
  * 对照 React Bits Pro 的同名组件按「公开 prop 语义 + 观测到的行为」重写，
  * 未使用其源码：Pro 版只走付费 registry 分发，拿不到实现。
- * 本文件只负责画布装配与参数默认值，几何／着色器见 passage-gallery-tunnel.ts、
- * passage-gallery-shader.ts，图集见 passage-gallery-atlas.ts。
- *
- * 当前阶段只做「静态隧道」：回收网格 + 圆角 + 图集照片 + 渐变格 + 距离雾化 + 巡航。
- * 指针视差、按住加速、点击飞出、拖尾模糊留待下一阶段。
+ * 本文件只负责画布装配、参数默认值与指针输入，
+ * 几何／着色器见 passage-gallery-tunnel.ts、passage-gallery-shader.ts，
+ * 图集见 passage-gallery-atlas.ts，拖尾后处理见 passage-gallery-trail.tsx。
  */
 
 const DEFAULT_ARIA_LABEL = '照片隧道：一条可以穿行浏览照片的走廊';
+
+/** 判定为「点击」而非「按住加速」：时长与位移都要够小 */
+const CLICK_MAX_MS = 260;
+const CLICK_MAX_PX = 8;
 
 function resolveParams(props: PassageGalleryProps) {
   return {
@@ -37,6 +49,12 @@ function resolveParams(props: PassageGalleryProps) {
     seed: props.seed ?? 0,
     paused: props.paused ?? false,
     dpr: props.dpr ?? 2,
+    interactive: props.interactive ?? true,
+    look: props.look ?? 1,
+    boost: props.boost ?? 3,
+    blur: props.blur ?? 1,
+    focusOnClick: props.focusOnClick ?? true,
+    captions: props.captions ?? true,
   };
 }
 
@@ -63,6 +81,16 @@ function Backdrop({ backgroundColor }: { backgroundColor: string }) {
     gl.setClearColor(backgroundColor, 1);
   }, [gl, backgroundColor]);
   return null;
+}
+
+/** 指针相对画面的归一化坐标，向右 / 向上为正 */
+function pointerNdc(element: HTMLElement, clientX: number, clientY: number) {
+  const rect = element.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return null;
+  return {
+    x: ((clientX - rect.left) / rect.width) * 2 - 1,
+    y: -(((clientY - rect.top) / rect.height) * 2 - 1),
+  };
 }
 
 export interface PassageGalleryProps {
@@ -99,11 +127,104 @@ export interface PassageGalleryProps {
   paused?: boolean;
   /** 画布最大像素比 */
   dpr?: number;
+  /** 指针视差、按住加速、点击飞出总开关 */
+  interactive?: boolean;
+  /** 指针视差幅度，1 为默认 */
+  look?: number;
+  /** 按住时的巡航倍率 */
+  boost?: number;
+  /** 拖尾模糊强度，0 关闭 */
+  blur?: number;
+  /** 点击照片是否飞到镜前 */
+  focusOnClick?: boolean;
+  /** 是否显示飞出时的标题叠加层 */
+  captions?: boolean;
+  /** 焦点变化回调，收回时 item 为 null、index 为 -1 */
+  onFocusChange?: (item: PassageGalleryItem | null, index: number) => void;
 }
 
 export default function PassageGallery(props: PassageGalleryProps) {
-  const { items, className, style } = props;
+  const { items, className, style, onFocusChange } = props;
   const params = resolveParams(props);
+
+  const inputRef = useRef<PointerInput>({
+    ndcX: 0,
+    ndcY: 0,
+    holding: false,
+    pendingClick: null,
+    pendingRelease: false,
+  });
+  const pressRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const [focused, setFocused] = useState<{
+    item: PassageGalleryItem | null;
+    index: number;
+  } | null>(null);
+
+  // 焦点由场景在命中时回调，这里只做叠加层与对外通知
+  const handleFocusChange = (
+    item: PassageGalleryItem | null,
+    index: number
+  ) => {
+    setFocused(item ? { item, index } : null);
+    onFocusChange?.(item, index);
+  };
+
+  useEffect(() => {
+    if (!params.interactive) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') inputRef.current.pendingRelease = true;
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [params.interactive]);
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const ndc = pointerNdc(
+      event.currentTarget,
+      event.clientX,
+      event.clientY
+    );
+    if (!ndc) return;
+    inputRef.current.ndcX = ndc.x;
+    inputRef.current.ndcY = ndc.y;
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    pressRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      time: performance.now(),
+    };
+    inputRef.current.holding = true;
+    handlePointerMove(event);
+  };
+
+  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const press = pressRef.current;
+    pressRef.current = null;
+    inputRef.current.holding = false;
+    if (!press) return;
+
+    const heldFor = performance.now() - press.time;
+    const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
+    // 按得久或拖得远都算「按住加速」，只有短促原位的一下才算点击
+    if (heldFor > CLICK_MAX_MS || moved > CLICK_MAX_PX) return;
+
+    const ndc = pointerNdc(event.currentTarget, event.clientX, event.clientY);
+    if (!ndc) return;
+    inputRef.current.pendingClick = ndc;
+  };
+
+  const releasePress = () => {
+    pressRef.current = null;
+    inputRef.current.holding = false;
+  };
+
+  const handlePointerLeave = () => {
+    releasePress();
+    inputRef.current.ndcX = 0;
+    inputRef.current.ndcY = 0;
+  };
 
   return (
     <div
@@ -114,6 +235,11 @@ export default function PassageGallery(props: PassageGalleryProps) {
       style={style}
       role="img"
       aria-label={params.ariaLabel}
+      onPointerMove={params.interactive ? handlePointerMove : undefined}
+      onPointerDown={params.interactive ? handlePointerDown : undefined}
+      onPointerUp={params.interactive ? handlePointerUp : undefined}
+      onPointerLeave={params.interactive ? handlePointerLeave : undefined}
+      onPointerCancel={params.interactive ? releasePress : undefined}
     >
       <Canvas
         flat
@@ -147,8 +273,26 @@ export default function PassageGallery(props: PassageGalleryProps) {
           speed={params.speed}
           seed={params.seed}
           paused={params.paused}
+          interactive={params.interactive}
+          look={params.look}
+          boost={params.boost}
+          blur={params.blur}
+          focusOnClick={params.focusOnClick}
+          input={inputRef}
+          onFocusChange={handleFocusChange}
         />
       </Canvas>
+
+      {params.captions && focused && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 p-4 text-center">
+          <span className="bg-card/85 text-card-foreground rounded-md px-3 py-1 text-sm font-medium">
+            {focused.item?.title ?? focused.item?.alt ?? ''}
+          </span>
+          <span className="text-muted-foreground text-xs">
+            {focused.index + 1} / {items.length}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
