@@ -6,8 +6,10 @@ const logger = createLogger('BilibiliParse');
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** B 站视频解析结果 */
-export interface ParseResult {
+/* ==================== 类型定义 ==================== */
+
+export interface VideoParseResult {
+  type: 'video';
   title: string;
   cover: string;
   mp4Url: string;
@@ -30,9 +32,26 @@ export interface ParseResult {
   partTitle: string;
 }
 
-type ParseSuccess = { success: true; data: ParseResult };
+export interface LiveParseResult {
+  type: 'live';
+  /** 直播间号 */
+  roomId: number;
+  /** HLS 直播流地址（.m3u8） */
+  m3u8Url: string;
+  /** 流格式名，如 ts / fmp4 */
+  formatName: string;
+  /** 编码名，如 avc / hevc */
+  codecName: string;
+}
+
+export type ParseResult = VideoParseResult | LiveParseResult;
+
+type ParseSuccess<T> = { success: true; data: T };
 type ParseFailure = { success: false; error: string; status: number };
-type ParseOutcome = ParseSuccess | ParseFailure;
+type VideoOutcome = ParseSuccess<VideoParseResult> | ParseFailure;
+type LiveOutcome = ParseSuccess<LiveParseResult> | ParseFailure;
+
+/* ==================== B 站接口响应类型 ==================== */
 
 interface BilibiliPage {
   cid: number;
@@ -62,12 +81,7 @@ interface BilibiliPlayurlResponse {
     format: string;
     timelength: number;
     accept_description: string[];
-    durl: Array<{
-      order: number;
-      length: number;
-      size: number;
-      url: string;
-    }>;
+    durl: Array<{ order: number; length: number; size: number; url: string }>;
     support_formats: Array<{
       quality: number;
       format: string;
@@ -77,8 +91,46 @@ interface BilibiliPlayurlResponse {
   };
 }
 
+interface BilibiliLiveCodec {
+  codec_name: string;
+  base_url: string;
+  url_info: Array<{ host: string; extra: string }>;
+}
+
+interface BilibiliLiveFormat {
+  format_name: string;
+  codec: BilibiliLiveCodec[];
+}
+
+interface BilibiliLiveStream {
+  protocol_name: string;
+  format: BilibiliLiveFormat[];
+}
+
+interface BilibiliLiveResponse {
+  code: number;
+  message: string;
+  data: {
+    room_id: number;
+    live_status: number;
+    playurl_info: { playurl: { stream: BilibiliLiveStream[] } } | null;
+  };
+}
+
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+/* ==================== URL 匹配辅助 ==================== */
+
+/** 是否直播链接（live.bilibili.com） */
+function isLiveUrl(input: string): boolean {
+  return /live\.bilibili\.com\//.test(input);
+}
+
+/** 提取直播间号，兼容 live.bilibili.com/123 与 live.bilibili.com/blanc/123 */
+function extractLiveRoomId(input: string): string | null {
+  return input.match(/live\.bilibili\.com\/(?:blanc\/)?(\d+)/)?.[1] ?? null;
+}
 
 /** 从原始输入中尝试解析分P号（支持完整 URL、BV号+?p=、裸 ?p= 查询串） */
 function extractPageFromInput(raw: string): number | null {
@@ -99,14 +151,12 @@ function extractPageFromInput(raw: string): number | null {
   return null;
 }
 
-/**
- * 解析 B 站视频链接，返回指定分P的直链播放地址与元信息。
- * 用 BV 号替代整条 URL 作为输入，规避 SSRF 风险（服务端只会去调 B 站官方接口）。
- */
+/* ==================== 视频解析（支持分P） ==================== */
+
 async function parseBilibiliVideo(
   url: string,
   pParam?: string | null
-): Promise<ParseOutcome> {
+): Promise<VideoOutcome> {
   const bvid = url.match(/(BV[a-zA-Z0-9]{10})/)?.[1];
 
   if (!bvid) {
@@ -169,7 +219,6 @@ async function parseBilibiliVideo(
 
     const { title, pic, pages, cid: firstCid } = viewData.data;
 
-    // 构造分集列表（兼容 pages 缺失的极少数情况）
     const pageList: BilibiliPage[] =
       Array.isArray(pages) && pages.length > 0
         ? pages
@@ -185,12 +234,11 @@ async function parseBilibiliVideo(
       };
     }
 
-    // 按 page 字段匹配，兜底用数组下标（pages 通常按 page 升序且从 1 连续）
     const targetPage =
       pageList.find((pg) => pg.page === pageNum) ?? pageList[pageNum - 1];
     const cid = targetPage.cid;
 
-    // 步骤二：用目标分P的 cid 获取 MP4 直链（durl 方案，不拆音视频）
+    // 步骤二：用目标分P的 cid 获取 MP4 直链
     const playurlApiUrl = `https://api.bilibili.com/x/player/wbi/playurl?bvid=${bvid}&cid=${cid}&qn=80&fnval=0&fnver=0&fourk=1&platform=html5`;
     const playurlRes = await fetch(playurlApiUrl, {
       headers: { 'User-Agent': UA, Referer: 'https://www.bilibili.com' },
@@ -226,6 +274,7 @@ async function parseBilibiliVideo(
     return {
       success: true,
       data: {
+        type: 'video',
         title,
         cover: pic,
         mp4Url,
@@ -251,19 +300,120 @@ async function parseBilibiliVideo(
   }
 }
 
+/* ==================== 直播解析 ==================== */
+
+async function parseBilibiliLive(raw: string): Promise<LiveOutcome> {
+  const roomId = extractLiveRoomId(raw);
+  if (!roomId) {
+    return {
+      success: false,
+      status: 400,
+      error: '无法从 URL 中提取直播间号，请检查链接格式',
+    };
+  }
+
+  try {
+    const api =
+      `https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo` +
+      `?room_id=${roomId}&protocol=0,1&format=0,1,2&codec=0,1&qn=10000&platform=web`;
+
+    const res = await fetch(api, {
+      headers: { 'User-Agent': UA, Referer: 'https://live.bilibili.com' },
+    });
+
+    if (!res.ok) {
+      return {
+        success: false,
+        status: 502,
+        error: '获取直播信息失败，B 站接口返回错误',
+      };
+    }
+
+    const data = (await res.json()) as BilibiliLiveResponse;
+    if (data.code !== 0) {
+      return {
+        success: false,
+        status: 502,
+        error: `B 站直播接口返回错误: ${data.message}`,
+      };
+    }
+
+    const roomInfo = data.data;
+
+    if (roomInfo.live_status === 0) {
+      return { success: false, status: 400, error: '该直播间当前未开播' };
+    }
+    if (!roomInfo.playurl_info) {
+      return {
+        success: false,
+        status: 502,
+        error: '未获取到直播流信息，可能该直播间当前无可用流',
+      };
+    }
+
+    const streams = roomInfo.playurl_info.playurl.stream;
+    // 优先取 HLS（m3u8）；若不存在再退回任意协议（下面仍按 host+base_url+extra 拼装）
+    const hlsStream =
+      streams.find((s) => s.protocol_name === 'http_hls') ??
+      streams.find((s) => s.format.some((f) => f.format_name === 'ts'));
+
+    if (!hlsStream) {
+      return {
+        success: false,
+        status: 502,
+        error: '未找到 HLS 直播流，该直播间可能不支持 m3u8 协议',
+      };
+    }
+
+    for (const fmt of hlsStream.format) {
+      for (const codec of fmt.codec) {
+        const urlInfo = codec.url_info?.[0];
+        if (urlInfo?.host) {
+          const m3u8Url = urlInfo.host + codec.base_url + urlInfo.extra;
+          return {
+            success: true,
+            data: {
+              type: 'live',
+              roomId: Number(roomId),
+              m3u8Url,
+              formatName: fmt.format_name,
+              codecName: codec.codec_name,
+            },
+          };
+        }
+      }
+    }
+
+    return { success: false, status: 502, error: '未找到可用的直播流地址' };
+  } catch (error) {
+    logger.error('B 站直播解析失败', error);
+    return { success: false, status: 500, error: '服务器内部错误，请稍后重试' };
+  }
+}
+
+/* ==================== 路由入口 ==================== */
+
 /**
  * GET /next-api/bilibili-parse
  *
  * 请求：
- *   ?url=string   B 站视频链接或 BV 号（链接中可自带 ?p=N）
- *   &p=number     可选，目标分P序号（从 1 开始），优先级高于 url 中的 p
+ *   ?url=string   B 站视频链接 / BV 号 / 直播间链接
+ *   &p=number     可选，视频目标分P序号（从 1 开始），优先级高于 url 中的 p
  *   &json=1       可选，返回 JSON 而不是 302 重定向
  *
+ * 行为：
+ *   - 若 url 匹配 live.bilibili.com → 走直播解析，返回 m3u8 地址
+ *   - 否则 → 走视频解析（支持分P），返回 mp4 直链
+ *
  * 成功：
- *   - 默认：302 重定向到目标分P的 mp4 直链
- *   - json=1：200 { success: true, data: ParseResult }
- * 失败：400（入参/链接/分P序号非法）、502（B 站接口异常）、500（服务端异常）
+ *   - 默认：302 重定向到目标流地址
+ *   - json=1：200 { success: true, data: VideoParseResult | LiveParseResult }
+ *
+ * 失败：400（入参/链接/分P非法/未开播）、502（B 站接口异常）、500（服务端异常）
  *      { success: false, error: string }
+ *
+ * ⚠️ 直播场景强烈建议使用 `json=1` 获取 m3u8 地址后由播放器自行请求，
+ *    因为 B 站 CDN 校验 Referer，浏览器直接 302 跟随请求会因缺少 Referer 被 403。
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -276,9 +426,25 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const pParam = searchParams.get('p');
   const asJson = searchParams.get('json') === '1';
 
+  // 分支一：直播
+  if (isLiveUrl(url)) {
+    const outcome = await parseBilibiliLive(url);
+    if (!outcome.success) {
+      return NextResponse.json(
+        { success: false, error: outcome.error },
+        { status: outcome.status }
+      );
+    }
+    if (asJson) {
+      return NextResponse.json({ success: true, data: outcome.data });
+    }
+    return NextResponse.redirect(outcome.data.m3u8Url, 302);
+  }
+
+  // 分支二：视频（含分P）
+  const pParam = searchParams.get('p');
   const outcome = await parseBilibiliVideo(url, pParam);
   if (!outcome.success) {
     return NextResponse.json(
@@ -286,10 +452,8 @@ export async function GET(request: NextRequest) {
       { status: outcome.status }
     );
   }
-
   if (asJson) {
     return NextResponse.json({ success: true, data: outcome.data });
   }
-
   return NextResponse.redirect(outcome.data.mp4Url, 302);
 }
