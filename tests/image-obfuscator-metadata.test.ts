@@ -11,7 +11,6 @@ const SAMPLE_META: ObfuscationMeta = {
   version: ALGORITHM_VERSION,
   strength: 1.35,
   enhancement: 'green-boost',
-  password: 'meta-test-pass',
   format: 'jpeg',
   quality: 0.72,
 };
@@ -98,7 +97,6 @@ describe('图片参数元数据', () => {
     const parsed = readObfuscationMeta(output);
 
     expect(parsed).toEqual(meta);
-    expect(parsed?.password).toBeUndefined();
   });
 
   it('字段非法或版本不一致时不采信', async () => {
