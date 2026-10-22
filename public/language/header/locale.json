@@ -69,6 +69,9 @@
     "image_compressor_nav_label": "Image Converter & Compressor",
     "image_compressor_nav_description": "Online image compression and format conversion tool",
 
+    "image_obfuscator_nav_label": "Image Obfuscator",
+    "image_obfuscator_nav_description": "Password-based pixel permutation, computed locally",
+
     "ai_chat_nav_label": "AI Chat",
     "ai_chat_nav_description": "Chat with AI models",
 
@@ -180,6 +183,9 @@
 
     "image_compressor_nav_label": "图片转换压缩工具",
     "image_compressor_nav_description": "在线图片压缩与格式转换工具",
+
+    "image_obfuscator_nav_label": "图片混淆工具",
+    "image_obfuscator_nav_description": "基于密码的像素置换，全程本地处理",
 
     "ai_chat_nav_label": "AI 聊天",
     "ai_chat_nav_description": "与 AI 模型聊天",

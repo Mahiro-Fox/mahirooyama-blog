@@ -24,6 +24,8 @@ const loaders: Record<string, () => Promise<LocaleModule>> = {
     import('../../public/language/bilibili-parse/locale.json'),
   'image-compressor': () =>
     import('../../public/language/image-compressor/locale.json'),
+  'image-obfuscator': () =>
+    import('../../public/language/image-obfuscator/locale.json'),
 };
 
 function pickLang(localeData: Record<string, Dictionary>, lang: string) {

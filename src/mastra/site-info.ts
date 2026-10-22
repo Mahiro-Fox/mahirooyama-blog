@@ -25,18 +25,57 @@ const siteInfo: SiteInfo = {
     '次要内容是编程笔记与技术分享；此外还集成了一批即开即用的小工具。' +
     '源代码开源在 GitHub（github.com/Mahiro-Fox/mahirooyama-blog）。',
   features: [
-    { name: '帖子（博客）', route: '/page/blog/1', summary: '浏览 mahiro 写的博客文章，支持 mdx/md。' },
+    {
+      name: '帖子（博客）',
+      route: '/page/blog/1',
+      summary: '浏览 mahiro 写的博客文章，支持 mdx/md。',
+    },
     { name: '相册', route: '/page/gallery/1', summary: '浏览图片相册。' },
     { name: '照片', route: '/photos', summary: '瀑布流形式的图片展示。' },
-    { name: '碎碎念', route: '/moments', summary: 'mahiro 的日常动态，支持文字、图片、心情与位置。' },
-    { name: '影视收藏', route: '/movies', summary: '私人影视收藏库，含海报、标签、简介与播放链接。' },
+    {
+      name: '碎碎念',
+      route: '/moments',
+      summary: 'mahiro 的日常动态，支持文字、图片、心情与位置。',
+    },
+    {
+      name: '影视收藏',
+      route: '/movies',
+      summary: '私人影视收藏库，含海报、标签、简介与播放链接。',
+    },
     { name: '留言墙', route: '/guestbook', summary: '访客留言与互动。' },
     { name: 'MIDI', route: '/midi', summary: 'VRChat 中文吧自动钢琴工具。' },
-    { name: 'Sonic播放器', route: '/sonic', summary: '3D 音频可视化音乐播放器，支持网易云与 QQ 云音乐搜索、播放与歌单。' },
-    { name: 'B站解析', route: '/bilibili-parse', summary: '解析 B 站视频链接。' },
-    { name: '图片转换压缩', route: '/image-compressor', summary: '在线图片压缩与格式转换工具。' },
-    { name: 'AI 聊天', route: '/chat', summary: '与 AI 模型聊天（你正用于回答的页面）。' },
-    { name: '秘密页面', route: '/secret', summary: '仅特定登录用户可访问的内容。' },
+    {
+      name: 'Sonic播放器',
+      route: '/sonic',
+      summary:
+        '3D 音频可视化音乐播放器，支持网易云与 QQ 云音乐搜索、播放与歌单。',
+    },
+    {
+      name: 'B站解析',
+      route: '/bilibili-parse',
+      summary: '解析 B 站视频链接。',
+    },
+    {
+      name: '图片转换压缩',
+      route: '/image-compressor',
+      summary: '在线图片压缩与格式转换工具。',
+    },
+    {
+      name: '图片混淆',
+      route: '/image-obfuscator',
+      summary:
+        '在浏览器内用密码驱动空间填充曲线置换混淆与还原图片，不上传数据。',
+    },
+    {
+      name: 'AI 聊天',
+      route: '/chat',
+      summary: '与 AI 模型聊天（你正用于回答的页面）。',
+    },
+    {
+      name: '秘密页面',
+      route: '/secret',
+      summary: '仅特定登录用户可访问的内容。',
+    },
     { name: '标签', route: '/tag', summary: '查看全站内容标签分类。' },
     { name: '关于我', route: '/about', summary: '站长的个人介绍。' },
   ],

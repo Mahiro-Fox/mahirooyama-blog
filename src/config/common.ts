@@ -14,6 +14,7 @@ import {
   LucideIcon,
   MessageSquare,
   Music,
+  Shuffle,
   Shield,
   Smile,
   Tag,
@@ -196,6 +197,14 @@ export const pageRoutesConfig: PageRouteConfig[] = [
     navHref: '/image-compressor',
     navLabel: 'image_compressor_nav_label',
     navDescription: 'image_compressor_nav_description',
+  },
+  {
+    name: 'image_obfuscator',
+    icon: Shuffle,
+    category: 'tools',
+    navHref: '/image-obfuscator',
+    navLabel: 'image_obfuscator_nav_label',
+    navDescription: 'image_obfuscator_nav_description',
   },
   {
     name: 'ai_chat',
