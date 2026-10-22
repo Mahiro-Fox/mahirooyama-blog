@@ -1,6 +1,6 @@
 'use client';
 
-import { Images, Lock, Shuffle } from 'lucide-react';
+import { Images, Shuffle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -590,11 +590,6 @@ export default function ImageObfuscatorClient({
             />
           </div>
         </div>
-
-        <p className="text-muted-foreground mt-6 flex items-center gap-1.5 text-xs">
-          <Lock className="h-3.5 w-3.5" />
-          {t('image-obfuscator.privacy_notice')}
-        </p>
       </div>
 
       <GalleryPickerDialog

@@ -51,7 +51,7 @@ function GalleryPickerBody({
     usePhotos({ limit: 12, fetcher: getObfuscatorPhotosAction });
 
   return (
-    <DialogContent className="flex max-h-[85vh] w-full flex-col gap-4 sm:max-w-5xl">
+    <DialogContent className="relative flex max-h-[85vh] w-full flex-col gap-4 sm:max-w-5xl">
       <DialogClose
         className="cursor-pointer"
         aria-label={t('image-obfuscator.gallery_close')}

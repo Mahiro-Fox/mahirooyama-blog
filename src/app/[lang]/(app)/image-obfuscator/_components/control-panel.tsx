@@ -369,10 +369,17 @@ export default function ControlPanel({
       {/* 说明 */}
       <div className="border-border text-muted-foreground space-y-1.5 border-t pt-3 text-xs">
         <p className="flex items-start gap-1.5">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>1.</span>
           <span>{t('image-obfuscator.note_params')}</span>
         </p>
-        <p>{t('image-obfuscator.note_security')}</p>
+        <p className="flex items-start gap-1.5">
+          <span>2.</span>
+          <span>{t('image-obfuscator.note_security')}</span>
+        </p>
+        <p className="flex items-start gap-1.5">
+          <span>3.</span>
+          <span>{t('image-obfuscator.privacy_notice')}</span>
+        </p>
       </div>
     </div>
   );

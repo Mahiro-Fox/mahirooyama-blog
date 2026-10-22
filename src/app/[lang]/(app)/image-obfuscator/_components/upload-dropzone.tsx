@@ -2,6 +2,7 @@
 
 import { Image as ImageIcon, RefreshCw, Trash2, Upload } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/shadcn-ui/button';
 import { useT } from '@/i18n/dictionary-provider';
 import { formatSize } from '@/utils/utils';
 import type { SourceImage } from '../_lib/types';
@@ -69,6 +70,11 @@ export default function UploadDropzone({
     return () => document.removeEventListener('paste', handlePaste);
   }, [disabled, onSelect]);
 
+  const truncateName = (name: string): string =>
+    name.length > 12
+      ? name.slice(0, 12) + '<br>' + truncateName(name.slice(12))
+      : name;
+
   return (
     <div className="space-y-3">
       <input
@@ -90,35 +96,39 @@ export default function UploadDropzone({
             alt={source.name}
             className="border-border bg-muted h-16 w-16 rounded-lg border object-cover"
           />
-
-          <div className="min-w-0 flex-1">
-            <p className="text-foreground truncate text-sm font-medium">
-              {source.name}
-            </p>
+          <div>
+            <p
+              className="text-foreground truncate text-sm font-medium"
+              dangerouslySetInnerHTML={{
+                __html:
+                  window.innerWidth < 764
+                    ? truncateName(source.name)
+                    : source.name,
+              }}
+            />
             <p className="text-muted-foreground mt-1 text-xs">
               {source.width}×{source.height} · {formatSize(source.size)}
             </p>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
+          <div className="ml-auto flex items-center gap-2">
+            <Button
               type="button"
               onClick={openPicker}
               disabled={disabled}
-              className="border-border text-foreground hover:bg-accent flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              variant="secondary"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               {t('image-obfuscator.change')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={onRemove}
               disabled={disabled}
               aria-label={t('image-obfuscator.remove')}
-              className="text-destructive hover:bg-destructive/10 rounded-lg p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              variant="destructive"
             >
               <Trash2 className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
