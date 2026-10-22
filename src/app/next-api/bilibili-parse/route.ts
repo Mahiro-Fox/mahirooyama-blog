@@ -196,8 +196,9 @@ async function parseBilibiliVideo(
   try {
     // 步骤一：获取视频基本信息（含分集列表 pages）
     const viewApiUrl = `https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`;
+    // 注意：机房 IP 携带浏览器 UA 会被 B 站风控拦截（412），此处不要伪装 Chrome UA
     const viewRes = await fetch(viewApiUrl, {
-      headers: { 'User-Agent': UA, Referer: 'https://www.bilibili.com' },
+      headers: { Referer: 'https://www.bilibili.com' },
     });
 
     if (!viewRes.ok) {
