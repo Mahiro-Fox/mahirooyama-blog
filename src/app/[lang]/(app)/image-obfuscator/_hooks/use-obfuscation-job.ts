@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   EnhancementId,
   ObfuscationMode,
   ObfuscationStage,
   RgbaImage,
-} from '@/lib/image-obfuscator/types';
+} from "@/lib/image-obfuscator/types";
 import type {
   ObfuscatorWorkerRequest,
   ObfuscatorWorkerResponse,
-} from '@/lib/image-obfuscator/worker-protocol';
+} from "@/lib/image-obfuscator/worker-protocol";
 
-export type JobStatus = 'idle' | 'running' | 'done' | 'error';
+export type JobStatus = "idle" | "running" | "done" | "error";
 
 export interface JobFailure extends Error {
   code: string;
@@ -24,6 +24,11 @@ export interface RunJobInput {
   password: string;
   strength: number;
   enhancement: EnhancementId;
+}
+
+/** 批量队列用：把当前任务的进度同步到对应列表项 */
+export interface RunJobCallbacks {
+  onProgress?: (stage: ObfuscationStage, ratio: number) => void;
 }
 
 interface PendingJob {
@@ -47,9 +52,9 @@ export function useObfuscationJob() {
   const requestIdRef = useRef(0);
   const mountedRef = useRef(true);
 
-  const [status, setStatus] = useState<JobStatus>('idle');
+  const [status, setStatus] = useState<JobStatus>("idle");
   const [progress, setProgress] = useState(0);
-  const [stage, setStage] = useState<ObfuscationStage>('derive-key');
+  const [stage, setStage] = useState<ObfuscationStage>("derive-key");
   const [error, setError] = useState<JobFailure | null>(null);
 
   useEffect(() => {
@@ -66,9 +71,12 @@ export function useObfuscationJob() {
    * 主线程兜底：Worker 构造失败时仍保证功能可用。
    */
   const runOnMainThread = useCallback(
-    async (input: RunJobInput): Promise<RgbaImage> => {
+    async (
+      input: RunJobInput,
+      callbacks?: RunJobCallbacks,
+    ): Promise<RgbaImage> => {
       const { obfuscateImageData, deobfuscateImageData } = await import(
-        '@/lib/image-obfuscator'
+        "@/lib/image-obfuscator"
       );
 
       const options = {
@@ -79,29 +87,33 @@ export function useObfuscationJob() {
           if (!mountedRef.current) return;
           setStage(update.stage);
           setProgress(update.ratio);
+          callbacks?.onProgress?.(update.stage, update.ratio);
         },
       };
 
       const result =
-        input.mode === 'obfuscate'
+        input.mode === "obfuscate"
           ? await obfuscateImageData(input.image, options)
           : await deobfuscateImageData(input.image, options);
 
       if (mountedRef.current) {
-        setStatus('done');
+        setStatus("done");
         setProgress(1);
       }
 
       return result;
     },
-    []
+    [],
   );
 
   const run = useCallback(
-    async (input: RunJobInput): Promise<RgbaImage> => {
-      setStatus('running');
+    async (
+      input: RunJobInput,
+      callbacks?: RunJobCallbacks,
+    ): Promise<RgbaImage> => {
+      setStatus("running");
       setProgress(0);
-      setStage('derive-key');
+      setStage("derive-key");
       setError(null);
 
       const requestId = requestIdRef.current + 1;
@@ -110,11 +122,11 @@ export function useObfuscationJob() {
       let worker: Worker;
       try {
         worker = new Worker(
-          new URL('../_workers/image-obfuscator.worker.ts', import.meta.url),
-          { type: 'module' }
+          new URL("../_workers/image-obfuscator.worker.ts", import.meta.url),
+          { type: "module" },
         );
       } catch {
-        return runOnMainThread(input);
+        return runOnMainThread(input, callbacks);
       }
 
       workerRef.current = worker;
@@ -134,17 +146,19 @@ export function useObfuscationJob() {
           const message = event.data;
           if (message.id !== requestId) return;
 
-          if (message.type === 'progress') {
-            if (!mountedRef.current) return;
-            setStage(message.stage);
-            setProgress(message.ratio);
+          if (message.type === "progress") {
+            if (mountedRef.current) {
+              setStage(message.stage);
+              setProgress(message.ratio);
+            }
+            callbacks?.onProgress?.(message.stage, message.ratio);
             return;
           }
 
-          if (message.type === 'done') {
+          if (message.type === "done") {
             settle();
             if (mountedRef.current) {
-              setStatus('done');
+              setStatus("done");
               setProgress(1);
             }
             resolve({
@@ -158,7 +172,7 @@ export function useObfuscationJob() {
           settle();
           const failure = createJobFailure(message.code, message.message);
           if (mountedRef.current) {
-            setStatus('error');
+            setStatus("error");
             setError(failure);
           }
           reject(failure);
@@ -167,11 +181,11 @@ export function useObfuscationJob() {
         worker.onerror = () => {
           settle();
           const failure = createJobFailure(
-            'WORKER_ERROR',
-            'Image worker failed'
+            "WORKER_ERROR",
+            "Image worker failed",
           );
           if (mountedRef.current) {
-            setStatus('error');
+            setStatus("error");
             setError(failure);
           }
           reject(failure);
@@ -192,7 +206,7 @@ export function useObfuscationJob() {
         worker.postMessage(request, [request.buffer]);
       });
     },
-    [runOnMainThread]
+    [runOnMainThread],
   );
 
   const cancel = useCallback(() => {
@@ -203,11 +217,11 @@ export function useObfuscationJob() {
     workerRef.current = null;
 
     if (pending) {
-      pending.reject(createJobFailure('ABORTED', 'Operation cancelled'));
+      pending.reject(createJobFailure("ABORTED", "Operation cancelled"));
     }
 
     if (mountedRef.current) {
-      setStatus('idle');
+      setStatus("idle");
       setProgress(0);
       setError(null);
     }
@@ -215,7 +229,7 @@ export function useObfuscationJob() {
 
   const reset = useCallback(() => {
     if (mountedRef.current) {
-      setStatus('idle');
+      setStatus("idle");
       setProgress(0);
       setError(null);
     }

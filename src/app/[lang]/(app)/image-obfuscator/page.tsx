@@ -1,4 +1,4 @@
-import ImageObfuscatorClient from './image-obfuscator-client';
+import ImageObfuscatorClient from "./image-obfuscator-client";
 
 interface ImageObfuscatorPageProps {
   searchParams: Promise<{ url?: string | string[] }>;
@@ -8,7 +8,9 @@ export default async function ImageObfuscatorPage({
   searchParams,
 }: ImageObfuscatorPageProps) {
   const { url } = await searchParams;
-  const initialUrl = Array.isArray(url) ? url[0] : url;
+  const initialUrls = (Array.isArray(url) ? url : url ? [url] : []).filter(
+    Boolean,
+  );
 
-  return <ImageObfuscatorClient initialUrl={initialUrl} />;
+  return <ImageObfuscatorClient initialUrls={initialUrls} />;
 }
