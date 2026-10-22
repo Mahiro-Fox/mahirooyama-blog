@@ -48,7 +48,7 @@ export async function getPhotosAction(
 }
 
 /** 混淆图库支持的格式：混淆输出可能是 PNG 或 JPG */
-const OBUSCATOR_PHOTO_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
+const OBUSCATOR_PHOTO_EXTENSIONS = ['.png', '.jpg'];
 
 /** 读取混淆图库（uploads/images/obfuscator）中的图片 */
 export async function getObfuscatorPhotosAction(
