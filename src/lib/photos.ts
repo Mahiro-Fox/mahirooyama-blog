@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { PHOTO_DIR } from '@/constant';
+import { PHOTO_DIR, UPLOADS_DIR } from '@/constant';
 import sharp from 'sharp';
 import { ensureDirectory } from '@/utils/file-utils';
 
@@ -16,22 +16,25 @@ export interface PhotoItem {
 }
 
 /**
- * 获取 uploads/images/photo 目录下的所有图片
- * 解析图片尺寸并计算宽高比，自动返回压缩版本
+ * 获取指定目录下的所有图片
+ * 解析图片尺寸并计算宽高比，自动返回可直接访问的 URL
  */
-export async function getPhotos(): Promise<PhotoItem[]> {
-  await ensureDirectory(PHOTO_DIR);
-  const files = await fs.promises.readdir(PHOTO_DIR);
+export async function getPhotos(
+  dir: string = PHOTO_DIR,
+  extensions: string[] = ['.webp']
+): Promise<PhotoItem[]> {
+  await ensureDirectory(dir);
+  const files = await fs.promises.readdir(dir);
   const imageFiles = files.filter((file) => {
     const ext = path.extname(file).toLowerCase();
     // 排除压缩目录和隐藏文件
     if (file.startsWith('.') || file.startsWith('_')) return false;
-    return ['.webp'].includes(ext);
+    return extensions.includes(ext);
   });
 
   const images = await Promise.all(
     imageFiles.map(async (filename) => {
-      const filePath = path.join(PHOTO_DIR, filename);
+      const filePath = path.join(dir, filename);
       const id = path.basename(filename, path.extname(filename));
 
       try {
@@ -43,7 +46,9 @@ export async function getPhotos(): Promise<PhotoItem[]> {
         const height = metadata.height || 0;
         const ratio = width > 0 && height > 0 ? width / height : 1;
 
-        const src = `/uploads/images/gallery/${filename}`;
+        // 由目录推导静态资源 URL，保证任意子目录都能正确访问
+        const relative = path.relative(UPLOADS_DIR, filePath);
+        const src = `/uploads/${relative.split(path.sep).join('/')}`;
 
         return {
           id,

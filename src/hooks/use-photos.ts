@@ -1,16 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getPhotosAction } from '@/actions/app/photos';
-import { PhotoItem } from '@/lib/photos';
+import { getPhotosAction, type PhotosResponse } from '@/actions/app/photos';
+import type { PhotoItem } from '@/lib/photos';
+
+/** 分页加载图片的函数，默认读取相册目录 */
+type PhotosFetcher = (page: number, limit: number) => Promise<PhotosResponse>;
 
 interface UsePhotosOptions {
   initialPage?: number;
   limit?: number;
+  /** 自定义数据源，用于读取其他图片目录 */
+  fetcher?: PhotosFetcher;
 }
 
 export function usePhotos(options: UsePhotosOptions = {}) {
-  const { initialPage = 1, limit = 12 } = options;
+  const { initialPage = 1, limit = 12, fetcher } = options;
 
   const [images, setImages] = useState<PhotoItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +25,8 @@ export function usePhotos(options: UsePhotosOptions = {}) {
   const [page, setPage] = useState(initialPage);
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const loadPhotos = fetcher ?? getPhotosAction;
 
   const fetchPhotos = useCallback(
     async (targetPage: number, isLoadMore = false) => {
@@ -31,7 +38,7 @@ export function usePhotos(options: UsePhotosOptions = {}) {
       setError(null);
 
       try {
-        const data = await getPhotosAction(targetPage, limit);
+        const data = await loadPhotos(targetPage, limit);
 
         if (isLoadMore) {
           setImages((prev) => [...prev, ...data.images]);
@@ -48,7 +55,7 @@ export function usePhotos(options: UsePhotosOptions = {}) {
         setIsLoadingMore(false);
       }
     },
-    [limit]
+    [limit, loadPhotos]
   );
 
   // Initial load

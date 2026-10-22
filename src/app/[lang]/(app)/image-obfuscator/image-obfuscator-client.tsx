@@ -1,9 +1,10 @@
 'use client';
 
-import { Lock, Shuffle } from 'lucide-react';
+import { Images, Lock, Shuffle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/shadcn-ui/button';
 // import { MAX_FILE_SIZE } from '@/constant/file-upload';
 import { useT } from '@/i18n/dictionary-provider';
 import type { ObfuscationMeta } from '@/lib/image-obfuscator/metadata';
@@ -16,6 +17,7 @@ import {
 } from '@/lib/image-obfuscator/types';
 import { formatSize } from '@/utils/utils';
 import ControlPanel from './_components/control-panel';
+import GalleryPickerDialog from './_components/gallery-picker-dialog';
 import PreviewCard from './_components/preview-card';
 import UploadDropzone from './_components/upload-dropzone';
 import {
@@ -85,6 +87,30 @@ function resolveSameSiteImageUrl(raw: string): ResolvedImageUrl | null {
   }
 }
 
+/**
+ * 下载本站图片并包装成 File。外链或下载失败时返回 null。
+ */
+async function loadImageFileFromUrl(raw: string): Promise<File | null> {
+  const resolved = resolveSameSiteImageUrl(raw);
+  if (!resolved) return null;
+
+  try {
+    const response = await fetch(resolved.url);
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    const type = ACCEPTED_TYPES.has(blob.type)
+      ? blob.type
+      : resolved.mime || blob.type;
+
+    return new File([blob], resolved.name, {
+      type: type || 'application/octet-stream',
+    });
+  } catch {
+    return null;
+  }
+}
+
 interface ImageObfuscatorClientProps {
   /** 通过 ?url= 传入的本站图片地址，载入后自动进入还原模式 */
   initialUrl?: string;
@@ -120,6 +146,8 @@ export default function ImageObfuscatorClient({
   const [parsedMeta, setParsedMeta] = useState<ObfuscationMeta | null>(null);
   /** 混淆输出的体积提示（PNG 打乱后难以压缩） */
   const [sizeNotice, setSizeNotice] = useState<string | null>(null);
+  /** 混淆图库弹窗开关 */
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const urlsRef = useRef<Set<string>>(new Set());
   /** 操作令牌：切换文件/取消后，丢弃过期的异步结果 */
@@ -252,20 +280,7 @@ export default function ImageObfuscatorClient({
         return urlLoadRef.current.promise;
       }
 
-      const promise = (async () => {
-        const response = await fetch(resolved.url);
-        if (!response.ok) return null;
-
-        const blob = await response.blob();
-        const type = ACCEPTED_TYPES.has(blob.type)
-          ? blob.type
-          : resolved.mime || blob.type;
-
-        return new File([blob], resolved.name, {
-          type: type || 'application/octet-stream',
-        });
-      })().catch(() => null);
-
+      const promise = loadImageFileFromUrl(resolved.url);
       urlLoadRef.current = { url: resolved.url, promise };
       return promise;
     };
@@ -283,6 +298,30 @@ export default function ImageObfuscatorClient({
       void selectRef.current(file);
     });
   }, [initialUrl, router, t]);
+
+  /** 从混淆图库选中一张图：下载后按 URL 流程载入并解析元数据 */
+  const handlePickFromGallery = useCallback(
+    async (src: string) => {
+      setPickerOpen(false);
+
+      if (!resolveSameSiteImageUrl(src)) {
+        alert(t('image-obfuscator.url_external'));
+        return;
+      }
+
+      const file = await loadImageFileFromUrl(src);
+      if (!file) {
+        setLocalErrorKey('image-obfuscator.url_failed');
+        toast.error(t('image-obfuscator.url_failed'));
+        return;
+      }
+
+      // 与 ?url= 流程一致：先切到还原模式，再由 handleSelect 解析元数据
+      setMode('deobfuscate');
+      await selectRef.current(file);
+    },
+    [t]
+  );
 
   const handleRemove = useCallback(() => {
     opTokenRef.current += 1;
@@ -480,6 +519,17 @@ export default function ImageObfuscatorClient({
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-5">
           <div className="space-y-4 lg:col-span-3">
+            <div className="flex justify-end">
+              <Button
+                disabled={isBusy}
+                onClick={() => setPickerOpen(true)}
+                type="button"
+              >
+                <Images className="h-3.5 w-3.5" />
+                {t('image-obfuscator.gallery_open')}
+              </Button>
+            </div>
+
             <UploadDropzone
               source={source}
               disabled={isBusy}
@@ -546,6 +596,12 @@ export default function ImageObfuscatorClient({
           {t('image-obfuscator.privacy_notice')}
         </p>
       </div>
+
+      <GalleryPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onPick={handlePickFromGallery}
+      />
     </div>
   );
 }

@@ -6,6 +6,11 @@ export const BLOG_DIR = path.join(UPLOADS_DIR, 'content', 'blog');
 export const GALLERY_DIR = path.join(UPLOADS_DIR, 'content', 'gallery');
 export const AVATAR_DIR = path.join(UPLOADS_DIR, 'images', 'avatar');
 export const PHOTO_DIR = path.join(UPLOADS_DIR, 'images', 'gallery');
+export const OBUSCATOR_PHOTO_DIR = path.join(
+  UPLOADS_DIR,
+  'images',
+  'obfuscator'
+);
 export const MIDI_DIR = path.join(UPLOADS_DIR, 'midisongs');
 
 export const TAGS_FILE = path.join(DATA_DIR, 'tags.json');
