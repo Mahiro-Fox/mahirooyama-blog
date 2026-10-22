@@ -31,7 +31,11 @@ interface GalleryTagPageProps {
 //   );
 // }
 
-export async function generateMetadata({ params }: GalleryTagPageProps) {
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) => {
   const { slug } = await params;
   const tags = await tagStore.getByType('gallery');
   const tag = tags[slug];
@@ -64,7 +68,7 @@ export async function generateMetadata({ params }: GalleryTagPageProps) {
       images: [siteConfig.ogImage],
     },
   };
-}
+};
 
 export default async function GalleryTagPage({ params }: GalleryTagPageProps) {
   const { slug } = await params;

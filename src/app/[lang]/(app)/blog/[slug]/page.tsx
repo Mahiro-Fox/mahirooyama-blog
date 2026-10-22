@@ -32,7 +32,11 @@ interface BlogPostPageProps {
 //   );
 // }
 
-export async function generateMetadata({ params }: BlogPostPageProps) {
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) => {
   const { slug } = await params;
   const [postResult] = await Promise.all([
     getPublicBlog(slug),
@@ -68,7 +72,7 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
       images: [siteConfig.ogImage],
     },
   };
-}
+};
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;

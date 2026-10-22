@@ -31,7 +31,11 @@ interface BlogTagPageProps {
 //   );
 // }
 
-export async function generateMetadata({ params }: BlogTagPageProps) {
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) => {
   const { slug } = await params;
   const tags = await tagStore.getByType('blog');
   const tag = tags[slug];
@@ -64,7 +68,7 @@ export async function generateMetadata({ params }: BlogTagPageProps) {
       images: [siteConfig.ogImage],
     },
   };
-}
+};
 
 export default async function BlogTagPage({ params }: BlogTagPageProps) {
   const { slug } = await params;

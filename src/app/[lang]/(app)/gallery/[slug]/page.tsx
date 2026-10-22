@@ -31,9 +31,11 @@ interface GalleryImagePageProps {
 //   );
 // }
 
-export async function generateMetadata({
+export const generateMetadata = async ({
   params,
-}: GalleryImagePageProps): Promise<Metadata> {
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> => {
   const { slug } = await params;
   const result = await getPublicGallery(slug);
   const image = result.success ? result.data : null;
@@ -46,7 +48,7 @@ export async function generateMetadata({
     title: image.title,
     description: image.description,
   };
-}
+};
 
 export default async function GalleryImagePage({
   params,

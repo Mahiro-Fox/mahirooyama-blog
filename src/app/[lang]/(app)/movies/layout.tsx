@@ -3,7 +3,11 @@ import { getPublicMovies } from '@/actions/admin/movie-actions';
 import { getDictionary } from '@/i18n/dictionary';
 import { DictionaryProvider } from '@/i18n/dictionary-provider';
 
-export const generateMetadata = async (params: Promise<{ lang: string }>) => {
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) => {
   const { lang } = await params;
   const moviesDictionary = await getDictionary(lang, 'movies');
   return {

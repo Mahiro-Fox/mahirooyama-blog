@@ -14,7 +14,11 @@ import { getDictionary } from '@/i18n/dictionary';
 import { DictionaryProvider } from '@/i18n/dictionary-provider';
 import { getCurrentUser } from '@/lib/user-auth';
 
-export const generateMetadata = async (params: Promise<{ lang: string }>) => {
+export const generateMetadata = async ({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) => {
   const { lang } = await params;
   const homeDictionary = await getDictionary(lang, 'home');
   const description =
