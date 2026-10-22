@@ -2,7 +2,7 @@
   "en": {
     "about.title": "About mahiro",
     "about.description": "Learn more about mahiro",
-    "about.keywords": ["about", "mahiro", "personal profile"],
+    "about.keywords": "about, mahiro, personal profile",
     "about.bio": "Perhaps I shall no longer eagerly await the arrival of summer. My heart aches, tears stream endlessly. Yet that gentle touch lingering at my fingertips, along with all the summer memories, will stay with me forever.",
     "about.profile.greeting": "👋 Hello there!",
     "about.profile.title": "Full Stack Developer | Office Worker",
@@ -43,7 +43,7 @@
   "cn": {
     "about.title": "关于 mahiro",
     "about.description": "了解更多关于 mahiro 的信息",
-    "about.keywords": ["关于", "绪山真寻", "个人简介"],
+    "about.keywords": "关于, mahiro, 个人简介",
     "about.bio": "暂时不会翘首期待夏季的来了吧，心好痛，眼泪不止。但是停留在手尖的温柔触感，连带着夏天的记忆，都将和我一起一直下去",
     "about.profile.greeting": "👋 你好呀！",
     "about.profile.title": "全栈开发，社畜",

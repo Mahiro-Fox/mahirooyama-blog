@@ -2,13 +2,7 @@
   "en": {
     "bilibili-parse.title": "Bilibili Video Parser",
     "bilibili-parse.description": "Input bilibili video url, get mp4 direct link with sound",
-    "bilibili-parse.keyword": [
-      "bilibili",
-      "video",
-      "parser",
-      "mp4",
-      "direct link"
-    ],
+    "bilibili-parse.keywords": "bilibili, video, parser, mp4, direct link",
     "bilibili-parse.enter_url_placeholder": "Enter Bilibili video link, e.g.: https://www.bilibili.com/video/BV1xxx/",
     "bilibili-parse.parse": "Parse",
     "bilibili-parse.parsing": "Parsing...",
@@ -37,7 +31,7 @@
   "cn": {
     "bilibili-parse.title": "Bilibili视频解析",
     "bilibili-parse.description": "输入Bilibili视频链接，获取带声音的MP4直链",
-    "bilibili-parse.keyword": ["b站", "视频", "解析", "mp4", "直链"],
+    "bilibili-parse.keywords": "b站, 视频, 解析, mp4, 直链",
     "bilibili-parse.enter_url_placeholder": "请输入 B 站视频链接，例如：https://www.bilibili.com/video/BV1xxx/",
     "bilibili-parse.parse": "解析",
     "bilibili-parse.parsing": "解析中...",

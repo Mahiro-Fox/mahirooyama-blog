@@ -2,7 +2,7 @@
   "en": {
     "chat.title": "mahiro's assistant and website guide",
     "chat.description": "this is a chat bot that you can chat free for any purpose",
-    "chat.keyword": ["ai", "chat", "mahiro"],
+    "chat.keywords": "ai, chat",
     "chat.start_title_no_auth": "Start Chat",
     "chat.start_desc_no_auth": "Enter the content below to start chatting, press the enter key to send, and after logging in, you can use DeepSeek and unlock Agent mode (supporting memory storage, cat girl character design...)",
     "chat.input_placeholder_no_auth": "say something...",
@@ -43,7 +43,7 @@
   "cn": {
     "chat.title": "mahiro 的助手兼网站导游",
     "chat.description": "这是一个免费的聊天机器人，你可以用它来聊天",
-    "chat.keyword": ["ai", "聊天", "绪山真寻"],
+    "chat.keywords": "ai, 聊天",
     "chat.start_title_no_auth": "开始聊天",
     "chat.start_desc_no_auth": "在下方输入内容即可开始聊天，按下 enter 键即可发送，登录后可用 DeepSeek 以及解锁 Agent 模式（支持记忆存储、猫娘人设...）",
     "chat.input_placeholder_no_auth": "说点什么...",

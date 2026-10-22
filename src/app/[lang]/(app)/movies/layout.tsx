@@ -9,6 +9,7 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
   return {
     title: moviesDictionary['movies.title'],
     description: moviesDictionary['movies.description'],
+    keywords: moviesDictionary['movies.keywords'],
   };
 };
 

@@ -5,12 +5,10 @@ import { DictionaryProvider } from '@/i18n/dictionary-provider';
 export const generateMetadata = async (params: Promise<{ lang: string }>) => {
   const { lang } = await params;
   const bilibiliDictionary = await getDictionary(lang, 'bilibili-parse');
-  const title = bilibiliDictionary['bilibili-parse.title'];
-  const description = bilibiliDictionary['bilibili-parse.description'];
   return {
-    title,
-    description,
-    keywords: bilibiliDictionary['bilibili-parse.keyword'],
+    title: bilibiliDictionary['bilibili-parse.title'],
+    description: bilibiliDictionary['bilibili-parse.description'],
+    keywords: bilibiliDictionary['bilibili-parse.keywords'],
   };
 };
 

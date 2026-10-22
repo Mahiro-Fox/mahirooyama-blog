@@ -2,7 +2,7 @@
   "en": {
     "guestbook.title": "Welcome to mahiooyama's guestbook wall",
     "guestbook.description": "Feel free to leave any messages for Mahiro here~",
-    "guestbook.keywords": ["guestbook", "leave messages"],
+    "guestbook.keywords": "guestbook, leave messages",
     "guestbook.page_title": "guestbook",
     "guestbook.page_description": "Leave any messages for Mahiro here~",
     "guestbook.no_messages": "No messages here yet, be the first to leave a message~",
@@ -28,7 +28,7 @@
   "cn": {
     "guestbook.title": "欢迎来到 mahirooyama 的留言墙喵~",
     "guestbook.description": "有什么想对mahiro说的话，都可以在这里留下喵~",
-    "guestbook.keywords": ["访客", "留言墙"],
+    "guestbook.keywords": "留言, 留言墙",
     "guestbook.page_title": "留言墙",
     "guestbook.page_description": "有什么想对我说的话，都可以在这里留下喵~",
     "guestbook.no_messages": "还没有留言，成为第一个留言的人吧！",

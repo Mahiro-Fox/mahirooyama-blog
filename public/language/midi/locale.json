@@ -2,6 +2,7 @@
   "en": {
     "midi.title": "Auto Piano Player",
     "midi.description": "Web MIDI Player with automatic piano playback",
+    "midi.keywords": "Web MIDI Player, Automatic Piano Playback, loopMIDI",
     "midi.notice": "Note: Please start loopMIDI before launching VRChat.",
     "midi.intro": "This is a Web MIDI player that implements automatic piano playback through loopMIDI. For setup instructions, please see:",
     "midi.setup_guide": "MIDI Setup Guide",
@@ -25,6 +26,7 @@
   "cn": {
     "midi.title": "中文吧自动钢琴",
     "midi.description": "中文吧自动钢琴 - Web MIDI Player with automatic piano playback",
+    "midi.keywords": "Web MIDI Player, Automatic Piano Playback, loopMIDI",
     "midi.notice": "注意: 请在启动 VRChat 之前先打开 loopMIDI。",
     "midi.intro": "这是一个通过 loopMIDI 实现自动钢琴播放的 Web MIDI 播放器，设置指南请查看:",
     "midi.setup_guide": "MIDI 设置指南",

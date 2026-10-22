@@ -9,6 +9,7 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
   return {
     title: midiDictionary['midi.title'],
     description: midiDictionary['midi.description'],
+    keywords: midiDictionary['midi.keywords'],
   };
 };
 

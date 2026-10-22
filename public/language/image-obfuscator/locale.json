@@ -2,6 +2,7 @@
   "en": {
     "image-obfuscator.title": "Image Obfuscator",
     "image-obfuscator.description": "Obfuscate and restore images in your browser with a space-filling curve permutation. The password is optional. Nothing is uploaded.",
+    "image-obfuscator.keywords": "image obfuscation, image encryption, image hiding, image protection.",
     "image-obfuscator.subtitle": "Space-filling curve permutation · Runs entirely in your browser",
     "image-obfuscator.privacy_notice": "All processing happens locally with Canvas and Web Crypto. Your images and password never leave this device.",
     "image-obfuscator.panel_title": "Settings",
@@ -67,6 +68,7 @@
   "cn": {
     "image-obfuscator.title": "图片混淆",
     "image-obfuscator.description": "在浏览器内用空间填充曲线置换来混淆与还原图片，密码可选，不上传任何数据。",
+    "image-obfuscator.keywords": "图片混淆, 图片加密, 图片隐藏, 图片保护",
     "image-obfuscator.subtitle": "空间填充曲线置换 · 全程在浏览器本地完成",
     "image-obfuscator.privacy_notice": "所有处理都通过 Canvas 与 Web Crypto 在本地完成，图片和密码都不会离开这台设备。",
     "image-obfuscator.panel_title": "参数设置",

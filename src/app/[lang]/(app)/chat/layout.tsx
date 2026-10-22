@@ -8,7 +8,7 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
   return {
     title: dictionary['chat.title'],
     description: dictionary['chat.description'],
-    keywords: dictionary['chat.keyword'],
+    keywords: dictionary['chat.keywords'],
   };
 };
 

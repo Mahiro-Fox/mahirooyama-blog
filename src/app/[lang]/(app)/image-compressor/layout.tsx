@@ -8,6 +8,7 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
   return {
     title: dict['image-compressor.title'],
     description: dict['image-compressor.description'],
+    keywords: dict['image-compressor.keywords'],
   };
 };
 

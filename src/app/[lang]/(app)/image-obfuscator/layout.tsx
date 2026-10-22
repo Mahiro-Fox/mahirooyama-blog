@@ -8,6 +8,7 @@ export const generateMetadata = async (params: Promise<{ lang: string }>) => {
   return {
     title: dict['image-obfuscator.title'],
     description: dict['image-obfuscator.description'],
+    keywords: dict['image-obfuscator.keywords'],
   };
 };
 
