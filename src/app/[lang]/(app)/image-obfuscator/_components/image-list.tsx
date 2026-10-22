@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   AlertCircle,
@@ -6,11 +6,11 @@ import {
   Download,
   Loader2,
   Trash2,
-} from "lucide-react";
-import { Button } from "@/components/shadcn-ui/button";
-import { useT } from "@/i18n/dictionary-provider";
-import { formatSize } from "@/utils/utils";
-import type { ImageItem } from "../_lib/types";
+} from 'lucide-react';
+import { Button } from '@/components/shadcn-ui/button';
+import { useT } from '@/i18n/dictionary-provider';
+import { formatSize } from '@/utils/utils';
+import type { ImageItem } from '../_lib/types';
 
 interface ImageListProps {
   items: ImageItem[];
@@ -34,13 +34,18 @@ export default function ImageList({
 }: ImageListProps) {
   const t = useT();
 
+  const truncateName = (name: string): string =>
+    name.length > 10
+      ? name.slice(0, 10) + '<br>' + truncateName(name.slice(10))
+      : name;
+
   if (items.length === 0) return null;
 
   return (
-    <div className="border-border bg-card overflow-hidden rounded-xl border">
+    <div className="border-border bg-card max-h-96 overflow-auto rounded-xl border">
       <div className="border-border flex items-center justify-between border-b px-4 py-2.5">
         <span className="text-sm font-medium">
-          {t("image-obfuscator.list_title", { count: items.length })}
+          {t('image-obfuscator.list_title', { count: items.length })}
         </span>
       </div>
 
@@ -52,7 +57,7 @@ export default function ImageList({
             <li
               key={item.id}
               className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
-                active ? "bg-primary/5" : ""
+                active ? 'bg-primary/5' : ''
               }`}
             >
               <button
@@ -65,18 +70,24 @@ export default function ImageList({
                   src={item.url}
                   alt={item.name}
                   className={`border-border bg-muted h-12 w-12 shrink-0 rounded-lg border object-cover ${
-                    active ? "ring-2 ring-[var(--primary)]" : ""
+                    active ? 'ring-2 ring-[var(--primary)]' : ''
                   }`}
                 />
 
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-foreground truncate text-sm font-medium">
-                      {item.name}
-                    </p>
+                    <p
+                      className="text-foreground truncate text-sm font-medium"
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          window.innerWidth < 764
+                            ? truncateName(item.name)
+                            : item.name,
+                      }}
+                    />
                     {item.meta ? (
                       <span className="bg-primary/10 text-primary shrink-0 rounded px-1.5 py-0.5 text-[10px]">
-                        {t("image-obfuscator.item_meta_badge")}
+                        {t('image-obfuscator.item_meta_badge')}
                       </span>
                     ) : null}
                   </div>
@@ -85,20 +96,20 @@ export default function ImageList({
                     <span>
                       {item.width}×{item.height} · {formatSize(item.size)}
                     </span>
-                    {item.status === "done" && item.result ? (
+                    {item.status === 'done' && item.result ? (
                       <span className="text-[var(--primary)]">
-                        {item.result.mode === "obfuscate"
-                          ? t("image-obfuscator.mode_obfuscate")
-                          : t("image-obfuscator.mode_deobfuscate")}
-                        {" · "}
+                        {item.result.mode === 'obfuscate'
+                          ? t('image-obfuscator.mode_obfuscate')
+                          : t('image-obfuscator.mode_deobfuscate')}
+                        {' · '}
                         {item.result.format.toUpperCase()}
-                        {" · "}
+                        {' · '}
                         {formatSize(item.result.blob.size)}
                       </span>
                     ) : null}
                   </div>
 
-                  {item.status === "running" ? (
+                  {item.status === 'running' ? (
                     <div className="flex items-center gap-2">
                       <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
                         <div
@@ -112,7 +123,7 @@ export default function ImageList({
                         {Math.round(item.progress * 100)}%
                       </span>
                     </div>
-                  ) : item.status === "error" ? (
+                  ) : item.status === 'error' ? (
                     <p className="text-destructive line-clamp-1 text-xs">
                       {item.errorKey ? t(item.errorKey) : null}
                     </p>
@@ -121,13 +132,13 @@ export default function ImageList({
               </button>
 
               <span className="shrink-0">
-                {item.status === "pending" ? (
+                {item.status === 'pending' ? (
                   <span className="bg-muted text-muted-foreground rounded px-2 py-0.5 text-[10px]">
-                    {t("image-obfuscator.item_pending")}
+                    {t('image-obfuscator.item_pending')}
                   </span>
-                ) : item.status === "running" ? (
+                ) : item.status === 'running' ? (
                   <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
-                ) : item.status === "done" ? (
+                ) : item.status === 'done' ? (
                   <CheckCircle2 className="h-4 w-4 text-[var(--primary)]" />
                 ) : (
                   <AlertCircle className="text-destructive h-4 w-4" />
@@ -139,7 +150,7 @@ export default function ImageList({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label={t("image-obfuscator.download")}
+                  aria-label={t('image-obfuscator.download')}
                   disabled={!item.result}
                   onClick={() => onDownload(item.id)}
                 >
@@ -149,7 +160,7 @@ export default function ImageList({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label={t("image-obfuscator.remove")}
+                  aria-label={t('image-obfuscator.remove')}
                   disabled={disabled}
                   onClick={() => onRemove(item.id)}
                 >
