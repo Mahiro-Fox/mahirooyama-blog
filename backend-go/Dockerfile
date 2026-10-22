@@ -15,7 +15,8 @@ RUN go mod tidy \
 
 # 运行阶段：极简镜像
 FROM alpine:3.19
-RUN apk add --no-cache ca-certificates tzdata
+RUN sed -i 's#https://dl-cdn.alpinelinux.org#https://mirrors.tencentyun.com#g' /etc/apk/repositories \
+    && apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/migrator ./migrator
