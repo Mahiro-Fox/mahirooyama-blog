@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "clean": "rm -rf .next/ node_modules/",
     "convert": "tsx scripts/convert-to-webp.ts",
+    "obfuscate": "tsx scripts/obfuscate-batch.ts",
     "test": "vitest run",
     "doctor": "npx react-doctor@latest"
   },

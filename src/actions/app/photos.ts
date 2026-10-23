@@ -1,8 +1,14 @@
 'use server';
 
+import path from 'path';
 import { cache } from 'react';
 import { OBUSCATOR_PHOTO_DIR } from '@/constant/dir';
-import { getPhotos, PhotoItem } from '@/lib/photos';
+import {
+  getPhotoCollections,
+  getPhotos,
+  PhotoCollection,
+  PhotoItem,
+} from '@/lib/photos';
 
 export interface PhotosResponse {
   images: PhotoItem[];
@@ -50,15 +56,34 @@ export async function getPhotosAction(
 /** 混淆图库支持的格式：混淆输出可能是 PNG 或 JPG */
 const OBUSCATOR_PHOTO_EXTENSIONS = ['.png', '.jpg'];
 
-/** 读取混淆图库（uploads/images/obfuscator）中的图片 */
-export async function getObfuscatorPhotosAction(
+/** 作者标识必须是单层目录名，防止通过 ../ 等方式读到图库目录之外 */
+function isSafeCollectionName(name: string): boolean {
+  if (!name || name === '.' || name === '..') return false;
+  if (name.includes('/') || name.includes('\\')) return false;
+  return path.basename(name) === name;
+}
+
+/** 读取混淆图库的一级分类（按作者分组）摘要 */
+export async function getObfuscatorCollectionsAction(): Promise<
+  PhotoCollection[]
+> {
+  return getPhotoCollections(OBUSCATOR_PHOTO_DIR, OBUSCATOR_PHOTO_EXTENSIONS);
+}
+
+/** 读取混淆图库中某个作者名下的图片，保持分页 */
+export async function getObfuscatorCollectionPhotosAction(
+  collection: string,
   page: number = 1,
   limit: number = 12
 ): Promise<PhotosResponse> {
+  if (!isSafeCollectionName(collection)) {
+    throw new Error('Invalid collection');
+  }
+
   return getPhotosAction(
     page,
     limit,
-    OBUSCATOR_PHOTO_DIR,
+    path.join(OBUSCATOR_PHOTO_DIR, collection),
     OBUSCATOR_PHOTO_EXTENSIONS
   );
 }
