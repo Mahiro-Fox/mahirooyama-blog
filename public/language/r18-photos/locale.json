@@ -1,0 +1,24 @@
+{
+  "en": {
+    "r18-photos.title": "R-18 Gallery",
+    "r18-photos.description": "A private pixiv collection, only visible after signing in.",
+    "r18-photos.keywords": "r18, pixiv, gallery, illustration",
+    "r18-photos.authors": "Artists",
+    "r18-photos.author_total": "{{count}} artists",
+    "r18-photos.author_count": "{{count}} works",
+    "r18-photos.no_images": "No images yet",
+    "r18-photos.authors_empty": "No artists yet",
+    "r18-photos.all_images_loaded": "All images loaded"
+  },
+  "cn": {
+    "r18-photos.title": "R-18 图库",
+    "r18-photos.description": "私密的 pixiv 收藏，登录后可见。",
+    "r18-photos.keywords": "r18, pixiv, 图库, 插画",
+    "r18-photos.authors": "作者",
+    "r18-photos.author_total": "{{count}} 位作者",
+    "r18-photos.author_count": "{{count}} 张",
+    "r18-photos.no_images": "暂无图片",
+    "r18-photos.authors_empty": "还没有作者作品",
+    "r18-photos.all_images_loaded": "已加载全部图片"
+  }
+}

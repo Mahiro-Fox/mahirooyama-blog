@@ -26,6 +26,7 @@ const loaders: Record<string, () => Promise<LocaleModule>> = {
     import('../../public/language/image-compressor/locale.json'),
   'image-obfuscator': () =>
     import('../../public/language/image-obfuscator/locale.json'),
+  'r18-photos': () => import('../../public/language/r18-photos/locale.json'),
 };
 
 function pickLang(localeData: Record<string, Dictionary>, lang: string) {

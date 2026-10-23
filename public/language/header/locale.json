@@ -29,6 +29,9 @@
     "photos_nav_label": "Photos",
     "photos_nav_description": "Waterfall layout image display",
 
+    "r18_photos_nav_label": "R-18 Gallery",
+    "r18_photos_nav_description": "Private pixiv collection (sign-in required)",
+
     "moments_nav_label": "Moments",
     "moments_nav_description": "View mahiro's daily moments",
     "moments_admin_title": "Moments Management",
@@ -143,6 +146,9 @@
 
     "photos_nav_label": "照片",
     "photos_nav_description": "瀑布流图片展示",
+
+    "r18_photos_nav_label": "R-18 图库",
+    "r18_photos_nav_description": "登录后可见的私密 pixiv 收藏",
 
     "moments_nav_label": "碎碎念",
     "moments_nav_description": "查看 mahiro 的日常碎碎念",

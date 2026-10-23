@@ -2,13 +2,14 @@
 
 import path from 'path';
 import { cache } from 'react';
-import { OBUSCATOR_PHOTO_DIR } from '@/constant/dir';
+import { OBUSCATOR_PHOTO_DIR, R18_PHOTO_DIR } from '@/constant/dir';
 import {
   getPhotoCollections,
   getPhotos,
   PhotoCollection,
   PhotoItem,
 } from '@/lib/photos';
+import { verifyUserAuth } from '@/lib/user-auth';
 
 export interface PhotosResponse {
   images: PhotoItem[];
@@ -63,6 +64,14 @@ function isSafeCollectionName(name: string): boolean {
   return path.basename(name) === name;
 }
 
+/** 把作者标识拼成图库下的子目录，同时完成安全校验 */
+function resolveCollectionDir(rootDir: string, collection: string): string {
+  if (!isSafeCollectionName(collection)) {
+    throw new Error('Invalid collection');
+  }
+  return path.join(rootDir, collection);
+}
+
 /** 读取混淆图库的一级分类（按作者分组）摘要 */
 export async function getObfuscatorCollectionsAction(): Promise<
   PhotoCollection[]
@@ -76,15 +85,43 @@ export async function getObfuscatorCollectionPhotosAction(
   page: number = 1,
   limit: number = 12
 ): Promise<PhotosResponse> {
-  if (!isSafeCollectionName(collection)) {
-    throw new Error('Invalid collection');
-  }
-
   return getPhotosAction(
     page,
     limit,
-    path.join(OBUSCATOR_PHOTO_DIR, collection),
+    resolveCollectionDir(OBUSCATOR_PHOTO_DIR, collection),
     OBUSCATOR_PHOTO_EXTENSIONS
+  );
+}
+
+/** R18 图库支持的格式：pixiv 下载常见为 jpg / png，兼容 webp */
+const R18_PHOTO_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
+
+/** R18 图库仅登录后可读，防止未登录直接调用 server action */
+async function requireR18Access(): Promise<void> {
+  const session = await verifyUserAuth();
+  if (!session.success) {
+    throw new Error('Not logged in');
+  }
+}
+
+/** 读取 R18 图库的一级分类（按作者分组）摘要 */
+export async function getR18CollectionsAction(): Promise<PhotoCollection[]> {
+  await requireR18Access();
+  return getPhotoCollections(R18_PHOTO_DIR, R18_PHOTO_EXTENSIONS);
+}
+
+/** 读取 R18 图库中某个作者名下的图片，保持分页 */
+export async function getR18CollectionPhotosAction(
+  collection: string,
+  page: number = 1,
+  limit: number = 12
+): Promise<PhotosResponse> {
+  await requireR18Access();
+  return getPhotosAction(
+    page,
+    limit,
+    resolveCollectionDir(R18_PHOTO_DIR, collection),
+    R18_PHOTO_EXTENSIONS
   );
 }
 

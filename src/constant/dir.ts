@@ -11,6 +11,7 @@ export const OBUSCATOR_PHOTO_DIR = path.join(
   'images',
   'obfuscator'
 );
+export const R18_PHOTO_DIR = path.join(UPLOADS_DIR, 'images', 'pixiv-r18');
 export const MIDI_DIR = path.join(UPLOADS_DIR, 'midisongs');
 
 export const TAGS_FILE = path.join(DATA_DIR, 'tags.json');
