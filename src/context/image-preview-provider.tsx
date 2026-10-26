@@ -528,6 +528,7 @@ function PreviewOverlay({
             data-preview-image
             onLoad={() => setLoaded(true)}
             onError={() => setLoaded(true)}
+            unoptimized
             className="pointer-events-auto max-h-full max-w-full object-contain will-change-transform"
             style={{
               transform: `translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale}) rotate(${view.rotate}deg) scaleX(${
@@ -537,7 +538,6 @@ function PreviewOverlay({
                 ? 'transform 260ms cubic-bezier(0.22, 1, 0.36, 1)'
                 : 'none',
               opacity: loaded ? 1 : 0,
-              // userDrag: 'none',
             }}
           />
         )}

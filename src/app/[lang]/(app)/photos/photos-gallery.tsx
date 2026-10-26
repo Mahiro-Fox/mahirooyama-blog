@@ -1,5 +1,6 @@
 'use client';
 
+import { useImagePreview } from '@/context/image-preview-provider';
 import { Loader2 } from 'lucide-react';
 import Masonry from '@/components/content/masonry';
 import { BlurFade } from '@/components/magicui/blur-fade';
@@ -11,6 +12,7 @@ export function PhotosGallery() {
   const { images, isLoading, isLoadingMore, error, hasMore, loadMoreRef } =
     usePhotos({ limit: 8 });
   const t = useT();
+  const { open } = useImagePreview();
 
   if (isLoading) {
     return (
@@ -52,10 +54,11 @@ export function PhotosGallery() {
         gutter={16}
         minColumns={1}
         minItemWidth={250}
-        itemRender={({ data }) => (
+        itemRender={({ data, index }) => (
           <BlurFade key={data.src} className="overflow-hidden rounded-md">
             <OptimizedImage
               previewable
+              onPreview={() => open(images, index)}
               src={data.src}
               alt={data.alt}
               width={data.width}

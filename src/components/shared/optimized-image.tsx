@@ -5,7 +5,6 @@ import { useInView } from 'motion/react';
 import NextImage from 'next/image';
 import { useCallback, useRef, useState } from 'react';
 import { cn } from '@/utils/utils';
-import { Image, useImagePreview } from '../../context/image-preview-provider';
 
 interface OptimizedImageProps {
   src: string;
@@ -23,10 +22,7 @@ interface OptimizedImageProps {
   unoptimized?: boolean;
   /** 是否启用点击预览功能 */
   previewable?: boolean;
-  /** 预览列表 */
-  previewList?: Image[];
-  /** 预览索引 */
-  previewIndex?: number;
+  onPreview?: () => void;
   /** 是否是竖屏图片 */
   isPortrait?: boolean;
 }
@@ -53,15 +49,13 @@ export function OptimizedImage({
   blurDataURL,
   unoptimized = true,
   previewable = false,
-  previewList = [],
-  previewIndex = 0,
+  onPreview,
   isPortrait = false,
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const preview = useImagePreview();
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -81,10 +75,10 @@ export function OptimizedImage({
   }, []);
 
   const handleClick = useCallback(() => {
-    if (previewable && src) {
-      preview.open(previewList, previewIndex);
+    if (previewable) {
+      onPreview?.();
     }
-  }, [src, previewable, previewList, previewIndex, preview]);
+  }, [previewable, onPreview]);
 
   const imageProps = fill ? { fill, sizes } : { width, height, sizes };
   const containerRef = useRef<HTMLDivElement>(null);

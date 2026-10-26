@@ -1,5 +1,6 @@
 'use client';
 
+import { useImagePreview } from '@/context/image-preview-provider';
 import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -163,6 +164,7 @@ function CollectionPhotos({ collection }: { collection: string }) {
   );
   const { images, isLoading, isLoadingMore, error, hasMore, loadMoreRef } =
     usePhotos({ limit: 12, fetcher });
+  const { open } = useImagePreview();
 
   if (isLoading) {
     return (
@@ -204,7 +206,7 @@ function CollectionPhotos({ collection }: { collection: string }) {
         gutter={16}
         minColumns={1}
         minItemWidth={250}
-        itemRender={({ data }) => (
+        itemRender={({ data, index }) => (
           <BlurFade key={data.src} className="overflow-hidden rounded-md">
             <OptimizedImage
               previewable
@@ -213,6 +215,7 @@ function CollectionPhotos({ collection }: { collection: string }) {
               width={data.width}
               height={data.height}
               aspectRatio={data.ratio}
+              onPreview={() => open(images, index)}
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           </BlurFade>

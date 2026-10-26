@@ -46,7 +46,10 @@ const Masonry = <T extends { [key: string]: any }>({
 
   // 2. 瀑布流分列计算
   const columnData = useMemo(() => {
-    const result: T[][] = Array.from({ length: currentColumns }, () => []);
+    const result: Array<Array<{ item: T; index: number }>> = Array.from(
+      { length: currentColumns },
+      () => []
+    );
     const columnHeights = new Array(currentColumns).fill(0);
 
     // 获取当前容器的大致宽度，用于更准地预估高度
@@ -54,7 +57,7 @@ const Masonry = <T extends { [key: string]: any }>({
     const approxColWidth =
       (containerWidth - (currentColumns - 1) * gutter) / currentColumns;
 
-    items.forEach((item) => {
+    items.forEach((item, index) => {
       // 贪心算法：找到当前最短的列
       let minHeightIndex = 0;
       for (let i = 1; i < currentColumns; i++) {
@@ -63,7 +66,8 @@ const Masonry = <T extends { [key: string]: any }>({
         }
       }
 
-      result[minHeightIndex].push(item);
+      // 连同原始下标一起入列，避免回调拿到的是「列内下标」
+      result[minHeightIndex].push({ item, index });
 
       // 高度计算逻辑：(1 / 宽高比) * 实际渲染宽度
       const itemRatio = item.ratio || 1;
@@ -88,11 +92,8 @@ const Masonry = <T extends { [key: string]: any }>({
           className="flex flex-1 flex-col"
           style={{ gap: `${gutter}px` }}
         >
-          {colItems.map((item, index) => (
-            <div
-              key={item.template_id || item.src}
-              className="w-full"
-            >
+          {colItems.map(({ item, index }) => (
+            <div key={item.template_id || item.src} className="w-full">
               {itemRender({ data: item, index })}
             </div>
           ))}
