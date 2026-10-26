@@ -10,7 +10,6 @@ import { useT } from '@/i18n/dictionary-provider';
 export function PhotosGallery() {
   const { images, isLoading, isLoadingMore, error, hasMore, loadMoreRef } =
     usePhotos({ limit: 8 });
-
   const t = useT();
 
   if (isLoading) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useImagePreview } from '@/context/image-preview-provider';
+import { Image, useImagePreview } from '@/context/image-preview-provider';
 import {
   ArrowLeft,
   Copy,
@@ -13,7 +13,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import Image from 'next/image';
+import NextImage from 'next/image';
 import { toast } from 'sonner';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -201,7 +201,7 @@ const Thumbnail = ({ item }: { item: FileItem }) => {
     if (isImage(item)) {
       if (item.size <= 100 * 1024) {
         return (
-          <Image
+          <NextImage
             src={item.path}
             alt={item.name}
             width={32}
@@ -280,7 +280,7 @@ function FileTable({
 }: {
   items: FileItem[];
   onEnterFolder: (item: FileItem) => void;
-  onPreview: (image: { src: string; alt: string }) => void;
+  onPreview: (image: Image) => void;
   onRename: (item: FileItem) => void;
   onDelete: (item: FileItem) => void;
 }) {
@@ -590,7 +590,7 @@ export default function UploadFilesClient({
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
-  const { openPreview } = useImagePreview();
+  const { open } = useImagePreview();
   const [isConverting, setIsConverting] = useState(false);
 
   // 获取文件列表
@@ -812,7 +812,9 @@ export default function UploadFilesClient({
         <FileTable
           items={items}
           onEnterFolder={enterFolder}
-          onPreview={openPreview}
+          onPreview={(item) => {
+            open([item]);
+          }}
           onRename={openRenameDialog}
           onDelete={(item) => {
             setSelectedItem(item);

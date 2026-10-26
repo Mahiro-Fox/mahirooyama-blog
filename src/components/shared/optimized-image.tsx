@@ -2,10 +2,10 @@
 
 import { RefreshCw } from 'lucide-react';
 import { useInView } from 'motion/react';
-import Image from 'next/image';
+import NextImage from 'next/image';
 import { useCallback, useRef, useState } from 'react';
 import { cn } from '@/utils/utils';
-import { useImagePreview } from '../../context/image-preview-provider';
+import { Image, useImagePreview } from '../../context/image-preview-provider';
 
 interface OptimizedImageProps {
   src: string;
@@ -23,6 +23,10 @@ interface OptimizedImageProps {
   unoptimized?: boolean;
   /** 是否启用点击预览功能 */
   previewable?: boolean;
+  /** 预览列表 */
+  previewList?: Image[];
+  /** 预览索引 */
+  previewIndex?: number;
   /** 是否是竖屏图片 */
   isPortrait?: boolean;
 }
@@ -49,13 +53,15 @@ export function OptimizedImage({
   blurDataURL,
   unoptimized = true,
   previewable = false,
+  previewList = [],
+  previewIndex = 0,
   isPortrait = false,
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const { openPreview } = useImagePreview();
+  const preview = useImagePreview();
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -76,9 +82,9 @@ export function OptimizedImage({
 
   const handleClick = useCallback(() => {
     if (previewable && src) {
-      openPreview({ src, alt, width, height });
+      preview.open(previewList, previewIndex);
     }
-  }, [src, previewable, alt, width, height, openPreview]);
+  }, [src, previewable, previewList, previewIndex, preview]);
 
   const imageProps = fill ? { fill, sizes } : { width, height, sizes };
   const containerRef = useRef<HTMLDivElement>(null);
@@ -152,7 +158,7 @@ export function OptimizedImage({
       )}
 
       {isInView && (
-        <Image
+        <NextImage
           key={isRetrying ? `retry-${retryCount}` : src}
           src={src}
           alt={alt}
