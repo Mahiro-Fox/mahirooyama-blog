@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  ClipboardPlus,
   Clock,
   Copy,
   Download,
@@ -12,10 +13,7 @@ import {
 import { AnimatePresence, m } from 'motion/react';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
-import {
-  parseBilibiliVideo,
-  type ParseResult,
-} from '@/actions/app/bilibili-parse';
+import { VideoParseResult } from '@/app/next-api/bilibili-parse/route';
 import { Button } from '@/components/shadcn-ui/button';
 import {
   Card,
@@ -28,11 +26,11 @@ import { Input } from '@/components/shadcn-ui/input';
 import { useT } from '@/i18n/dictionary-provider';
 import { formatSize } from '@/utils/utils';
 
-interface HistoryItem extends ParseResult {
+type HistoryItem = VideoParseResult & {
   id: string;
   url: string;
   timestamp: number;
-}
+};
 
 const formatDuration = (ms: number) => {
   const seconds = Math.floor(ms / 1000);
@@ -52,6 +50,7 @@ interface ParseFormProps {
   historyCount: number;
   onUrlChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
+  onPaste: () => void;
   onToggleHistory: () => void;
 }
 
@@ -61,6 +60,7 @@ function ParseForm({
   historyCount,
   onUrlChange,
   onSubmit,
+  onPaste,
   onToggleHistory,
 }: ParseFormProps) {
   const t = useT();
@@ -80,12 +80,17 @@ function ParseForm({
               onChange={(e) => onUrlChange(e.target.value)}
               placeholder={t('bilibili-parse.enter_url_placeholder')}
               disabled={loading}
-              className="flex-1"
+              className="flex-1 pr-8"
             />
-            {url && (
+            {url ? (
               <XIcon
                 className="absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 cursor-pointer"
                 onClick={() => onUrlChange('')}
+              />
+            ) : (
+              <ClipboardPlus
+                onClick={onPaste}
+                className="absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 cursor-pointer"
               />
             )}
           </div>
@@ -204,9 +209,12 @@ function HistoryPanel({
                     onClick={() => onLoad(item)}
                   >
                     <div className="hover:bg-accent flex items-center gap-3 rounded-lg border p-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={item.cover}
                         alt={item.title}
+                        width={48}
+                        height={48}
                         referrerPolicy="no-referrer"
                         className="h-12 w-12 rounded-md object-cover"
                       />
@@ -247,7 +255,7 @@ function HistoryPanel({
   );
 }
 
-function ResultCard({ result }: { result: ParseResult | null }) {
+function ResultCard({ result }: { result: VideoParseResult | null }) {
   const t = useT();
   return (
     <AnimatePresence>
@@ -326,24 +334,6 @@ function ResultCard({ result }: { result: ParseResult | null }) {
                 </m.div>
               </div>
 
-              {/* Cover Image */}
-              <div>
-                <span className="text-muted-foreground mb-2 block text-sm font-medium">
-                  {t('bilibili-parse.cover_image')}
-                </span>
-                <m.div
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ type: 'spring', stiffness: 300 }}
-                >
-                  <img
-                    src={result.cover}
-                    alt={result.title}
-                    referrerPolicy="no-referrer"
-                    className="max-h-64 w-auto rounded-lg border shadow-md"
-                  />
-                </m.div>
-              </div>
-
               {/* Supported Formats */}
               <div>
                 <span className="text-muted-foreground mb-2 block text-sm font-medium">
@@ -402,7 +392,7 @@ function ResultCard({ result }: { result: ParseResult | null }) {
               </div>
 
               {/* Video Preview */}
-              <div>
+              <div id="video-preview">
                 <span className="text-muted-foreground mb-2 block text-sm font-medium">
                   {t('bilibili-parse.video_preview')}
                 </span>
@@ -410,10 +400,20 @@ function ResultCard({ result }: { result: ParseResult | null }) {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
+                  className="group relative"
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={result.cover}
+                    alt={result.title}
+                    referrerPolicy="no-referrer"
+                    className="absolute w-full rounded-lg border shadow-md transition-all duration-100 group-hover:pointer-events-none group-hover:opacity-0"
+                  />
                   <video
                     src={result.mp4Url}
                     controls
+                    autoPlay
+                    muted
                     className="w-full rounded-lg border shadow-md"
                   />
                 </m.div>
@@ -430,7 +430,7 @@ export default function BilibiliParsePage() {
   const t = useT();
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ParseResult | null>(null);
+  const [result, setResult] = useState<VideoParseResult | null>(null);
   const [error, setError] = useState('');
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -465,19 +465,19 @@ export default function BilibiliParsePage() {
     setResult(null);
 
     try {
-      const res = await parseBilibiliVideo(url);
+      const res = await fetch(`/next-api/bilibili-parse?url=${url}&json=1`);
+      const data = await res.json();
 
-      if (!res.success) {
-        setError(res.error);
+      if (!data.success) {
+        setError(data.error);
         return;
       }
 
-      const data = res.data;
-      setResult(data);
+      setResult(data.data);
 
       // Add to history
       const historyItem: HistoryItem = {
-        ...data,
+        ...data.data,
         id: Date.now().toString(),
         url,
         timestamp: Date.now(),
@@ -496,11 +496,30 @@ export default function BilibiliParsePage() {
         return newHistory;
       });
       toast.success(t('bilibili-parse.parse_success'));
+      console.log(
+        'video-preview element:',
+        document.getElementById('video-preview')
+      );
+      setTimeout(() => {
+        document.getElementById('video-preview')?.scrollIntoView({
+          behavior: 'smooth', // 平滑滚动效果，若不需要可设为 'auto'
+        });
+      });
     } catch {
       setError(t('bilibili-parse.network_error'));
       toast.error(t('bilibili-parse.parse_failed'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setUrl(text);
+    } catch (e) {
+      console.error('Failed to paste text:', e);
+      toast.error(t('bilibili-parse.paste_failed'));
     }
   };
 
@@ -525,6 +544,7 @@ export default function BilibiliParsePage() {
         historyCount={history.length}
         onUrlChange={setUrl}
         onSubmit={handleParse}
+        onPaste={handlePaste}
         onToggleHistory={() => setShowHistory(!showHistory)}
       />
       <ErrorBanner error={error} />

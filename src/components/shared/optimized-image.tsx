@@ -3,29 +3,22 @@
 import { RefreshCw } from 'lucide-react';
 import { useInView } from 'motion/react';
 import NextImage from 'next/image';
-import { useCallback, useRef, useState } from 'react';
+import { ComponentProps, useCallback, useRef, useState } from 'react';
 import { cn } from '@/utils/utils';
 
-interface OptimizedImageProps {
-  src: string;
-  alt: string;
-  fill?: boolean;
-  width?: number;
-  height?: number;
+type OptimizedImageProps = ComponentProps<typeof NextImage> & {
   className?: string;
   containerClassName?: string;
-  priority?: boolean;
   sizes?: string;
   hoverScale?: boolean;
   aspectRatio?: number;
   blurDataURL?: string;
-  unoptimized?: boolean;
   /** 是否启用点击预览功能 */
   previewable?: boolean;
   onPreview?: () => void;
   /** 是否是竖屏图片 */
   isPortrait?: boolean;
-}
+};
 
 /**
  * 优化的图片组件
@@ -40,14 +33,15 @@ export function OptimizedImage({
   fill = false,
   width,
   height,
+  priority = false,
+  unoptimized = true,
+  referrerPolicy = 'no-referrer',
   className,
   containerClassName,
-  priority = false,
   sizes = '100vw',
   hoverScale = false,
   aspectRatio,
   blurDataURL,
-  unoptimized = true,
   previewable = false,
   onPreview,
   isPortrait = false,
@@ -153,7 +147,7 @@ export function OptimizedImage({
 
       {isInView && (
         <NextImage
-          key={isRetrying ? `retry-${retryCount}` : src}
+          key={isRetrying ? `retry-${retryCount}` : alt}
           src={src}
           alt={alt}
           {...imageProps}
@@ -171,6 +165,7 @@ export function OptimizedImage({
           onLoad={handleLoad}
           onError={handleError}
           unoptimized={unoptimized}
+          referrerPolicy={referrerPolicy}
         />
       )}
     </div>
