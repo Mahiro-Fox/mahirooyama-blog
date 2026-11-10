@@ -3,7 +3,7 @@
 import path from 'path';
 import { MIDI_DIR } from '@/constant/dir';
 import { getMidis, readMidiFile } from '@/lib/midi';
-import { goFetch, withGoAuth } from '@/lib/server/api-client';
+import { goFetch, withGoAuth, buildQuery } from '@/lib/server/api-client';
 import { createGoUploadAction } from '@/lib/upload';
 import {
   withActionPermission,
@@ -13,19 +13,51 @@ import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('MidiActions');
 
-// GET - 获取 MIDI 文件列表（转发到 Go GET /api/midi）
-export async function adminGetMidiFiles(): Promise<
-  ActionResponse<MidiAdminFile[]>
-> {
+/** MIDI 列表每页默认条数（与 Go 端默认值保持一致） */
+const MIDI_LIST_DEFAULT_LIMIT = 20;
+/** MIDI 列表每页最大条数（与 Go 端上限保持一致） */
+const MIDI_LIST_MAX_LIMIT = 100;
+
+export interface AdminGetMidiFilesParams {
+  page?: number;
+  limit?: number;
+  /** 文件名关键字，大小写不敏感 */
+  search?: string;
+}
+
+// GET - 获取 MIDI 文件列表（转发到 Go GET /api/midi，支持搜索与分页）
+export async function adminGetMidiFiles(
+  params: AdminGetMidiFilesParams = {}
+): Promise<ActionResponse<MidiAdminFilesPage>> {
+  const page = Math.max(1, Math.floor(params.page ?? 1));
+  const limit = Math.min(
+    MIDI_LIST_MAX_LIMIT,
+    Math.max(1, Math.floor(params.limit ?? MIDI_LIST_DEFAULT_LIMIT))
+  );
+  const search = params.search?.trim() ?? '';
+
   return withActionPermission(
     'midi:read',
     async (_user, ctx) => {
       try {
+        const query = buildQuery({
+          page: String(page),
+          limit: String(limit),
+          search,
+        });
         const data = await goFetch<{
           files: MidiAdminFile[];
+          pagination: MidiAdminFilesPage['pagination'];
           success: boolean;
-        }>('/api/midi', withGoAuth(ctx));
-        return { success: true, data: data.files ?? [] };
+        }>(`/api/midi${query}`, withGoAuth(ctx));
+
+        return {
+          success: true,
+          data: {
+            files: data.files ?? [],
+            pagination: data.pagination,
+          },
+        };
       } catch (error) {
         logger.error('获取 MIDI 文件列表失败', error);
         return { success: false, error: '获取文件列表失败' };

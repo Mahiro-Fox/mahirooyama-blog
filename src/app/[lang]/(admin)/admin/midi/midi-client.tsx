@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, SearchIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, SearchIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCallback, useState } from 'react';
 import {
@@ -57,8 +57,11 @@ const columns: Column<MidiAdminFile>[] = [
 ];
 
 interface MidiClientProps {
-  initialFiles: MidiAdminFile[];
+  initialData: MidiAdminFilesPage;
 }
+
+/** 列表每页条数 */
+const PAGE_SIZE = 20;
 
 // 创建搜索操作项
 const createSearchAction = (search: (query: string) => void) => {
@@ -81,9 +84,11 @@ const createSearchAction = (search: (query: string) => void) => {
   };
 };
 
-export default function MidiClient({ initialFiles }: MidiClientProps) {
-  const [filteredFiles, setFilteredFiles] =
-    useState<MidiAdminFile[]>(initialFiles);
+export default function MidiClient({ initialData }: MidiClientProps) {
+  const [files, setFiles] = useState<MidiAdminFile[]>(initialData.files);
+  const [pagination, setPagination] = useState(initialData.pagination);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<MidiAdminFile | null>(null);
@@ -92,30 +97,38 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
   const [newName, setNewName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // 刷新文件列表
-  const refreshFiles = useCallback(async () => {
-    const result = await adminGetMidiFiles();
-    if (result.success) {
-      setFilteredFiles(result.data);
-    } else {
-      toast.error(result.error);
+  // 按页拉取文件列表（服务端搜索 + 分页）
+  const loadPage = useCallback(async (page: number, keyword: string) => {
+    setIsLoading(true);
+    try {
+      const result = await adminGetMidiFiles({
+        page,
+        limit: PAGE_SIZE,
+        search: keyword,
+      });
+      if (result.success) {
+        setFiles(result.data.files);
+        setPagination(result.data.pagination);
+      } else {
+        toast.error(result.error);
+      }
+    } finally {
+      setIsLoading(false);
     }
   }, []);
+
+  // 刷新当前页（保持当前搜索关键字）
+  const refreshFiles = useCallback(async () => {
+    await loadPage(pagination.page, searchTerm);
+  }, [loadPage, pagination.page, searchTerm]);
 
   const search = useCallback(
     (query: string) => {
       const trimmed = query.trim();
-      if (!trimmed) {
-        setFilteredFiles(initialFiles);
-        return;
-      }
-
-      const q = trimmed.toLowerCase();
-      setFilteredFiles(
-        initialFiles.filter((file) => file.name.toLowerCase().includes(q))
-      );
+      setSearchTerm(trimmed);
+      loadPage(1, trimmed);
     },
-    [initialFiles]
+    [loadPage]
   );
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -247,19 +260,48 @@ export default function MidiClient({ initialFiles }: MidiClientProps) {
       ]}
     >
       <DataTable
-        data={filteredFiles}
+        data={files}
         columns={columns}
+        isLoading={isLoading}
         keyExtractor={(file) => file.slug}
         onDelete={openDeleteDialog}
         onEdit={openRenameDialog}
         actions={{ edit: true, delete: true }}
-        emptyText="暂无 MIDI 文件"
+        emptyText={searchTerm ? '没有匹配的 MIDI 文件' : '暂无 MIDI 文件'}
         virtual={true}
         virtualOptions={{
           estimateSize: 50,
           maxHeight: '65vh',
         }}
       />
+
+      {/* 分页控制 */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-muted-foreground text-sm">
+          共 {pagination.total} 个文件，第 {pagination.page} /{' '}
+          {Math.max(1, pagination.totalPages)} 页
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isLoading || pagination.page <= 1}
+            onClick={() => loadPage(pagination.page - 1, searchTerm)}
+          >
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            上一页
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isLoading || !pagination.hasMore}
+            onClick={() => loadPage(pagination.page + 1, searchTerm)}
+          >
+            下一页
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog

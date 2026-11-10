@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,22 @@ import (
 
 	"mahirooyama-blog/backend-go/internal/fileutil"
 )
+
+const (
+	// midiListDefaultLimit 列表默认每页条数
+	midiListDefaultLimit = 20
+	// midiListMaxLimit 列表允许的最大每页条数
+	midiListMaxLimit = 100
+)
+
+// parsePositiveQueryInt 读取正整数查询参数，非法或缺省时返回 fallback
+func parsePositiveQueryInt(raw string, fallback int) int {
+	value, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil || value < 1 {
+		return fallback
+	}
+	return value
+}
 
 // MidiFileItem MIDI 文件项（对应 Next.js 端 MidiAdminFile + API 响应格式）
 type MidiFileItem struct {
@@ -27,8 +44,10 @@ type MidiFileItem struct {
 	Path         string `json:"path,omitempty"`
 }
 
-// ListMidiFilesHandler GET /api/midi
-// 列出 MIDI_DIR 下的所有 .mid 文件，按修改时间倒序
+// ListMidiFilesHandler GET /api/midi?search=&page=&limit=
+// 列出 MIDI_DIR 下的 .mid 文件，按修改时间倒序，支持关键字搜索与分页。
+// 搜索匹配文件名（不含扩展名，大小写不敏感）；分页参数非法时回落默认值，
+// page 超出范围时收敛到最后一页。
 func ListMidiFilesHandler(midiDir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := fileutil.EnsureDirectory(midiDir); err != nil {
@@ -42,6 +61,8 @@ func ListMidiFilesHandler(midiDir string) gin.HandlerFunc {
 			return
 		}
 
+		search := strings.ToLower(strings.TrimSpace(c.Query("search")))
+
 		items := make([]MidiFileItem, 0, len(entries))
 		for _, entry := range entries {
 			if entry.IsDir() {
@@ -50,12 +71,15 @@ func ListMidiFilesHandler(midiDir string) gin.HandlerFunc {
 			if !strings.HasSuffix(strings.ToLower(entry.Name()), ".mid") {
 				continue
 			}
+			name := strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
+			if search != "" && !strings.Contains(strings.ToLower(name), search) {
+				continue
+			}
 			fullPath := filepath.Join(midiDir, entry.Name())
 			stats, err := os.Stat(fullPath)
 			if err != nil {
 				continue
 			}
-			name := strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
 			items = append(items, MidiFileItem{
 				Slug:         name,
 				FileName:     entry.Name(),
@@ -71,7 +95,35 @@ func ListMidiFilesHandler(midiDir string) gin.HandlerFunc {
 			return items[i].LastModified > items[j].LastModified
 		})
 
-		c.JSON(http.StatusOK, gin.H{"success": true, "files": items})
+		// 分页
+		total := len(items)
+		limit := parsePositiveQueryInt(c.Query("limit"), midiListDefaultLimit)
+		if limit > midiListMaxLimit {
+			limit = midiListMaxLimit
+		}
+		totalPages := (total + limit - 1) / limit
+		page := parsePositiveQueryInt(c.Query("page"), 1)
+		if totalPages > 0 && page > totalPages {
+			page = totalPages
+		}
+
+		start := (page - 1) * limit
+		end := min(start+limit, total)
+		if start > total {
+			start = total
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"files":   items[start:end],
+			"pagination": gin.H{
+				"page":       page,
+				"limit":      limit,
+				"total":      total,
+				"totalPages": totalPages,
+				"hasMore":    page < totalPages,
+			},
+		})
 	}
 }
 

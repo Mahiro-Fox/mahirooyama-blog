@@ -11,7 +11,18 @@ export default async function MidiAdminPage() {
   }
 
   const result = await adminGetMidiFiles();
-  const files = result.success ? result.data : [];
+  const initialData: MidiAdminFilesPage = result.success
+    ? result.data
+    : {
+        files: [],
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+          hasMore: false,
+        },
+      };
 
-  return <MidiClient initialFiles={files} />;
+  return <MidiClient initialData={initialData} />;
 }
