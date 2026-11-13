@@ -1,5 +1,6 @@
 'use client';
 
+import { useImagePreview } from '@/context/image-preview-provider';
 import { RefreshCw } from 'lucide-react';
 import { useInView } from 'motion/react';
 import NextImage from 'next/image';
@@ -50,6 +51,7 @@ export function OptimizedImage({
   const [hasError, setHasError] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const { open } = useImagePreview();
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -69,10 +71,12 @@ export function OptimizedImage({
   }, []);
 
   const handleClick = useCallback(() => {
-    if (previewable) {
-      onPreview?.();
-    }
-  }, [previewable, onPreview]);
+    if (!previewable) return;
+    // 如果有传入自定义的函数，优先使用。
+    if (onPreview) onPreview();
+    // 否则使用自带函数。
+    else open([{ src, alt }]);
+  }, [previewable, onPreview, src, alt, open]);
 
   const imageProps = fill ? { fill, sizes } : { width, height, sizes };
   const containerRef = useRef<HTMLDivElement>(null);

@@ -1,6 +1,6 @@
 'use client';
 
-import { Image, useImagePreview } from '@/context/image-preview-provider';
+import { useImagePreview } from '@/context/image-preview-provider';
 import {
   ArrowLeft,
   Copy,
@@ -274,16 +274,16 @@ function BreadcrumbNav({
 function FileTable({
   items,
   onEnterFolder,
-  onPreview,
   onRename,
   onDelete,
 }: {
   items: FileItem[];
   onEnterFolder: (item: FileItem) => void;
-  onPreview: (image: Image) => void;
   onRename: (item: FileItem) => void;
   onDelete: (item: FileItem) => void;
 }) {
+  const { open } = useImagePreview();
+
   return (
     <Table>
       <TableHeader>
@@ -348,7 +348,7 @@ function FileTable({
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onPreview({ src: item.path, alt: item.name });
+                        open([{ src: item.path, alt: item.name }]);
                       }}
                     >
                       <ImageIcon className="h-4 w-4" />
@@ -590,7 +590,6 @@ export default function UploadFilesClient({
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
-  const { open } = useImagePreview();
   const [isConverting, setIsConverting] = useState(false);
 
   // 获取文件列表
@@ -812,9 +811,6 @@ export default function UploadFilesClient({
         <FileTable
           items={items}
           onEnterFolder={enterFolder}
-          onPreview={(item) => {
-            open([item]);
-          }}
           onRename={openRenameDialog}
           onDelete={(item) => {
             setSelectedItem(item);

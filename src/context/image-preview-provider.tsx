@@ -13,9 +13,11 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
+import NextImage from 'next/image';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import React, {
+  ComponentProps,
   createContext,
   useCallback,
   useContext,
@@ -25,13 +27,13 @@ import React, {
   useState,
   type ReactNode,
 } from 'react';
+import { useClickOutside } from '@/hooks/use-click-outside';
 
 /* -------------------------------- 常量 / 类型 -------------------------------- */
 
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 10;
 const ZOOM_STEP = 1.25;
-const CLICK_SLOP = 6; // 判定为「点击」的最大移动距离(px)
 
 interface Point {
   x: number;
@@ -88,12 +90,10 @@ export interface ImagePreviewContextValue {
 const ImagePreviewContext = createContext<ImagePreviewContextValue | null>(
   null
 );
-export type Image = {
-  src: string;
-  alt: string;
-  width?: number;
-  height?: number;
-};
+export type Image = Pick<
+  ComponentProps<typeof NextImage>,
+  'src' | 'alt' | 'width' | 'height'
+>;
 
 export function useImagePreview(): ImagePreviewContextValue {
   const ctx = useContext(ImagePreviewContext);
@@ -163,7 +163,10 @@ function PreviewOverlay({
   onIndexChange,
   onClose,
 }: PreviewOverlayProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  // 切换图片时 <Image> 会因 key 变化重新挂载，用 state 保存节点让手势 effect 能重新绑定
+  const [imageEl, setImageEl] = useState<HTMLImageElement | null>(null);
+  /** 内容层（图片 + 所有控件），点击其外部即空白背景时关闭预览 */
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const [view, setView] = useState<ViewState>(DEFAULT_VIEW);
   const viewRef = useRef<ViewState>(DEFAULT_VIEW);
@@ -174,9 +177,9 @@ function PreviewOverlay({
 
   const pointersRef = useRef<Map<number, Point>>(new Map());
   const gestureRef = useRef<Gesture | null>(null);
-  const movedRef = useRef(0);
-  const lastPointRef = useRef<Point | null>(null);
-  const downTargetRef = useRef<Element | null>(null);
+
+  // 点击图片与控件之外的空白背景时关闭
+  useClickOutside(contentRef, onClose);
 
   // 给原生事件监听器提供最新数据
   const latestRef = useRef({ images, index, onIndexChange, onClose });
@@ -283,7 +286,7 @@ function PreviewOverlay({
   /* ------------------------------ 手势（原生监听） ------------------------------ */
 
   useEffect(() => {
-    const el = containerRef.current;
+    const el = imageEl;
     if (!el) return;
 
     const getCenter = (): Point => {
@@ -298,9 +301,6 @@ function PreviewOverlay({
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
       if (pointers.size === 1) {
-        downTargetRef.current = e.target as Element;
-        movedRef.current = 0;
-        lastPointRef.current = { x: e.clientX, y: e.clientY };
         gestureRef.current = {
           type: 'pan',
           startX: e.clientX,
@@ -333,14 +333,6 @@ function PreviewOverlay({
       const pointers = pointersRef.current;
       if (!pointers.has(e.pointerId)) return;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-      if (lastPointRef.current) {
-        movedRef.current += Math.hypot(
-          e.clientX - lastPointRef.current.x,
-          e.clientY - lastPointRef.current.y
-        );
-      }
-      lastPointRef.current = { x: e.clientX, y: e.clientY };
 
       const g = gestureRef.current;
       if (!g) return;
@@ -382,16 +374,7 @@ function PreviewOverlay({
 
       if (pointers.size === 0) {
         gestureRef.current = null;
-        lastPointRef.current = null;
         setDragging(false);
-
-        const target = downTargetRef.current;
-        const isBlank = !target?.closest(
-          '[data-preview-image], [data-preview-ui]'
-        );
-        if (isBlank && movedRef.current < CLICK_SLOP) {
-          latestRef.current.onClose();
-        }
         return;
       }
 
@@ -405,7 +388,6 @@ function PreviewOverlay({
           startTx: viewRef.current.x,
           startTy: viewRef.current.y,
         };
-        lastPointRef.current = p;
       }
     };
 
@@ -441,7 +423,7 @@ function PreviewOverlay({
       window.removeEventListener('pointercancel', onPointerUp);
       el.removeEventListener('wheel', onWheel);
     };
-  }, [applyZoom, patchView]);
+  }, [imageEl, applyZoom, patchView]);
 
   /* --------------------------------- 操作 --------------------------------- */
 
@@ -476,7 +458,7 @@ function PreviewOverlay({
     const { src } = image;
 
     const fallbackName = `image-${Date.now()}.png`;
-    const name = decodeURIComponent(src || '') || fallbackName;
+    const name = decodeURIComponent(src as string) || fallbackName;
 
     const triggerDownload = (href: string, filename: string, blank = false) => {
       const a = document.createElement('a');
@@ -492,7 +474,7 @@ function PreviewOverlay({
     };
 
     try {
-      const res = await fetch(src || '', { mode: 'cors' });
+      const res = await fetch(src as string, { mode: 'cors' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -500,7 +482,7 @@ function PreviewOverlay({
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch {
       // 跨域等原因 fetch 失败时退化为直接下载 / 新窗口打开
-      triggerDownload(src || '', name, true);
+      triggerDownload(src as string, name, true);
     }
   }, []);
 
@@ -510,121 +492,129 @@ function PreviewOverlay({
 
   return (
     <div
-      ref={containerRef}
       role="dialog"
       aria-modal="true"
       aria-label="图片预览"
-      className="fixed inset-0 z-[9999] overflow-hidden bg-black/90 backdrop-blur-sm select-none"
-      style={{ cursor: dragging ? 'grabbing' : 'grab', touchAction: 'none' }}
+      className="fixed inset-0 z-[9999] overflow-hidden bg-transparent backdrop-blur-sm select-none"
     >
-      {/* 图片 */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 pt-16 pb-28">
-        {current && (
-          <Image
-            key={current.src}
-            src={current.src}
-            alt=""
-            draggable={false}
-            data-preview-image
-            onLoad={() => setLoaded(true)}
-            onError={() => setLoaded(true)}
-            unoptimized
-            className="pointer-events-auto max-h-full max-w-full object-contain will-change-transform"
-            style={{
-              transform: `translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale}) rotate(${view.rotate}deg) scaleX(${
-                view.flipX ? -1 : 1
-              }) scaleY(${view.flipY ? -1 : 1})`,
-              transition: animate
-                ? 'transform 260ms cubic-bezier(0.22, 1, 0.36, 1)'
-                : 'none',
-              opacity: loaded ? 1 : 0,
-            }}
-          />
+      {/*
+        内容层：整体 pointer-events-none，空白区域的点击会落到外层背景节点上，
+        由 useClickOutside(contentRef) 判定为「点击外部」并关闭预览；
+        需要交互的元素各自声明 pointer-events-auto。
+      */}
+      <div ref={contentRef} className="pointer-events-none absolute inset-0">
+        {/* 图片 */}
+        <div className="absolute inset-0 flex items-center justify-center px-4 pt-16 pb-28">
+          {current && (
+            <Image
+              ref={setImageEl}
+              key={current.src.toString()}
+              src={current.src}
+              alt=""
+              draggable={false}
+              onLoad={() => setLoaded(true)}
+              onError={() => setLoaded(true)}
+              unoptimized
+              className="pointer-events-auto max-h-full max-w-full object-contain will-change-transform"
+              style={{
+                transform: `translate3d(${view.x}px, ${view.y}px, 0) scale(${view.scale}) rotate(${view.rotate}deg) scaleX(${
+                  view.flipX ? -1 : 1
+                }) scaleY(${view.flipY ? -1 : 1})`,
+                transition: animate
+                  ? 'transform 260ms cubic-bezier(0.22, 1, 0.36, 1)'
+                  : 'none',
+                opacity: loaded ? 1 : 0,
+                cursor: dragging ? 'grabbing' : 'grab',
+                touchAction: 'none',
+              }}
+            />
+          )}
+        </div>
+
+        {/* 加载中 */}
+        {!loaded && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-white/60" />
+          </div>
         )}
-      </div>
 
-      {/* 加载中 */}
-      {!loaded && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-white/60" />
-        </div>
-      )}
+        {/* 序号 */}
+        {images.length > 1 && (
+          <div className="pointer-events-auto absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white/80 tabular-nums backdrop-blur">
+            {index + 1} / {images.length}
+          </div>
+        )}
 
-      {/* 序号 */}
-      {images.length > 1 && (
-        <div
-          data-preview-ui
-          className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white/80 tabular-nums backdrop-blur"
-        >
-          {index + 1} / {images.length}
-        </div>
-      )}
-
-      {/* 右上角关闭 */}
-      <button
-        type="button"
-        data-preview-ui
-        onClick={onClose}
-        aria-label="关闭"
-        className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur transition-colors hover:bg-white/15 hover:text-white"
-      >
-        <X size={20} />
-      </button>
-
-      {/* 上一张 / 下一张 */}
-      {images.length > 1 && (
-        <>
-          <NavButton side="left" onClick={() => goTo(index - 1)} />
-          <NavButton side="right" onClick={() => goTo(index + 1)} />
-        </>
-      )}
-
-      {/* 底部操作栏 */}
-      <div
-        data-preview-ui
-        className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/10 bg-black/60 px-2 py-2 text-white shadow-2xl backdrop-blur-md"
-      >
-        <ToolButton label="缩小" onClick={zoomOut}>
-          <ZoomOut size={18} />
-        </ToolButton>
-
+        {/* 右上角关闭 */}
         <button
           type="button"
-          onClick={resetView}
-          title="重置视图"
-          aria-label="重置视图"
-          className="min-w-[58px] rounded-full px-2 py-1.5 text-xs font-medium text-white/80 tabular-nums transition-colors hover:bg-white/15 hover:text-white"
+          onClick={onClose}
+          aria-label="关闭"
+          className="pointer-events-auto absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur transition-colors hover:bg-white/15 hover:text-white"
         >
-          {Math.round(view.scale * 100)}%
+          <X size={20} />
         </button>
 
-        <ToolButton label="放大" onClick={zoomIn}>
-          <ZoomIn size={18} />
-        </ToolButton>
+        {/* 上一张 / 下一张 */}
+        {images.length > 1 && (
+          <>
+            <NavButton side="left" onClick={() => goTo(index - 1)} />
+            <NavButton side="right" onClick={() => goTo(index + 1)} />
+          </>
+        )}
 
-        <Divider />
+        {/* 底部操作栏 */}
+        <div className="pointer-events-auto absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/10 bg-black/60 px-2 py-2 text-white shadow-2xl backdrop-blur-md">
+          <ToolButton label="缩小" onClick={zoomOut}>
+            <ZoomOut size={18} />
+          </ToolButton>
 
-        <ToolButton label="顺时针旋转 90°" onClick={rotate}>
-          <RotateCw size={18} />
-        </ToolButton>
-        <ToolButton label="水平翻转" onClick={toggleFlipX} active={view.flipX}>
-          <FlipHorizontal size={18} />
-        </ToolButton>
-        <ToolButton label="垂直翻转" onClick={toggleFlipY} active={view.flipY}>
-          <FlipVertical size={18} />
-        </ToolButton>
-        <ToolButton label="适应屏幕" onClick={resetView}>
-          <Maximize2 size={18} />
-        </ToolButton>
+          <button
+            type="button"
+            onClick={resetView}
+            title="重置视图"
+            aria-label="重置视图"
+            className="min-w-[58px] rounded-full px-2 py-1.5 text-xs font-medium text-white/80 tabular-nums transition-colors hover:bg-white/15 hover:text-white"
+          >
+            {Math.round(view.scale * 100)}%
+          </button>
 
-        <Divider />
+          <ToolButton label="放大" onClick={zoomIn}>
+            <ZoomIn size={18} />
+          </ToolButton>
 
-        <ToolButton label="下载" onClick={handleDownload}>
-          <Download size={18} />
-        </ToolButton>
-        <ToolButton label="关闭" onClick={onClose}>
-          <X size={18} />
-        </ToolButton>
+          <Divider />
+
+          <ToolButton label="顺时针旋转 90°" onClick={rotate}>
+            <RotateCw size={18} />
+          </ToolButton>
+          <ToolButton
+            label="水平翻转"
+            onClick={toggleFlipX}
+            active={view.flipX}
+          >
+            <FlipHorizontal size={18} />
+          </ToolButton>
+          <ToolButton
+            label="垂直翻转"
+            onClick={toggleFlipY}
+            active={view.flipY}
+          >
+            <FlipVertical size={18} />
+          </ToolButton>
+          <ToolButton label="适应屏幕" onClick={resetView}>
+            <Maximize2 size={18} />
+          </ToolButton>
+
+          <Divider />
+
+          <ToolButton label="下载" onClick={handleDownload}>
+            <Download size={18} />
+          </ToolButton>
+          <ToolButton label="关闭" onClick={onClose}>
+            <X size={18} />
+          </ToolButton>
+        </div>
       </div>
     </div>
   );
@@ -675,10 +665,9 @@ function NavButton({
   return (
     <button
       type="button"
-      data-preview-ui
       onClick={onClick}
       aria-label={isLeft ? '上一张' : '下一张'}
-      className={`absolute top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur transition-colors hover:bg-white/15 hover:text-white ${
+      className={`pointer-events-auto absolute top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white/80 backdrop-blur transition-colors hover:bg-white/15 hover:text-white ${
         isLeft ? 'left-4' : 'right-4'
       }`}
     >
